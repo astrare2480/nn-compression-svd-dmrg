@@ -11,14 +11,10 @@
             "id": "b6907776fdc3a747",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "svd/08_MNIST実験.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "08_MNIST実験"
+              "title": "新規タブ"
             }
           }
         ]
@@ -41,7 +37,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "ファイルエクスプローラ"
@@ -185,20 +183,51 @@
   },
   "active": "b6907776fdc3a747",
   "lastOpenFiles": [
-    "svd/07_PyTorch実装.md",
-    "svd/09_DMRGとのつながり.md",
-    "svd/04_Linear層を2層へ置き換える.md",
-    "svd/03_SVDによる低ランク近似.md",
-    "svd/02_nn.Linearとは.md",
-    "svd/01_SVDとは.md",
-    "svd/00_目次.md",
-    "svd/00_目次(1).md",
-    "svd/07_次にやること_MNISTでのSVD圧縮.md",
-    "svd/06_研究・面接で説明するための考察.md",
-    "svd/05_PyTorchによるLinear層のSVD圧縮.md",
-    "svd/04_Linear層を2層へ置き換える意味.md",
-    "svd/03_SVDをNNへ適用する意味.md",
-    "svd/02_DMRGとは.md",
-    "svd/01_そもそもSVDとは.md"
+    "MINIST_SVD_Note/10_SVD実装/04_理論計算量と実測時間.md",
+    "README_実装編.md",
+    "README.md",
+    "90_監査/再配置・欠落監査レポート.md",
+    "90_監査/PDF内容反映監査.md",
+    "90_監査/MIGRATION_MANIFEST.json",
+    "90_監査",
+    "50_DMRG/README.md",
+    "50_DMRG/01_SVDからDMRGへのつながり.md",
+    "50_DMRG",
+    "40_TensorTrain_MPS",
+    "30_CIFAR10_CNN",
+    "20_FashionMNIST",
+    "10_MNIST_MLP_SVD/assets/retained_energy_vs_rank.png",
+    "10_MNIST_MLP_SVD/assets/rank_accuracy_heatmap.png",
+    "10_MNIST_MLP_SVD/assets/parameters_vs_accuracy.png",
+    "10_MNIST_MLP_SVD/README.md",
+    "10_MNIST_MLP_SVD/assets",
+    "10_MNIST_MLP_SVD/04_MNISTでの実験結果.md",
+    "10_MNIST_MLP_SVD/03_MNISTのMACs訂正と実測時間.md",
+    "10_MNIST_MLP_SVD/02_MNIST評価で使用した指標と実装.md",
+    "10_MNIST_MLP_SVD/01_MNIST実験.md",
+    "10_MNIST_MLP_SVD",
+    "05_SVD基礎実装検証/README.md",
+    "05_SVD基礎実装検証/02_Linear層2層置換の確認結果.md",
+    "05_SVD基礎実装検証/01_SVD実装の確認結果.md",
+    "05_SVD基礎実装検証",
+    "00_基礎理論/README.md",
+    "00_基礎理論/11_理論計算量とベンチマーク.md",
+    "00_基礎理論/10_SVD圧縮モデルの評価設計.md",
+    "00_基礎理論/09_Linear層の2層置換_実装.md",
+    "00_基礎理論/08_Linear層のSVD実装.md",
+    "00_基礎理論/07_PyTorch実装.md",
+    "00_基礎理論/06_誤差評価.md",
+    "00_基礎理論/05_圧縮率とRank.md",
+    "00_基礎理論/04_Linear層を2層へ置き換える.md",
+    "00_基礎理論/03_SVDによる低ランク近似.md",
+    "00_基礎理論/02_nn.Linearとは.md",
+    "00_基礎理論",
+    "docs_reorganized_verified/docs/10_MNIST_MLP_SVD/assets/retained_energy_vs_rank.png",
+    "docs_reorganized_verified/docs/10_MNIST_MLP_SVD/assets/rank_accuracy_heatmap.png",
+    "docs_reorganized_verified/docs/10_MNIST_MLP_SVD/assets/parameters_vs_accuracy.png",
+    "MINIST_SVD_Note/10_SVD実装/assets/retained_energy_vs_rank.png",
+    "MINIST_SVD_Note/10_SVD実装/assets/rank_accuracy_heatmap.png",
+    "MINIST_SVD_Note/10_SVD実装/assets/parameters_vs_accuracy.png",
+    "MINIST_SVD/10_SVD実装/assets/retained_energy_vs_rank.png"
   ]
 }
