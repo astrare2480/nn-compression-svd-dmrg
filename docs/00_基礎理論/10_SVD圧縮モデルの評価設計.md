@@ -520,6 +520,34 @@ fine-tuningでaccuracyが回復しても、元のdense weightへ戻ったわけ�
 
 ---
 
+---
+
+## 13.1 fine-tuning前後は同じRank-Selection Validationで比較する
+
+fine-tuningの効果を測るときは、BeforeとAfterを同じ評価データへ通す。
+
+$$
+\Delta\mathrm{Accuracy}
+=
+\mathrm{Acc}_{\mathrm{after}}
+-
+\mathrm{Acc}_{\mathrm{before}}
+$$
+
+$$
+\Delta L
+=
+L_{\mathrm{after}}
+-
+L_{\mathrm{before}}
+$$
+
+accuracyは正なら改善、lossは負なら改善である。
+
+Fine-tuningはrankを変えず、低ランク因子の値だけを更新するので、同じrankならparametersと理論MACsはBefore/Afterで変わらない。
+
+---
+
 ## 14. optimizerはfine-tuning前に作る
 
 圧縮層へ置換した後に、新しいoptimizerを作る。
@@ -537,6 +565,34 @@ fine-tuning
 ```
 
 置換前のoptimizerを使うと、新しい層が正しく更新されない。
+
+---
+
+---
+
+## 14.1 候補ごとにモデル・optimizer・Early-Stopping状態を独立させる
+
+複数候補をfine-tuningするときは、候補ごとに次を独立にする。
+
+- モデル本体
+- optimizer
+- best validation loss
+- best model state
+- patience counter
+- history
+
+モデル本体は、元候補を直接更新せず、
+
+```python
+pareto_model = copy.deepcopy(source_model)
+```
+
+のように独立コピーしてから学習する。
+
+直接参照をfine-tuningすると、同じKernel内でセルを再実行したときに、すでにfine-tuning済みのモデルへさらにfine-tuningしてしまうことがある。
+再現実験では `Restart Kernel -> Run All` とseed固定を組み合わせる。
+
+また、optimizerはmodel parameterへの参照を保持するため、別候補へ使い回さず候補ごとに新規作成する。
 
 ---
 
@@ -592,6 +648,84 @@ MNISTの公式test setを何度も見ながらrankを決めると、testへ過�
 
 ---
 
+---
+
+## 16.1 Early-Stopping用ValidationとRank選択用Validationを分ける
+
+1つのvalidation setをEarly Stoppingとrank選択の両方へ使うことは一般的には可能である。
+ただし、rank候補を多数比較し、Pareto / kneeなどで何度もモデル選択を行うと、そのvalidation setへの選択過適合が起こりうる。
+
+より厳密に分けるなら、学習用データを、
+
+```text
+Train
+Early-Stopping Validation
+Rank-Selection Validation
+```
+
+へ分割する。
+
+役割は次のとおり。
+
+| データ | 用途 |
+|---|---|
+| Train | `backward()` / `optimizer.step()` による重み更新 |
+| Early-Stopping Validation | epoch停止・best state決定 |
+| Rank-Selection Validation | SVD rank、Pareto、knee、fine-tuning後候補の比較 |
+| Test | 最終モデル確定後の最終評価 |
+
+この分離では、Early Stoppingに使った `best_validation_loss` と、Rank-Selection Validationで測ったlossを直接比較しない。
+異なるデータ集合上の値だからである。
+
+---
+
+---
+
+## 16.2 BaselineもRank-Selection Validation上で評価する
+
+圧縮前後の差を計算するときは、同じデータ集合上の値を使う。
+
+```text
+Baseline → Rank-Selection Validation
+SVDモデル → Rank-Selection Validation
+```
+
+として、
+
+$$
+\Delta\mathrm{Acc}
+=
+\mathrm{Acc}_{\mathrm{baseline,rankval}}
+-
+\mathrm{Acc}_{\mathrm{compressed,rankval}}
+$$
+
+を計算する。
+Early-Stopping ValidationのaccuracyをBaseline基準に混ぜない。
+
+---
+
+---
+
+## 16.3 Test leakageを避ける
+
+Testを途中のモデル選択へ使うと、Testが実質的にValidationへ変わる。
+特に次は避ける。
+
+```text
+Test結果を見る
+↓
+別rankへ変える
+↓
+Testを再評価
+```
+
+参考コードとしてTest評価セルをNotebookへ残すこと自体は問題ではないが、**最終モデルを確定するまでその値を選択へ使わない**。
+
+推論時間の計測はラベルを使わないため分類性能の選択とは性質が異なるが、評価設計を明確にするなら固定入力やvalidation入力を使い、Testは最終タスク評価として温存すると整理しやすい。
+
+---
+
 ## 17. 複数seed
 
 1つのseedだけでは、学習初期値やDataLoader順序によるばらつきを評価できない。
@@ -607,6 +741,27 @@ MNISTの公式test setを何度も見ながらrankを決めると、testへ過�
 を記録する。
 
 特にaccuracy差が0.1ポイント程度なら、seedばらつきと区別する必要がある。
+
+---
+
+---
+
+## 17.1 単一baseline + 決定論的rank sweepと1-SE rule
+
+通常の1-SE ruleは、複数回の学習・交差検証から得た平均値の標準誤差を使う。
+
+単一の学習済みbaselineを固定し、rankだけを決定論的に変える場合、学習手続きのばらつきを表すSEは得られない。
+そのため、この条件では1-SE ruleを主選択法にしない。
+
+複数seedで、
+
+```text
+baseline学習
+→ SVD
+→ rankごとの評価
+```
+
+を繰り返す追加実験を行うなら、mean ± SEと1-SE ruleを導入できる。
 
 ---
 
@@ -738,6 +893,27 @@ SVD単体の効果が分からない。圧縮直後も残す。
 ---
 
 > [!note] 実測・実行結果は [[10_MNIST_MLP_SVD/02_MNIST評価で使用した指標と実装]] へ分離した。
+
+---
+
+## 22.1 最終モデル選択のルールを明示する
+
+Pareto frontierは候補集合を与えるが、常に1モデルへ絞れるとは限らない。
+最終的に1つへ決める場合は、優先順位を明記する。
+
+例：
+
+```text
+1. parameters + validation_lossでPareto frontier
+2. 複数残ればvalidation_loss最小
+3. 同値ならparameters最小
+4. 同値ならvalidation_accuracy最大
+```
+
+この規則をTest結果を見る前に固定する。
+Testは選択済み1モデルを最後に評価する。
+
+> [!note] Fashion-MNISTではこの規則により、fine-tuning後の最終モデルとして `fc1_rank=32, fc2_rank=16` が選ばれた。実測値は [[20_FASHION_MNIST_MLP_SVD/04_Fashion-MNISTでの実験結果]] を参照する。
 
 ## 次に読むノート
 
