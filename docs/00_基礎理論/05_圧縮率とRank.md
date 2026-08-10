@@ -2653,6 +2653,211 @@ rankごとにこの3段階を記録する。
 
 ---
 
+---
+
+## 50.1 Pareto支配を厳密に定義する
+
+rank選択を「パラメータ数」と「validation loss」の2目的で行う場合、両方とも小さいほどよい。
+候補 $A$ が候補 $B$ を支配する条件は、
+
+$$
+P_A \le P_B
+$$
+
+かつ
+
+$$
+L_A \le L_B
+$$
+
+であり、さらに少なくとも一方が厳密に小さいことである。
+
+$$
+P_A < P_B
+\quad\text{or}\quad
+L_A < L_B
+$$
+
+ここで、$P$ はパラメータ数、$L$ はvalidation lossである。
+支配される候補は、「より小さく、かつ同等以上に性能のよい候補」が別に存在するため、最終候補から外せる。
+
+Pandasで実装するときは、Series同士の論理積・論理和にPythonの `and` / `or` ではなく `&` / `|` を使い、条件を満たす行が1つでもあるかは `.any()` で判定する。
+ループ中にDataFrameを `drop` せず、残すindexを集めて最後に一度だけ絞る方が安全である。
+
+---
+
+## 50.2 Pareto frontierを先に作る理由
+
+knee pointは全rank候補へ直接適用するのではなく、まずPareto frontierへ絞ってから求める。
+支配されている点を混ぜると、「そもそも選ぶ理由のない候補」が曲線形状へ影響するためである。
+
+```text
+全rank候補
+↓
+圧縮になっている候補を残す
+↓
+Pareto支配される候補を除く
+↓
+Pareto frontier
+↓
+knee point
+```
+
+パラメータ数がBaseline以上の低ランク表現は、「SVDをした」という意味では正しくても圧縮にはなっていない。
+最終的な圧縮候補を探す場合は、まずBaselineより小さい候補へ絞るのが自然である。
+
+---
+
+## 50.3 knee計算前のMin-Max正規化
+
+パラメータ数とvalidation lossは単位もスケールも異なる。
+そのままユークリッド距離を計算すると、数値スケールが大きい軸へ距離が引っ張られる。
+
+Pareto frontier上の各軸を、
+
+$$
+x' = \frac{x-x_{\min}}{x_{\max}-x_{\min}}
+$$
+
+で $[0,1]$ へ変換する。
+
+`MinMaxScaler` を使う場合も意味は同じである。
+
+重要なのは、Baseline比、
+
+$$
+\frac{x}{x_{\mathrm{baseline}}}
+$$
+
+とMin-Max正規化を区別することである。
+Baseline比は「元モデルの何倍か」を表す指標であり、kneeの幾何計算で両軸を同じスケールへ揃える処理ではない。
+
+---
+
+## 50.4 knee point：端点を結ぶ直線からの最大距離
+
+Pareto frontierをパラメータ数の昇順へ並べる。
+正規化後の左端を $p_0=(x_0,y_0)$、右端を $p_1=(x_1,y_1)$ とする。
+
+この2点を結ぶ直線を基準とし、各Pareto点からその直線までの垂直距離を求める。
+最大距離の点をknee pointとする方法がある。
+
+直線を
+
+$$
+y=ax+b
+$$
+
+と書けば、点 $(x_i,y_i)$ から直線までの距離は、
+
+$$
+d_i
+=
+\frac{
+|ax_i-y_i+b|
+}{
+\sqrt{a^2+1}
+}
+$$
+
+である。
+
+$$
+k^* = \arg\max_i d_i
+$$
+
+をkneeとする。
+
+この方法の意味は、「両端を直線的に結んだ単純なトレードオフ」から最も大きく曲がった点を探すことである。
+
+---
+
+## 50.5 global kneeは唯一の最適解ではない
+
+knee pointはヒューリスティックであり、唯一の数学的最適解ではない。
+位置は次に依存する。
+
+- rank候補の刻み方
+- どの指標を横軸・縦軸へ使うか
+- Min-Max正規化の対象範囲
+- Pareto frontierの端点
+- 極端に性能が崩れた低rank点を含むか
+
+特に最小rankでlossが急激に悪化している場合、global kneeは「良い圧縮バランス」というより、「モデルが壊れる領域から使える領域へ移る境界」を拾うことがある。
+したがって、kneeの数値だけで結論を出さず、Pareto曲線と候補点を可視化して意味を確認する。
+
+---
+
+## 50.6 Aggressive / Balanced / Conservativeの意味
+
+kneeを中心に、Pareto frontierをパラメータ数の昇順へ並べたときの隣接点を候補にできる。
+
+```text
+parameters 小                                  parameters 大
+
+Aggressive  ←  Balanced(knee)  →  Conservative
+```
+
+- **Aggressive**：kneeの1つ左。さらに圧縮を優先する候補
+- **Balanced**：kneeそのもの
+- **Conservative**：kneeの1つ右。より多くのパラメータを残す候補
+
+「左右」はrank値そのものの大小ではなく、**Pareto frontier上をパラメータ数順に並べたときの前後**である。
+このラベルはSVD直後の位置を表すだけであり、fine-tuning後もConservativeが必ず最高性能になるとは限らない。
+
+---
+
+## 50.7 1-SEルールを使える条件
+
+1-SE ruleは、複数回の学習・交差検証などから得た平均性能と、その平均の標準誤差を使って「最良と統計的に同程度の単純なモデル」を選ぶ考え方である。
+
+しかし、
+
+```text
+Baselineを1回だけ学習
+↓
+重みを固定
+↓
+rankだけ変えて決定論的にSVD
+```
+
+という実験では、各rankに対して通常1つのvalidation値しか得られない。
+この条件で、学習手続きのばらつきを表す通常の1-SE ruleを中心手法にするのは適切ではない。
+
+1-SEを本格的に使うなら、複数seedで、
+
+```text
+学習 → SVD → 評価
+```
+
+を繰り返し、rankごとの平均とSEを求める。
+単一学習済みモデルに対するrank sweepでは、Pareto frontier、knee、validation loss、パラメータ数、特異値エネルギーを組み合わせる方が素直である。
+
+---
+
+## 50.8 fine-tuning後はPareto関係を再評価できる
+
+SVD直後に付けたAggressive / Balanced / Conservativeは、fine-tuning後に性能順位が変わりうる。
+
+fine-tuning後の各候補について再び、
+
+- parameters：小さいほど良い
+- validation loss：小さいほど良い
+
+でPareto支配を判定できる。
+複数の非支配候補が残る場合は、最終選択ルールを実験前に定義する。
+
+例：
+
+1. Pareto非支配候補を残す
+2. validation loss最小を優先
+3. 同値ならparameters最小
+4. さらに同値ならvalidation accuracy最大
+
+この優先順位自体は数学的必然ではなく、研究目的に基づく選択規則である。
+
+> [!note] Fashion-MNISTでの実適用は [[20_FASHION_MNIST_MLP_SVD/02_Fashion-MNISTのRank選択]] と [[20_FASHION_MNIST_MLP_SVD/03_Fashion-MNISTのFine-tuning]] を参照する。
+
 ## 51. 圧縮指標を計算するPython関数
 
 ```python

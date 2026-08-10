@@ -1,0 +1,2 @@
+fc1_rank,fc2_rank,parameters,parameters_reduction,validation_loss,validation_acc,accuracy_drop,compressed_macs,compute_reduction,baseline_time_ms,compressed_time_ms,agreement,logits_rmse,retained_energy_fc1,retained_energy_fc2,parameters_normalize,validation_loss_normalize
+32,16,57098,0.8934376971285026,0.36364540555477143,0.8706,0.024799999999999933,56320,0.8947368421052632,0.12682375000076718,0.15715300000010757,0.914,3.7052574770441264,0.7019044756889343,0.5849804282188416,0.059602649006622516,0.05071025406335028
