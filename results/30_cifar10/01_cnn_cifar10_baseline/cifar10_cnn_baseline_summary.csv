@@ -1,0 +1,2 @@
+dataset,model,seed,batch_size,max_epochs,best_epoch,optimizer,learning_rate,criterion,parameters,validation_loss,test_loss,test_accuracy
+CIFAR-10,CIFAR10CNN,0,128,20,19,Adam,0.001,CrossEntropyLoss,128842,0.7969129266738891,0.7998793402671814,0.7125

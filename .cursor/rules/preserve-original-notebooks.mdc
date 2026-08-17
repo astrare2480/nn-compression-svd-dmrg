@@ -1,0 +1,22 @@
+---
+description: モジュール化時に元 Notebook を消さない・上書きしない
+alwaysApply: true
+---
+
+# 原本 Notebook を残す
+
+`src/nn_compression/` へ切り出す・import に置き換えるとき、**元ファイルを消さない**。唯一の原本を src 版で上書きしない。
+
+## 先にコピー、そのあと変換
+
+1. 変換前に、同じディレクトリへ原本の複製を作る。
+2. 複製がディスク上にあることを確認してから、作業用ファイルを src import へ直す。
+3. `*_before_src.ipynb` と、モジュール化前の原本・zip は削除しない。
+
+```text
+NG: 01_cnn_baseline.ipynb をその場で src 版に上書き（原本が消える）
+OK: 先に 01_cnn_baseline_before_src.ipynb を作り、その後 01_cnn_baseline.ipynb を src 版にする
+OK: 01_cnn_baseline.ipynb は触らず、01_cnn_baseline_using_src.ipynb を新規作成する
+```
+
+Cursor のローカル履歴に頼って復元する前提で上書きしない。

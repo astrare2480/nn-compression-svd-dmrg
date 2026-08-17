@@ -4,10 +4,18 @@
     notebooks/20_fashion_mnist/mlp/02_mlp_svd_rank_selection.ipynb
 """
 
+
 import torch
+from torch import nn
+from torch.utils.data import DataLoader
 
-
-def train_one_epoch(model, train_loader, criterion, optimizer, device):
+def train_one_epoch(
+    model: nn.Module,
+    train_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+) -> tuple[float, float]:
     """全学習バッチで順伝播・誤差逆伝播・更新を1回ずつ行う。
 
     損失はバッチ平均の加重平均、accuracy は全サンプルに対する正解率として
@@ -20,10 +28,16 @@ def train_one_epoch(model, train_loader, criterion, optimizer, device):
     total = 0
 
     for images, labels in train_loader:
-        images = images.to(device)
-        labels = labels.to(device)
+        images = images.to(
+            device,
+            non_blocking=True,
+        )
+        labels = labels.to(
+            device,
+            non_blocking=True,
+        )
 
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=True)
         outputs = model(images)
         loss = criterion(outputs, labels)
         loss.backward()
@@ -41,7 +55,13 @@ def train_one_epoch(model, train_loader, criterion, optimizer, device):
     return avg_loss, accuracy
 
 
-def evaluate(model, loader, criterion, device):
+def evaluate(
+    model: nn.Module,
+    loader: DataLoader,
+    criterion: nn.Module,
+    device: torch.device,
+) -> tuple[float, float]:
+
     """重みを更新せず、loss と accuracy をデータローダ全体で評価する。
 
     ``model.eval()`` と ``torch.no_grad()`` により、推論モードで

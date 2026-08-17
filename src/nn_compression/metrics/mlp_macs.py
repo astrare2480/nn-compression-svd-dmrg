@@ -5,28 +5,10 @@
     「MACs (Multiply-Accumulate Operations)」のセル
 
 このモジュールは現在の 784 -> 512 -> 256 -> 10 MLP を対象にする。
-CNN や Transformer に適用する場合は、モデル構造に応じた別の推定関数を
-用意する。
+層単位の計算は ``metrics.macs`` に置く。
 """
 
-
-def linear_macs(layer):
-    """1サンプルを Linear 層へ通すときの MACs を返す。
-
-    Linear(in_features -> out_features) では、各出力要素が
-    ``in_features`` 回の積和演算を行うため、概算は
-    ``in_features * out_features`` となる。
-    """
-    return layer.in_features * layer.out_features
-
-
-def compressed_linear_macs(in_features, out_features, rank):
-    """rank ``r`` の2層分解 Linear の MACs を返す。
-
-    元の ``in -> out`` を ``in -> r -> out`` に置き換えるため、
-    演算量は ``in * r + r * out`` で見積もる。
-    """
-    return in_features * rank + rank * out_features
+from .macs import compressed_linear_macs, linear_macs
 
 
 def estimate_mlp_macs(model, fc1_rank, fc2_rank, verbose=True):

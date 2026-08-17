@@ -1,0 +1,42 @@
+---
+description: 圧縮実験の src 切り出し・パス・CNN/MLP の使い分け
+globs: notebooks/**/*.ipynb,src/**/*.py
+alwaysApply: false
+---
+
+# src と Notebook の分担
+
+再利用ロジックは `src/nn_compression/`、実験判断は Notebook。コードは最小修正。
+
+## src へ共通処理を入れるとき
+
+元03に限らない。既存 Notebook から `src/nn_compression/` へ切り出すときは必ず次にする。
+
+- **原本を消さない。** 詳細は `preserve-original-notebooks.mdc`。先に `*_before_src.ipynb` を残すか、原本は触らず `*_using_src.ipynb` を新規作成する。
+- 再利用ロジックだけ src へ。実験判断・フィルタ・正規化列・ファイル名・プロットは Notebook。
+- CNN モデルは Notebook で書いてから src へ移す。先に空モジュールを増やさない。
+
+通常の実験作業（切り出しではない）では、元03を特別扱いしなくてよい。
+
+## パス
+
+`get_experiment_dirs` を使う。cwd 基準の相対パスは使わない。
+
+- データ: `data/`
+- 重み: `models/{dataset}/{experiment}/`
+- CSV / 図: `results/{dataset}/{experiment}/`
+- CSV に `model` 列（PyTorch オブジェクト）を書かない。
+
+## 落とし穴
+
+```python
+# NG: shuffle 用 Generator を消費し、学習順がずれる
+images, labels = next(iter(train_loader))
+
+# OK
+image, label = train_dataset[0]
+```
+
+- `make_two_layer_svd_model` / `estimate_mlp_macs` は 784→512→256 MLP 専用。CNN では使わない。
+- Linear の SVD は `factorize_linear_layer`。層名の差し替えは Notebook 側。
+- `fit_with_early_stopping` の履歴列は `train_acc` / `validation_acc`。

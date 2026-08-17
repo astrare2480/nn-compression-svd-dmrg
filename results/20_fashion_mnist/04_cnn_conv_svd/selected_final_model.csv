@@ -1,0 +1,2 @@
+model,conv2_rank,validation_acc,validation_loss,parameters,parameters_reduction
+Balanced after FT,28,0.926,0.20933417978286742,413066,0.020339529743241935

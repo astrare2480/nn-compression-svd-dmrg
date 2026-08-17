@@ -1,0 +1,15 @@
+---
+description: notebooks と src 作業時は指示のないファイルを読まない
+globs: notebooks/**/*.ipynb,src/**/*.py
+alwaysApply: false
+---
+
+# 読み取り範囲
+
+`notebooks/` または `src/nn_compression/` を開いているときだけ適用する。
+
+- 読むのは対象 Notebook の**ソースセル**と、そのセルが使う `src/nn_compression/` だけにする。
+- 指示がない限り読まない: `docs/`（Obsidian 設定含む）、`__pycache__`、他実験の `results/` / `models/`、agent transcript、一時スクリプト。
+- `.ipynb` は JSON 全体や PNG 出力を読まない。セルソースが必要なら Python で `source` だけ出す。
+- 日常の先例は `*_using_src.ipynb` のソースを優先する。
+- `src/` へ共通処理を入れるときだけ、切り出し元 Notebook のソースを対照してよい。原本は消さず、先に `*_before_src.ipynb` などを残す（`preserve-original-notebooks.mdc`）。

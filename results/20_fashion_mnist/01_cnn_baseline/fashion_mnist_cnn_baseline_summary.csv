@@ -1,0 +1,2 @@
+dataset,model,seed,batch_size,max_epochs,best_epoch,optimizer,learning_rate,criterion,parameters,validation_loss,test_loss,test_accuracy
+Fashion-MNIST,CNN 1-32-64 / FC 3136-128-10,0,256,10,10,Adam,0.001,CrossEntropyLoss,421642,0.22325173783302307,0.2461569386959076,0.909
