@@ -1,0 +1,2 @@
+conv2_rank,fc1_rank,learning_rate,best_epoch,best_validation_loss
+28,24,0.0003,1,0.22058545649051667

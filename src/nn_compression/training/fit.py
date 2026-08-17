@@ -8,19 +8,22 @@
 
 import copy
 
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
 from .loops import evaluate, train_one_epoch
 
 
 def fit_with_early_stopping(
-    model,
-    train_loader,
-    val_loader,
-    criterion,
-    optimizer,
-    device,
-    max_epochs,
-    patience,
-    min_delta,
+    model: nn.Module,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    criterion: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+    max_epochs: int,
+    patience: int,
+    min_delta: float,
 ):
     """Early Stopping付きで学習し、最良validation loss時の重みへ戻す。
 

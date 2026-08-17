@@ -4,13 +4,14 @@
     notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning.ipynb
     「2層に分解し、SVDを適用したモデルで評価」のセル
 
-SVDそのものとLinear層の因子分解は ``compression.svd`` に置く。
-このファイルには、fc1・fc2・fc3 という現在のMLP構造を前提にした
-組み立てだけを置く。
+SVD そのものは ``compression.svd``、Linear の因子分解は
+``compression.linear_svd`` に置く。このファイルには fc1・fc2・fc3
+という現在の MLP 構造を前提にした組み立てだけを置く。
 """
 
 from ..models.mlp import MNISTMLP
-from .svd import RebuildSVD, SVD, factorize_linear_layer
+from .linear_svd import factorize_linear_layer, rebuild_linear_from_svd
+from .svd import truncated_svd
 
 
 def make_one_layer_svd_model(model, fc1_rank, fc2_rank):
@@ -21,12 +22,12 @@ def make_one_layer_svd_model(model, fc1_rank, fc2_rank):
     """
     device = model.fc1.weight.device
     compressed_model = MNISTMLP().to(device)
-    compressed_model.fc1 = RebuildSVD(
-        *SVD(model.fc1.weight.detach(), fc1_rank),
+    compressed_model.fc1 = rebuild_linear_from_svd(
+        *truncated_svd(model.fc1.weight.detach(), fc1_rank),
         model.fc1,
     )
-    compressed_model.fc2 = RebuildSVD(
-        *SVD(model.fc2.weight.detach(), fc2_rank),
+    compressed_model.fc2 = rebuild_linear_from_svd(
+        *truncated_svd(model.fc2.weight.detach(), fc2_rank),
         model.fc2,
     )
     compressed_model.fc3 = model.fc3

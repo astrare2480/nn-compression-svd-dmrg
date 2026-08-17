@@ -1,0 +1,2 @@
+conv2_rank,fc1_rank,parameters,parameters_reduction,baseline_macs,compressed_macs,compute_reduction,validation_loss,validation_acc,accuracy_drop,baseline_time_ms,compressed_time_ms,agreement,logits_rmse,retained_energy_conv2,retained_energy_fc1
+28,24,89994,0.7865630084289515,4241152,2237184,0.4725055833886642,0.246371084523201,0.9124,0.013000000000000012,0.38425344999996014,0.4164965000018128,0.9674,0.8736154112186609,0.8634181618690491,0.856741726398468

@@ -1,0 +1,32 @@
+{
+  "dataset": "CIFAR-10",
+  "train_size": 45000,
+  "validation_size": 5000,
+  "test_size": 10000,
+  "train_transform": "Compose(\n    RandomCrop(size=(32, 32), padding=4)\n    RandomHorizontalFlip(p=0.5)\n    ToTensor()\n    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))\n)",
+  "evaluation_transform": "Compose(\n    ToTensor()\n    Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))\n)",
+  "seed": 0,
+  "batch_size": 128,
+  "num_workers": 2,
+  "model": "CIFAR10CNN",
+  "model_config": {
+    "input_channels": 3,
+    "conv2_in_channels": 32,
+    "conv3_in_channels": 64,
+    "flatten_dim": 128,
+    "num_classes": 10
+  },
+  "parameters": 128842,
+  "optimizer": "Adam",
+  "learning_rate": 0.001,
+  "max_epochs": 20,
+  "best_epoch": 19,
+  "criterion": "CrossEntropyLoss",
+  "device": "cuda",
+  "python_version": "3.12.13 | packaged by Anaconda, Inc. | (main, Jul  9 2026, 14:26:47) [MSC v.1942 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "torch_version": "2.11.0+cu128",
+  "validation_loss": 0.7969129266738891,
+  "test_loss": 0.7998793402671814,
+  "test_accuracy": 0.7125
+}

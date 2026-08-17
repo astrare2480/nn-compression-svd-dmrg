@@ -1,0 +1,3 @@
+model,conv2_rank,parameters,test_loss,test_acc,delta_test_acc,delta_test_loss
+Baseline,-,421642,0.23413073759078978,0.9175,0.0,0.0
+Final (compressed + FT),28,413066,0.23648845391273499,0.9197,0.0021999999999999797,0.0023577163219452024
