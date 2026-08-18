@@ -10,7 +10,7 @@ import torch
 from torch import nn
 
 from ..utils.modules import get_named_module, set_named_module
-from .svd import truncated_svd
+from .svd import coerce_rank, truncated_svd
 
 
 def conv2d_weight_matrix(weight: torch.Tensor) -> torch.Tensor:
@@ -21,6 +21,29 @@ def conv2d_weight_matrix(weight: torch.Tensor) -> torch.Tensor:
     return weight.flatten(start_dim=1)
 
 
+def conv2d_max_rank(conv: nn.Conv2d) -> int:
+    """現在の unfolding（out × in*kH*kW）に対する最大 rank。"""
+    out_ch, in_ch, k_h, k_w = conv.weight.shape
+    return min(out_ch, in_ch * k_h * k_w)
+
+
+def _factory_kwargs(conv: nn.Conv2d) -> dict:
+    return {
+        "device": conv.weight.device,
+        "dtype": conv.weight.dtype,
+    }
+
+
+def _unsupported_conv2d(conv: nn.Conv2d) -> None:
+    if conv.groups != 1:
+        raise ValueError(
+            "groups=1 の Conv2d のみ対応しています: "
+            f"groups={conv.groups}"
+        )
+    if getattr(conv, "transposed", False):
+        raise ValueError("転置畳み込みは未対応です。")
+
+
 def factorize_conv2d_layer(conv: nn.Conv2d, rank: int) -> nn.Sequential:
     """Conv2d を SVD で低ランクな 2 層 Conv へ分解する。
 
@@ -29,26 +52,21 @@ def factorize_conv2d_layer(conv: nn.Conv2d, rank: int) -> nn.Sequential:
     - ``A = Vh_r``: 1 層目 ``Conv(in → rank, 元 kernel)``。中間 rank チャネル
     - ``B = U_r @ diag(S_r)``: 2 層目 ``1×1 Conv(rank → out)``。空間サイズは不変
 
-    Conv 重みは出力チャネルが先頭次元なので、B の各行が
-    「1 つの最終チャネルを作る混合係数」になる。
-    stride / padding / dilation は 1 層目が引き継ぐ。
-    bias は最終出力に加わるため 2 層目へ移す。``groups != 1`` は非対応。
+    stride / padding / dilation / padding_mode は 1 層目が引き継ぐ。
+    bias は最終出力に加わるため 2 層目へ移す。
+    生成層は元層と同じ device / dtype で作り、float32 を経由しない。
     """
-    if conv.groups != 1:
-        raise ValueError("groups=1 のConv2dのみ対応しています。")
+    _unsupported_conv2d(conv)
+    rank = coerce_rank(rank, conv2d_max_rank(conv))
+    factory = _factory_kwargs(conv)
 
     out_ch, in_ch, k_h, k_w = conv.weight.shape
-    max_rank = min(out_ch, in_ch * k_h * k_w)
-    if not 1 <= rank <= max_rank:
-        raise ValueError(f"rank は1〜{max_rank}の範囲で指定してください。")
-
     W_mat = conv2d_weight_matrix(conv.weight.detach())
     U_r, S_r, Vh_r = truncated_svd(W_mat, rank)
 
     A = Vh_r
     B = U_r @ torch.diag(S_r)
 
-    # A を (rank, in, kH, kW) に戻して通常の畳み込みへ使う。
     first_layer = nn.Conv2d(
         in_channels=conv.in_channels,
         out_channels=rank,
@@ -56,16 +74,22 @@ def factorize_conv2d_layer(conv: nn.Conv2d, rank: int) -> nn.Sequential:
         stride=conv.stride,
         padding=conv.padding,
         dilation=conv.dilation,
+        groups=1,
         bias=False,
+        padding_mode=conv.padding_mode,
+        **factory,
     )
-    # 1×1 / stride=1 / padding=0 で空間サイズは変えない。
     second_layer = nn.Conv2d(
         in_channels=rank,
         out_channels=conv.out_channels,
         kernel_size=1,
         stride=1,
         padding=0,
+        dilation=1,
+        groups=1,
         bias=(conv.bias is not None),
+        padding_mode="zeros",
+        **factory,
     )
 
     with torch.no_grad():
@@ -74,10 +98,12 @@ def factorize_conv2d_layer(conv: nn.Conv2d, rank: int) -> nn.Sequential:
         if conv.bias is not None:
             second_layer.bias.copy_(conv.bias)
 
-    return nn.Sequential(first_layer, second_layer).to(
-        device=conv.weight.device,
-        dtype=conv.weight.dtype,
-    )
+    first_layer.weight.requires_grad = conv.weight.requires_grad
+    second_layer.weight.requires_grad = conv.weight.requires_grad
+    if conv.bias is not None:
+        second_layer.bias.requires_grad = conv.bias.requires_grad
+
+    return nn.Sequential(first_layer, second_layer)
 
 
 def factorize_named_conv2d(

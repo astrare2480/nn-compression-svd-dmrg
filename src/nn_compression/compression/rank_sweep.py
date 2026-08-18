@@ -34,6 +34,7 @@ def sweep_layer_ranks(
     warmup: int = 5,
     repeats: int = 200,
     verbose: bool = True,
+    input_batch=None,
 ) -> list[dict]:
     """1つの named 層だけを各 rank で置き換え、validation 指標を集める。
 
@@ -68,6 +69,8 @@ def sweep_layer_ranks(
             repeats=repeats,
             compressed_macs=compressed_macs,
             compute_reduction=compute_reduction,
+            include_model=False,
+            input_batch=input_batch,
         )
         row["layer"] = layer_name
         row["rank"] = int(rank)
@@ -106,6 +109,7 @@ def sweep_conv2d_ranks(
     warmup: int = 5,
     repeats: int = 200,
     verbose: bool = True,
+    input_batch=None,
 ) -> list[dict]:
     """Conv2d 1層の SVD rank sweep。空間サイズ ``out_hw`` は呼び出し側が渡す。"""
 
@@ -132,6 +136,7 @@ def sweep_conv2d_ranks(
         warmup=warmup,
         repeats=repeats,
         verbose=verbose,
+        input_batch=input_batch,
     )
 
 
@@ -149,6 +154,7 @@ def sweep_conv_svd_ranks(
     warmup: int = 5,
     repeats: int = 200,
     verbose: bool = True,
+    input_batch=None,
 ) -> list[dict]:
     """Notebook 互換の引数名。本体は ``sweep_conv2d_ranks``。"""
     return sweep_conv2d_ranks(
@@ -164,4 +170,5 @@ def sweep_conv_svd_ranks(
         warmup=warmup,
         repeats=repeats,
         verbose=verbose,
+        input_batch=input_batch,
     )

@@ -7,8 +7,39 @@
 Linear / Conv2d への因子分解は ``linear_svd`` / ``conv_svd`` に置く。
 """
 
+from __future__ import annotations
+
+import operator
+
 import torch
 from torch import nn
+
+
+def coerce_rank(rank, max_rank: int, *, name: str = "rank") -> int:
+    """``rank`` を整数化し、``1 <= rank <= max_rank`` を検証する。"""
+    try:
+        rank_int = operator.index(rank)
+    except TypeError as exc:
+        raise TypeError(
+            f"{name} は整数である必要があります: {rank!r}"
+        ) from exc
+
+    if max_rank < 1:
+        raise ValueError(f"{name} の上限 {max_rank} が 1 未満です。")
+    if not 1 <= rank_int <= max_rank:
+        raise ValueError(
+            f"{name} は 1〜{max_rank} の範囲で指定してください: {rank_int}"
+        )
+    return rank_int
+
+
+def matrix_max_rank(matrix: torch.Tensor) -> int:
+    """2 次元行列に対する SVD の最大 rank。"""
+    if matrix.ndim != 2:
+        raise ValueError(
+            f"SVD には 2 次元行列が必要です: ndim={matrix.ndim}"
+        )
+    return int(min(matrix.shape))
 
 
 def truncated_svd(matrix: torch.Tensor, rank: int):
@@ -16,8 +47,9 @@ def truncated_svd(matrix: torch.Tensor, rank: int):
 
     ``matrix ≈ U_r @ diag(S_r) @ Vh_r``。形状は
     ``U_r: (out, rank)``、``S_r: (rank,)``、``Vh_r: (rank, in)``。
-    rank が小さいほどパラメータと演算は減るが、元行列との差は大きくなる。
+    入力の dtype / device を維持する。
     """
+    rank = coerce_rank(rank, matrix_max_rank(matrix))
     U, S, Vh = torch.linalg.svd(matrix, full_matrices=False)
 
     U_r = U[:, :rank]
@@ -47,11 +79,12 @@ def retained_energy_from_matrix(matrix: torch.Tensor, rank: int) -> float:
     ``sum(S[:rank]**2) / sum(S**2)``。1 に近いほど近似が元の行列の
     Frobenius ノルムを多く残している目安だが、分類精度を保証しない。
     """
+    rank = coerce_rank(rank, matrix_max_rank(matrix))
     singular_values = torch.linalg.svdvals(matrix)
-    return (
-        singular_values[:rank].square().sum()
-        / singular_values.square().sum()
-    ).item()
+    energy = singular_values.square().sum()
+    if energy.item() == 0.0:
+        return 1.0
+    return (singular_values[:rank].square().sum() / energy).item()
 
 
 def retained_energy(layer: nn.Module, rank: int) -> float:

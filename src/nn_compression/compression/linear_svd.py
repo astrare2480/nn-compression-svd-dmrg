@@ -11,7 +11,23 @@ import torch
 from torch import nn
 
 from ..utils.modules import get_named_module, set_named_module
-from .svd import truncated_svd
+from .svd import coerce_rank, truncated_svd
+
+
+def linear_max_rank(layer: nn.Linear) -> int:
+    """Linear 重みの数学的な最大 rank。"""
+    return min(layer.in_features, layer.out_features)
+
+
+def _factory_kwargs(layer: nn.Linear) -> dict:
+    return {
+        "device": layer.weight.device,
+        "dtype": layer.weight.dtype,
+    }
+
+
+def _set_requires_grad(parameter: torch.nn.Parameter, enabled: bool) -> None:
+    parameter.requires_grad = enabled
 
 
 def rebuild_linear_from_svd(U_r, S_r, Vh_r, layer: nn.Linear) -> nn.Linear:
@@ -19,7 +35,9 @@ def rebuild_linear_from_svd(U_r, S_r, Vh_r, layer: nn.Linear) -> nn.Linear:
 
     元に bias がある場合だけ引き継ぐ。層数は変わらないため、これは
     パラメータ削減ではなく、低ランク近似の誤差確認向けである。
+    生成層は元層と同じ device / dtype / requires_grad を持つ。
     """
+    factory = _factory_kwargs(layer)
     W_r = U_r @ torch.diag(S_r) @ Vh_r
     has_bias = layer.bias is not None
 
@@ -27,6 +45,7 @@ def rebuild_linear_from_svd(U_r, S_r, Vh_r, layer: nn.Linear) -> nn.Linear:
         layer.in_features,
         layer.out_features,
         bias=has_bias,
+        **factory,
     )
 
     with torch.no_grad():
@@ -34,10 +53,11 @@ def rebuild_linear_from_svd(U_r, S_r, Vh_r, layer: nn.Linear) -> nn.Linear:
         if has_bias:
             new_layer.bias.copy_(layer.bias)
 
-    return new_layer.to(
-        device=layer.weight.device,
-        dtype=layer.weight.dtype,
-    )
+    _set_requires_grad(new_layer.weight, layer.weight.requires_grad)
+    if has_bias:
+        _set_requires_grad(new_layer.bias, layer.bias.requires_grad)
+
+    return new_layer
 
 
 def factorize_linear_layer(layer: nn.Linear, rank: int) -> nn.Sequential:
@@ -46,11 +66,19 @@ def factorize_linear_layer(layer: nn.Linear, rank: int) -> nn.Sequential:
     元の重み ``W`` を ``U_r @ diag(S_r) @ Vh_r`` と近似し、
     1 層目へ ``Vh_r``、2 層目へ ``U_r @ diag(S_r)`` を代入する。
     元に bias がある場合だけ、2 層目へコピーする。
+    生成層は元層と同じ device / dtype で作り、float32 を経由しない。
     """
+    rank = coerce_rank(rank, linear_max_rank(layer))
+    factory = _factory_kwargs(layer)
     U_r, S_r, Vh_r = truncated_svd(layer.weight.detach(), rank)
     has_bias = layer.bias is not None
-    first_layer = nn.Linear(layer.in_features, rank, bias=False)
-    second_layer = nn.Linear(rank, layer.out_features, bias=has_bias)
+    first_layer = nn.Linear(layer.in_features, rank, bias=False, **factory)
+    second_layer = nn.Linear(
+        rank,
+        layer.out_features,
+        bias=has_bias,
+        **factory,
+    )
 
     with torch.no_grad():
         first_layer.weight.copy_(Vh_r)
@@ -58,10 +86,12 @@ def factorize_linear_layer(layer: nn.Linear, rank: int) -> nn.Sequential:
         if has_bias:
             second_layer.bias.copy_(layer.bias)
 
-    return nn.Sequential(first_layer, second_layer).to(
-        device=layer.weight.device,
-        dtype=layer.weight.dtype,
-    )
+    _set_requires_grad(first_layer.weight, layer.weight.requires_grad)
+    _set_requires_grad(second_layer.weight, layer.weight.requires_grad)
+    if has_bias:
+        _set_requires_grad(second_layer.bias, layer.bias.requires_grad)
+
+    return nn.Sequential(first_layer, second_layer)
 
 
 def factorize_named_linear(

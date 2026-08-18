@@ -175,7 +175,21 @@ def test_collect_compression_metrics_keys():
     )
     assert row["compressed_macs"] == 10
     assert "agreement" in row
-    assert row["model"] is compressed
+    assert "model" not in row
+
+    row_with_model = collect_compression_metrics(
+        model,
+        compressed,
+        _tiny_loader(),
+        nn.CrossEntropyLoss(),
+        torch.device("cpu"),
+        baseline_acc=0.5,
+        baseline_time_s=0.001,
+        warmup=0,
+        repeats=1,
+        include_model=True,
+    )
+    assert row_with_model["model"] is compressed
 
 
 def test_fashion_mnist_cnn_still_imports():
