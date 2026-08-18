@@ -10,6 +10,7 @@ import copy
 import torch
 from torch import nn
 
+from ..utils.modules import get_named_module, set_named_module
 from .svd import truncated_svd
 
 
@@ -68,15 +69,19 @@ def factorize_named_linear(
     layer_name: str,
     rank: int,
 ) -> nn.Module:
-    """指定した Linear 属性だけを低ランク 2 層へ置換したコピーを返す。
+    """指定した Linear だけを低ランク 2 層へ置換したコピーを返す。
 
     ``Linear(in → out)`` を ``Linear(in → rank)`` + ``Linear(rank → out)``
-    に分解する。``layer_name`` は ``"fc1"`` のような属性名。
-    元の ``model`` は変更しない。MLP 専用ではなく、渡したモデルをコピーする。
+    に分解する。``layer_name`` は ``\"fc1\"`` でも ``\"head.fc\"`` でもよい。
+    元の ``model`` は変更しない。
     """
     compressed_model = copy.deepcopy(model)
-    layer = getattr(compressed_model, layer_name)
-    setattr(
+    layer = get_named_module(model, layer_name)
+    if not isinstance(layer, nn.Linear):
+        raise TypeError(
+            f"{layer_name!r} は Linear である必要があります: {type(layer).__name__}"
+        )
+    set_named_module(
         compressed_model,
         layer_name,
         factorize_linear_layer(layer, rank),

@@ -20,6 +20,7 @@ from .model_comparison import (
     agreement,
     benchmark_inference,
     benchmark_inference_print,
+    collect_compression_metrics,
     count_parameters,
     logits_rmse,
     parameters_reduction,
@@ -44,4 +45,5 @@ __all__ = [
     "estimate_cnn_conv2_macs",
     "benchmark_inference",
     "benchmark_inference_print",
+    "collect_compression_metrics",
 ]

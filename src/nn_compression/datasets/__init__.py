@@ -5,9 +5,11 @@ from .fashion_mnist import (
     make_fashion_mnist_loaders,
     split_fashion_mnist_dataset,
 )
+from .splits import shuffled_index_splits
 
 __all__ = [
     "get_fashion_mnist_datasets",
     "split_fashion_mnist_dataset",
     "make_fashion_mnist_loaders",
+    "shuffled_index_splits",
 ]

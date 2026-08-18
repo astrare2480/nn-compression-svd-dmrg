@@ -10,6 +10,8 @@ import time
 
 import torch
 
+from ..training.loops import evaluate
+
 
 def count_parameters(model):
     """学習可能・非学習可能を問わず、モデルが保持する全要素数を数える。"""
@@ -61,10 +63,10 @@ def agreement(baseline_model, compressed_model, loader, device):
 
 
 def logits_rmse(baseline_model, compressed_model, loader, device):
-    """圧縮前後の10クラス logits の RMSE を返す。
+    """圧縮前後の出力（logits）の RMSE を返す。
 
-    agreement が最終クラスだけを見るのに対して、この指標は各クラスの
-    生スコア全体のずれを評価する。小さいほど圧縮前モデルに近い。
+    agreement が最終クラスだけを見るのに対して、この指標は出力要素全体の
+    ずれを評価する。小さいほど圧縮前モデルに近い。クラス数は仮定しない。
     """
     baseline_model.eval()
     compressed_model.eval()
@@ -106,6 +108,77 @@ def benchmark_inference(model, data_loader, device, warmup=10, repeats=5000):
     if device.type == "cuda":
         torch.cuda.synchronize()
     return (time.perf_counter() - start) / repeats
+
+
+def collect_compression_metrics(
+    baseline_model,
+    compressed_model,
+    loader,
+    criterion,
+    device,
+    *,
+    baseline_acc: float,
+    baseline_time_s: float,
+    warmup: int = 5,
+    repeats: int = 200,
+    compressed_macs: int | None = None,
+    compute_reduction: float | None = None,
+    baseline_macs: int | None = None,
+) -> dict:
+    """圧縮モデルを validation loader で評価し、共通指標の dict を返す。
+
+    層名・rank・CSV 名は含めない。呼び出し側が実験固有の列を足す。
+    ``model`` キーに圧縮モデル本体を入れる（CSV には書かない想定）。
+    """
+    validation_loss, validation_acc = evaluate(
+        compressed_model,
+        loader,
+        criterion,
+        device,
+    )
+    compressed_time_s = benchmark_inference(
+        compressed_model,
+        loader,
+        device,
+        warmup=warmup,
+        repeats=repeats,
+    )
+    row = {
+        "parameters": count_parameters(compressed_model),
+        "parameters_reduction": parameters_reduction(
+            baseline_model,
+            compressed_model,
+        ),
+        "validation_loss": validation_loss,
+        "validation_acc": validation_acc,
+        "accuracy_drop": accuracy_drop(
+            baseline_acc,
+            validation_acc,
+            verbose=False,
+        ),
+        "baseline_time_ms": baseline_time_s * 1000,
+        "compressed_time_ms": compressed_time_s * 1000,
+        "agreement": agreement(
+            baseline_model,
+            compressed_model,
+            loader,
+            device,
+        ),
+        "logits_rmse": logits_rmse(
+            baseline_model,
+            compressed_model,
+            loader,
+            device,
+        ),
+        "model": compressed_model,
+    }
+    if baseline_macs is not None:
+        row["baseline_macs"] = baseline_macs
+    if compressed_macs is not None:
+        row["compressed_macs"] = compressed_macs
+    if compute_reduction is not None:
+        row["compute_reduction"] = compute_reduction
+    return row
 
 
 def benchmark_inference_print(
