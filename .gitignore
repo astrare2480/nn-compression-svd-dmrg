@@ -17,6 +17,9 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 
+# Local editor settings (machine-specific interpreter paths)
+.vscode/
+
 # Local scratch
 .tmp*
 *.tmp
