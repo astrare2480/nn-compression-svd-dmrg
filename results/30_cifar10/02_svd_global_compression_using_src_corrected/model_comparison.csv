@@ -1,0 +1,5 @@
+model,conv1_rank,conv2_rank,conv3_rank,validation_acc,validation_loss,parameters,parameters_reduction
+Baseline,-,-,-,0.7344,0.760243639755249,128842,0.0
+Aggressive after FT,6,32,32,0.7336,0.7801626772880554,69964,0.4569783145247668
+Balanced after FT,9,32,32,0.736,0.7714907892227173,70141,0.4556045388925971
+Conservative after FT,9,32,48,0.7444,0.7469203527450562,81405,0.3681796308657115

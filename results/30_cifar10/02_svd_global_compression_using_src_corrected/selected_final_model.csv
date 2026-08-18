@@ -1,0 +1,2 @@
+model,conv1_rank,conv2_rank,conv3_rank,validation_acc,validation_loss,parameters,parameters_reduction
+Conservative after FT,9,32,48,0.7444,0.7469203527450562,81405,0.3681796308657115
