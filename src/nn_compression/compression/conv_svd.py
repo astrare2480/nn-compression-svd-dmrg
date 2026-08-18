@@ -9,6 +9,7 @@ import copy
 import torch
 from torch import nn
 
+from ..utils.modules import get_named_module, set_named_module
 from .svd import truncated_svd
 
 
@@ -84,13 +85,18 @@ def factorize_named_conv2d(
     layer_name: str,
     rank: int,
 ) -> nn.Module:
-    """指定した Conv2d 属性だけを低ランク 2 層へ置換したコピーを返す。
+    """指定した Conv2d だけを低ランク 2 層へ置換したコピーを返す。
 
+    ``layer_name`` は ``\"conv2\"`` でも ``\"block.conv\"`` でもよい。
     元の ``model`` は変更しない。
     """
     compressed_model = copy.deepcopy(model)
-    layer = getattr(compressed_model, layer_name)
-    setattr(
+    layer = get_named_module(model, layer_name)
+    if not isinstance(layer, nn.Conv2d):
+        raise TypeError(
+            f"{layer_name!r} は Conv2d である必要があります: {type(layer).__name__}"
+        )
+    set_named_module(
         compressed_model,
         layer_name,
         factorize_conv2d_layer(layer, rank),

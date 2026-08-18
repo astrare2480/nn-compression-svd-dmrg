@@ -12,6 +12,7 @@ from .macs import (
     estimate_conv2d_macs,
     linear_macs,
 )
+from ..utils.modules import get_named_module
 
 CONV1_OUTPUT_HW = (28, 28)
 CONV2_OUTPUT_HW = (14, 14)
@@ -64,7 +65,7 @@ def estimate_cnn_conv2_macs(
     if out_hw is None:
         out_hw = CONV2_OUTPUT_HW
 
-    conv = getattr(model, layer_name)
+    conv = get_named_module(model, layer_name)
     return estimate_conv2d_macs(
         conv,
         rank,
@@ -108,7 +109,7 @@ def estimate_cnn_macs(
     compressed_macs = 0
 
     for layer_name, out_hw in conv_output_hw.items():
-        conv = getattr(model, layer_name)
+        conv = get_named_module(model, layer_name)
         out_h, out_w = out_hw
         layer_baseline = conv2d_macs(conv, out_h, out_w)
         baseline_macs += layer_baseline
@@ -123,7 +124,7 @@ def estimate_cnn_macs(
             compressed_macs += layer_baseline
 
     for layer_name in linear_layer_names:
-        linear = getattr(model, layer_name)
+        linear = get_named_module(model, layer_name)
         layer_baseline = linear_macs(linear)
         baseline_macs += layer_baseline
         if layer_name in linear_ranks:

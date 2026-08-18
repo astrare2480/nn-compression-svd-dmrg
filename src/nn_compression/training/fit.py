@@ -24,12 +24,19 @@ def fit_with_early_stopping(
     max_epochs: int,
     patience: int,
     min_delta: float,
+    *,
+    reevaluate_train: bool = True,
+    log_every_epoch: bool = False,
 ):
     """Early Stopping付きで学習し、最良validation loss時の重みへ戻す。
 
-    元Notebookと同じく各epochで「学習 → validation評価 → 学習データの
-    再評価」を行う。``min_delta`` を超えて validation loss が改善した時だけ
-    最良重みを更新し、連続 ``patience`` 回改善しなければ停止する。
+    既定では各epochで「学習 → validation評価 → 学習データの再評価」を行う
+    （Fashion-MNIST と同じ）。``reevaluate_train=False`` なら train 全件の
+    再評価を省略し、履歴の train 指標は ``train_one_epoch`` の戻り値を使う。
+    ``log_every_epoch=True`` なら毎epoch進捗を出す。
+
+    ``min_delta`` を超えて validation loss が改善した時だけ最良重みを更新し、
+    連続 ``patience`` 回改善しなければ停止する。学習率・epoch数は引数。
     """
     best_validation_loss = float("inf")
     best_epoch = None
@@ -38,7 +45,7 @@ def fit_with_early_stopping(
     history = []
 
     for epoch in range(max_epochs):
-        train_one_epoch(
+        train_loss, train_acc = train_one_epoch(
             model,
             train_loader,
             criterion,
@@ -53,12 +60,13 @@ def fit_with_early_stopping(
             device,
         )
 
-        train_eval_loss, train_eval_acc = evaluate(
-            model,
-            train_loader,
-            criterion,
-            device,
-        )
+        if reevaluate_train:
+            train_loss, train_acc = evaluate(
+                model,
+                train_loader,
+                criterion,
+                device,
+            )
 
         # 元Notebookと同じ厳密な改善判定。
         if best_validation_loss - min_delta > validation_loss:
@@ -72,12 +80,21 @@ def fit_with_early_stopping(
         history.append(
             {
                 "epoch": epoch + 1,
-                "train_acc": train_eval_acc,
-                "train_loss": train_eval_loss,
+                "train_acc": train_acc,
+                "train_loss": train_loss,
                 "validation_loss": validation_loss,
                 "validation_acc": validation_acc,
             }
         )
+
+        if log_every_epoch:
+            print(
+                f"epoch={epoch + 1:02d} "
+                f"train_loss={train_loss:.4f} "
+                f"train_acc={train_acc:.4f} "
+                f"val_loss={validation_loss:.4f} "
+                f"val_acc={validation_acc:.4f}"
+            )
 
         if no_improvement_count >= patience:
             print(f"Early stopping at epoch {epoch + 1}")
