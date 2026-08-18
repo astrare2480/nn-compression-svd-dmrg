@@ -21,6 +21,7 @@ from .model_comparison import (
     benchmark_inference,
     benchmark_inference_print,
     collect_compression_metrics,
+    take_inference_batch,
     count_parameters,
     logits_rmse,
     parameters_reduction,
@@ -46,4 +47,5 @@ __all__ = [
     "benchmark_inference",
     "benchmark_inference_print",
     "collect_compression_metrics",
+    "take_inference_batch",
 ]

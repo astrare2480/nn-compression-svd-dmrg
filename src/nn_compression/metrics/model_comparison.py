@@ -6,9 +6,12 @@
     「パラメータ数を数える」の各セル
 """
 
+from __future__ import annotations
+
 import time
 
 import torch
+from torch.utils.data import DataLoader, RandomSampler
 
 from ..training.loops import evaluate
 
@@ -83,31 +86,93 @@ def logits_rmse(baseline_model, compressed_model, loader, device):
     return (squared_error_sum / element_count) ** 0.5
 
 
-def benchmark_inference(model, data_loader, device, warmup=10, repeats=5000):
-    """同一バッチの平均推論時間を秒単位で測定する。
+def _synchronize(device: torch.device) -> None:
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
 
-    GPU は非同期実行のため、計時の前後で同期する。小さな MLP では
-    実測時間の差が小さく揺れやすいので、理論MACsと併用して解釈する。
+
+def _as_input_batch(batch) -> torch.Tensor:
+    if isinstance(batch, (tuple, list)):
+        return batch[0]
+    if torch.is_tensor(batch):
+        return batch
+    raise TypeError(
+        "input_batch は Tensor、または (images, labels) である必要があります。"
+    )
+
+
+def take_inference_batch(data_loader: DataLoader) -> torch.Tensor:
+    """比較用の 1 バッチを取る。shuffle Generator は消費しない。"""
+    sampler = getattr(data_loader, "sampler", None)
+    if isinstance(sampler, RandomSampler):
+        raise ValueError(
+            "shuffle 付き DataLoader は Generator を消費します。"
+            " input_batch を渡すか、shuffle=False の loader を使ってください。"
+        )
+    try:
+        batch = next(iter(data_loader))
+    except StopIteration as exc:
+        raise ValueError("空の DataLoader では推論時間を測れません。") from exc
+    return _as_input_batch(batch)
+
+
+def benchmark_inference(
+    model,
+    data_loader=None,
+    device=None,
+    warmup=10,
+    repeats=5000,
+    *,
+    input_batch=None,
+    return_details: bool = False,
+):
+    """同一入力バッチの平均推論時間を秒単位で測定する。
+
+    ``input_batch`` があれば loader を走査しない。
+    baseline と compressed は同じ ``input_batch`` / warmup / repeats で測る。
     """
+    if device is None:
+        raise TypeError("device が必要です。")
+    if warmup < 0:
+        raise ValueError(f"warmup は 0 以上にしてください: {warmup}")
+    if repeats <= 0:
+        raise ValueError(f"repeats は 1 以上にしてください: {repeats}")
+
+    if input_batch is None:
+        if data_loader is None:
+            raise TypeError("data_loader または input_batch が必要です。")
+        images = take_inference_batch(data_loader)
+    else:
+        images = _as_input_batch(input_batch)
+
     model.eval()
-    images, _ = next(iter(data_loader))
     images = images.to(device)
 
     with torch.no_grad():
         for _ in range(warmup):
             _ = model(images)
 
-    if device.type == "cuda":
-        torch.cuda.synchronize()
+    _synchronize(device)
     start = time.perf_counter()
 
     with torch.no_grad():
         for _ in range(repeats):
             _ = model(images)
 
-    if device.type == "cuda":
-        torch.cuda.synchronize()
-    return (time.perf_counter() - start) / repeats
+    _synchronize(device)
+    time_s = (time.perf_counter() - start) / repeats
+
+    if not return_details:
+        return time_s
+
+    return {
+        "time_s": time_s,
+        "time_ms": time_s * 1000,
+        "batch_size": int(images.size(0)),
+        "input_shape": tuple(images.shape),
+        "warmup": int(warmup),
+        "repeats": int(repeats),
+    }
 
 
 def collect_compression_metrics(
@@ -124,11 +189,14 @@ def collect_compression_metrics(
     compressed_macs: int | None = None,
     compute_reduction: float | None = None,
     baseline_macs: int | None = None,
+    include_model: bool = False,
+    input_batch=None,
 ) -> dict:
     """圧縮モデルを validation loader で評価し、共通指標の dict を返す。
 
     層名・rank・CSV 名は含めない。呼び出し側が実験固有の列を足す。
-    ``model`` キーに圧縮モデル本体を入れる（CSV には書かない想定）。
+    既定では model 本体を保持しない。必要な候補だけ
+    ``include_model=True`` にするか、rank から再構築する。
     """
     validation_loss, validation_acc = evaluate(
         compressed_model,
@@ -136,12 +204,15 @@ def collect_compression_metrics(
         criterion,
         device,
     )
-    compressed_time_s = benchmark_inference(
+    if input_batch is None:
+        input_batch = take_inference_batch(loader)
+    details = benchmark_inference(
         compressed_model,
-        loader,
-        device,
+        device=device,
         warmup=warmup,
         repeats=repeats,
+        input_batch=input_batch,
+        return_details=True,
     )
     row = {
         "parameters": count_parameters(compressed_model),
@@ -157,7 +228,11 @@ def collect_compression_metrics(
             verbose=False,
         ),
         "baseline_time_ms": baseline_time_s * 1000,
-        "compressed_time_ms": compressed_time_s * 1000,
+        "compressed_time_ms": details["time_ms"],
+        "benchmark_batch_size": details["batch_size"],
+        "benchmark_input_shape": details["input_shape"],
+        "benchmark_warmup": details["warmup"],
+        "benchmark_repeats": details["repeats"],
         "agreement": agreement(
             baseline_model,
             compressed_model,
@@ -170,8 +245,9 @@ def collect_compression_metrics(
             loader,
             device,
         ),
-        "model": compressed_model,
     }
+    if include_model:
+        row["model"] = compressed_model
     if baseline_macs is not None:
         row["baseline_macs"] = baseline_macs
     if compressed_macs is not None:
@@ -187,11 +263,41 @@ def benchmark_inference_print(
     data_loader,
     device,
     verbose=True,
+    *,
+    warmup=10,
+    repeats=5000,
+    input_batch=None,
 ):
-    """圧縮前後の平均推論時間を測定して返す。"""
-    baseline_time = benchmark_inference(baseline_model, data_loader, device)
-    compressed_time = benchmark_inference(compressed_model, data_loader, device)
+    """圧縮前後の平均推論時間を、同じ入力バッチで測定して返す。"""
+    if input_batch is None:
+        input_batch = take_inference_batch(data_loader)
+    baseline_details = benchmark_inference(
+        baseline_model,
+        device=device,
+        warmup=warmup,
+        repeats=repeats,
+        input_batch=input_batch,
+        return_details=True,
+    )
+    compressed_details = benchmark_inference(
+        compressed_model,
+        device=device,
+        warmup=warmup,
+        repeats=repeats,
+        input_batch=input_batch,
+        return_details=True,
+    )
     if verbose:
-        print(f"Baseline: {baseline_time * 1000:.3f} ms/batch")
-        print(f"TwolayerSVD: {compressed_time * 1000:.3f} ms/batch")
-    return baseline_time, compressed_time
+        print(
+            "batch_size:",
+            baseline_details["batch_size"],
+            "input_shape:",
+            baseline_details["input_shape"],
+            "warmup:",
+            warmup,
+            "repeats:",
+            repeats,
+        )
+        print(f"Baseline: {baseline_details['time_ms']:.3f} ms/batch")
+        print(f"Compressed: {compressed_details['time_ms']:.3f} ms/batch")
+    return baseline_details["time_s"], compressed_details["time_s"]

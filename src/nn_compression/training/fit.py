@@ -6,12 +6,38 @@
     notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning.ipynb
 """
 
+from __future__ import annotations
+
 import copy
 
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+
 from .loops import evaluate, train_one_epoch
+
+
+def non_shuffling_loader(loader: DataLoader) -> DataLoader:
+    """同じ Dataset を shuffle せず走査する DataLoader を返す。
+
+    学習用 ``shuffle=True`` loader の Generator を消費しない。
+    """
+    kwargs = {
+        "dataset": loader.dataset,
+        "batch_size": loader.batch_size,
+        "shuffle": False,
+        "num_workers": loader.num_workers,
+        "collate_fn": loader.collate_fn,
+        "pin_memory": loader.pin_memory,
+        "drop_last": False,
+        "timeout": loader.timeout,
+    }
+    if loader.num_workers > 0:
+        kwargs["worker_init_fn"] = loader.worker_init_fn
+        kwargs["multiprocessing_context"] = loader.multiprocessing_context
+        kwargs["prefetch_factor"] = loader.prefetch_factor
+        kwargs["persistent_workers"] = loader.persistent_workers
+    return DataLoader(**kwargs)
 
 
 def fit_with_early_stopping(
@@ -27,13 +53,19 @@ def fit_with_early_stopping(
     *,
     reevaluate_train: bool = True,
     log_every_epoch: bool = False,
+    train_eval_loader: DataLoader | None = None,
 ):
     """Early Stopping付きで学習し、最良validation loss時の重みへ戻す。
 
-    既定では各epochで「学習 → validation評価 → 学習データの再評価」を行う
-    （Fashion-MNIST と同じ）。``reevaluate_train=False`` なら train 全件の
-    再評価を省略し、履歴の train 指標は ``train_one_epoch`` の戻り値を使う。
-    ``log_every_epoch=True`` なら毎epoch進捗を出す。
+    各epochは「学習 → validation評価」のあと、必要なら train 指標を
+    別 loader で取り直す。
+
+    train 再評価に ``train_loader``（shuffle=True）を使わない。
+    ``train_eval_loader`` があればそれを使う（このときは
+    ``reevaluate_train=True`` が必要）。なければ
+    ``reevaluate_train=True`` のときだけ、同じ Dataset の
+    shuffle=False loader を内部で作る。どちらも無い /
+    ``reevaluate_train=False`` なら ``train_one_epoch`` の戻り値を履歴に使う。
 
     ``min_delta`` を超えて validation loss が改善した時だけ最良重みを更新し、
     連続 ``patience`` 回改善しなければ停止する。学習率・epoch数は引数。
@@ -43,6 +75,20 @@ def fit_with_early_stopping(
     best_model_state = None
     no_improvement_count = 0
     history = []
+
+    if train_eval_loader is not None and not reevaluate_train:
+        raise ValueError(
+            "train_eval_loader を渡すときは reevaluate_train=True にしてください。"
+            " train 再評価をしない場合は train_eval_loader を省略し、"
+            " reevaluate_train=False を指定してください。"
+        )
+
+    if train_eval_loader is not None:
+        train_metric_loader = train_eval_loader
+    elif reevaluate_train:
+        train_metric_loader = non_shuffling_loader(train_loader)
+    else:
+        train_metric_loader = None
 
     for epoch in range(max_epochs):
         train_loss, train_acc = train_one_epoch(
@@ -60,10 +106,10 @@ def fit_with_early_stopping(
             device,
         )
 
-        if reevaluate_train:
+        if train_metric_loader is not None:
             train_loss, train_acc = evaluate(
                 model,
-                train_loader,
+                train_metric_loader,
                 criterion,
                 device,
             )
@@ -100,7 +146,8 @@ def fit_with_early_stopping(
             print(f"Early stopping at epoch {epoch + 1}")
             break
 
-    model.load_state_dict(best_model_state)
+    if best_model_state is not None:
+        model.load_state_dict(best_model_state)
 
     return {
         "model": model,

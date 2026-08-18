@@ -99,6 +99,12 @@ def make_fashion_mnist_loaders(
             batch_size=test_batch_size,
             shuffle=False,
         ),
+        # 学習履歴用。shuffle Generator を消費しない
+        "train_eval_loader": DataLoader(
+            train_dataset,
+            batch_size=train_batch_size,
+            shuffle=False,
+        ),
     }
 
     if rank_validation_dataset is not None:

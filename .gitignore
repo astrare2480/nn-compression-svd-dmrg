@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Test / type / lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local scratch
+.tmp*
+*.tmp
+src.zip
+tests.zip
+*.zip
+
+# Re-downloadable datasets (keep local copies; do not delete)
+data/
+
+# Training checkpoints (keep local copies; do not delete)
+models/
+
+# Research records (CSV / figures) stay tracked. Do not ignore results/.
