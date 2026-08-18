@@ -1,0 +1,2 @@
+conv2_rank,fc1_rank,parameters,parameters_reduction,baseline_macs,compressed_macs,compute_reduction,validation_loss,validation_acc,accuracy_drop,baseline_time_ms,compressed_time_ms,agreement,logits_rmse,retained_energy_conv2,retained_energy_fc1,benchmark_batch_size,benchmark_input_shape,benchmark_warmup,benchmark_repeats
+28,24,89994,0.7865630084289515,4241152,2237184,0.4725055833886642,0.24192310311794282,0.9116,0.009800000000000031,0.37751645000025746,0.3992160000007061,0.9716,0.691808047975839,0.8664435744285583,0.8646880984306335,256,"(256, 1, 28, 28)",20,2000

@@ -1,0 +1,2 @@
+model,fc1_rank,fc2_rank,validation_acc,validation_loss,parameters,parameters_reduction
+Balanced after FT,32,16,0.8924,0.30795635957717893,57098,0.8934376971285026

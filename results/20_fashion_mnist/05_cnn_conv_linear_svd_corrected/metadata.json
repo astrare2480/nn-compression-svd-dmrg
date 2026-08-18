@@ -1,0 +1,17 @@
+{
+  "experiment": "05_cnn_conv_linear_svd_corrected",
+  "conv2_rank": 28,
+  "fc1_rank": 24,
+  "fine_tuning_learning_rate": 0.0003,
+  "fine_tuning_best_epoch": 1,
+  "parameters_baseline": 421642,
+  "parameters_final": 89994,
+  "parameters_reduction": 0.7865630084289515,
+  "macs_baseline": 4241152,
+  "macs_final": 2237184,
+  "macs_reduction": 0.4725055833886642,
+  "baseline_test_loss": 0.23826273543834686,
+  "baseline_test_acc": 0.9128,
+  "final_test_loss": 0.2412421983242035,
+  "final_test_acc": 0.9133
+}

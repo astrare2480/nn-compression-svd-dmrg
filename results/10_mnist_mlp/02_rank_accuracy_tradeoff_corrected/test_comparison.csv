@@ -1,0 +1,3 @@
+model,fc1_rank,fc2_rank,test_loss,test_acc
+baseline,-,-,0.06544245900586247,0.9817
+selected SVD,128,128,0.06575845070183277,0.9808
