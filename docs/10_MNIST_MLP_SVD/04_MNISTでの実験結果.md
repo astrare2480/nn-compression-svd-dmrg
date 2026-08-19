@@ -23,11 +23,6 @@ MNIST分類用MLPの `fc1` / `fc2` をSVDで低rank2層へ置換し、rankとacc
 
 ```text
 notebooks/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
-```
-
-と、対応する
-
-```text
 results/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/
 ```
 
@@ -59,6 +54,17 @@ Train
 ```
 
 へ分離した。
+
+さらに、
+
+- candidate比較のseed / DataLoader Generator条件を固定
+- train指標は `shuffle=False` の `train_eval_loader` で評価
+- baseline / compressedで同じ `input_batch` を使用
+- benchmarkを同じ `warmup=20`, `repeats=200` へ統一
+- baseline / compressedでParameterを共有しない
+- rank sweep結果へmodel本体を保持しない
+
+という実験契約も揃えた。
 
 詳細は [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]] を参照。
 
@@ -219,6 +225,18 @@ classification accuracy
 
 # 6. MACsとlatency
 
+corrected benchmarkの条件は、
+
+```text
+same input_batch
+batch size = 64
+input shape = (64, 1, 28, 28)
+warmup = 20
+repeats = 200
+```
+
+である。
+
 選択rankでは、理論MACsは約50%減った。
 
 ```text
@@ -272,7 +290,8 @@ corrected
 3. rankを下げるほど圧縮率は上がるが、task性能とのトレードオフがある。
 4. retained energyだけではtask accuracyを決められない。
 5. Testはrank選択に使わず、最終確認へ分離する必要がある。
-6. MACs削減は実測latency短縮を保証しない。
+6. benchmarkは同じ入力・warmup・repeatsで比較する必要がある。
+7. MACs削減は実測latency短縮を保証しない。
 
 MNISTでSVD圧縮と公平なrank評価の基本を確認し、次にFashion-MNISTでFine-tuning・CNN・Conv SVDへ拡張する。
 
@@ -281,4 +300,5 @@ MNISTでSVD圧縮と公平なrank評価の基本を確認し、次にFashion-MNI
 # 関連
 
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
+- [[00_基礎理論/11_理論計算量とベンチマーク]]
 - [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
