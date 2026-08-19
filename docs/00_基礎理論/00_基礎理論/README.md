@@ -1,7 +1,7 @@
 # 基礎理論・共通実装
 
 データセットに依存しないSVD、Linear / Conv2dの低ランク近似、評価設計、PyTorch実装、理論計算量、ベンチマークを置く。
-Fashion-MNIST実験で整理したPareto / knee、厳密なValidation分離、fine-tuning再現性、CNN / Conv-SVDに加え、CIFAR-10で整理したデータ前処理、DataLoader、乱数管理、GAPと複数Convのrank allocationへつながる知識も共通知識として反映する。
+Fashion-MNIST実験で整理したPareto / knee、厳密なValidation分離、Fine-tuningの再現性、CNN / Conv SVDに加え、CIFAR-10で整理したデータ前処理、DataLoader、乱数管理、GAPと複数Convのrank allocationへつながる知識も共通知識として反映する。
 
 ## ノート
 
@@ -46,7 +46,7 @@ Fashion-MNIST実験で整理したPareto / knee、厳密なValidation分離、fi
 09_Linear層の2層置換_実装
 ```
 
-## CNN / Conv-SVDの読み順
+## CNN / Conv SVDの読み順
 
 ```text
 15_CNNとConv2dの基礎
@@ -147,4 +147,4 @@ models/
 - [[20_FashionMNIST/11_CNNでの実験結果]]
 - [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
 
-formalな結果を参照するときは、historical original / using_srcではなくcorrected Notebook / corrected resultsを優先する。
+正式結果を参照するときは、historical original / using_srcではなくcorrected Notebook / corrected resultsを優先する。
