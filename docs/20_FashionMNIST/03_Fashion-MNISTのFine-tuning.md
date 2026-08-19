@@ -10,296 +10,272 @@ tags:
   - FineTuning
   - Pareto
   - NN圧縮
+  - Historical
 ---
 
 # Fashion-MNISTのFine-tuning
 
+> [!warning]
+> このノートは旧 `03_mlp_svd_finetuning` 系runで得たFine-tuning結果と、そこから学んだことを残すhistorical note。
+> 現在の正式結果は [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]] のcorrected版を参照する。
+
 ## サマリー
 
-最新 `03_mlp_svd_finetuning(3).ipynb` はBaseline学習からrank sweepまで独立に再実行し、03内で得たknee ±1をFine-tuningする。
+旧03ではBaseline学習からrank sweepまで独立に実行し、SVD直後のknee近傍をFine-tuningした。
 
-03内の候補：
+旧runの候補：
 
 ```text
 Aggressive   = 16 / 16
-Balanced     = 32 / 16  <- SVD直後のknee
+Balanced     = 32 / 16
 Conservative = 64 / 16
 ```
 
-Fine-tuning後、`parameters + validation_loss` で再度Pareto支配を判定した結果、**Aggressiveだけが残った**。
+Fine-tuningにより低rank化直後の性能を大きく回復できることを確認した一方、後のレビューで**candidate間の乱数条件を同一にして比較すべき**ことが分かった。
 
-最終モデル：
-
-```text
-Aggressive
-fc1_rank = 16
-fc2_rank = 16
-```
+そのため旧runの最終 `16/16` はcanonical resultではない。
 
 ---
 
-## 1. 03は独立run
+# 1. Fine-tuningは何をしているか
 
-Baseline Early Stopping：
+SVDで作った低rank modelは、元weightをFrobeniusノルムの意味でよく近似するよう初期化される。
 
-| 項目 | 値 |
-|---|---:|
-| Early stopping | epoch 16 |
-| Best epoch | 11 |
-| Best Early-Stopping Validation loss | 0.3010 |
+しかし、
 
-Best state復元後、Rank-Selection ValidationでBaselineを評価すると、
+```text
+weight approximation
+≠
+task loss optimum
+```
 
-| 指標 | 値 |
-|---|---:|
-| validation accuracy | 89.42% |
-| validation loss | 0.299003 |
-| parameters | 535,818 |
+である。
 
-となった。
+Fine-tuningでは、
 
-`02` と `03` のrank結果を混ぜず、03の最終モデルは03内のValidationだけで決める。
+```text
+学習済みweight
+↓ truncated SVD
+低rank因子を初期値にする
+↓ task lossで追加学習
+低rank構造を保ったまま分類性能へ再適応
+```
+
+を行う。
+
+この違いは、Tucker / TTへ進んだあとも重要になる。
 
 ---
 
-## 2. 03のSVD直後rank選択
+# 2. 旧runで見えた回復
 
-Pareto frontierは **9点**。
+旧03では、Fine-tuning前後で次のような変化があった。
 
-![[20_FashionMNIST/assets/finetuning_rank_selection_pareto.png]]
+| Candidate | rank | Val acc before | Val acc after | Val loss before | Val loss after |
+|---|---|---:|---:|---:|---:|
+| Aggressive | 16 / 16 | 0.7176 | 0.8832 | 0.858264 | 0.322567 |
+| Balanced | 32 / 16 | 0.8718 | 0.8858 | 0.364576 | 0.328358 |
+| Conservative | 64 / 16 | 0.8886 | 0.8862 | 0.311055 | 0.335646 |
 
-knee：
+特に `16/16` はSVD直後には大きく崩れたが、Fine-tuningで大幅に回復した。
 
-```text
-distance = 0.5862092326788827
-parameters_normalize      = 0.05222437137330754
-validation_loss_normalize = 0.11875058138389116
-```
+ここから、
 
-|   fc1_rank |   fc2_rank |   parameters |   parameters_reduction |   validation_loss |   validation_acc |   accuracy_drop |   compressed_macs |   compute_reduction |   baseline_time_ms |   compressed_time_ms |   agreement |   logits_rmse |   retained_energy_fc1 |   retained_energy_fc2 |   parameters_normalize |   validation_loss_normalize |
-|-----------:|-----------:|-------------:|-----------------------:|------------------:|-----------------:|----------------:|------------------:|--------------------:|-------------------:|---------------------:|------------:|--------------:|----------------------:|----------------------:|-----------------------:|----------------------------:|
-|  32.000000 |  16.000000 | 57098.000000 |               0.893438 |          0.364576 |         0.871800 |        0.022400 |      56320.000000 |            0.894737 |           0.136975 |             0.275393 |    0.930800 |      2.979520 |              0.709006 |              0.607805 |               0.052224 |                    0.118751 |
+> SVD直後の大きなaccuracy低下だけを見て「このrankでは表現能力が足りない」と即断しない
 
-knee ±1：
+ことを学んだ。
 
-|   fc1_rank |   fc2_rank |   parameters |   parameters_reduction |   validation_loss |   validation_acc |   accuracy_drop |   compressed_macs |   compute_reduction |   baseline_time_ms |   compressed_time_ms |   agreement |   logits_rmse |   retained_energy_fc1 |   retained_energy_fc2 |   parameters_normalize |   validation_loss_normalize |
-|-----------:|-----------:|-------------:|-----------------------:|------------------:|-----------------:|----------------:|------------------:|--------------------:|-------------------:|---------------------:|------------:|--------------:|----------------------:|----------------------:|-----------------------:|----------------------------:|
-|  16.000000 |  16.000000 | 36362.000000 |               0.932137 |          0.858264 |         0.717600 |        0.176600 |      35584.000000 |            0.933493 |           0.136975 |             0.179334 |    0.753400 |      6.248245 |              0.549914 |              0.607805 |               0.000000 |                    1.000000 |
-|  32.000000 |  16.000000 | 57098.000000 |               0.893438 |          0.364576 |         0.871800 |        0.022400 |      56320.000000 |            0.894737 |           0.136975 |             0.275393 |    0.930800 |      2.979520 |              0.709006 |              0.607805 |               0.052224 |                    0.118751 |
-|  64.000000 |  16.000000 | 98570.000000 |               0.816038 |          0.311055 |         0.888600 |        0.005600 |      97792.000000 |            0.817225 |           0.136975 |             0.188748 |    0.961600 |      1.592894 |              0.837559 |              0.607805 |               0.156673 |                    0.023214 |
-
-Fine-tuning対象を要約すると、
-
-| Candidate | fc1 | fc2 | Parameters | Val acc before FT | Val loss before FT |
-|---|---:|---:|---:|---:|---:|
-| Aggressive | 16 | 16 | 36,362 | 71.76% | 0.858264 |
-| Balanced | 32 | 16 | 57,098 | 87.18% | 0.364576 |
-| Conservative | 64 | 16 | 98,570 | 88.86% | 0.311055 |
-
-となる。
+一方でConservativeでは別Validation上の性能が悪化しており、**Fine-tuningは必ず改善するわけではない**ことも分かった。
 
 ---
 
-## 3. Fine-tuning条件と再現性
+# 3. 旧runの問題 — candidateごとに別seedを使っていた
 
-```text
-optimizer     = Adam
-learning rate = 0.001
-MAX_EPOCHS    = 50
-PATIENCE      = 5
-MIN_DELTA     = 1e-4
-```
-
-候補モデルは必ず、
-
-```python
-pareto_model = copy.deepcopy(
-    pareto_row["model"]
-).to(device)
-```
-
-として元のSVD候補を壊さない。
-
-さらに最新03では候補ごとに、
+旧03では、Fine-tuning candidateごとにrankからseedを作る実装を使っていた。
 
 ```python
 set_seed(SEED + 1000 * fc1_rank + fc2_rank)
 ```
 
-を設定し、各候補のFine-tuningを再現可能な別seedで実行する。
+これは各candidateを再実行可能にはするが、**candidate間の比較条件は同じではない**。
 
----
+```text
+Candidate A
+→ rank A + 乱数条件 A
 
-## 4. `eval()` / `no_grad()` の確認
+Candidate B
+→ rank B + 乱数条件 B
+```
 
-評価用 `evaluate()` の内部で、
+となるため、Validation差にrank以外の学習乱数差が混ざる。
+
+rank差を比較したいなら、Fine-tuning直前に、
 
 ```python
-model.eval()
-with torch.no_grad():
-    ...
+set_seed(SEED)
+loader_generator.manual_seed(SEED)
 ```
 
-を使っている。
+として候補間の乱数条件を揃える方がよい。
 
-Fine-tuning中のEarly-Stopping Validation、Train再評価、Fine-tuning前後比較、最終Testはいずれもこの `evaluate()` を通るので、セルごとに `model.eval()` / `torch.no_grad()` が見えなくても評価自体は正しい。
-
-Agreement / logits RMSEは `torch.inference_mode()`、推論時間計測も `eval()` + `no_grad()`。
+corrected版ではこの方針へ変更した。
 
 ---
 
-## 5. Fine-tuning中のBest epoch
+# 4. DataLoader Generatorも比較条件に含める
 
-NotebookのhistoryからBest epoch時点のaccuracyを取り直すと、
+seedを同じ整数にするだけでは十分ではない。
 
-|   fc1_rank |   fc2_rank |   best_epoch |   best_validation_loss |   validation_acc_at_best_epoch |   notebook_best_validation_acc_column |
-|-----------:|-----------:|-------------:|-----------------------:|-------------------------------:|--------------------------------------:|
-|  16.000000 |  16.000000 |     4.000000 |               0.332432 |                       0.878400 |                              0.878800 |
-|  32.000000 |  16.000000 |     6.000000 |               0.316080 |                       0.884600 |                              0.888600 |
-|  64.000000 |  16.000000 |     2.000000 |               0.329689 |                       0.882600 |                              0.881400 |
+`shuffle=True` のDataLoaderは内部のGenerator状態に依存するため、先に何回iteratorを作ったか、評価で同じloaderを再走査したかでも次のmini-batch順が変わり得る。
 
-> [!warning]
-> Notebook内の `best_validation_acc` 列は現在も `re_validation_acc` の最終値を入れているため、列名どおりの「Best epoch accuracy」ではない。最終モデル選択にはこの列を使っていないため、最終結果への影響はない。
-
----
-
-## 6. Fine-tuning前後の正式比較
-
-同じRank-Selection ValidationでBefore / Afterを比較する。
-
-| candidate    |   fc1_rank |   fc2_rank |   acc_before |   acc_after |   delta_acc |   loss_before |   loss_after |   delta_loss |
-|:-------------|-----------:|-----------:|-------------:|------------:|------------:|--------------:|-------------:|-------------:|
-| Aggressive   |         16 |         16 |     0.717600 |    0.883200 |    0.165600 |      0.858264 |     0.322567 |    -0.535697 |
-| Balanced     |         32 |         16 |     0.871800 |    0.885800 |    0.014000 |      0.364576 |     0.328358 |    -0.036218 |
-| Conservative |         64 |         16 |     0.888600 |    0.886200 |   -0.002400 |      0.311055 |     0.335646 |     0.024591 |
-
-![[20_FashionMNIST/assets/finetuning_delta.png]]
-
-![[20_FashionMNIST/assets/finetuning_after.png]]
-
-解釈：
-
-- **Aggressive**: accuracy +16.56pt、loss -0.535697。SVD直後の大幅劣化を大きく回復。
-- **Balanced**: accuracy +1.40pt、loss -0.036218。小幅だが両指標改善。
-- **Conservative**: accuracy -0.24pt、loss +0.024591。今回のrunではFine-tuning後にRank-Selection Validationが悪化。
-
-Fine-tuningは必ず性能を改善するわけではない。
-Early-Stopping Validationを使ってbest stateを選んでも、別のRank-Selection Validationでの性能が必ず改善するとは限らないことが実測で確認できた。
-
----
-
-## 7. Fine-tuning後のモデル比較
-
-| model                 | fc1_rank   | fc2_rank   |   validation_acc |   validation_loss |   parameters |   parameters_reduction |
-|:----------------------|:-----------|:-----------|-----------------:|------------------:|-------------:|-----------------------:|
-| Baseline              | -          | -          |         0.894200 |          0.299003 |       535818 |               0.000000 |
-| Aggressive after FT   | 16         | 16         |         0.883200 |          0.322567 |        36362 |               0.932137 |
-| Balanced after FT     | 32         | 16         |         0.885800 |          0.328358 |        57098 |               0.893438 |
-| Conservative after FT | 64         | 16         |         0.886200 |          0.335646 |        98570 |               0.816038 |
-
-Accuracyだけを見るとConservativeが3候補中わずかに高いが、事前に定めた主目的は、
+そのためcorrected実装では、
 
 ```text
-parameters ↓
-validation loss ↓
+candidate開始前
+→ global seedを戻す
+→ DataLoader Generatorも戻す
+
+train metrics
+→ shuffle=Falseのtrain_eval_loaderで計測
 ```
 
-である。
+とした。
 
-Aggressiveは、
+評価処理そのものが後続学習のshuffle順を変えないようにする。
 
-```text
-parameters      36,362  < 57,098 < 98,570
-validation loss 0.322567 < 0.328358 < 0.335646
-```
+詳細：
 
-なのでBalanced / Conservativeを両方支配する。
+- [[00_基礎理論/19_再現性と乱数管理]]
+- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 
 ---
 
-## 8. 最終モデル選択
+# 5. baseline / compressed modelを共有しない
 
-Fine-tuning後Pareto：
+Fine-tuning candidateはbaselineから独立したmodelでなければならない。
 
-| model               |   fc1_rank |   fc2_rank |   validation_acc |   validation_loss |   parameters |   parameters_reduction |
-|:--------------------|-----------:|-----------:|-----------------:|------------------:|-------------:|-----------------------:|
-| Aggressive after FT |         16 |         16 |         0.883200 |          0.322567 |        36362 |               0.932137 |
+もし未圧縮層をbaselineとcompressedで同じModule / Parameterとして共有すると、compressed modelをFine-tuningしただけでbaselineも変化する。
+
+corrected実装では `deepcopy` と新規factor layer生成により、
+
+```text
+baseline parameters
+≠
+compressed parameters
+```
+
+を保証する。
+
+この契約は `src/nn_compression` 側にもコメントとして残している。
+
+---
+
+# 6. sweepでは全modelを保持しない
+
+旧実験ではrank sweepのrecordへcandidate model本体を保持する構成があった。
+
+学習目的では分かりやすいが、候補数が増えると、
+
+- メモリを余計に使う
+- DataFrameへPyTorch objectが混ざる
+- CSVへ保存しにくい
+
+という問題がある。
+
+現在は、
+
+```text
+sweep
+→ rankとmetricsを保存
+
+Fine-tuning対象
+→ 必要なrankだけmodelを再構築
+```
+
+を基本とする。
+
+`include_model=False` はこのための契約。
+
+---
+
+# 7. corrected版の結果
+
+公平性を修正したcanonical Notebook：
+
+```text
+notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
+```
+
+Fine-tuning候補：
+
+| Candidate | fc1 | fc2 | Val acc before | Val acc after | Val loss after | Parameters |
+|---|---:|---:|---:|---:|---:|---:|
+| Aggressive | 16 | 16 | 0.7822 | 0.8850 | 0.318649 | 36,362 |
+| Balanced | **32** | **16** | 0.8694 | **0.8924** | **0.307956** | **57,098** |
+| Conservative | 32 | 32 | 0.8694 | 0.8856 | 0.318636 | 69,386 |
 
 最終選択：
 
-| model               |   fc1_rank |   fc2_rank |   validation_acc |   validation_loss |   parameters |   parameters_reduction |
-|:--------------------|-----------:|-----------:|-----------------:|------------------:|-------------:|-----------------------:|
-| Aggressive after FT |         16 |         16 |         0.883200 |          0.322567 |        36362 |               0.932137 |
-
-今回はPareto候補が1つだけなので、第2基準のvalidation loss優先まで使う必要なく、**Aggressiveが一意に選ばれた**。
-
----
-
-## 9. 最終Test
-
-| model                   | fc1_rank   | fc2_rank   |   parameters |   test_loss |   test_acc |   delta_test_acc |   delta_test_loss |
-|:------------------------|:-----------|:-----------|-------------:|------------:|-----------:|-----------------:|------------------:|
-| Baseline                | -          | -          |       535818 |    0.333783 |   0.887100 |         0.000000 |          0.000000 |
-| Final (compressed + FT) | 16         | 16         |        36362 |    0.366167 |   0.871400 |        -0.015700 |          0.032384 |
-
 ```text
-Baseline:
-  loss = 0.333783
-  acc  = 0.8871
-
-Final Aggressive (16/16):
-  loss = 0.366167
-  acc  = 0.8714
-
-accuracy delta = -0.0157 = -1.57 percentage point
-loss delta     = +0.032384
+fc1 = 32
+fc2 = 16
 ```
 
-サイズ：
+最終Test：
 
 ```text
-Parameters: 535,818 -> 36,362
-reduction = 93.2137%
-compression factor = 14.74x
+Baseline
+loss = 0.329024
+acc  = 0.8819
 
-MACs: 535,040 -> 35,584
-reduction = 93.3493%
+Compressed + FT
+loss = 0.333776
+acc  = 0.8853
 ```
 
-Testを見てから別rankへ変更しない。
+Parameter reduction：
+
+```text
+535,818 → 57,098
+-89.34%
+```
+
+`+0.34pt` はsingle seedの小差なので、accuracy改善ではなく**大幅圧縮後も精度をほぼ維持した**と表現する。
 
 ---
 
-## 10. 考察
+# 8. 旧runとcorrectedをどう読むか
 
-### Aggressiveが大きく回復した
+旧03から得られた学びそのものは残る。
 
-`16/16` はSVD直後にはaccuracy 71.76%、loss 0.858264と大きく崩れたが、Fine-tuning後は88.32% / 0.322567まで回復した。
+- SVD直後の性能低下はFine-tuningで大きく回復し得る
+- 低rank因子はランダム初期化ではなく、学習済みweight由来の初期値
+- Fine-tuningが常にValidation性能を改善するわけではない
 
-したがって、SVD直後の悪化すべてを「rank不足」と解釈するのは不適切。
-低rank構造自体には分類性能を取り戻す余地があり、SVDで得た初期配置がtask lossに最適ではなかった影響が大きい可能性がある。
+ただし最終rank・accuracyを引用するときは、
 
-### ただし元モデルには届いていない
+```text
+旧 16/16
+ではなく
+corrected 32/16
+```
 
-最終Test accuracyはBaselineより1.57pt低く、lossも0.032384悪化した。
-93%以上のparameter削減とのトレードオフとして評価する必要がある。
+を使う。
 
-### AccuracyとLossで順位が異なる
+旧runの詳細なepoch / rank表は、
 
-Fine-tuning後、validation accuracyはConservativeの方が高いが、validation lossはAggressiveの方が小さい。
-今回の機械選択は `parameters + validation_loss` を主目的に固定しているためAggressiveとなった。
-選択目的をaccuracy中心に変えれば結果は変わり得るが、Testを見た後に目的関数を変更しない。
-
-### 02と03でkneeが異なる
-
-最新02は `64/16`、最新03は `32/16` がSVD直後knee。
-独立runでPareto / kneeが動くこと自体が、単一seed・単一runのkneeを絶対視できないことを示す。
-より強い結論には複数seedで平均・分散を確認する必要がある。
-
----
-
-## 関連
-
-- [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
+- [[20_FashionMNIST/05_全RankSweep結果]]
 - [[20_FashionMNIST/06_学習履歴とFine-tuning履歴]]
-- [[00_基礎理論/10_SVD圧縮モデルの評価設計]]
+
+にhistorical raw dataとして残す。
+
+---
+
+# 関連
+
+- [[20_FashionMNIST/README]]
+- [[20_FashionMNIST/02_Fashion-MNISTのRank選択]]
+- [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
+- [[20_FashionMNIST/05_全RankSweep結果]]
+- [[20_FashionMNIST/06_学習履歴とFine-tuning履歴]]
+- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
