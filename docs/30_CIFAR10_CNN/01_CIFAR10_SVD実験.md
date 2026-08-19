@@ -95,7 +95,7 @@ CIFAR-10
 
 という順序にした。
 
-データセット・前処理の詳細は [[00_基礎理論/18_CIFAR10の前処理とDataLoader]] を参照。
+データセット・前処理・データ取得時のメモは [[00_基礎理論/18_CIFAR10の前処理とDataLoader]] を参照。
 
 ---
 
@@ -110,7 +110,7 @@ ToTensor()
 Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 ```
 
-validation / test：
+Early-Stopping Validation / Rank-Selection Validation / test：
 
 ```text
 ToTensor()
@@ -135,24 +135,78 @@ Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 
 # 3. train / validation / testと乱数管理
 
-CIFAR-10公式trainを、train用transformとevaluation用transformで2通り読み、同じindex体系からtrain / validationを作る。
+canonical corrected Notebookでは、公式train 50,000枚を次の3つへ分ける。
+
+```text
+Train                       40,000
+Early-Stopping Validation    5,000
+Rank-Selection Validation    5,000
+Test（公式test）            10,000
+```
+
+Notebook上の実験条件は、
+
+```python
+TRAIN_SIZE = 40_000
+VALIDATION_SIZE = 5_000
+```
+
+で、
+
+```python
+train_indices, validation_indices_early_stop, validation_indices_rank = (
+    shuffled_index_splits(
+        len(full_train_augmented),
+        (TRAIN_SIZE, VALIDATION_SIZE, VALIDATION_SIZE),
+        seed=SEED,
+    )
+)
+```
+
+として分割する。
+
+役割は明確に分ける。
+
+```text
+Train
+→ weight更新
+
+Early-Stopping Validation
+→ epoch停止 / best state決定
+
+Rank-Selection Validation
+→ 単層rank sweep
+→ Pareto / knee
+→ model-wide candidate比較
+→ Fine-tuning後の最終候補選択
+
+Test
+→ 最終model決定後の最終確認だけ
+```
+
+CIFAR-10公式trainは、train用transformとevaluation用transformで2通り読む。
 
 ```text
 full_train_augmented
 → train_indices
-→ train
+→ Train
 
 full_train_evaluation
-→ validation_indices
-→ validation
+→ validation_indices_early_stop
+→ Early-Stopping Validation
+
+full_train_evaluation
+→ validation_indices_rank
+→ Rank-Selection Validation
 ```
+
+したがって、**どの画像を使うかはindices、どう前処理するかは参照元Datasetのtransform**で決まる。
 
 データ分割には専用Generatorを使い、weight初期化・Dropout・DataLoader shuffleなどの乱数利用から分離する。
 
 rank候補のFine-tuningでもseed条件とDataLoader Generator条件を揃える。
 
 また、train accuracyを再評価するときに `shuffle=True` の学習用loaderを再走査しない。
-
 評価処理によってGeneratorを進めると、その後のmini-batch順が変わり、候補比較の公平性を壊すためである。
 
 詳細は [[00_基礎理論/19_再現性と乱数管理]] を参照。
@@ -299,7 +353,7 @@ Conv2d(r → C_out, 1×1, bias=元bias)
 
 # 7. 単一層rank sweep
 
-最初に、`conv1` / `conv2` / `conv3` を1層ずつ圧縮し、Validation性能を評価した。
+最初に、`conv1` / `conv2` / `conv3` を1層ずつ圧縮し、Rank-Selection Validation上の性能を評価した。
 
 目的は、全組合せをいきなり総当たりすることではなく、各層の圧縮感度を調べること。
 
@@ -326,11 +380,11 @@ retained energyが高い
 classification accuracyが必ず高い
 ```
 
-なので、重み近似指標とtask性能を分けて見る。
+ので、重み近似指標とtask性能を分けて見る。
 
 ---
 
-# 8. Knee近傍だけをmodel-wide探索
+# 8. knee近傍だけをmodel-wide探索
 
 各層の単独sweepから得たknee周辺rankを使って、3層の組合せを評価した。
 
@@ -360,15 +414,15 @@ knee近傍だけ残す
 
 Fine-tuning候補として、代表的な3構成を比較した。
 
-| Candidate | conv1 | conv2 | conv3 | Val acc after FT | Val loss after FT | Parameters |
-|---|---:|---:|---:|---:|---:|---:|
-| Aggressive | 6 | 32 | 32 | 0.7336 | 0.780163 | 69,964 |
-| Balanced | 9 | 32 | 32 | 0.7360 | 0.771491 | 70,141 |
-| Conservative | **9** | **32** | **48** | **0.7444** | **0.746920** | **81,405** |
+| Candidate | conv1 | conv2 | conv3 | Val acc before FT | Val acc after FT | Val loss after FT | Parameters |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Aggressive | 6 | 32 | 32 | 0.3994 | 0.7336 | 0.780163 | 69,964 |
+| Balanced | 9 | 32 | 32 | 0.4354 | 0.7360 | 0.771491 | 70,141 |
+| Conservative | **9** | **32** | **48** | **0.4792** | **0.7444** | **0.746920** | **81,405** |
 
 最終選択は `9 / 32 / 48`。
 
-この構成はFine-tuning前には、
+ConservativeはFine-tuning前には、
 
 ```text
 Val acc  = 0.4792
@@ -584,6 +638,7 @@ historical Notebookは、実験の発展や修正前の問題を学ぶために�
 # 16. 結論
 
 - CIFAR-10のRGB自然画像へ実験を拡張した。
+- canonicalでは `40,000 / 5,000 / 5,000` に分け、Early Stoppingとrank選択のValidationを分離した。
 - 学習用augmentationと固定evaluation transformを分離した。
 - GAPを使い巨大classifierを避け、Conv圧縮を主題にした。
 - 3つのConv層を対象にmodel-wide rank allocationを行った。
