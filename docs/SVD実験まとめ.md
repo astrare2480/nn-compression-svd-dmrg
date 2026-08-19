@@ -151,9 +151,9 @@ Latency: 約0.531 → 0.537 ms/batch
 
 # 3. 一番重要な結論
 
-SVD編全体で一貫して確認できたのは、
+SVD編全体で確認できた中心的な傾向は、
 
-> **適切なrank選択とFine-tuningを行えば、parameter数や理論MACsを大きく減らしながらtask accuracyをほぼ維持できる場合がある**
+> **適切にrankを選び、必要に応じてFine-tuningを行うことで、parameter数や理論MACsを大きく減らしながらtask accuracyをほぼ維持できる場合がある**
 
 ということ。
 
