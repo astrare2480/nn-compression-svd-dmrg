@@ -29,7 +29,7 @@ mini-batch: (N, 3, 32, 32)
 
 SVD圧縮実験では、モデルだけでなく**入力側の条件を固定すること**が重要になる。
 
-今回のCIFAR-10実験では、
+今回のcanonical CIFAR-10実験では、
 
 ```text
 train
@@ -38,14 +38,14 @@ train
   ToTensor()
   Normalize((0.5,)*3, (0.5,)*3)
 
-validation / test
+Early-Stopping Validation / Rank-Selection Validation / test
   ToTensor()
   Normalize((0.5,)*3, (0.5,)*3)
 ```
 
 とした。
 
-学習時だけランダムaugmentationを入れ、validation / testでは評価入力を固定する。
+学習時だけランダムaugmentationを入れ、評価側では入力条件を固定する。
 
 ---
 
@@ -89,7 +89,7 @@ CIFAR-10
 32×32 / RGB / 背景や姿勢の変化が大きい
 ```
 
-このため、Fashion-MNISTでSVD圧縮の基本パイプラインを確認したあと、CIFAR-10でより厳しい条件へ進む流れにした。
+このため、Fashion-MNISTでSVD圧縮の基本パイプラインを確認したあと、CIFAR-10でより難しい入力と複数Conv層のrank allocationへ進んだ。
 
 ---
 
@@ -129,10 +129,10 @@ PyTorchの `nn.Conv2d` は通常、batchを含めて、
 (N, C, H, W)
 ```
 
-を受け取るので、このCHW化はCNN入力の基本である。
+を受け取る。
 
 > [!note]
-> `ToTensor()` と `Normalize()` は別の処理。`ToTensor()` はTensor化・軸順変更・典型的uint8画像の0–1化を行い、平均0付近へ寄せる処理は `Normalize()` が担当する。
+> `ToTensor()` と `Normalize()` は別の処理。`ToTensor()` はTensor化・軸順変更・典型的uint8画像の0–1化を行い、中心化・スケーリングは `Normalize()` が担当する。
 
 ---
 
@@ -162,17 +162,16 @@ $$
 重要なのは、学習時と評価時で同じNormalizeを使うこと。
 
 ```text
-train時     [-1, 1] 相当
-validation  [-1, 1] 相当
-test        [-1, 1] 相当
+train
+Early-Stopping Validation
+Rank-Selection Validation
+test
 ```
 
-と揃える。
-
-学習時だけNormalizeして評価時に外すと、モデルが学習した入力分布と評価入力の分布が変わってしまう。
+で入力スケールを揃える。
 
 > [!important]
-> 正規化条件は「モデル単体」ではなく、**モデルと学習時の前処理の組**として扱う。事前学習済みモデルを使う場合も、提供元が想定する前処理へ合わせる必要がある。
+> 前処理条件はモデルと切り離して考えない。学習時と評価時でNormalizeが変わると、モデル差ではなく入力分布差が評価へ混ざる。
 
 ---
 
@@ -196,14 +195,7 @@ train_transform = transforms.Compose([
 
 ## `RandomCrop(32, padding=4)`
 
-32×32画像の上下左右に4 pixelずつpaddingするため、一時的には、
-
-```text
-32 + 4 + 4 = 40
-```
-
-で、40×40相当になる。
-
+32×32画像の上下左右に4 pixelずつpaddingすると、一時的に40×40相当になる。
 そこからランダムに32×32を切り出す。
 
 ```text
@@ -214,19 +206,21 @@ train_transform = transforms.Compose([
 32×32
 ```
 
-物体の位置が少しずれても同じクラスとして認識できるようにする。
+物体位置の小さなずれに対する頑健性を学習させる。
 
 ## `RandomHorizontalFlip()`
 
 デフォルトでは確率0.5で左右反転する。
 
-CIFAR-10の車・動物・船などでは、左右を反転しても通常クラスは変わらないため、クラスを保った見え方の変化として使える。
+CIFAR-10の車・動物・船などでは、左右反転しても通常クラスは変わらないため、ラベルを保った見え方の変化として利用できる。
+
+Fashion-MNISTでもaugmentationは可能だが、今回のCIFAR-10では背景・姿勢・位置の変化が大きいため、RandomCrop + HorizontalFlipの意味がより分かりやすい。
 
 ---
 
-# 5. augmentationで「画像枚数」は増えるか
+# 5. augmentationで画像枚数は増えるか
 
-登録されているDatasetの枚数は増えない。
+登録されているDatasetの件数は増えない。
 
 ```text
 len(train_dataset)
@@ -234,7 +228,7 @@ len(train_dataset)
 
 は元のtrain subsetの件数のまま。
 
-一方、サンプルを取り出すたびにランダム変換が実行されるため、同じ元画像でもエポックごとに異なるTensorになり得る。
+一方、サンプルを取り出すたびにランダム変換が実行されるため、同じ元画像でもepochごとに異なるTensorになり得る。
 
 ```text
 元画像 x
@@ -243,29 +237,27 @@ len(train_dataset)
   └─ epoch 3: 上寄りcrop + flipなし
 ```
 
-したがって、これは**on-the-fly / online augmentation**として、実質的な入力バリエーションを増やす処理と考える。
+つまり、
 
 ```text
 元画像ファイル数は増えない
 Dataset長も増えない
-しかし学習中に見るTensorの見え方は増える
+学習中に見る入力バリエーションは増える
 ```
+
+というon-the-fly / online augmentationである。
 
 ---
 
 # 6. `shuffle` とaugmentationは別物
-
-混同しやすいので分ける。
 
 ```text
 shuffle=True
 → 画像を取り出す順番を変える
 
 RandomCrop / HorizontalFlip
-→ 取り出した画像の内容を変える
+→ 取り出した画像の見え方を変える
 ```
-
-DataLoaderがindexを選び、Datasetの `__getitem__()` がそのindexの画像を取り出すときにtransformが適用される。
 
 概念的には、
 
@@ -283,11 +275,13 @@ CNN
 
 となる。
 
+DataLoaderが「どのindexをいつ読むか」を決め、Dataset側のtransformが「その画像をどう変換するか」を決める。
+
 ---
 
 # 7. validation / testへランダムaugmentationを入れない理由
 
-評価時には、
+評価時は、
 
 ```python
 evaluation_transform = transforms.Compose([
@@ -299,17 +293,17 @@ evaluation_transform = transforms.Compose([
 ])
 ```
 
-を使用する。
+を使う。
 
 `RandomCrop` や `RandomHorizontalFlip` を入れないのは、同じ評価画像が実行ごとに変化することを避けるため。
 
-SVD圧縮前後を比較する際、評価入力まで変わってしまうと、
+SVD圧縮前後を比較する際、評価入力までランダムに変わると、
 
 ```text
 accuracy差
 =
 モデル差？
-入力のランダム差？
+入力差？
 ```
 
 を切り分けにくい。
@@ -329,49 +323,49 @@ DataLoaderのshuffle=False
 
 # 8. 同じ公式trainを2つのDatasetオブジェクトとして読む理由
 
-今回のように、同じ公式train 50,000枚からtrainとvalidationを作りたい場合、
+同じ公式train 50,000枚を、transformだけ変えて2つのDatasetオブジェクトとして読む。
 
 ```python
 full_train_augmented = datasets.CIFAR10(
-    ...,
+    root=data_dir,
     train=True,
     transform=train_transform,
+    download=...,
 )
 
 full_train_evaluation = datasets.CIFAR10(
-    ...,
+    root=data_dir,
     train=True,
     transform=evaluation_transform,
+    download=...,
 )
 ```
 
-と、**元画像は同じだがtransformだけ違うDatasetオブジェクト**を2つ作る。
-
-そのうえで同じindex体系を使い、
+元画像は同じでも、
 
 ```text
 train_indices
-→ full_train_augmentedを参照
+→ full_train_augmented
+→ augmentationあり
 
-validation_indices
-→ full_train_evaluationを参照
+validation indices
+→ full_train_evaluation
+→ augmentationなし
 ```
 
-とする。
+とできる。
 
-こうすると、
+この設計により、
 
-- trainはaugmentationあり
-- validationはaugmentationなし
-- 元画像集合の重複はindex分割で防ぐ
+- trainだけaugmentationあり
+- validationは固定transform
+- 元画像集合の重複はindex分割で防止
 
 を同時に満たせる。
 
 ---
 
 # 9. `Subset` の意味
-
-例えば、
 
 ```python
 train_dataset = Subset(
@@ -380,62 +374,110 @@ train_dataset = Subset(
 )
 ```
 
-は、元Datasetをコピーして新しい画像を作る処理ではない。
+は、新しい画像をコピーして作る処理ではない。
 
 ```text
 train_dataset[0]
 ↓
-train_indices[0] を見る
+train_indices[0]
 ↓
 full_train_augmented[そのindex]
 ```
 
-という**参照するindexを制限したviewに近い役割**を持つ。
+のように、参照可能なindexを制限する。
 
-したがって、「どの画像を使うか」と「どのtransformを使うか」は別々に決まる。
+したがって、
 
 ```text
-どの画像？
-→ train_indices / validation_indices
+どの画像を使うか
+→ indices / Subset
 
-どう前処理？
-→ full_train_augmented / full_train_evaluation の transform
+どう前処理するか
+→ 親Datasetのtransform
 ```
+
+は別々の責務である。
 
 ---
 
-# 10. train / validation分割
+# 10. split用Generatorと`randperm`
 
-専用Generatorを使ってindex順列を作る。
+データ分割は専用Generatorで固定する。
 
 ```python
 split_generator = torch.Generator().manual_seed(SEED)
-
 indices = torch.randperm(
     len(full_train_augmented),
     generator=split_generator,
 ).tolist()
 ```
 
-例えば45,000 / 5,000へ分けるなら、
+`torch.randperm()` は `0 ... n-1` を重複なしで並べ替える。
+同じ順列を区間で切れば、split間で同じindexを重複させずに分けられる。
+
+## 単純な45,000 / 5,000例
+
+Perplexityで前処理を学んだ段階では、公式trainを、
+
+```text
+45,000 train
+5,000 validation
+```
+
+へ分ける単純な例を使った。
 
 ```python
 train_indices = indices[:45_000]
 validation_indices = indices[45_000:50_000]
 ```
 
-となる。
+これはDataset / Subset / Generatorの仕組みを理解するための例として有効。
 
-`torch.randperm()` は0〜n-1を重複なしで並べ替えるので、同じ順列を前後に分割すれば、train / validationの重複を避けられる。
+## canonical CIFAR-10実験は40,000 / 5,000 / 5,000
 
-専用の `split_generator` を使うのは、データ分割の乱数を、
+ただし、最終的なcorrected Notebookではモデル選択をより厳密に分離している。
 
-- weight初期化
-- Dropout
-- DataLoader shuffle
-- augmentation
+```text
+公式train 50,000
+├─ Train                       40,000
+├─ Early-Stopping Validation    5,000
+└─ Rank-Selection Validation    5,000
 
-など別の乱数利用から切り離すためでもある。
+公式test                         10,000
+```
+
+canonical Notebookでは、
+
+```python
+TRAIN_SIZE = 40_000
+VALIDATION_SIZE = 5_000
+
+train_indices, validation_indices_early_stop, validation_indices_rank = (
+    shuffled_index_splits(
+        len(full_train_augmented),
+        (TRAIN_SIZE, VALIDATION_SIZE, VALIDATION_SIZE),
+        seed=SEED,
+    )
+)
+```
+
+という役割分離を使う。
+
+```text
+Train
+→ weight更新
+
+Early-Stopping Validation
+→ best epoch / best state
+
+Rank-Selection Validation
+→ rank sweep / Pareto / knee / candidate選択
+
+Test
+→ 最終モデル確定後だけ
+```
+
+したがって、**45k/5kは基礎説明用の例、40k/5k/5kが今回のcanonical実験条件**である。
 
 ---
 
@@ -467,8 +509,6 @@ test_loader = DataLoader(
 
 ## `num_workers`
 
-DataLoaderがデータ取得を並列化するworker数。
-
 ```text
 num_workers=0
 → main processで読み込む
@@ -483,11 +523,41 @@ Windows / Jupyterではmulti-process DataLoaderの扱いが環境依存になり
 
 GPUへTensorを転送する際の効率改善に使える設定。
 
-ただし、SVD実験ではDataLoader高速化そのものとモデル推論latencyを混同しない。
+ただし、DataLoader高速化とモデルforward latencyは別物なので、benchmarkでは何を計測対象に含めるかを明示する。
 
 ---
 
-# 12. SVD圧縮実験で固定するもの
+# 12. 学習用DataLoader Generator
+
+`shuffle=True` の順序を再現可能にするには、DataLoader専用Generatorを使える。
+
+```python
+loader_generator = torch.Generator().manual_seed(SEED)
+
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=BATCH_SIZE,
+    shuffle=True,
+    generator=loader_generator,
+)
+```
+
+candidate間でFine-tuning条件を揃える場合は、候補開始前に、
+
+```python
+set_seed(SEED)
+loader_generator.manual_seed(SEED)
+```
+
+の両方を戻す。
+
+また、train accuracyを測るために学習用 `shuffle=True` loaderを追加走査するとGenerator状態が進むため、評価には `shuffle=False` の `train_eval_loader` を使う。
+
+詳細は [[00_基礎理論/19_再現性と乱数管理]] を参照。
+
+---
+
+# 13. SVD圧縮実験で固定するもの
 
 圧縮前後の比較では、少なくとも、
 
@@ -495,54 +565,123 @@ GPUへTensorを転送する際の効率改善に使える設定。
 train / validation / testの分割
 validation / testのevaluation_transform
 Normalize
-評価batch
+評価input_batch
 model.eval()
 inference_mode / no_grad
+benchmark warmup / repeats
 ```
 
 を揃える。
 
-さらにrank選択ではtestを使わない。
+rank選択にtestを使わない。
 
 ```text
-train
-→ 重みを学習
+Train
+→ 学習
 
-validation
-→ rank / candidate / fine-tuning条件を選択
+Validation
+→ rank / candidate / Fine-tuning条件を選択
 
-test
-→ 最終選択後に1回確認
+Test
+→ 最終選択後にだけ評価
 ```
 
-この分離は、[[00_基礎理論/10_SVD圧縮モデルの評価設計]] と [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]] へつながる。
+この分離は [[00_基礎理論/10_SVD圧縮モデルの評価設計]] と [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]] へつながる。
 
 ---
 
-# 13. Fashion-MNISTとの違い
+# 14. CIFAR-10のデータ取得で詰まったとき
 
-Fashion-MNISTでもaugmentationは使えるが、今回の学習ではCIFAR-10ほど強く必要としなかった。
+Perplexityで実際に確認したデータ取得時の要点も、再現用メモとして残す。
 
-CIFAR-10は、
+## 一度取得できたら`download=False`
 
-- RGB
-- 背景の変化
-- 物体位置の変化
-- 左右方向の変化
+CIFAR-10が `data_dir` に正しく展開済みなら、以後は、
 
-が大きいため、RandomCrop + HorizontalFlipを使う意味が分かりやすい。
+```python
+full_train_augmented = datasets.CIFAR10(
+    root=data_dir,
+    train=True,
+    download=False,
+    transform=train_transform,
+)
 
-SVD圧縮の観点では、
+full_train_evaluation = datasets.CIFAR10(
+    root=data_dir,
+    train=True,
+    download=False,
+    transform=evaluation_transform,
+)
+
+test_dataset = datasets.CIFAR10(
+    root=data_dir,
+    train=False,
+    download=False,
+    transform=evaluation_transform,
+)
+```
+
+としてよい。
+
+まだデータが存在しない状態で `download=False` にすると、Dataset not found / corrupted系のエラーになる。その場合だけ初回取得を行う。
+
+## 展開後の配置
+
+Torchvisionから読むときは、概念的に次の構成になっていることを確認する。
+
+```text
+data_dir/
+└─ cifar-10-batches-py/
+   ├─ data_batch_1
+   ├─ data_batch_2
+   ├─ data_batch_3
+   ├─ data_batch_4
+   ├─ data_batch_5
+   ├─ test_batch
+   └─ ...
+```
+
+## 自動downloadが極端に遅い場合
+
+Notebookからの自動取得が長時間進まない場合は、コードを待ち続けるより、ブラウザ等でPython版アーカイブを手動取得して配置する方法もある。
+
+取得した `cifar-10-python.tar.gz` が正しいか確認するMD5は、Perplexityで確認した値では、
+
+```text
+c58f30108f718f92721af3b95e74349a
+```
+
+である。
+
+Windows PowerShellなら、
+
+```powershell
+Get-FileHash "$HOME\Downloads\cifar-10-python.tar.gz" -Algorithm MD5
+```
+
+で確認できる。
+
+MD5が一致したら展開し、`data_dir/cifar-10-batches-py/` になるよう配置して、以後 `download=False` で読む。
+
+> [!note]
+> この節はSVD理論ではなく、実際のCIFAR-10データ準備で詰まった際の再現用トラブルシュート。実験結果そのものには含めない。
+
+---
+
+# 15. Fashion-MNISTとの違いと次の学習
 
 ```text
 Fashion-MNIST
 → 圧縮パイプラインの原理確認
+→ Linear / Convを個別に圧縮
 
 CIFAR-10
-→ より難しい画像で複数Conv層のrank allocationを検証
+→ RGB自然画像
+→ augmentationと評価transformを分離
+→ 複数Conv層のrank allocation
 ```
 
-という役割分担になった。
+ここで、単一層のrank選択からモデル全体のrank配分へ問題が広がる。
 
 ---
 
