@@ -11,5 +11,10 @@ alwaysApply: false
 - 読むのは対象 Notebook の**ソースセル**と、そのセルが使う `src/nn_compression/` だけにする。
 - 指示がない限り読まない: `docs/`（Obsidian 設定含む）、`__pycache__`、他実験の `results/` / `models/`、agent transcript、一時スクリプト。
 - `.ipynb` は JSON 全体や PNG 出力を読まない。セルソースが必要なら Python で `source` だけ出す。
-- 日常の先例は `*_using_src.ipynb` のソースを優先する。
+- SVD 実験を読むときの優先順位は **corrected → using_src → original / before_src**。
+  - `*_corrected.ipynb` / `*_using_src_corrected.ipynb`: 現在の正式・canonical な実験結果。結果・rank・精度・benchmark を参照するときはここを最優先する。
+  - `*_using_src.ipynb`: src 共通化時点の snapshot。
+  - original（補正ファイル名なし）: 初期実験・学習履歴。
+  - `*_before_src.ipynb`: src 共通化以前の historical snapshot。
+- original / using_src / before_src は削除しない。歴史記録として残す。
 - `src/` へ共通処理を入れるときだけ、切り出し元 Notebook のソースを対照してよい。原本は消さず、先に `*_before_src.ipynb` などを残す（`preserve-original-notebooks.mdc`）。

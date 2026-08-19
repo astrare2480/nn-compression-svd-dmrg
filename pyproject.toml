@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "SVD-based neural network compression experiments"
 requires-python = ">=3.10"
 dependencies = [
-    "torch>=2.1",
+    "torch>=2.7",
     "torchvision>=0.16",
     "numpy>=1.24",
     "pandas>=2.0",
