@@ -16,117 +16,194 @@ tags:
 
 ## サマリー
 
-Fashion-MNIST CNNでは、Linear圧縮・Conv圧縮・Conv+Linear同時圧縮を比較した。
-
-現在、最終結果を引用するときはcorrected Notebookを優先する。
-
-特に、
+Fashion-MNIST CNNでは、段階的に、
 
 ```text
-04_cnn_conv_svd_corrected.ipynb
-05_cnn_conv_linear_svd_corrected.ipynb
+Linear-only SVD
+↓
+Conv-only SVD
+↓
+Conv + Linear同時圧縮
 ```
 
-では、旧04/05で不揃いだったlatency benchmark条件を修正し、baseline / compressedを同一 `input_batch`、同一warmup/repeatsで比較した。
+を行った。
+
+重要なのは、**3実験を1つの同一runとして混ぜないこと**。
+
+Linear-onlyの02/03は、それ自体のbaselineとの比較として有効である。
+
+Conv-only / Conv+Linearは、benchmark条件などを修正したcorrected 04/05を正式結果とする。
+
+```text
+Linear-only
+→ 03_cnn_linear_svd_finetuning のrun内で比較
+
+Conv-only
+→ 04_cnn_conv_svd_corrected のrun内で比較
+
+Conv+Linear
+→ 05_cnn_conv_linear_svd_corrected のrun内で比較
+```
+
+各実験のabsolute accuracyを横並びにして「どれが最も高性能」と比較するより、**各run内のbaselineとの差と圧縮量**を見る。
 
 ---
 
-# 1. Baseline
+# 1. モデル構造
 
-圧縮実験側で共通に使うCNN：
-
-```text
-Parameters = 421,642
-MACs       = 4,241,152
-Test loss  = 0.238263
-Test acc   = 0.9128
-```
-
-このモデルでは、parameter数とMACsを支配する層が異なる。
+Fashion-MNIST CNN：
 
 ```text
-fc1
-→ parameter数を大きく持つ
-
-conv2
-→ 同じweightを多くの空間位置で使うためMACsが大きい
+Input (1, 28, 28)
+↓
+conv1: 1 → 32, 3×3
+ReLU + MaxPool
+↓
+conv2: 32 → 64, 3×3
+ReLU + MaxPool
+↓
+Flatten: 64×7×7 = 3136
+↓
+fc1: 3136 → 128
+ReLU
+↓
+fc2: 128 → 10
 ```
 
-この違いが、Linear SVDとConv SVDの役割分担につながる。
+総Parametersは、
+
+```text
+421,642
+```
+
+fc1がparameter数の大半を持ち、conv2がMACsの大半を使う。
+
+この構造により、
+
+```text
+Linear圧縮
+→ モデルサイズ削減
+
+Conv圧縮
+→ 理論演算量削減
+```
+
+の違いを観測できた。
 
 ---
 
-# 2. Conv-only corrected
+# 2. Linear-only SVD
 
 対象：
 
 ```text
-conv2 = Conv2d(32 → 64, 3x3)
+fc1 = Linear(3136 → 128)
 ```
 
-最終rank：
+採用rank：
+
+```text
+fc1 rank = 24
+```
+
+この実験では、03のrun内で、
+
+```text
+Parameters: 421,642 → 98,570
+Parameter reduction: 76.62%
+
+Test acc: 91.75% → 91.87%
+```
+
+となった。
+
+差は `+0.12pt` と小さいため、accuracy改善ではなく**大幅parameter削減後も精度を維持した**と解釈する。
+
+Linear-onlyのbenchmarkはbaseline / compressedで同じwarmup / repeatsを使っており、旧04/05で見つかったbenchmark不整合の対象ではない。
+
+詳細は [[20_FashionMNIST/08_CNNのLinear SVD]] を参照。
+
+> [!important]
+> Linear-only runのbaseline Test acc `91.75%` と、corrected 04/05のbaseline `91.28%` は別runの値。1つの共通baselineとして混ぜない。
+
+---
+
+# 3. Conv-only corrected
+
+対象：
+
+```text
+conv2 = Conv2d(32 → 64, 3×3)
+```
+
+corrected direct sweepのknee近傍：
+
+```text
+20 / 24 / 28
+```
+
+Fine-tuning後に最終採用：
 
 ```text
 conv2 rank = 28
 ```
 
-### 最終Test
+### Validation after FT
+
+| rank | Val acc | Val loss |
+|---:|---:|---:|
+| 20 | 0.9252 | 0.212728 |
+| 24 | **0.9254** | 0.210294 |
+| **28** | 0.9250 | **0.209190** |
+
+rank28はaccuracy最大ではなく、最終比較でloss最小だったcandidateとして採用した。
+
+### Test
 
 | Model | Parameters | Test loss | Test acc |
 |---|---:|---:|---:|
 | Baseline | 421,642 | 0.238263 | 0.9128 |
 | conv2 SVD + FT | **413,066** | **0.232226** | **0.9175** |
 
-Parameter reductionは約 **2.03%**。
-
-Accuracy差は、
-
 ```text
-+0.47 percentage point
+Parameter reduction = 2.03%
+Test acc delta       = +0.47pt
 ```
 
-だが、single seedなので性能改善とは断定しない。
+single seedなので改善とは断定しない。
 
 ### Latency
 
-corrected版では、
+corrected benchmark：
 
 ```text
-batch        = 256
-warmup       = 20
-repeats      = 2000
+batch size = 256
 same input_batch
-```
+warmup = 20
+repeats = 2000
 
-へ条件を統一した。
-
-```text
 Baseline   ≈ 0.367 ms/batch
 Compressed ≈ 0.370 ms/batch
 ```
 
-MACsは減っているが、実測latencyは短くならなかった。
+理論MACsは減るが、wall-clock latencyは短くならなかった。
 
 ---
 
-# 3. Conv + Linear corrected
+# 4. Conv + Linear corrected
 
-単独実験で選んだrankを固定して同時に適用した。
+単独実験で採用したrankを固定して同時に適用した。
 
 ```text
 conv2 rank = 28
 fc1 rank   = 24
 ```
 
-これは `conv2 rank × fc1 rank` の全組合せを探索した結果ではない。
-
-> **個別に選んだrankを組み合わせた複合圧縮実験**
-
-として扱う。
+これは2次元rank sweepのglobal optimumではない。
 
 ### 圧縮量
 
-| 項目 | Baseline | Conv2 + fc1 SVD |
+| 項目 | Baseline | Compressed |
 |---|---:|---:|
 | Parameters | 421,642 | **89,994** |
 | Parameter reduction | — | **78.66%** |
@@ -135,190 +212,226 @@ fc1 rank   = 24
 
 ### Validation
 
-Fine-tuning前：
+| Stage | Val loss | Val acc |
+|---|---:|---:|
+| Baseline | **0.220664** | **0.9214** |
+| SVD direct | 0.241923 | 0.9116 |
+| SVD + FT | **0.225938** | **0.9188** |
 
-```text
-Val acc  = 0.9116
-Val loss = 0.241923
-```
+Fine-tuningにより、SVD directのaccuracy低下を `-0.98pt → -0.26pt` まで回復した。
 
-Fine-tuning後：
-
-```text
-Val acc  = 0.9188
-Val loss = 0.225938
-```
-
-Fine-tuningにより、同時圧縮で生じた性能低下をかなり回復した。
-
-### 最終Test
+### Test
 
 | Model | Test loss | Test acc |
 |---|---:|---:|
 | Baseline | **0.238263** | 0.9128 |
 | Conv2 + fc1 SVD + FT | 0.241242 | **0.9133** |
 
-Accuracy差：
+差は `+0.05pt`。
 
-```text
-+0.05 percentage point
-```
-
-この差は極小であり、**精度維持**と解釈する。
+大幅圧縮後も**ほぼ同じaccuracyを維持した**と解釈する。
 
 ---
 
-# 4. Corrected latency
+# 5. ParameterとMACsの役割分担
 
-Conv+Linear correctedの公平なbenchmark：
+このCNNでは、
+
+```text
+fc1
+→ 巨大なweight matrix
+→ Parametersへの寄与が大きい
+
+conv2
+→ weight自体はfc1より少ない
+→ 同じweightを14×14の多数位置で使う
+→ MACsへの寄与が大きい
+```
+
+したがって、
+
+```text
+parameterを減らしたい
+→ Linear SVDが効きやすい
+
+演算量を減らしたい
+→ Conv SVDが効きやすい
+
+両方減らしたい
+→ Conv + Linear
+```
+
+という整理になる。
+
+圧縮対象は「一番parameterが多い層」だけで決めるのではなく、目的指標によって選ぶ。
+
+---
+
+# 6. Fine-tuningの意味
+
+SVDは重み行列に対する最良低rank近似を与えるが、task lossそのものを直接最小化していない。
+
+```text
+学習済みweight
+↓ truncated SVD
+低rank初期値
+↓ Fine-tuning
+低rank制約の中でtask lossへ再適応
+```
+
+Fashion-MNIST CNNでは、Conv-only / CombinedともにFine-tuningでValidation性能が回復した。
+
+ただし、single seedの小さなaccuracy差から、
+
+```text
+SVDに正則化効果がある
+SVDで精度が上がる
+```
+
+とは一般化しない。
+
+---
+
+# 7. MACsとlatency
+
+Conv+Linear corrected：
+
+```text
+MACs
+4,241,152 → 2,237,184
+-47.25%
+```
+
+一方、同条件latencyは、
 
 ```text
 Baseline   ≈ 0.378 ms/batch
 Compressed ≈ 0.399 ms/batch
 ```
 
-一方、理論MACsは、
+で改善しなかった。
+
+この結果は、
 
 ```text
-4,241,152 → 2,237,184
--47.25%
+理論演算量
+≠
+実装上の実行時間
 ```
 
-まで減っている。
+を示す。
 
-つまり、今回の実装・GPU・batchでは、
+低rank因子化では、
 
-```text
-MACs -47%
-でも
-wall-clock latencyは改善しない
-```
+- layer数
+- kernel launch
+- 中間Tensor
+- memory access
+- GEMM / convolution shape
+- backend最適化
 
-という結果になった。
+なども影響し得る。
 
-これは失敗として隠すのではなく、重要な実験結果として扱う。
-
-ただし、
-
-> SVD圧縮は一般に遅くなる
-
-とは結論しない。
-
-低rank2層化では、kernel launch、中間Tensor、memory access、行列shapeなどの影響も受けるため、**理論演算量と実速度は別に測定する必要がある**という結論までに留める。
+ただし各要因を分離して測定したわけではないので、一般的な速度低下と結論しない。
 
 ---
 
-# 5. Parameter削減とMACs削減の役割分担
+# 8. correctedで直した実験設計
 
-このCNNでは、
-
-```text
-fc1 SVD
-→ parameter削減に大きく効く
-
-conv2 SVD
-→ MACs削減に大きく効く
-```
-
-という違いがある。
-
-そのため、Conv+Linear同時圧縮では、
+Conv-only / Combinedのcorrected版では、主に、
 
 ```text
-Parameters -78.66%
-MACs       -47.25%
+baseline / compressedで同じinput batchを使用
+warmup / repeatsを統一
+train指標評価でshuffle Generatorを進めない
+current src APIを使用
+corrected専用resultsへ保存
 ```
 
-を同時に実現できた。
+を徹底した。
 
-ここから、圧縮対象層は、
+SVDの数式を変更したのではなく、**比較条件と再現性を正した**。
 
-```text
-モデルサイズを減らしたいのか
-演算量を減らしたいのか
-```
+詳細は、
 
-によって変わることが分かる。
+- [[00_基礎理論/19_再現性と乱数管理]]
+- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
+
+を参照。
 
 ---
 
-# 6. Fine-tuningの意味
+# 9. Single seedの制約
 
-SVD直後の低rankモデルは元の学習済みweightを近似しているが、task lossを直接最適化した低rankモデルではない。
-
-Fine-tuningでは、
+今回の実験はsingle seed。
 
 ```text
-SVDで低rank制約を入れる
-        ↓
-その低rankモデルを初期値にする
-        ↓
-task lossで再最適化
+Linear-only  +0.12pt
+Conv-only    +0.47pt
+Combined     +0.05pt
 ```
 
-を行う。
+という小差を、統計的な性能改善とは扱わない。
 
-Fashion-MNISTでは、SVD直後の性能低下を短いFine-tuningで大きく回復できた。
+主結論は、
 
-ただしFine-tuning後の小さなaccuracy上昇を、SVDの正則化効果などとして一般化しない。
+> **SVDで大きくparameter / MACsを削減しても、Fine-tuningによりtask accuracyをほぼ維持できた**
 
----
-
-# 7. Single seedの制約
-
-corrected実験は `SEED=0` のsingle run。
-
-Conv-onlyの `+0.47pt`、Conv+Linearの `+0.05pt` は、複数seedで再現確認していない。
-
-したがって、本ノートでは、
-
-> **大きな圧縮後もaccuracyをほぼ維持した**
-
-ことを中心結論とする。
+である。
 
 ---
 
-# 8. Historical 04/05との違い
+# 10. 次のCIFAR-10へ何を持ち越したか
 
-旧04/05では、baselineとcompressedでbenchmarkのwarmup / repeatsが揃っていなかった。
-
-そのため旧latency値はhistorical recordとして残すが、正式な速度比較には使わない。
-
-corrected版では、
+Fashion-MNISTでは、
 
 ```text
-same input_batch
-same batch size
-warmup=20
-repeats=2000
+単一Linearのrank選択
+単一Convのrank選択
+個別に選んだConv + Linearの組合せ
 ```
 
-へ統一した。
+まで確認した。
 
-詳細は [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]] を参照。
+次のCIFAR-10では、
+
+```text
+conv1
+conv2
+conv3
+```
+
+の複数Convへ、rankをどう配るかを扱う。
+
+つまり、
+
+```text
+single-layer rank selection
+↓
+model-wide rank allocation
+```
+
+へ進む。
 
 ---
 
-# 9. 結論
+# 11. 結論
 
-Fashion-MNIST CNNから得た主要な結果は次のとおり。
-
-1. LinearとConvでは、parameter数・MACsへの効き方が異なる。
-2. Conv-onlyではparameter削減は小さいが、理論演算量を大きく減らせる。
+1. Linear SVDはparameter削減に非常に効いた。
+2. Conv SVDはMACs削減に効いた。
 3. Conv+LinearではParametersを約79%、MACsを約47%削減できた。
-4. Fine-tuningにより低rank近似後のtask性能をかなり回復できる。
-5. corrected Testでは大幅圧縮後もaccuracyをほぼ維持した。
+4. Fine-tuningでSVD直後のtask性能を大きく回復できた。
+5. corrected結果では大幅圧縮後もaccuracyをほぼ維持した。
 6. MACs削減はGPU latency短縮を保証しなかった。
-7. `(conv2=28, fc1=24)` は同時圧縮の全rank空間における最適解ではない。
-
-この段階までで、単一層圧縮から複数種類の層の同時圧縮まで確認した。次のCIFAR-10では、複数Conv層の**model-wide rank allocation**へ進む。
+7. Linear-onlyとcorrected 04/05は別runなのでabsolute baselineを混ぜない。
+8. `(conv2=28, fc1=24)` は同時圧縮のglobal optimumではない。
 
 ---
 
 # 関連
 
-- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 - [[20_FashionMNIST/08_CNNのLinear SVD]]
 - [[20_FashionMNIST/09_CNNのConv SVD]]
 - [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]
+- [[00_基礎理論/19_再現性と乱数管理]]
 - [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
