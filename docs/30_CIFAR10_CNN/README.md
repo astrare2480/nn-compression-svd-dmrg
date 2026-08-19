@@ -22,7 +22,24 @@ CIFAR-10
 conv1 / conv2 / conv3 の model-wide rank allocation
 ```
 
-CIFAR-10では、学習時だけRandomCrop / HorizontalFlipを使い、validation / testでは入力条件を固定する。GAPで巨大な全結合層を避け、複数Conv層の圧縮を主題にした。
+CIFAR-10では、学習時だけRandomCrop / HorizontalFlipを使い、評価側では入力条件を固定する。GAPで巨大な全結合層を避け、複数Conv層の圧縮を主題にした。
+
+## canonicalデータ分割
+
+corrected Notebookでは公式train 50,000枚を、
+
+```text
+Train                       40,000
+Early-Stopping Validation    5,000
+Rank-Selection Validation    5,000
+Test（公式test）            10,000
+```
+
+へ分ける。
+
+PerplexityでDataset / Subset / Generatorを学んだ際の `45,000 / 5,000` は基礎説明用の単純例であり、**canonical実験条件は40,000 / 5,000 / 5,000**。
+
+データ取得が極端に遅い場合の `download=False`、展開先、MD5確認などの実務メモも [[00_基礎理論/18_CIFAR10の前処理とDataLoader]] に残している。
 
 ## 正式結果
 
@@ -45,9 +62,17 @@ conv3 = 48
 ```
 
 ```text
-Parameters: 128,842 → 81,405   (-36.82%)
+Parameters: 128,842 → 81,405       (-36.82%)
 MACs:       10,357,248 → 5,625,344 (-45.69%)
 Test acc:   73.27% → 73.43%
+```
+
+Fine-tuning候補：
+
+```text
+Aggressive   6 / 32 / 32 : 0.3994 → 0.7336
+Balanced     9 / 32 / 32 : 0.4354 → 0.7360
+Conservative 9 / 32 / 48 : 0.4792 → 0.7444
 ```
 
 single seedなので、小さいaccuracy差は改善と断定せず、**圧縮後も精度をほぼ維持した**と解釈する。
@@ -56,10 +81,19 @@ single seedなので、小さいaccuracy差は改善と断定せず、**圧縮�
 
 ## MACsとlatency
 
-corrected benchmarkでは同一input batch、batch size、warmup、repeatsへ揃えた。
+corrected benchmarkでは、
 
 ```text
-MACs: -45.69%
+batch size = 256
+same input_batch
+warmup = 20
+repeats = 2000
+```
+
+へ揃えた。
+
+```text
+MACs:    -45.69%
 Latency: 約0.531 → 0.537 ms/batch
 ```
 
