@@ -23,11 +23,6 @@ Fashion-MNIST用MLP `784 → 512 → 256 → 10` の `fc1` / `fc2` をSVD低rank
 
 ```text
 notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
-```
-
-と、
-
-```text
 results/20_fashion_mnist/03_mlp_svd_finetuning_using_src_corrected/
 ```
 
@@ -47,7 +42,7 @@ Fashion-MNIST MLPでは、train / validation / testの大枠は旧版から維�
 - DataLoader Generatorも候補ごとに同じ初期状態へ戻す
 - train metricsは `shuffle=False` の `train_eval_loader` で測る
 - baseline / compressedは同じ `input_batch` でbenchmarkする
-- warmup / repeatsを統一する
+- warmup / repeatsを `20 / 2000` に統一する
 - rank sweep結果にmodel本体を保持せず、Fine-tuning候補はrankから再構築する
 - baselineとcompressedでParameterを共有しない
 
@@ -59,11 +54,11 @@ Fashion-MNIST MLPでは、train / validation / testの大枠は旧版から維�
 
 Fine-tuning候補は次の3構成。
 
-| Candidate | fc1 | fc2 | Val acc after FT | Val loss after FT | Parameters |
-|---|---:|---:|---:|---:|---:|
-| Aggressive | 16 | 16 | 0.8850 | 0.318649 | 36,362 |
-| Balanced | **32** | **16** | **0.8924** | **0.307956** | **57,098** |
-| Conservative | 32 | 32 | 0.8856 | 0.318636 | 69,386 |
+| Candidate | fc1 | fc2 | Val acc before FT | Val acc after FT | Val loss after FT | Parameters |
+|---|---:|---:|---:|---:|---:|---:|
+| Aggressive | 16 | 16 | 0.7822 | 0.8850 | 0.318649 | 36,362 |
+| Balanced | **32** | **16** | **0.8694** | **0.8924** | **0.307956** | **57,098** |
+| Conservative | 32 | 32 | 0.8694 | 0.8856 | 0.318636 | 69,386 |
 
 最終選択は、
 
@@ -101,6 +96,15 @@ $$
 
 MLPでは大部分のparameterが `fc1` / `fc2` にあるため、Linear SVDによる削減効果が非常に大きい。
 
+SVD直後のBalancedでは、
+
+```text
+MACs = 56,320
+compute reduction ≈ 89.47%
+```
+
+となった。
+
 ---
 
 # 3. SVD直後とFine-tuning後
@@ -123,7 +127,50 @@ Conservative 0.8694 → 0.8856
 
 ---
 
-# 4. 最終Test
+# 4. corrected benchmark
+
+Notebook側で修正したbenchmark条件も、正式結果として残す。
+
+```text
+input shape = (64, 1, 28, 28)
+batch size  = 64
+warmup      = 20
+repeats     = 2000
+```
+
+baselineと各compressed candidateへ**同じ `input_batch`**を渡した。
+
+最終rank `32 / 16` のSVD直後モデルでは、rank sweep時の実測値が、
+
+```text
+Baseline   ≈ 0.247535 ms/batch
+Compressed ≈ 0.333352 ms/batch
+```
+
+だった。
+
+一方で理論MACsは大きく減っている。
+
+```text
+MACs reduction ≈ 89.47%
+Latency        0.248 → 0.333 ms/batch
+```
+
+したがってこの小型MLPでも、
+
+```text
+MACs reduction
+≠
+wall-clock speedup
+```
+
+だった。
+
+低rank化により1つのLinearを2つへ分けるので、kernel起動や小さい行列積の実行効率なども影響し得る。ただし個々の要因を分離計測していないため、「Linear SVDは一般に遅い」とは結論しない。
+
+---
+
+# 5. 最終Test
 
 最終選択後にTestを評価した。
 
@@ -148,9 +195,18 @@ $$
 
 ことである。
 
+Test lossは、
+
+```text
+0.329024 → 0.333776
+Δ = +0.004752
+```
+
+と少し増えているため、accuracyだけで完全に同じ挙動とは言わない。
+
 ---
 
-# 5. なぜ旧結果と最終rankが違うか
+# 6. なぜ旧結果と最終rankが違うか
 
 historicalな旧03では、別のcandidate選択・乱数条件により `16 / 16` が最終候補になっていた。
 
@@ -170,7 +226,7 @@ Test acc=0.8853
 
 ---
 
-# 6. Rank選択の意味
+# 7. Rank選択の意味
 
 Rank選択はaccuracyだけを最大化する問題ではない。
 
@@ -190,7 +246,7 @@ Rank選択はaccuracyだけを最大化する問題ではない。
 
 ---
 
-# 7. Single seedの制約
+# 8. Single seedの制約
 
 corrected実験は `SEED=0` のsingle run。
 
@@ -208,13 +264,14 @@ corrected実験は `SEED=0` のsingle run。
 
 ---
 
-# 8. MLP実験から得たこと
+# 9. MLP実験から得たこと
 
 1. Linear SVDでparameter数を大幅に削減できる。
 2. 極端な低rankではSVD直後のtask性能が大きく低下する。
 3. Fine-tuningで低rank制約内の性能を大きく回復できる場合がある。
 4. Candidate比較ではseedとDataLoader条件を揃える必要がある。
-5. 小さなaccuracy差はsingle seedでは過度に解釈しない。
+5. MACs削減と実測latencyは別に評価する必要がある。
+6. 小さなaccuracy差はsingle seedでは過度に解釈しない。
 
 MNISTでrank評価の基本を確認し、Fashion-MNIST MLPでFine-tuningまで拡張した。次はCNNへ進み、LinearとConvでparameter数・MACsへの効き方が異なることを確認する。
 
@@ -223,6 +280,7 @@ MNISTでrank評価の基本を確認し、Fashion-MNIST MLPでFine-tuningまで�
 # 関連
 
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
+- [[00_基礎理論/11_理論計算量とベンチマーク]]
 - [[20_FashionMNIST/08_CNNのLinear SVD]]
 - [[20_FashionMNIST/09_CNNのConv SVD]]
 - [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]
