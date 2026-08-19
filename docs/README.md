@@ -1,1417 +1,520 @@
 ---
-title: NN圧縮とSVDノート 目次
+title: NN圧縮ノート 目次
 aliases:
   - NN圧縮とSVD
   - SVDによるニューラルネットワーク圧縮
   - NN SVD Notes
-  - NN_SVD_Notes
   - SVD Compression Roadmap
 tags:
   - NN圧縮
   - SVD
-  - 低ランク近似
-  - PyTorch
-  - MNIST
+  - Tucker
+  - TensorTrain
+  - MPS
   - DMRG
-  - テンソルネットワーク
+  - PyTorch
 ---
 
-# NN圧縮とSVDノート 目次
+# NN圧縮ノート 目次
 
 ## サマリー
 
-このノート群では、ニューラルネットワークの学習済み重み行列へSVDを適用し、Linear層を低ランク化する方法を、数学・実装・実験の順に体系的に学ぶ。
-
-中心となる対象は、PyTorchの
-
-```python
-nn.Linear
-```
-
-である。
-
-元の重み行列
-
-$$
-W
-\in
-\mathbb{R}^{
-D_{\mathrm{out}}
-\times
-D_{\mathrm{in}}
-}
-$$
-
-をSVDし、上位rankだけを残す。
-
-$$
-W
-=
-U\Sigma V^{\mathsf{T}}
-$$
-
-$$
-W_r
-=
-U_r\Sigma_rV_r^{\mathsf{T}}
-$$
-
-この低ランク近似を、2つの小さいLinear層として実装する。
+このノート群では、ニューラルネットワークの学習済みweightを低rank化する方法を、
 
 ```text
-元の層
-
-D_in ───────────────▶ D_out
-       Linear(W, b)
+SVD
+↓
+Tucker decomposition
+↓
+Tensor Train / MPS
+↓
+DMRG
 ```
+
+の順に学ぶ。
+
+現在、**SVD編のcorrected実験まで完了**している。
+
+SVD編では、
 
 ```text
-圧縮後
+MNIST MLP
+→ Linear SVDの基本
 
-D_in ─▶ rank r ─▶ D_out
-        Linear     Linear
-        biasなし    元のbias
+Fashion-MNIST MLP
+→ rank選択 / Pareto / knee / Fine-tuning
+
+Fashion-MNIST CNN
+→ Linear SVD / Conv SVD / Conv + Linear
+
+CIFAR-10 CNN
+→ 複数Convのmodel-wide rank allocation
 ```
 
-最終的には、MNISTを使って次を比較する。
+まで進んだ。
 
-- rank
-- パラメータ数
-- 圧縮率
-- 特異値エネルギー保持率
-- 重み近似誤差
-- 層出力誤差
-- logits誤差
-- test accuracy
-- fine-tuning後のaccuracy
-- 実測推論時間
+SVDの式だけでなく、
 
-最後に、行列SVDによる圧縮を、MPS・Tensor Train・MPO・DMRG-like最適化へつなげる。
+- train / validation / testの役割
+- candidate比較の再現性
+- DataLoader Generator
+- parameter / MACs / latencyの違い
+- Fine-tuning
+- Pareto / knee
+- single seedの解釈
+
+も実験を通して整理している。
+
+まず全体結果を見る場合は、[[SVD実験まとめ]] を参照。
 
 ---
 
-## このノート群の目的
+# 1. canonical / historical
 
-このノート群の目的は、単にSVDのコードを動かすことではない。
+現在の正式な実験結果を引用するときは、原則として、
 
-次の流れを、自分で説明・実装・評価できる状態を目指す。
+```text
+*_corrected.ipynb
++
+対応するcorrected results/
+```
+
+を使用する。
+
+Notebookの位置付けは次のとおり。
+
+```text
+corrected
+→ 現在のcanonicalな実験結果
+
+using_src
+→ src共通化時点のsnapshot
+
+original
+→ 初期実験・学習履歴
+
+before_src
+→ src共通化以前のhistorical snapshot
+```
+
+historical Notebookは削除しない。
+
+何が問題で、なぜcorrected版を作ったかを学習履歴として残す。
+
+詳細：
+
+- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
+
+---
+
+# 2. SVD編の全体像
 
 ```mermaid
 flowchart TD
-    A["SVDの数学を理解する"] --> B["nn.Linearの計算を理解する"]
-    B --> C["重みを低ランク近似する"]
-    C --> D["Linear層を2層へ置き換える"]
-    D --> E["rankと圧縮率を計算する"]
-    E --> F["誤差を複数段階で評価する"]
-    F --> G["PyTorchで再利用可能な実装を作る"]
-    G --> H["MNISTで圧縮実験を行う"]
-    H --> I["DMRG・MPS・MPOとの関係を整理する"]
+    A["SVDの数学"] --> B["Linear低rank化"]
+    B --> C["MNIST MLP"]
+    C --> D["Fashion-MNIST MLP"]
+    D --> E["Fashion-MNIST CNN"]
+    E --> F["Conv2d SVD"]
+    F --> G["Conv + Linear"]
+    G --> H["CIFAR-10"]
+    H --> I["model-wide rank allocation"]
+    I --> J["Tucker decomposition"]
+    J --> K["TT / MPS"]
+    K --> L["DMRG"]
 ```
 
 ---
 
-## 到達目標
+# 3. 基礎理論
 
-このノート群を一通り終えた時点で、次をできることを目標とする。
+基礎理論は `00_基礎理論` にまとめる。
 
-- SVDの式と各行列の役割を説明できる
-- 特異値とrankの意味を説明できる
-- 切り詰めSVDが最良低ランク近似になる理由を説明できる
-- `nn.Linear` の重み形状と行列積を説明できる
-- 学習済みLinear層を2つの小さいLinear層へ置き換えられる
-- 2層の間にReLUを入れてはいけない理由を説明できる
-- rankごとのパラメータ数と圧縮成立条件を計算できる
-- 重み誤差・層出力誤差・タスク誤差を区別できる
-- PyTorchで再利用可能な低ランクLinearを実装できる
-- MNISTでbaselineと圧縮モデルを公平に比較できる
-- 圧縮直後とfine-tuning後の性能を分けて評価できる
-- 行列rankとMPSのbond dimensionの共通点と違いを説明できる
-- NN重みの特異値をSchmidt係数やエネルギーと混同せず説明できる
-- Tensor Train・MPO・DMRG-like手法へ進むための前提を理解できる
+## SVD / Linear
+
+1. [[00_基礎理論/01_SVDとは]]
+2. [[00_基礎理論/02_nn.Linearとは]]
+3. [[00_基礎理論/03_SVDによる低ランク近似]]
+4. [[00_基礎理論/04_Linear層を2層へ置き換える]]
+5. [[00_基礎理論/05_圧縮率とRank]]
+6. [[00_基礎理論/06_誤差評価]]
+7. [[00_基礎理論/07_PyTorch実装]]
+8. [[00_基礎理論/08_Linear層のSVD実装]]
+9. [[00_基礎理論/09_Linear層の2層置換_実装]]
+
+## 評価・実験設計
+
+10. [[00_基礎理論/10_SVD圧縮モデルの評価設計]]
+11. [[00_基礎理論/11_理論計算量とベンチマーク]]
+12. [[00_基礎理論/12_PyTorch学習と評価の基礎]]
+13. [[00_基礎理論/13_PandasとPython実装メモ]]
+
+## CNN / Conv2d
+
+15. [[00_基礎理論/15_CNNとConv2dの基礎]]
+16. [[00_基礎理論/16_Conv2d重みの行列化とSVD]]
+17. [[00_基礎理論/17_Conv2dの低ランク2層置換]]
+
+## CIFAR-10実験で追加した共通知識
+
+18. [[00_基礎理論/18_CIFAR10の前処理とDataLoader]]
+19. [[00_基礎理論/19_再現性と乱数管理]]
+20. [[00_基礎理論/20_Global Average PoolingとCIFAR10モデル設計]]
+
+## Tensor Networkへの橋渡し
+
+14. [[00_基礎理論/14_低ランク学習からテンソルネットワークへの発展]]
+
+基礎理論だけの索引は、[[00_基礎理論/README]] を参照。
 
 ---
 
-# 全体ロードマップ
+# 4. MNIST MLP
 
-## 01〜09の依存関係
-
-```mermaid
-flowchart TD
-    N01["01 SVDとは"] --> N02["02 nn.Linearとは"]
-    N02 --> N03["03 SVDによる低ランク近似"]
-    N03 --> N04["04 Linear層を2層へ置き換える"]
-    N04 --> N05["05 圧縮率とRank"]
-    N05 --> N06["06 誤差評価"]
-    N06 --> N07["07 PyTorch実装"]
-    N07 --> N08["08 MNIST実験"]
-    N08 --> N09["09 DMRGとのつながり"]
-```
-
-基本的には、[[00_基礎理論/01_SVDとは]] から [[50_DMRG/01_SVDからDMRGへのつながり]] まで順番に読む。
-
----
-
-## 学習段階
+MNISTでは、SVDによるLinear圧縮とrank sweepの基本を確認した。
 
 ```text
-第1段階：数学
-├── 01_SVDとは
-└── 03_SVDによる低ランク近似
-
-第2段階：ニューラルネットワークの構造
-├── 02_nn.Linearとは
-└── 04_Linear層を2層へ置き換える
-
-第3段階：圧縮設計と評価
-├── 05_圧縮率とRank
-└── 06_誤差評価
-
-第4段階：実装と実験
-├── 07_PyTorch実装
-└── 08_MNIST実験
-
-第5段階：テンソルネットワークへの接続
-└── 09_DMRGとのつながり
+784 → 512 → 256 → 10
 ```
 
----
+corrected版では、旧rank sweepのtest leakageを修正し、
 
-# ノート一覧
+```text
+train
+↓
+validationでrank選択
+↓
+testは最終選択後のみ
+```
 
-## [[00_基礎理論/01_SVDとは]]
+へ分離した。
 
-### 役割
+正式結果：
 
-SVDによるNN圧縮を理解するための線形代数の基礎を作る。
+```text
+fc1 rank = 128
+fc2 rank = 128
+Parameters ≈ -50%
+Test acc 98.17% → 98.08%
+```
 
-### 主な内容
-
-- 任意の実行列に対するSVD
-- $U$、$\Sigma$、$V^{\mathsf{T}}$ の役割
-- 特異値と特異ベクトル
-- 行列のrank
-- ランク1行列の和としてのSVD
-- 切り詰めSVD
-- Eckart–Young–Mirskyの定理
-- フロベニウスノルム誤差
-- 特異値エネルギー
-- NumPy・PyTorchによるSVD
-- 特異値スペクトルの可視化
-- NN圧縮との接点
-
-### この章で答えられるようになる問い
-
-- SVDは何を分解しているのか
-- 特異値が大きいとはどういう意味か
-- 小さい特異値を捨てると、なぜ近似になるのか
-- 固有値分解とSVDは何が違うのか
-- 長方形行列にもSVDを使えるのはなぜか
-
-### 次に進む条件
-
-次を説明できれば [[00_基礎理論/02_nn.Linearとは]] へ進む。
-
-$$
-W
-=
-U\Sigma V^{\mathsf{T}}
-$$
-
-$$
-W_r
-=
-U_r\Sigma_rV_r^{\mathsf{T}}
-$$
+- [[10_MNIST_MLP_SVD/README]]
+- [[10_MNIST_MLP_SVD/04_MNISTでの実験結果]]
 
 ---
 
-## [[00_基礎理論/02_nn.Linearとは]]
+# 5. Fashion-MNIST MLP
 
-### 役割
+MNISTから、
 
-SVDを適用する対象であるPyTorchのLinear層を、数式・形状・実装の面から理解する。
+```text
+Pareto frontier
+knee
+Fine-tuning
+candidate比較の再現性
+```
 
-### 主な内容
+へ実験を拡張した。
 
-- `nn.Linear` の基本
-- 線形変換とアフィン変換
-- 重み行列とbias
-- 重み形状
-- バッチ入力
-- 3次元以上の入力
-- biasのブロードキャスト
-- `torch.nn.functional.linear`
-- 学習可能パラメータ
-- パラメータ数と計算量
-- 活性化関数との区別
-- Linear層だけを重ねた場合
-- 学習済み重みの取得
-- SVDを適用する対象
-- MNISTでのLinear層
-- 最大rankと実rank
-- よくある形状エラー
+正式結果：
 
-### 中心となる式
+```text
+fc1 rank = 32
+fc2 rank = 16
+Parameters 535,818 → 57,098
+Reduction 89.34%
+Test acc 88.19% → 88.53%
+```
 
-PyTorchの重みを、
+single seedの小差なので、精度改善ではなく**大幅圧縮後も精度維持**と解釈する。
 
-$$
-W
-\in
-\mathbb{R}^{
-D_{\mathrm{out}}
-\times
-D_{\mathrm{in}}
-}
-$$
-
-とすると、1サンプルの出力は、
-
-$$
-y
-=
-Wx+b
-$$
-
-である。
-
-バッチ入力では、PyTorch上の表記は、
-
-$$
-Y
-=
-XW^{\mathsf{T}}+b
-$$
-
-となる。
-
-### 次に進む条件
-
-次を迷わず答えられれば [[00_基礎理論/03_SVDによる低ランク近似]] へ進む。
-
-- `nn.Linear(784, 512)` の重み形状
-- biasの形状
-- 入力バッチの形状
-- 出力バッチの形状
-- SVDを適用するテンソル
+- [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
 
 ---
 
-## [[00_基礎理論/03_SVDによる低ランク近似]]
+# 6. Fashion-MNIST CNN
 
-### 役割
+Fashion-MNIST CNNでは、parameter数とMACsを支配する層が異なることを利用して、
 
-SVDを使って、学習済み重み行列を少ないrankで近似する理論を整理する。
+```text
+Linear-only
+Conv-only
+Conv + Linear
+```
 
-### 主な内容
+を比較した。
 
-- 低ランク行列
-- 2つの小さい行列への分解
-- ランク1行列の和
-- 切り詰めSVD
-- 大きい特異値を残す理由
-- 最良低ランク近似
-- フロベニウスノルム誤差
-- スペクトルノルム誤差
-- 特異値エネルギー保持率
-- 厳密な低ランクと近似的な低ランク
-- 重み誤差・出力誤差・タスク誤差の違い
-- 入力分布を考慮した誤差
-- NN重みで低ランク構造を期待する理由
-- パラメータ圧縮が成立する条件
-- rank選択方法
-- PyTorchによる低ランク近似
-- 理論誤差と実測誤差の比較
-- fine-tuningの意味
+## Linear-only
 
-### 中心となる式
+```text
+fc1 rank = 24
+Parameters 421,642 → 98,570
+Test acc 91.75% → 91.87%
+```
 
-$$
-W_r
-=
-U_r\Sigma_rV_r^{\mathsf{T}}
-$$
+このLinear-onlyはcorrected 04/05とは別runなので、absolute baseline値を混ぜずrun内差として読む。
 
-$$
-\lVert
-W-W_r
-\rVert_F^2
-=
-\sum_{i=r+1}^{k}
-\sigma_i^2
-$$
+- [[20_FashionMNIST/08_CNNのLinear SVD]]
+
+## Conv-only corrected
+
+```text
+conv2 rank = 28
+Parameters 421,642 → 413,066
+Test acc 91.28% → 91.75%
+Latency 約0.367 → 0.370 ms/batch
+```
+
+- [[20_FashionMNIST/09_CNNのConv SVD]]
+
+## Conv + Linear corrected
+
+```text
+conv2 rank = 28
+fc1 rank = 24
+Parameters 421,642 → 89,994   (-78.66%)
+MACs 4,241,152 → 2,237,184    (-47.25%)
+Test acc 91.28% → 91.33%
+Latency 約0.378 → 0.399 ms/batch
+```
+
+`(28, 24)` は各層を単独で選んだrankの組合せであり、2次元rank空間のglobal optimumではない。
+
+- [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]
+- [[20_FashionMNIST/11_CNNでの実験結果]]
+
+---
+
+# 7. CIFAR-10 CNN
+
+CIFAR-10では、より自然画像に近いRGB入力へ進んだ。
+
+入力：
+
+```text
+(C, H, W) = (3, 32, 32)
+```
+
+学習時だけ、
+
+```text
+RandomCrop(32, padding=4)
+RandomHorizontalFlip()
+```
+
+を使い、validation / testではランダムaugmentationを外す。
+
+GAPを使って巨大なFC層を避け、
+
+```text
+conv1
+conv2
+conv3
+```
+
+のrank allocationを主題にした。
+
+正式結果：
+
+```text
+conv1 = 9
+conv2 = 32
+conv3 = 48
+
+Parameters 128,842 → 81,405   (-36.82%)
+MACs 10,357,248 → 5,625,344   (-45.69%)
+Test acc 73.27% → 73.43%
+Latency 約0.531 → 0.537 ms/batch
+```
+
+探索は、各層の単独rank sweepからPareto / knee近傍を作り、その候補集合を組み合わせた**制約付きmodel-wide rank allocation**。
+
+全rank空間のglobal optimumとは呼ばない。
+
+- [[30_CIFAR10_CNN/README]]
+- [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
+
+---
+
+# 8. corrected実験で重要になった設計
+
+SVDの数式そのものではなく、実験設計と実装契約を修正した。
+
+主な項目：
+
+```text
+test leakage
+candidate間のseed条件
+DataLoader Generator消費
+baseline / compressedのParameter共有
+rank validation
+device / dtype / requires_grad
+Conv2dのsemantic contract
+benchmark条件
+same input batch
+rank sweepでmodelを保持しすぎない
+CIFAR探索の「global」表現
+```
+
+詳しくは、
+
+- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
+
+を参照。
+
+---
+
+# 9. SVD編で得た共通知識
+
+## retained energy
 
 $$
 E(r)
 =
-\frac{
-\sum_{i=1}^{r}
-\sigma_i^2
-}{
-\sum_{i=1}^{k}
-\sigma_i^2
-}
+\frac{\sum_{i=1}^{r}\sigma_i^2}{\sum_i\sigma_i^2}
 $$
 
-### 重要な区別
+はweight近似の指標。
 
 ```text
-重み誤差
-W と W_r の差
-        ↓
-層出力誤差
-Wx と W_rx の差
-        ↓
-モデル出力誤差
-logitsの差
-        ↓
-タスク誤差
-loss・accuracyの変化
+retained energyが高い
+≠
+accuracyが必ず高い
 ```
 
-### 次に進む条件
+## Fine-tuning
 
-- 最大rankでは元の行列へ戻る
-- rankを下げると誤差が増える
-- 重み誤差が小さくてもaccuracyが同じとは限らない
+```text
+truncated SVD
+→ weight近似として良い低rank初期値
 
-この3点を説明できれば [[00_基礎理論/04_Linear層を2層へ置き換える]] へ進む。
+Fine-tuning
+→ task lossに対して低rank構造を再最適化
+```
+
+## MACsとlatency
+
+```text
+MACs reduction
+≠
+wall-clock speedup
+```
+
+Fashion-MNIST CNNとCIFAR-10のcorrected benchmarkでは、理論MACsを大幅に減らしてもGPU latencyは短くならなかった。
+
+## single seed
+
+corrected実験は基本的にsingle seed。
+
+小さなaccuracy差は「改善」と強く主張せず、**精度維持**と表現する。
 
 ---
 
-## [[00_基礎理論/04_Linear層を2層へ置き換える]]
+# 10. 実装
 
-### 役割
+再利用可能な処理は `src/nn_compression/` へ分離している。
 
-低ランク近似した重みを、実際のPyTorchモデルで動作する2つのLinear層へ変換する。
+```text
+src/nn_compression/
+├─ compression/
+│  ├─ svd.py
+│  ├─ linear_svd.py
+│  ├─ conv_svd.py
+│  ├─ mlp_svd.py
+│  ├─ named_layers.py
+│  └─ rank_sweep.py
+├─ models/
+│  ├─ mlp.py
+│  ├─ cnn.py
+│  └─ cifar10.py
+├─ training/
+├─ metrics/
+├─ selection/
+├─ datasets/
+└─ utils/
+```
 
-### 主な内容
+現在のSVD実装では、
 
-- 元のLinear層
-- SVDによる低ランク近似
-- $\Sigma_r$ を前段へ吸収する方法
-- $\Sigma_r$ を後段へ吸収する方法
-- $\Sigma_r^{1/2}$ を左右へ分配する方法
-- 2つのLinear層への変換
-- biasの配置
-- 2層の間にReLUを入れない理由
-- 元から存在するReLUを残す方法
-- PyTorchの `Vh`
-- 最大rankでの再構成確認
-- 再構成重みの確認
-- モデル内の層置換
-- `nn.Sequential` での扱い
-- optimizer再作成
-- 保存・読み込み
-- fine-tuning
+- baselineとParameterを共有しない
+- 数学的最大rankを超えない
+- device / dtype / requires_gradを維持する
+- evaluationがtraining DataLoader Generatorを進めない
+- baseline / compressed benchmarkで同じinput batchを使う
 
-### 中心となる構造
+といった不変条件をコードコメントとtestsで明示している。
+
+実装寄りの索引は [[README_実装編]] を参照。
+
+---
+
+# 11. 次：Tucker decomposition
+
+Conv SVDでは、4次元weight、
 
 $$
-W_r
-=
-BA
-$$
-
-$$
-A
+W
 \in
-\mathbb{R}^{
-r
-\times
-D_{\mathrm{in}}
-}
+\mathbb{R}^{C_{out}\times C_{in}\times K_h\times K_w}
 $$
 
+を、
+
 $$
-B
+W_{mat}
 \in
-\mathbb{R}^{
-D_{\mathrm{out}}
-\times
-r
-}
+\mathbb{R}^{C_{out}\times(C_{in}K_hK_w)}
 $$
+
+へ行列化した。
+
+次のTucker decompositionでは、この多モード構造をテンソルのまま、より直接扱う。
+
+SVD編で作った、
 
 ```text
-正しい置換
-
-入力
- ↓
-Linear(D_in, r, bias=False)
- ↓
-Linear(r, D_out, bias=True)
- ↓
-元から存在していた活性化関数
+評価設計
+rank選択
+Fine-tuning
+parameter / MACs
+latency benchmark
+reproducibility
 ```
 
-### 最重要注意
+はTuckerでも再利用する。
 
-SVDで分解した2つのLinear層の間にReLUを入れない。
+その後、
 
 ```text
-誤り
-
-Linear(D_in, r)
- ↓
-ReLU
- ↓
-Linear(r, D_out)
+Tucker
+↓
+TT / MPS
+↓
+DMRG
 ```
 
-これは元のLinear層の低ランク近似ではなく、新しい非線形ネットワークになる。
-
-### 次に進む条件
-
-- `Vh` をそのまま前段重みに使える理由
-- 元のbiasを後段へ置く理由
-- 最大rankで元出力を再現する確認方法
-
-を説明できれば [[00_基礎理論/05_圧縮率とRank]] へ進む。
+へ進む。
 
 ---
 
-## [[00_基礎理論/05_圧縮率とRank]]
-
-### 役割
-
-rankを変えたときに、どの程度パラメータ数・保存容量・理論演算量が変わるかを計算する。
-
-### 主な内容
-
-- rankの範囲
-- 元のLinear層のパラメータ数
-- 低ランク2層のパラメータ数
-- 圧縮成立条件
-- 損益分岐rank
-- 保持率・削減率・圧縮倍率
-- `Linear(784, 512)` のrank別比較
-- 小さいLinear層を圧縮する場合
-- モデル全体の圧縮率
-- 保存容量
-- optimizer state
-- MACsとFLOPs
-- 中間テンソル
-- 理論計算量と実測時間の違い
-- 特異値エネルギーとrank
-- rank選択方法
-
-### 中心となる式
-
-元の重み数は、
-
-$$
-P_{\mathrm{original}}
-=
-D_{\mathrm{out}}D_{\mathrm{in}}
-$$
-
-低ランク化後は、
-
-$$
-P_{\mathrm{lowrank}}
-=
-r
-\left(
-D_{\mathrm{in}}
-+
-D_{\mathrm{out}}
-\right)
-$$
-
-圧縮が成立する条件は、
-
-$$
-r
-<
-\frac{
-D_{\mathrm{in}}D_{\mathrm{out}}
-}{
-D_{\mathrm{in}}+D_{\mathrm{out}}
-}
-$$
-
-である。
-
-### `Linear(784, 512)` の基準値
-
-元の重みパラメータ数：
-
-$$
-784
-\times
-512
-=
-401{,}408
-$$
-
-rank 64の場合：
-
-$$
-64
-\times
-(784+512)
-=
-82{,}944
-$$
-
-### 次に進む条件
-
-- rankだけでは圧縮率が決まらず、入出力次元も必要
-- パラメータ数が減っても推論時間が同じ割合で減るとは限らない
-- 層単体とモデル全体の圧縮率を区別する
-
-を説明できれば [[00_基礎理論/06_誤差評価]] へ進む。
-
----
-
-## [[00_基礎理論/06_誤差評価]]
-
-### 役割
-
-圧縮による変化を、1つのaccuracyだけで判断せず、複数段階の指標で評価する。
-
-### 主な内容
-
-- 差分
-- MAE
-- MSE
-- RMSE
-- 最大絶対誤差
-- フロベニウスノルム
-- 相対誤差
-- 相対RMSE
-- コサイン類似度
-- 重み行列の誤差
-- SVD理論誤差
-- スペクトルノルム誤差
-- Linear層の出力誤差
-- 入力分布を考慮した期待誤差
-- ReLU前後の誤差
-- 活性状態の一致率
-- logits誤差
-- 予測margin
-- 予測一致率
-- Cross Entropy Loss
-- accuracy
-- fine-tuning前後の比較
-
-### 評価階層
-
-```mermaid
-flowchart TD
-    W["重み行列の誤差"] --> L["対象Linear層の出力誤差"]
-    L --> A["活性化後の誤差"]
-    A --> Z["logitsの誤差"]
-    Z --> P["予測一致率"]
-    P --> T["loss・accuracy"]
-```
-
-### 重要な注意
-
-差分をそのまま平均すると、正負が打ち消し合う。
-
-```python
-mean_error = torch.mean(
-    reference
-    -
-    approximation
-)
-```
-
-これは、近似の大きさを測る主指標には向かない。
-
-MSEでは、差を二乗する。
-
-```python
-mse = torch.mean(
-    (
-        reference
-        -
-        approximation
-    )
-    ** 2
-)
-```
-
-### 次に進む条件
-
-- MSEとRMSEの違い
-- フロベニウス誤差と相対誤差の違い
-- 重み誤差とaccuracyが一致しない理由
-- データセット全体のRMSEを正しく集計する方法
-
-を理解したら [[00_基礎理論/07_PyTorch実装]] へ進む。
-
----
-
-## [[00_基礎理論/07_PyTorch実装]]
-
-### 役割
-
-01〜06で整理した理論を、再利用可能なPyTorchコードへまとめる。
-
-### 主な内容
-
-- rank検証
-- 圧縮統計
-- 切り詰めSVD
-- 因子重みの作成
-- 特異値の配置方法
-- `LowRankLinear`
-- 学習済みLinearからの変換
-- biasの引き継ぎ
-- 再構成重み
-- 最大rankテスト
-- 重み・出力誤差評価
-- 特異値エネルギー
-- モデル内の層取得・置換
-- `nn.Sequential` 内の置換
-- optimizer再作成
-- device・dtype・train/evalモード
-- `detach()`、`no_grad()`、`inference_mode()`
-- ベンチマーク
-- checkpoint保存・読み込み
-- rank sweep
-- 自動テスト
-- Notebookとプロジェクト構成
-
-### 中心となる実装部品
-
-- `LowRankLinear`
-- `compression_stats`
-- `truncated_svd`
-- `factor_weights`
-- `compare_tensors`
-- `compare_weight_matrices`
-- `compress_linear_by_path`
-- `benchmark_module`
-- `rank_for_energy`
-
-### 実装上の最重要確認
-
-```text
-最大rank
-  ↓
-再構成重みが元重みに近い
-  ↓
-同じ入力に対する出力が近い
-  ↓
-rankを下げた実験へ進む
-```
-
-最大rankで一致しない場合は、rank sweepやMNIST実験へ進まない。
-
-### 次に進む条件
-
-- 1層を安全に置換できる
-- 最大rankテストが通る
-- optimizerを置換後に作り直せる
-- checkpointを保存・読み込みできる
-
-状態になったら [[10_MNIST_MLP_SVD/01_MNIST実験]] へ進む。
-
----
-
-## [[10_MNIST_MLP_SVD/01_MNIST実験]]
-
-### 役割
-
-学習済みMNIST MLPへSVD圧縮を適用し、rankと圧縮率・誤差・分類精度の関係を実験する。
-
-### 対象モデル
-
-```text
-入力画像
-(N, 1, 28, 28)
-      │
-      ▼
-Flatten
-(N, 784)
-      │
-      ▼
-Linear(784, 512)
-      │
-      ▼
-ReLU
-      │
-      ▼
-Linear(512, 10)
-      │
-      ▼
-logits
-(N, 10)
-```
-
-最初の圧縮対象は、
-
-```python
-nn.Linear(
-    784,
-    512,
-)
-```
-
-である。
-
-### 主な内容
-
-- MNISTの読み込み
-- train・validation・testの分離
-- seed・device・保存先
-- baseline MLP
-- 学習・評価関数
-- baseline checkpoint
-- 圧縮対象層の確認
-- 特異値スペクトル
-- 累積エネルギー
-- エネルギー閾値rank
-- rank候補
-- 最大rankでの実装確認
-- データセット全体の誤差集計
-- 重み誤差
-- 層出力誤差
-- logits誤差
-- 予測一致率
-- rank sweep
-- DataFrame・CSV保存
-- グラフ作成
-- fine-tuning
-- 推論時間
-- クラス別accuracy
-- 誤分類画像
-- 実験メタデータ
-- 考察・結論の書き方
-
-### 基本rank候補
-
-$$
-r
-\in
-\{
-8,
-16,
-32,
-64,
-128,
-256
-\}
-$$
-
-### 実験の原則
-
-```text
-1つの学習済みbaseline
-├── rank 8
-├── rank 16
-├── rank 32
-├── rank 64
-├── rank 128
-└── rank 256
-```
-
-rankごとにbaselineを再学習しない。
-
-### 最低限保存する結果
-
-- baseline test loss
-- baseline test accuracy
-- rank
-- パラメータ数
-- 重み保持率
-- 圧縮倍率
-- 特異値エネルギー保持率
-- 相対重み誤差
-- 層出力RMSE
-- logits RMSE
-- 予測一致率
-- 圧縮直後accuracy
-- fine-tuning後accuracy
-- 推論時間
-
-### 実験完了条件
-
-- baseline checkpointを保存した
-- 特異値スペクトルを描いた
-- 最大rankで再構成を確認した
-- 複数rankを評価した
-- CSVへ結果を保存した
-- 代表rankをfine-tuningした
-- 圧縮率とaccuracyのグラフを作った
-- 結果を文章で考察した
-
-### 次に進む条件
-
-単純SVDによるMNIST baselineを完成させた後、[[50_DMRG/01_SVDからDMRGへのつながり]] へ進む。
-
----
-
-## [[50_DMRG/01_SVDからDMRGへのつながり]]
-
-### 役割
-
-行列SVDによるNN圧縮と、MPS・Tensor Train・MPO・DMRGの共通点と違いを整理する。
-
-### 主な内容
-
-- DMRG
-- MPS
-- bond dimension
-- Schmidt分解
-- 密度行列
-- discarded weight
-- NN特異値エネルギーとの数式上の対応
-- rankとbond dimension
-- 2因子Linearを最小のテンソルネットワークとして見る考え方
-- MPO
-- Tensor Train
-- 行列SVDとMPOの違い
-- DMRGのsweep
-- 2-site DMRG
-- canonical form
-- gauge freedom
-- ALS
-- TT-SVD
-- tensorization
-- DMRG-likeなNN局所最適化
-- HamiltonianとNN lossの違い
-- 行列SVDをbaselineにする理由
-- 将来の研究ロードマップ
-
-### 最重要の共通点
-
-- SVDを使う
-- 上位特異値を残す
-- 内部次元を制限する
-- 捨てた特異値の二乗和を誤差指標にする
-- 小さいテンソルの積へ分解する
-
-### 最重要の違い
-
-- NN圧縮は主に重み行列を近似する
-- DMRGは量子状態を変分的に最適化する
-- DMRGはHamiltonianとエネルギー最小化を扱う
-- DMRGの特異値はSchmidt係数として解釈できる
-- NN重みの特異値は、通常はSchmidt係数ではない
-- NN重みの特異値はエネルギー固有値ではない
-
-### 次の発展先
-
-- [[10_Tensor Trainとは]]
-- [[11_TT-SVD]]
-- [[12_MPOでLinear層を表す]]
-- [[13_MPOのPyTorch実装]]
-- [[14_MPOによるMNIST圧縮]]
-- [[15_DMRG-like最適化]]
-
-これらは今後追加する発展ノートの候補である。
-
----
-
-# 目的別の読み方
-
-## 数学から順番に理解したい
-
-```text
-01 → 03 → 02 → 04 → 05 → 06 → 07 → 08 → 09
-```
-
-SVDと近似理論を先に固め、その後Linear層へ接続する。
-
----
-
-## 実装を早く動かしたい
-
-```text
-02 → 04 → 07 → 08
-       ↑
-    01・03・05・06を必要に応じて参照
-```
-
-ただし、最大rankでの一致確認と誤差評価は省略しない。
-
----
-
-## 研究テーマ全体を把握したい
-
-```text
-00 → 08 → 09 → 01〜07
-```
-
-最初に実験の全体像と将来の発展先を見た後、理論へ戻る。
-
----
-
-## DMRG経験からNN圧縮へ入りたい
-
-```text
-09 → 01 → 03 → 04 → 07 → 08
-```
-
-ただし、量子状態のSchmidt係数とNN重みの特異値を同一視しない。
-
----
-
-# 理論・実装・実験の対応表
-
-| 理論・概念 | 実装箇所 | 実験で確認するもの |
-|---|---|---|
-| SVD | `torch.linalg.svd` | 特異値スペクトル |
-| 切り詰めSVD | `truncated_svd` | rank別重み誤差 |
-| 特異値エネルギー | `rank_for_energy` | 累積エネルギー |
-| 低ランク因子 | `factor_weights` | 最大rankでの再構成 |
-| 2層Linear | `LowRankLinear` | 元層との出力比較 |
-| 圧縮率 | `compression_stats` | rank別パラメータ数 |
-| 重み誤差 | `compare_weight_matrices` | 相対フロベニウス誤差 |
-| 出力誤差 | `compare_tensors` | 層出力RMSE |
-| モデル置換 | `compress_linear_by_path` | MNIST圧縮モデル |
-| 推論時間 | `benchmark_module` | baselineとの時間比較 |
-| タスク性能 | 学習・評価関数 | loss・accuracy |
-| 再最適化 | fine-tuning | 精度回復量 |
-
----
-
-# 実験フロー
-
-```mermaid
-flowchart TD
-    D["MNISTを読み込む"] --> B["baseline MLPを学習"]
-    B --> S["checkpointを保存"]
-    S --> V["特異値を解析"]
-    V --> R["rank候補を決める"]
-    R --> C["各rankでfc1を置換"]
-    C --> W["重み誤差を評価"]
-    W --> O["層出力誤差を評価"]
-    O --> Z["logits誤差を評価"]
-    Z --> A["accuracyを評価"]
-    A --> F["代表rankをfine-tuning"]
-    F --> P["CSV・グラフ・考察を保存"]
-```
-
----
-
-# 重要なチェックポイント
-
-## 数学
-
-- [ ] $W=U\Sigma V^{\mathsf{T}}$ の各行列の形状を説明できる
-- [ ] 特異値が大きい順に並ぶことを理解している
-- [ ] rankと非ゼロ特異値数の関係を説明できる
-- [ ] 切り詰めSVDの誤差式を説明できる
-- [ ] 特異値エネルギー保持率を計算できる
-
-## Linear層
-
-- [ ] `nn.Linear(in_features, out_features)` の重み形状を説明できる
-- [ ] bias込みではアフィン変換であることを理解している
-- [ ] PyTorchのバッチ行列積の向きを理解している
-- [ ] Linearと活性化関数を区別できる
-
-## 低ランク置換
-
-- [ ] 2つのLinearの間にReLUを入れない
-- [ ] 元のbiasを後段へ引き継ぐ
-- [ ] 入出力形状を変えない
-- [ ] 最大rankで元重み・元出力に近づくことを確認する
-- [ ] 置換後にoptimizerを作り直す
-
-## 評価
-
-- [ ] 重み誤差とaccuracyを区別する
-- [ ] MAE・MSE・RMSEを区別する
-- [ ] 相対誤差の分母を確認する
-- [ ] バッチRMSEを単純平均しない
-- [ ] 圧縮直後とfine-tuning後を分けて記録する
-- [ ] パラメータ数と実測時間を分けて評価する
-
-## 実験
-
-- [ ] rankごとにbaselineを再学習しない
-- [ ] validationとtestの用途を区別する
-- [ ] seed・device・ライブラリバージョンを保存する
-- [ ] checkpointとCSVを保存する
-- [ ] 特異値スペクトルとaccuracy曲線を描く
-- [ ] 結果の限界を文章で明記する
-
-## DMRGとの接続
-
-- [ ] DMRGはSVDだけではないと説明できる
-- [ ] rankとbond dimensionの類似点を説明できる
-- [ ] NN特異値とSchmidt係数を混同しない
-- [ ] HamiltonianとNN lossの違いを説明できる
-- [ ] TT-SVD・MPO・DMRG-likeの段階を区別できる
-
----
-
-# よくある混同
-
-## SVD圧縮とpruning
-
-SVD圧縮は、重み要素を個別に0へする方法ではない。
-
-```text
-SVD圧縮
-大きな行列を2つの小さい行列へ分解する
-```
-
-```text
-pruning
-重み要素・チャネル・ユニットなどを削除する
-```
-
----
-
-## rankと圧縮率
-
-同じrankでも、入出力次元が異なれば圧縮率は異なる。
-
-$$
-P_{\mathrm{lowrank}}
-=
-r
-\left(
-D_{\mathrm{in}}
-+
-D_{\mathrm{out}}
-\right)
-$$
-
-を使って計算する。
-
----
-
-## 特異値エネルギーとaccuracy
-
-エネルギー保持率が99%でも、accuracyが99%維持される保証はない。
-
-SVDが最小化するのは重み行列のノルム誤差であり、分類lossではない。
-
----
-
-## 2層化と非線形化
-
-SVDによる2層化では、2つのLinearの間に活性化関数を入れない。
-
-元モデルでLinearの後に存在したReLUは、そのまま残す。
-
----
-
-## パラメータ削減と高速化
-
-パラメータ数や理論MAC数が減っても、実測推論時間が同じ割合で短くなるとは限らない。
-
-2つのLinearへ分かれることで、演算呼び出しや中間テンソルのオーバーヘッドが発生する。
-
----
-
-## SVDとDMRG
-
-DMRGはSVDの別名ではない。
-
-DMRGには、MPSによる状態表現、局所有効問題、変分更新、sweep、SVD切り捨てが含まれる。
-
----
-
-# 推奨プロジェクト構成
-
-```text
-nn-svd-experiment/
-├── notebooks/
-│   └── 08_mnist_svd_experiment.ipynb
-├── src/
-│   ├── models.py
-│   ├── svd_compression.py
-│   ├── metrics.py
-│   └── training.py
-├── checkpoints/
-│   ├── mnist_mlp_baseline.pt
-│   └── mnist_mlp_rank64_finetuned.pt
-├── results/
-│   ├── rank_results_before_finetuning.csv
-│   ├── rank_results_with_finetuning.csv
-│   ├── experiment_metadata.json
-│   └── figures/
-├── notes/
-│   ├── 00_目次.md
-│   ├── 01_SVDとは.md
-│   ├── 02_nn.Linearとは.md
-│   ├── 03_SVDによる低ランク近似.md
-│   ├── 04_Linear層を2層へ置き換える.md
-│   ├── 05_圧縮率とRank.md
-│   ├── 06_誤差評価.md
-│   ├── 07_PyTorch実装.md
-│   ├── 08_MNIST実験.md
-│   └── 09_DMRGとのつながり.md
-└── README.md
-```
-
----
-
-# 学習記録テンプレート
-
-各章を進めるときは、次を記録する。
-
-```markdown
-## 学習日
-
-YYYY-MM-DD
-
-## 理解できたこと
-
--
-
-## まだ曖昧なこと
-
--
-
-## 実行したコード
-
--
-
-## 発生したエラー
-
--
-
-## 自分の言葉での説明
-
--
-
-## 次に確認すること
-
--
-```
-
----
-
-# 実験記録テンプレート
-
-```markdown
-## 実験名
-
-## 仮説
-
-## baseline
-
-- seed:
-- epoch:
-- learning rate:
-- test loss:
-- test accuracy:
-
-## 圧縮条件
-
-- target layer:
-- rank:
-- singular-value placement:
-- fine-tuning epoch:
-- fine-tuning learning rate:
-
-## 結果
-
-- parameter count:
-- keep ratio:
-- compression factor:
-- retained energy:
-- relative weight error:
-- layer output RMSE:
-- logits RMSE:
-- prediction agreement:
-- test accuracy before fine-tuning:
-- test accuracy after fine-tuning:
-- inference time:
-
-## 考察
-
-## 次の実験
-```
-
----
-
-# 研究ロードマップ
-
-## 現在の範囲
-
-```text
-行列SVD
-  ↓
-Linear層の2因子化
-  ↓
-MNISTでrank比較
-  ↓
-fine-tuning
-```
-
-## 次の範囲
-
-```mermaid
-flowchart TD
-    S["行列SVD baseline"] --> T["Tensor Trainの基礎"]
-    T --> TS["TT-SVD"]
-    TS --> M["重みをMPOで表す"]
-    M --> MP["MPO LinearのPyTorch実装"]
-    MP --> E["MNISTでSVDとMPOを比較"]
-    E --> D["DMRG-like sweep最適化"]
-```
-
-## 今後の候補ノート
-
-- [[10_Tensor Trainとは]]
-- [[11_TT-SVD]]
-- [[12_MPOでLinear層を表す]]
-- [[13_MPOのPyTorch実装]]
-- [[14_MPOによるMNIST圧縮]]
-- [[15_DMRG-like最適化]]
-
----
-
-# 研究で比較する基準
-
-将来、MPOやDMRG-like手法を実装した場合、単純SVDを必ずbaselineとして残す。
-
-比較方法は、次の2種類を基本とする。
-
-## 同じパラメータ数で比較する
-
-$$
-P_{\mathrm{SVD}}
-\approx
-P_{\mathrm{MPO}}
-$$
-
-の条件で、accuracyやlossを比較する。
-
-## 同じaccuracyで比較する
-
-同程度のaccuracyを保つために必要なパラメータ数・学習時間・推論時間を比較する。
-
-## 併記する項目
-
-- 圧縮直後かfine-tuning後か
-- optimizer
-- learning rate
-- epoch数
-- seed
-- tensorization
-- rankまたはbond dimension
-- パラメータ数
-- 学習時間
-- 推論時間
-- device
-
----
-
-# このノート群の完了条件
-
-## 理論
-
-- [ ] SVDを行列の形状込みで説明できる
-- [ ] 切り詰めSVDの誤差式を説明できる
-- [ ] rankと圧縮率の関係を計算できる
-- [ ] 重み誤差・出力誤差・タスク誤差を区別できる
-
-## 実装
-
-- [ ] `LowRankLinear` を自力で再実装できる
-- [ ] 任意のLinear層を名前で置換できる
-- [ ] 最大rankテストを作れる
-- [ ] 圧縮モデルを保存・読み込みできる
-
-## 実験
-
-- [ ] MNIST baselineを学習できる
-- [ ] rank sweepを実行できる
-- [ ] CSVとグラフを保存できる
-- [ ] fine-tuning前後を比較できる
-- [ ] 結果を数値入りで考察できる
-
-## 発展
-
-- [ ] SVDとSchmidt分解の関係を説明できる
-- [ ] rankとbond dimensionの違いを説明できる
-- [ ] 行列SVDとMPO分解の違いを説明できる
-- [ ] DMRG-likeという表現が必要な理由を説明できる
-
----
-
-# 用語の最小整理
-
-| 用語 | このノート群での意味 |
-|---|---|
-| SVD | 行列を左右の特異ベクトルと特異値へ分解する方法 |
-| 特異値 | 各変換方向の強さを表す非負の値 |
-| rank | 独立な変換方向の数 |
-| 切り詰めSVD | 上位rankの特異値・特異ベクトルだけを残す近似 |
-| 低ランク近似 | 元行列をより小さいrankの行列で近似すること |
-| 保持率 | 圧縮後に残るパラメータ数の割合 |
-| 削減率 | 圧縮によって減ったパラメータ数の割合 |
-| 圧縮倍率 | 元のパラメータ数を圧縮後で割った値 |
-| RMSE | 誤差二乗平均の平方根 |
-| fine-tuning | 圧縮後モデルをタスクlossで再学習すること |
-| MPS | 量子状態・高階テンソルを行列積形式で表す表現 |
-| Tensor Train | MPSと基本構造が近い高階テンソル分解 |
-| MPO | 行列・演算子をテンソル列で表す形式 |
-| bond dimension | テンソル間の内部添字次元 |
-| DMRG | MPSを局所的に変分最適化するsweep型手法 |
-| DMRG-like | DMRGの局所更新・sweep・SVD再分割を参考にした手法 |
-
----
-
-# 関連ノート
-
-## 基礎
-
-- [[00_基礎理論/01_SVDとは]]
-- [[00_基礎理論/02_nn.Linearとは]]
-- [[00_基礎理論/03_SVDによる低ランク近似]]
-
-## 圧縮設計
-
-- [[00_基礎理論/04_Linear層を2層へ置き換える]]
-- [[00_基礎理論/05_圧縮率とRank]]
-- [[00_基礎理論/06_誤差評価]]
-
-## 実装・実験
-
-- [[00_基礎理論/07_PyTorch実装]]
-- [[10_MNIST_MLP_SVD/01_MNIST実験]]
-
-## 発展
-
-- [[50_DMRG/01_SVDからDMRGへのつながり]]
-- [[10_Tensor Trainとは]]
-- [[11_TT-SVD]]
-- [[12_MPOでLinear層を表す]]
-
----
-
-# 最初に読むノート
-
-初めて読む場合は、[[00_基礎理論/01_SVDとは]] から開始する。
-
-すでにSVDの基礎を理解している場合は、[[00_基礎理論/02_nn.Linearとは]] でPyTorchの重み形状を確認し、[[00_基礎理論/03_SVDによる低ランク近似]] へ進む。
-
-実装を進める場合は、[[00_基礎理論/07_PyTorch実装]] を参照しながら、[[10_MNIST_MLP_SVD/01_MNIST実験]] のNotebookを作成する。
-
----
-
-## 10_SVD実装：コード・実測の詳細編
-
-[[00_基礎理論/07_PyTorch実装]] と [[10_MNIST_MLP_SVD/01_MNIST実験]] の詳細作業を、次の実装編へ分離した。
-
-- [[README_実装編]]
-- [[00_基礎理論/08_Linear層のSVD実装]]
-- [[00_基礎理論/09_Linear層の2層置換_実装]]
-- [[00_基礎理論/10_SVD圧縮モデルの評価設計]]
-- [[00_基礎理論/11_理論計算量とベンチマーク]]
-- [[10_MNIST_MLP_SVD/04_MNISTでの実験結果]]
-
-ルート直下の01〜09は理論・全体設計を扱い、10_SVD実装は関数単位の実装判断、テスト、実測結果を扱う。コード本体は別ディレクトリへ保存する。
-
-```mermaid
-flowchart LR
-    A["01〜06 理論"] --> B["07 実装全体"]
-    B --> C["10 SVD実装詳細"]
-    C --> D["08 MNIST実験設計"]
-    D --> E["10/05 実測結果"]
-    E --> F["09 DMRGへの接続"]
-```
+# 12. 最短で読むなら
+
+SVD編の全体を短く追う場合：
+
+1. [[00_基礎理論/01_SVDとは]]
+2. [[00_基礎理論/03_SVDによる低ランク近似]]
+3. [[00_基礎理論/04_Linear層を2層へ置き換える]]
+4. [[00_基礎理論/16_Conv2d重みの行列化とSVD]]
+5. [[00_基礎理論/17_Conv2dの低ランク2層置換]]
+6. [[00_基礎理論/10_SVD圧縮モデルの評価設計]]
+7. [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
+8. [[SVD実験まとめ]]
+9. [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
+
+CIFAR-10のコードを理解しながら読む場合は、途中に、
+
+- [[00_基礎理論/18_CIFAR10の前処理とDataLoader]]
+- [[00_基礎理論/19_再現性と乱数管理]]
+- [[00_基礎理論/20_Global Average PoolingとCIFAR10モデル設計]]
+
+を入れる。
