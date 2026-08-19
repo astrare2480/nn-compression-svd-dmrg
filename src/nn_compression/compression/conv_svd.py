@@ -35,6 +35,7 @@ def _factory_kwargs(conv: nn.Conv2d) -> dict:
 
 
 def _unsupported_conv2d(conv: nn.Conv2d) -> None:
+    """現在の flattening（out × in*kH*kW）が groups=1 前提のため、それ以外は拒否する。"""
     if conv.groups != 1:
         raise ValueError(
             "groups=1 の Conv2d のみ対応しています: "
@@ -55,6 +56,7 @@ def factorize_conv2d_layer(conv: nn.Conv2d, rank: int) -> nn.Sequential:
     stride / padding / dilation / padding_mode は 1 層目が引き継ぐ。
     bias は最終出力に加わるため 2 層目へ移す。
     生成層は元層と同じ device / dtype で作り、float32 を経由しない。
+    ``requires_grad`` も元層から引き継ぐ。
     """
     _unsupported_conv2d(conv)
     rank = coerce_rank(rank, conv2d_max_rank(conv))
@@ -114,7 +116,8 @@ def factorize_named_conv2d(
     """指定した Conv2d だけを低ランク 2 層へ置換したコピーを返す。
 
     ``layer_name`` は ``\"conv2\"`` でも ``\"block.conv\"`` でもよい。
-    元の ``model`` は変更しない。
+    元の ``model`` は変更しない。``deepcopy`` するため Fine-tune しても
+    baseline の Parameter は動かない。
     """
     compressed_model = copy.deepcopy(model)
     layer = get_named_module(model, layer_name)

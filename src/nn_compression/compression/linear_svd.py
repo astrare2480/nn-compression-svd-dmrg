@@ -15,7 +15,7 @@ from .svd import coerce_rank, truncated_svd
 
 
 def linear_max_rank(layer: nn.Linear) -> int:
-    """Linear 重みの数学的な最大 rank。"""
+    """Linear 重みの数学的な最大 rank（``min(out_features, in_features)``）。"""
     return min(layer.in_features, layer.out_features)
 
 
@@ -67,6 +67,7 @@ def factorize_linear_layer(layer: nn.Linear, rank: int) -> nn.Sequential:
     1 層目へ ``Vh_r``、2 層目へ ``U_r @ diag(S_r)`` を代入する。
     元に bias がある場合だけ、2 層目へコピーする。
     生成層は元層と同じ device / dtype で作り、float32 を経由しない。
+    ``requires_grad`` も元層から引き継ぐ（frozen を trainable にしない）。
     """
     rank = coerce_rank(rank, linear_max_rank(layer))
     factory = _factory_kwargs(layer)
@@ -103,7 +104,8 @@ def factorize_named_linear(
 
     ``Linear(in → out)`` を ``Linear(in → rank)`` + ``Linear(rank → out)``
     に分解する。``layer_name`` は ``\"fc1\"`` でも ``\"head.fc\"`` でもよい。
-    元の ``model`` は変更しない。
+    元の ``model`` は変更しない。``deepcopy`` するため Fine-tune しても
+    baseline の Parameter は動かない。
     """
     compressed_model = copy.deepcopy(model)
     layer = get_named_module(model, layer_name)

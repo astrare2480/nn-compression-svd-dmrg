@@ -44,7 +44,7 @@ def make_one_layer_svd_model(
     """fc1・fc2 を低ランク近似した1層Linearへ差し替えた MLP を作る.
 
     層の形状は変わらないため、パラメータ削減ではなく近似誤差を確認する
-    実験用である。返り値は ``model`` と Parameter を共有しない。
+    実験用である。返り値は ``model`` と Parameter を共有しない（``deepcopy``。fc3 も含む）。
     ``r1`` / ``r2`` は旧 Notebook 向け alias。
     """
     fc1_rank, fc2_rank = _resolve_mlp_ranks(fc1_rank, fc2_rank, r1, r2)
@@ -73,7 +73,7 @@ def make_two_layer_svd_model(
     ``Linear(in -> out)`` を ``Linear(in -> rank)`` と
     ``Linear(rank -> out)`` に分解するため、rank が十分小さい場合に
     パラメータ数・理論MACsを削減できる。
-    返り値は ``model`` と Parameter を共有しない。
+    返り値は ``model`` と Parameter を共有しない（``deepcopy``。fc3 も含む）。
     ``r1`` / ``r2`` は旧 Notebook 向け alias。
     """
     fc1_rank, fc2_rank = _resolve_mlp_ranks(fc1_rank, fc2_rank, r1, r2)

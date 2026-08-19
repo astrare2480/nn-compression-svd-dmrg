@@ -20,7 +20,8 @@ from .loops import evaluate, train_one_epoch
 def non_shuffling_loader(loader: DataLoader) -> DataLoader:
     """同じ Dataset を shuffle せず走査する DataLoader を返す。
 
-    学習用 ``shuffle=True`` loader の Generator を消費しない。
+    学習用 ``shuffle=True`` loader を評価で再走査すると Generator が進み、
+    次 epoch や次候補の mini-batch 順が変わる。train 指標はこちらで測る。
     """
     kwargs = {
         "dataset": loader.dataset,
@@ -107,6 +108,7 @@ def fit_with_early_stopping(
         )
 
         if train_metric_loader is not None:
+            # shuffle 付き train_loader は再走査しない（学習順を変えない）。
             train_loss, train_acc = evaluate(
                 model,
                 train_metric_loader,

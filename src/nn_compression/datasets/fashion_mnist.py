@@ -99,7 +99,7 @@ def make_fashion_mnist_loaders(
             batch_size=test_batch_size,
             shuffle=False,
         ),
-        # 学習履歴用。shuffle Generator を消費しない
+        # 学習履歴用。shuffle=True の train_loader を再走査して Generator を進めない
         "train_eval_loader": DataLoader(
             train_dataset,
             batch_size=train_batch_size,

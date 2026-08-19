@@ -20,7 +20,8 @@ def set_named_module(model: nn.Module, name: str, module: nn.Module) -> None:
 
     PyTorch の ``set_submodule`` を使う。
     ``nn.Sequential`` の番号付き子（``\"block.0\"``）にも使える。
-    存在しないパスは ``strict=True`` でエラーにする。
+    ``strict=True`` なので、存在しないパスを暗黙に作らず
+    既存モジュールの置換だけを許可する。
     """
     get_named_module(model, name)
     model.set_submodule(name, module, strict=True)
