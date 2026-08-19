@@ -15,9 +15,13 @@ tags:
 
 # Fashion-MNIST実験
 
+> [!important]
+> このノートは、Fashion-MNIST MLP実験を組み立てていった**学習履歴・設計経緯**を残す。
+> 最終rank・Test accuracyなどの正式値は [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]] のcorrected結果を参照する。
+
 ## サマリー
 
-Fashion-MNIST分類用のMLPを学習し、学習済み `fc1` と `fc2` の重みをSVDで低ランク2層へ置き換え、圧縮率と分類性能の関係を調べた。
+Fashion-MNIST分類用のMLPを学習し、学習済み `fc1` / `fc2` のweightをSVDで低rank化した。
 
 ```mermaid
 flowchart LR
@@ -25,33 +29,24 @@ flowchart LR
     B --> ES["Early Stopping"]
     ES --> S["fc1 / fc2をSVD"]
     S --> R["rank pair sweep"]
-    R --> P["Pareto frontier"]
-    P --> K["knee ± 1"]
-    K --> F["3候補をFine-tuning"]
-    F --> V["Validationで最終モデル選択"]
-    V --> T["Testで最終評価"]
+    R --> P["Pareto / knee"]
+    P --> F["Fine-tuning"]
+    F --> V["Validationで選択"]
+    V --> T["Testで最終確認"]
 ```
 
-今回SVDをかけた対象は画像そのものではなく、学習済みMLPの重み行列。
+SVD対象は画像ではなく、学習済みMLPのweight matrixである。
 
 ---
 
-## 1. 目的
+# 1. データとモデル
 
-> 学習済みMLPの重み行列にどれだけ冗長性があり、低rank表現へ置き換えても分類性能をどこまで維持できるかを調べる。
+Fashion-MNISTは28×28のグレースケール衣類画像を10クラスへ分類するデータセット。
 
-さらにSVD直後に落ちた性能を、rankを固定したFine-tuningでどこまで回復できるかを見る。
-
----
-
-## 2. データとモデル
-
-Fashion-MNISTは28×28グレースケール画像、10クラス、train 60,000 / test 10,000。
-
-モデル：
+今回のMLPは、
 
 ```text
-784 -> 512 -> 256 -> 10
+784 → 512 → 256 → 10
 ```
 
 ```text
@@ -60,77 +55,68 @@ fc2 = Linear(512, 256)
 fc3 = Linear(256, 10)
 ```
 
-SVD圧縮対象は `fc1` と `fc2`。`fc3` は非圧縮。
-Baseline parameter数は **535,818**。
+で、SVD対象は `fc1` / `fc2`。`fc3` はそのまま残す。
 
----
-
-## 3. 00: 50 epoch固定学習
-
-条件：
-
-| 項目 | 値 |
-|---|---:|
-| Train | 60,000 |
-| Test | 10,000 |
-| batch size | 64 |
-| optimizer | Adam |
-| learning rate | 0.001 |
-| epoch | 50固定 |
-
-epoch 50：
-
-| 指標 | Train | Test |
-|---|---:|---:|
-| loss | 0.0650 | 0.6842 |
-| accuracy | 97.51% | 88.44% |
-
-![[20_FashionMNIST/assets/baseline_fixed50_learning_curves.png]]
-
-Train lossは全体として低下する一方、Test lossは後半で大きく上昇しており、過学習を確認できる。
-このNotebookは過学習確認用であり、正式なモデル選択には使わない。
-
-shape確認用の `next(iter(train_loader))` セルは削除し、最新版00を先頭から再実行した結果へ更新した。
-
----
-
-## 4. 01: Early Stopping
-
-分割：
+Baseline parameter数：
 
 ```text
-Train      55,000
-Validation  5,000
-Test       10,000
+535,818
 ```
-
-設定：
-
-```text
-MAX_EPOCHS = 50
-PATIENCE   = 5
-MIN_DELTA  = 1e-4
-```
-
-最新run：
-
-| 項目 | 値 |
-|---|---:|
-| Early stopping | epoch 15 |
-| Best epoch | 10 |
-| Best validation loss | 0.2767 |
-| Test loss | 0.3212 |
-| Test accuracy | 89.07% |
-
-![[20_FashionMNIST/assets/baseline_early_stopping_learning_curves.png]]
-
-Best epochの `state_dict` を `deepcopy` で保存し、学習終了後に復元してTest評価する。
 
 ---
 
-## 5. 02 / 03: Validationを2つへ分離
+# 2. 固定50 epoch学習で過学習を確認した
 
-SVD rank選択以降はtrain 60,000を、
+最初のNotebookでは、Early Stoppingを入れず50 epoch学習し、Train lossが下がり続ける一方でTest lossが後半に悪化することを確認した。
+
+```text
+最終epoch付近
+Train acc ≈ 97.5%
+Test acc  ≈ 88.4%
+Test loss は後半で上昇
+```
+
+このrunの目的は最終modelを作ることではなく、**固定epochで学習し続けるとValidation / Test性能が悪化し得る**ことを確認することだった。
+
+---
+
+# 3. Early Stoppingを導入した
+
+次に、trainの一部をValidationへ分け、Validation lossが改善しなくなった時点で学習を止めるようにした。
+
+重要なのは、最後のepochのweightではなく、
+
+```text
+best validation lossを出したepoch
+```
+
+の `state_dict` を保存・復元すること。
+
+これにより、
+
+```text
+train lossを最小化し続ける
+```
+
+のではなく、Validation性能を基準にmodelを選択する流れへ移った。
+
+---
+
+# 4. Validationを用途別に分けた
+
+SVD rank選択まで行うと、1つのValidationを、
+
+```text
+Early Stopping
++
+rank選択
++
+Fine-tuning後の最終候補選択
+```
+
+に何度も使うことになる。
+
+そのため実験では、
 
 ```text
 Train                       50,000
@@ -139,52 +125,102 @@ Rank-Selection Validation    5,000
 Test                        10,000
 ```
 
-へ分ける。
-
-役割：
+へ役割を分離した。
 
 ```text
 Early-Stopping Validation
--> 学習を止めるepochを決める
+→ 学習を止めるepochを決める
 
 Rank-Selection Validation
--> rank / Pareto / knee / Fine-tuning後の最終モデルを選ぶ
+→ rank / candidateを選ぶ
 
 Test
--> 最終モデル決定後にだけ評価する
+→ 最終モデル決定後に確認する
 ```
 
----
-
-## 6. shape確認セルを実験手順から外した理由
-
-`next(iter(train_loader))` でshapeを見る処理は、データ形式の初期確認には使えるが、モデル学習・評価には不要。
-
-さらに `train_loader` が `shuffle=True` なので、学習前にiteratorを作ると乱数状態を進め、後続epochのバッチ順を変える可能性がある。
-今回の最新 `01` / `02` / `03` ではこのセルを削除したため、旧runの数値ではなく**今回添付されたNotebook出力を正本**とする。
-
-> [!warning]
-> 最新 `00_mlp_baseline_fixed_50epochs.ipynb` にはshape確認セルがまだ残る。ここで記録した00の値はその添付Notebookの出力に合わせている。00からもセルを削除して再実行した場合は、00の履歴を再更新する必要がある。
+この考え方はMNIST correctedで明確化した「Testをrank選択に使わない」という原則と同じ。
 
 ---
 
-## 7. 評価関数
+# 5. DataLoaderを読むときの注意
 
-最新Notebookの `evaluate()` は、
+学習用DataLoaderは通常、
+
+```text
+shuffle=True
+```
+
+を使う。
+
+そのため、学習前に、
 
 ```python
-model.eval()
-with torch.no_grad():
-    ...
+next(iter(train_loader))
 ```
 
-を内部で実行する。
-そのため各評価セルに `eval()` / `no_grad()` を直接書かなくても、Validation / Testのlossとaccuracyは評価モードで計算される。
+などで確認用batchを取得すると、DataLoader Generatorの状態を進める可能性がある。
+
+shape確認自体が悪いわけではないが、再現性を重視する実験では、
+
+```text
+確認用処理
+≠
+学習用Generatorを進める処理
+```
+
+として分離する。
+
+corrected実装ではさらに、train metricsを計算するときも `shuffle=True` のtraining loaderを再走査せず、`train_eval_loader` を分けている。
+
+詳細：
+
+- [[00_基礎理論/19_再現性と乱数管理]]
+- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 
 ---
 
-## 関連
+# 6. 旧02 / 03 runとcorrectedの関係
 
+historicalなMLP 02 / 03では、rank sweepとFine-tuningまで実施した。
+
+ただし後のレビューで、candidateごとに異なるseedを使うなど、比較条件を揃える余地が見つかった。
+
+そのため、旧runのrankやaccuracyは履歴として残し、現在の正式結果はcorrected Notebookを使う。
+
+```text
+notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
+```
+
+canonical result：
+
+```text
+fc1 rank = 32
+fc2 rank = 16
+Parameters = 57,098
+Test acc   = 0.8853
+```
+
+Baseline Test accuracyは `0.8819`。
+
+single seedなので、`+0.34pt` を性能改善とは断定せず、**約89%のparameter削減後も精度を維持した**と解釈する。
+
+---
+
+# 7. この実験設計から学んだこと
+
+1. SVD対象は入力画像ではなく学習済みweight。
+2. 固定epochよりValidationを使ったmodel選択が重要。
+3. Early Stopping用Validationとrank選択用Validationを分けると役割が明確になる。
+4. Testは最終model選択後まで温存する。
+5. DataLoaderの乱数状態も実験条件の一部。
+6. Fine-tuning candidate間では比較対象以外の乱数条件を揃える。
+7. historical runを残しつつ、formal resultはcorrectedへ一本化する。
+
+---
+
+# 関連
+
+- [[20_FashionMNIST/README]]
 - [[20_FashionMNIST/02_Fashion-MNISTのRank選択]]
 - [[20_FashionMNIST/03_Fashion-MNISTのFine-tuning]]
 - [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
