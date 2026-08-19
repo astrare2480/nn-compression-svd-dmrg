@@ -14,344 +14,311 @@ tags:
 
 # CNNでの実験結果
 
-## 最終比較
+## サマリー
 
-圧縮前後の比較には、02〜05で共通に使ったBaselineを使用する。
+Fashion-MNIST CNNでは、Linear圧縮・Conv圧縮・Conv+Linear同時圧縮を比較した。
 
-| Model | rank | Parameters | Param reduction | Total MACs | Total MAC reduction | Test loss | Test acc | ΔTest acc |
-|---|---|---:|---:|---:|---:|---:|---:|---:|
-| Baseline | — | 421,642 | — | 4,241,152 | — | **0.234131** | 91.75% | — |
-| fc1 SVD + FT | fc1=24 | 98,570 | **76.62%** | 3,918,080 | **7.62%** | 0.238414 | **91.87%** | +0.12pt |
-| conv2 SVD + FT | conv2=28 | 413,066 | **2.03%** | 2,560,256 | **39.63%** | 0.236488 | **91.97%** | +0.22pt |
-| conv2 + fc1 SVD + FT | conv2=28, fc1=24 | **89,994** | **78.66%** | **2,237,184** | **47.25%** | 0.240347 | **91.80%** | +0.05pt |
+現在、最終結果を引用するときはcorrected Notebookを優先する。
 
-> [!important]
-> `Total MACs` と `Total MAC reduction` は単独圧縮も同じCNN全体を分母にして比較するために整理した値。02/03のNotebook内MACsはLinear部分、04はconv2単体、05はCNN全体を計算しているため、Notebookの `compute_reduction` をそのまま横並びにはしない。
+特に、
 
-最終的に、**conv2 rank28 + fc1 rank24** の同時圧縮で、Parametersを78.66%、理論MACsを47.25%削減しながら、Test accuracy 91.80%を得た。
+```text
+04_cnn_conv_svd_corrected.ipynb
+05_cnn_conv_linear_svd_corrected.ipynb
+```
+
+では、旧04/05で不揃いだったlatency benchmark条件を修正し、baseline / compressedを同一 `input_batch`、同一warmup/repeatsで比較した。
 
 ---
 
-## 01と02〜05のBaselineの違い
+# 1. Baseline
 
-01：
-
-```text
-Train / Validation = 55,000 / 5,000
-Test acc            = 90.90%
-```
-
-02〜05：
+圧縮実験側で共通に使うCNN：
 
 ```text
-Train / ES Val / Rank Val = 50,000 / 5,000 / 5,000
-Test acc                  = 91.75%
+Parameters = 421,642
+MACs       = 4,241,152
+Test loss  = 0.238263
+Test acc   = 0.9128
 ```
 
-01はCNN構造・shape・学習確認用。圧縮実験の比較には02〜05側のBaselineを使う。
+このモデルでは、parameter数とMACsを支配する層が異なる。
+
+```text
+fc1
+→ parameter数を大きく持つ
+
+conv2
+→ 同じweightを多くの空間位置で使うためMACsが大きい
+```
+
+この違いが、Linear SVDとConv SVDの役割分担につながる。
 
 ---
 
-## Parameters: fc1が支配的
+# 2. Conv-only corrected
 
-Baselineのparameter内訳：
-
-| Layer | Parameters | 全体に占める割合 |
-|---|---:|---:|
-| conv1 | 320 | 0.08% |
-| conv2 | 18,496 | 4.39% |
-| fc1 | 401,536 | **95.23%** |
-| fc2 | 1,290 | 0.31% |
-| **Total** | **421,642** | **100%** |
-
-したがって、fc1 rank24だけで、
+対象：
 
 ```text
-421,642 → 98,570
-76.62% reduction
+conv2 = Conv2d(32 → 64, 3x3)
 ```
 
-まで減らせる。conv2だけでは、
+最終rank：
 
 ```text
-421,642 → 413,066
-2.03% reduction
+conv2 rank = 28
 ```
 
-に留まる。
+### 最終Test
+
+| Model | Parameters | Test loss | Test acc |
+|---|---:|---:|---:|
+| Baseline | 421,642 | 0.238263 | 0.9128 |
+| conv2 SVD + FT | **413,066** | **0.232226** | **0.9175** |
+
+Parameter reductionは約 **2.03%**。
+
+Accuracy差は、
+
+```text
++0.47 percentage point
+```
+
+だが、single seedなので性能改善とは断定しない。
+
+### Latency
+
+corrected版では、
+
+```text
+batch        = 256
+warmup       = 20
+repeats      = 2000
+same input_batch
+```
+
+へ条件を統一した。
+
+```text
+Baseline   ≈ 0.367 ms/batch
+Compressed ≈ 0.370 ms/batch
+```
+
+MACsは減っているが、実測latencyは短くならなかった。
 
 ---
 
-## MACs: conv2が支配的
+# 3. Conv + Linear corrected
 
-Baseline全CNNのMACs：
-
-| Layer | MACs |
-|---|---:|
-| conv1 | 225,792 |
-| conv2 | **3,612,672** |
-| fc1 | 401,408 |
-| fc2 | 1,280 |
-| **Total** | **4,241,152** |
-
-parameter数とは逆に、計算量ではconv2が大きい。
-
-### fc1 rank24
+単独実験で選んだrankを固定して同時に適用した。
 
 ```text
-Total MACs = 3,918,080
-Reduction  = 7.62%
-```
-
-### conv2 rank28
-
-```text
-Total MACs = 2,560,256
-Reduction  = 39.63%
-```
-
-### conv2 rank28 + fc1 rank24
-
-```text
-Total MACs = 2,237,184
-Reduction  = 47.25%
-```
-
-この結果から、
-
-```text
-fc1 SVD   → parameter削減の主役
-conv2 SVD → MACs削減の主役
-```
-
-という役割分担が確認できた。
-
-より具体的には、Baseline全体に対して、
-
-```text
-fc1   : Parametersの95.23% / MACsの9.46%
-conv2 : Parametersの 4.39% / MACsの85.18%
-```
-
-を占める。`conv2` はweight数自体は少なくても、そのweightを `14×14=196` 個の空間位置で再利用するためMACsが大きい。一方 `fc1` は巨大なweight行列を持つが、各weightを空間位置ごとに繰り返し使わない。
-
-この実験から、**圧縮対象は「parameterを減らしたいか」「演算量を減らしたいか」で選ぶ必要がある**ことが分かった。
-
----
-
-## rank選択は唯一の最適解ではない
-
-今回の `fc1=24`, `conv2=28` は、単純にaccuracy最大のrankを採用したものではない。Pareto frontierとkneeを使い、圧縮率とValidation性能の折衷点として選んだ。
-
-またfull-rank近くまでrankを増やすと近似誤差は減る一方、2層化のオーバーヘッドにより元モデルよりParameters/MACsが増える場合がある。実際、
-
-```text
-fc1 rank128 : CNN Parameters 438,026 > Baseline 421,642
-conv2 rank64: CNN Parameters 425,738 > Baseline 421,642
-```
-
-となった。
-
-したがって、
-
-```text
-SVD分解した = 圧縮できた
-```
-
-ではなく、**十分小さいrankを選ぶことで初めて圧縮になる**。
-
----
-
-## Fine-tuningの効果
-
-### fc1 rank24
-
-```text
-Validation acc : 91.72% → 92.26%
-Validation loss: 0.233418 → 0.220129
-```
-
-### conv2 rank28
-
-```text
-Validation acc : 92.16% → 92.60%
-Validation loss: 0.230316 → 0.209334
-```
-
-### conv2 rank28 + fc1 rank24
-
-```text
-Validation acc : 91.24% → 92.04%
-Validation loss: 0.246371 → 0.222078
-```
-
-特に同時圧縮ではSVD直後にBaselineから `-1.30pt` まで落ちたaccuracyが、Fine-tuning後は `-0.50pt` まで回復した。
-
-03ではbest epoch=1、04ではbest epoch=2、05ではbest epoch=1で、比較的短いFine-tuningで大きく回復している。結果からは、SVD因子が元の学習済みweightを近似した**良い初期値**になっていると考えられる。
-
-ただし、この結果だけからSVDそのものにaccuracy改善効果や正則化効果があるとは結論しない。確認できたのは、**低rank近似で生じた性能低下を追加学習で補正しやすかった**ことである。
-
-同時圧縮では上流の`conv2`で特徴量が変化し、その後段の`fc1`も同時に近似されるため、SVD directでは単独圧縮より誤差が重なった可能性がある。これはモデル構造と結果からの解釈であり、層ごとの誤差寄与を分離測定したわけではない。
-
----
-
-## retained energyと分類性能
-
-最終採用rank：
-
-```text
-fc1 rank24 retained energy   = 0.856742
-conv2 rank28 retained energy = 0.863418
-```
-
-どちらも約86%だが、rank sweepではretained energyが増えてもValidation accuracyは完全な単調増加にはならなかった。
-
-retained energyはSVDでどれだけ重み行列のエネルギーを保持したかを見る指標で、分類accuracy/lossとは別に評価する。
-
-さらに、fc1とconv2でretained energyがどちらも約86%だからといって、2層が「同じ強さで圧縮されている」とは限らない。特異値分布や下流タスクへの感度が層ごとに異なるため、**retained energyの値を異なる層どうしの絶対的な圧縮強度として比較しない**。
-
----
-
-## Test結果の解釈
-
-3種類の圧縮モデルはすべてBaselineよりTest accuracyがわずかに高かった。
-
-```text
-fc1        +0.12pt
-conv2      +0.22pt
-combined   +0.05pt
-```
-
-ただし今回の実験はseed 0の1 runで、差も小さい。本ノートでは「SVDにより精度向上」とは結論せず、**圧縮後も精度を維持できた**と解釈する。
-
-一方、Test lossは全圧縮モデルでBaselineよりわずかに増えた。
-
-```text
-Baseline  0.234131
-fc1       0.238414
-conv2     0.236488
-combined  0.240347
-```
-
-accuracyだけでなくlossも残すことで、正解率が同程度でも予測分布が完全には同じでないことを確認できる。
-
-今回のTestはrank選択やFine-tuning条件の選択には使わず、最終確認に限定している。この分離は、Test結果を見ながらrankを調整してしまうことを避けるために重要である。
-
-一方、結果はseed 0の1 runだけなので、数十サンプル以下に相当する小さなaccuracy差を頑健な差とはみなさない。複数seedで平均・標準偏差を確認するまでは「維持」と表現するのが適切である。
-
-また、Validationではcombined + FTがBaselineより `-0.50pt`、Testでは `+0.05pt` となっている。ValidationとTestで差の符号まで変わること自体も、今回の差が小さいことを示しており、単一split・単一seedの小差を過度に解釈しない。
-
----
-
-## 同時圧縮rankの限界
-
-05では、単独実験で選んだ `conv2=28` と `fc1=24` を固定して組み合わせた。
-
-```text
-conv2 rank × fc1 rank
-```
-
-を同時に探索したわけではないため、`(28, 24)` が同時圧縮としての全組み合わせ中の最適点であることは示していない。
-
-この実験で示せたのは、**個別に選んだrankを組み合わせても、Parameters -78.66%、MACs -47.25%と精度維持を両立できた**ことまでである。
-
----
-
-## MACsとlatency
-
-05の同時圧縮：
-
-```text
-MACs      : 4,241,152 → 2,237,184 (-47.25%)
-記録時間  : 0.384253 ms → 0.416497 ms
-```
-
-ただし、05ではbenchmark条件が揃っていない。
-
-```text
-Baseline   : warmup=20, repeats=2000
-Compressed : warmup=5,  repeats=200
-```
-
-そのため、この2値から「圧縮後の方が遅い」とは結論しない。現在のlatency値は参考記録であり、**速度比較としては未確定**とする。
-
-また、たとえ同一条件で測定しても、MACsは理論演算量であり実測latencyとは別物である。低rank化では元の1層が2層になるため、候補要因として、
-
-- 演算呼び出し回数の増加
-- 中間Tensorの生成・メモリアクセス
-- backend/kernelの実装効率
-- batch sizeやdevice
-- 小規模モデルでの固定オーバーヘッド
-
-などがある。これらは今回原因別に計測したものではないため、今後は同一benchmark条件で複数回測定する。
-
-よって今後も、
-
-- Parameters
-- MACs
-- 実測latency
-- Accuracy / loss
-
-を別の評価軸として残す。
-
----
-
-## 今回の結論
-
-```text
-Fashion-MNIST CNN
 conv2 rank = 28
 fc1 rank   = 24
 ```
 
-で、
+これは `conv2 rank × fc1 rank` の全組合せを探索した結果ではない。
+
+> **個別に選んだrankを組み合わせた複合圧縮実験**
+
+として扱う。
+
+### 圧縮量
+
+| 項目 | Baseline | Conv2 + fc1 SVD |
+|---|---:|---:|
+| Parameters | 421,642 | **89,994** |
+| Parameter reduction | — | **78.66%** |
+| MACs | 4,241,152 | **2,237,184** |
+| MAC reduction | — | **47.25%** |
+
+### Validation
+
+Fine-tuning前：
 
 ```text
-Parameters 421,642 → 89,994
-           -78.66%
-
-MACs       4,241,152 → 2,237,184
-           -47.25%
-
-Test acc   91.75% → 91.80%
+Val acc  = 0.9116
+Val loss = 0.241923
 ```
 
-を得た。
+Fine-tuning後：
 
-**LinearとConvを同時に低rank化することで、parameter数と理論計算量を同時に大きく減らしながら分類精度を維持できた。**
+```text
+Val acc  = 0.9188
+Val loss = 0.225938
+```
+
+Fine-tuningにより、同時圧縮で生じた性能低下をかなり回復した。
+
+### 最終Test
+
+| Model | Test loss | Test acc |
+|---|---:|---:|
+| Baseline | **0.238263** | 0.9128 |
+| Conv2 + fc1 SVD + FT | 0.241242 | **0.9133** |
+
+Accuracy差：
+
+```text
++0.05 percentage point
+```
+
+この差は極小であり、**精度維持**と解釈する。
 
 ---
 
-## この実験で言えること / まだ言えないこと
+# 4. Corrected latency
 
-### 言えること
+Conv+Linear correctedの公平なbenchmark：
 
-- このFashion-MNIST CNNでは、fc1低rank化がparameter削減、conv2低rank化がMACs削減に強く効いた。
-- 個別に選択した `fc1=24`, `conv2=28` を同時適用すると、Parameters -78.66%、MACs -47.25%でもTest accuracyをBaselineと同程度に維持できた。
-- SVD directの性能低下は短いFine-tuningでかなり回復した。
-- retained energyだけでは最終分類性能を決められず、Validation loss/accuracyなどタスク指標も必要だった。
+```text
+Baseline   ≈ 0.378 ms/batch
+Compressed ≈ 0.399 ms/batch
+```
 
-### まだ言えないこと
+一方、理論MACsは、
 
-- `(conv2=28, fc1=24)` が同時圧縮の全rank組み合わせで最適か。
-- 小さなTest accuracy差が複数seedでも再現するか。
-- MACs -47.25%が実機latency短縮へつながるか。
-- accuracyが近いモデル間で予測確率のcalibrationまで維持されているか。今回はcalibration指標を測定していない。
-- 別のデータセット・別のCNN構造でも同じ圧縮率を保てるか。
+```text
+4,241,152 → 2,237,184
+-47.25%
+```
 
-## 今後の追加検証（提案）
+まで減っている。
 
-1. 複数seedでBaseline/圧縮モデルを再実行し、Test accuracy/lossの平均と標準偏差を確認する。
-2. `conv2 rank × fc1 rank` の2次元sweepを行い、Parameters・MACs・Validation lossのPareto frontierを作る。
-3. latency benchmarkを同一warmup/repeats・同一batch sizeで複数回測定し、代表値とばらつきを残す。
-4. parameter数だけでなく、必要なら保存checkpointサイズや実メモリ使用量も別途測定する。
-5. より難しいデータセットや別CNN構造でも同じ手順を再現し、今回の傾向がモデル固有か一般化できるか確認する。
-6. accuracyとlossの差をさらに調べる必要がある場合は、予測確率のcalibration指標も追加する。
+つまり、今回の実装・GPU・batchでは、
 
-## 関連
+```text
+MACs -47%
+でも
+wall-clock latencyは改善しない
+```
 
-- [[20_FashionMNIST/07_CNN実験]]
+という結果になった。
+
+これは失敗として隠すのではなく、重要な実験結果として扱う。
+
+ただし、
+
+> SVD圧縮は一般に遅くなる
+
+とは結論しない。
+
+低rank2層化では、kernel launch、中間Tensor、memory access、行列shapeなどの影響も受けるため、**理論演算量と実速度は別に測定する必要がある**という結論までに留める。
+
+---
+
+# 5. Parameter削減とMACs削減の役割分担
+
+このCNNでは、
+
+```text
+fc1 SVD
+→ parameter削減に大きく効く
+
+conv2 SVD
+→ MACs削減に大きく効く
+```
+
+という違いがある。
+
+そのため、Conv+Linear同時圧縮では、
+
+```text
+Parameters -78.66%
+MACs       -47.25%
+```
+
+を同時に実現できた。
+
+ここから、圧縮対象層は、
+
+```text
+モデルサイズを減らしたいのか
+演算量を減らしたいのか
+```
+
+によって変わることが分かる。
+
+---
+
+# 6. Fine-tuningの意味
+
+SVD直後の低rankモデルは元の学習済みweightを近似しているが、task lossを直接最適化した低rankモデルではない。
+
+Fine-tuningでは、
+
+```text
+SVDで低rank制約を入れる
+        ↓
+その低rankモデルを初期値にする
+        ↓
+task lossで再最適化
+```
+
+を行う。
+
+Fashion-MNISTでは、SVD直後の性能低下を短いFine-tuningで大きく回復できた。
+
+ただしFine-tuning後の小さなaccuracy上昇を、SVDの正則化効果などとして一般化しない。
+
+---
+
+# 7. Single seedの制約
+
+corrected実験は `SEED=0` のsingle run。
+
+Conv-onlyの `+0.47pt`、Conv+Linearの `+0.05pt` は、複数seedで再現確認していない。
+
+したがって、本ノートでは、
+
+> **大きな圧縮後もaccuracyをほぼ維持した**
+
+ことを中心結論とする。
+
+---
+
+# 8. Historical 04/05との違い
+
+旧04/05では、baselineとcompressedでbenchmarkのwarmup / repeatsが揃っていなかった。
+
+そのため旧latency値はhistorical recordとして残すが、正式な速度比較には使わない。
+
+corrected版では、
+
+```text
+same input_batch
+same batch size
+warmup=20
+repeats=2000
+```
+
+へ統一した。
+
+詳細は [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]] を参照。
+
+---
+
+# 9. 結論
+
+Fashion-MNIST CNNから得た主要な結果は次のとおり。
+
+1. LinearとConvでは、parameter数・MACsへの効き方が異なる。
+2. Conv-onlyではparameter削減は小さいが、理論演算量を大きく減らせる。
+3. Conv+LinearではParametersを約79%、MACsを約47%削減できた。
+4. Fine-tuningにより低rank近似後のtask性能をかなり回復できる。
+5. corrected Testでは大幅圧縮後もaccuracyをほぼ維持した。
+6. MACs削減はGPU latency短縮を保証しなかった。
+7. `(conv2=28, fc1=24)` は同時圧縮の全rank空間における最適解ではない。
+
+この段階までで、単一層圧縮から複数種類の層の同時圧縮まで確認した。次のCIFAR-10では、複数Conv層の**model-wide rank allocation**へ進む。
+
+---
+
+# 関連
+
+- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 - [[20_FashionMNIST/08_CNNのLinear SVD]]
 - [[20_FashionMNIST/09_CNNのConv SVD]]
 - [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]
-- [[20_FashionMNIST/12_CNN全RankSweepと学習履歴]]
+- [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
