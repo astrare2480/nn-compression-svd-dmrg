@@ -75,6 +75,8 @@ Balanced     9 / 32 / 32 : 0.4354 → 0.7360
 Conservative 9 / 32 / 48 : 0.4792 → 0.7444
 ```
 
+この `before → after` は **Rank-Selection Validation accuracy** のFine-tuning前後を表す。Early-Stopping Validationやtestの値ではない。
+
 single seedなので、小さいaccuracy差は改善と断定せず、**圧縮後も精度をほぼ維持した**と解釈する。
 
 探索は全rank空間のglobal optimumではなく、各層のPareto / knee近傍に候補を制約したmodel-wide rank allocationである。
