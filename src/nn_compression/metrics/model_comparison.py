@@ -87,6 +87,7 @@ def logits_rmse(baseline_model, compressed_model, loader, device):
 
 
 def _synchronize(device: torch.device) -> None:
+    """CUDA 非同期 kernel を、測定している device 上で完了させてから時刻を取る。"""
     if device.type == "cuda":
         torch.cuda.synchronize(device)
 
@@ -102,7 +103,11 @@ def _as_input_batch(batch) -> torch.Tensor:
 
 
 def take_inference_batch(data_loader: DataLoader) -> torch.Tensor:
-    """比較用の 1 バッチを取る。shuffle Generator は消費しない。"""
+    """比較用の 1 バッチを取る。shuffle Generator は消費しない。
+
+    baseline / compressed は同じ Tensor を ``input_batch`` として共有する。
+    loader から都度取ると入力条件差が latency に混ざる。
+    """
     sampler = getattr(data_loader, "sampler", None)
     if isinstance(sampler, RandomSampler):
         raise ValueError(
@@ -130,6 +135,7 @@ def benchmark_inference(
 
     ``input_batch`` があれば loader を走査しない。
     baseline と compressed は同じ ``input_batch`` / warmup / repeats で測る。
+    条件を揃えないとモデル差以外が混入する。
     """
     if device is None:
         raise TypeError("device が必要です。")
@@ -195,8 +201,9 @@ def collect_compression_metrics(
     """圧縮モデルを validation loader で評価し、共通指標の dict を返す。
 
     層名・rank・CSV 名は含めない。呼び出し側が実験固有の列を足す。
-    既定では model 本体を保持しない。必要な候補だけ
-    ``include_model=True`` にするか、rank から再構築する。
+    既定 ``include_model=False`` は rank sweep 向け。全候補の model を
+    表に残さず、メモリと CSV を軽くし、必要な候補は rank から再構築する。
+    Fine-tuning 済みなど、保持が必要なときだけ ``include_model=True``。
     """
     validation_loss, validation_acc = evaluate(
         compressed_model,

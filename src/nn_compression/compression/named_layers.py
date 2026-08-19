@@ -19,6 +19,7 @@ def factorize_named_layers(
 
     Conv2d と Linear は分解の仕方が違うので、辞書を分ける。
     元の ``model`` は変更しない。分解は必ず未分解の元層から行う。
+    ``deepcopy`` するため Fine-tune しても baseline の Parameter は動かない。
     """
     compressed_model = copy.deepcopy(model)
 

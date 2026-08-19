@@ -40,6 +40,8 @@ def sweep_layer_ranks(
 
     ``factorize(original_layer, rank)`` が置換モジュールを返す。
     他層は触らない。元の ``model`` も変更しない。
+    各 candidate の model 本体は結果へ残さない（``include_model=False``）。
+    必要な候補は rank から再構築する。
     """
     original_layer = get_named_module(model, layer_name)
     rank_results: list[dict] = []

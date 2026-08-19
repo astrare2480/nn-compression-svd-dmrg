@@ -16,7 +16,11 @@ from torch import nn
 
 
 def coerce_rank(rank, max_rank: int, *, name: str = "rank") -> int:
-    """``rank`` を整数化し、``1 <= rank <= max_rank`` を検証する。"""
+    """``rank`` を整数化し、``1 <= rank <= max_rank`` を検証する。
+
+    ``max_rank`` は対象行列の数学的上限（``min(shape)``）。0 や超過は
+    切り捨てではなくエラーにする。
+    """
     try:
         rank_int = operator.index(rank)
     except TypeError as exc:
