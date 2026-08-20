@@ -241,5 +241,5 @@ Test acc = 0.8853
 - [[20_FashionMNIST/03_Fashion-MNISTのFine-tuning]]
 - [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
 - [[20_FashionMNIST/05_全RankSweep結果]]
-- [[00_基礎理論/05_圧縮率とRank]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]

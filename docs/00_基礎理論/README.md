@@ -1,112 +1,74 @@
-# CIFAR-10 CNN / SVD
+# 基礎理論
 
-Fashion-MNISTで確認したLinear / Conv SVDを、RGB自然画像と複数Conv層へ拡張する章。
+SVDによる低ランク近似から、ニューラルネットワークの圧縮、評価、PyTorch実装、テンソルネットワークへの発展までを整理する章。
 
-## 読む順番
+ファイル名の番号は、これまでの学習順と参照の連続性を保つため維持している。フォルダは内容の分野ごとに分けている。
 
-1. [[00_基礎理論/18_CIFAR10の前処理とDataLoader]]
-2. [[00_基礎理論/19_再現性と乱数管理]]
-3. [[00_基礎理論/20_Global Average PoolingとCIFAR10モデル設計]]
-4. [[00_基礎理論/16_Conv2d重みの行列化とSVD]]
-5. [[00_基礎理論/17_Conv2dの低ランク2層置換]]
-6. [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
+## 01_数学基礎
 
-## この章で進んだ点
+### 01_線形代数
 
-```text
-Fashion-MNIST
-single-layer rank selection
-+ fixed-rank Conv/Linear combination
-        ↓
-CIFAR-10
-conv1 / conv2 / conv3 の model-wide rank allocation
-```
+- [[00_基礎理論/01_数学基礎/01_線形代数/01_SVDとは]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/03_SVDによる低ランク近似]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
 
-CIFAR-10では、学習時だけRandomCrop / HorizontalFlipを使い、評価側では入力条件を固定する。GAPで巨大な全結合層を避け、複数Conv層の圧縮を主題にした。
+Tucker、TT/MPS、DMRGへ進み、ノートが増えた段階で `02_テンソル代数`、`03_最適化・変分法` を追加する。
 
-## canonicalデータ分割
+## 02_ニューラルネットワーク基礎
 
-corrected Notebookでは公式train 50,000枚を、
+- [[00_基礎理論/02_ニューラルネットワーク基礎/02_nn.Linearとは]]
+- [[00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎]]
+- [[00_基礎理論/02_ニューラルネットワーク基礎/15_CNNとConv2dの基礎]]
+- [[00_基礎理論/02_ニューラルネットワーク基礎/20_Global Average PoolingとCIFAR10モデル設計]]
 
-```text
-Train                       40,000
-Early-Stopping Validation    5,000
-Rank-Selection Validation    5,000
-Test（公式test）            10,000
-```
+## 03_モデル圧縮理論
 
-へ分ける。
+- [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]]
+- [[00_基礎理論/03_モデル圧縮理論/16_Conv2d重みの行列化とSVD]]
+- [[00_基礎理論/03_モデル圧縮理論/17_Conv2dの低ランク2層置換]]
 
-PerplexityでDataset / Subset / Generatorを学んだ際の `45,000 / 5,000` は基礎説明用の単純例であり、**canonical実験条件は40,000 / 5,000 / 5,000**。
+## 04_実験設計
 
-データ取得が極端に遅い場合の `download=False`、展開先、MD5確認などの実務メモも [[00_基礎理論/18_CIFAR10の前処理とDataLoader]] に残している。
+- [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
+- [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
+- [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
 
-## 正式結果
+## 05_PyTorch実装
 
-正式に引用する結果はcorrected版。
+- [[00_基礎理論/05_PyTorch実装/07_PyTorch実装]]
+- [[00_基礎理論/05_PyTorch実装/08_Linear層のSVD実装]]
+- [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]]
+- [[00_基礎理論/05_PyTorch実装/13_PandasとPython実装メモ]]
 
-```text
-Notebook:
-notebooks/30_cifar10/02_svd_global_compression_using_src_corrected.ipynb
+## 06_手法間のつながり
 
-Results:
-results/30_cifar10/02_svd_global_compression_using_src_corrected/
-```
+- [[00_基礎理論/06_手法間のつながり/14_低ランク学習からテンソルネットワークへの発展]]
 
-最終rank：
+## 関連する実験固有の基礎
 
-```text
-conv1 = 9
-conv2 = 32
-conv3 = 48
-```
+CIFAR-10固有のデータセット、前処理、DataLoaderはCIFAR-10章に配置する。
+
+- [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]]
+- [[30_CIFAR10_CNN/README]]
+- [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
+
+## 推奨する読み順
+
+### Linear層のSVD圧縮
 
 ```text
-Parameters: 128,842 → 81,405       (-36.82%)
-MACs:       10,357,248 → 5,625,344 (-45.69%)
-Test acc:   73.27% → 73.43%
+01 → 02 → 03 → 04 → 05 → 06 → 07 → 08 → 09 → 10 → 11
 ```
 
-Fine-tuning候補：
+### CNN / Conv2dのSVD圧縮
 
 ```text
-Aggressive   6 / 32 / 32 : 0.3994 → 0.7336
-Balanced     9 / 32 / 32 : 0.4354 → 0.7360
-Conservative 9 / 32 / 48 : 0.4792 → 0.7444
+15 → 16 → 17 → 18 → 19 → 20
 ```
 
-この `before → after` は **Rank-Selection Validation accuracy** のFine-tuning前後を表す。Early-Stopping Validationやtestの値ではない。
-
-single seedなので、小さいaccuracy差は改善と断定せず、**圧縮後も精度をほぼ維持した**と解釈する。
-
-探索は全rank空間のglobal optimumではなく、各層のPareto / knee近傍に候補を制約したmodel-wide rank allocationである。
-
-## MACsとlatency
-
-corrected benchmarkでは、
+### テンソルネットワークへの発展
 
 ```text
-batch size = 256
-same input_batch
-warmup = 20
-repeats = 2000
+03 → 14 → Tucker → TT / MPS → DMRG
 ```
-
-へ揃えた。
-
-```text
-MACs:    -45.69%
-Latency: 約0.531 → 0.537 ms/batch
-```
-
-理論演算量削減はwall-clock speedupを保証しなかった。
-
-## 修正履歴を読む
-
-旧実験の問題とcorrected版での修正理由は、
-
-- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
-
-へまとめている。
-
-original / using_src / before_srcはhistorical recordとして残し、正式結果はcorrectedを優先する。

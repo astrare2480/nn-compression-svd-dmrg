@@ -4,11 +4,11 @@ Fashion-MNISTで確認したLinear / Conv SVDを、RGB自然画像と複数Conv�
 
 ## 読む順番
 
-1. [[00_基礎理論/18_CIFAR10の前処理とDataLoader]]
-2. [[00_基礎理論/19_再現性と乱数管理]]
-3. [[00_基礎理論/20_Global Average PoolingとCIFAR10モデル設計]]
-4. [[00_基礎理論/16_Conv2d重みの行列化とSVD]]
-5. [[00_基礎理論/17_Conv2dの低ランク2層置換]]
+1. [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]]
+2. [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
+3. [[00_基礎理論/02_ニューラルネットワーク基礎/20_Global Average PoolingとCIFAR10モデル設計]]
+4. [[00_基礎理論/03_モデル圧縮理論/16_Conv2d重みの行列化とSVD]]
+5. [[00_基礎理論/03_モデル圧縮理論/17_Conv2dの低ランク2層置換]]
 6. [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
 
 ## この章で進んだ点
@@ -39,7 +39,7 @@ Test（公式test）            10,000
 
 PerplexityでDataset / Subset / Generatorを学んだ際の `45,000 / 5,000` は基礎説明用の単純例であり、**canonical実験条件は40,000 / 5,000 / 5,000**。
 
-データ取得が極端に遅い場合の `download=False`、展開先、MD5確認などの実務メモも [[00_基礎理論/18_CIFAR10の前処理とDataLoader]] に残している。
+データ取得が極端に遅い場合の `download=False`、展開先、MD5確認などの実務メモも [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]] に残している。
 
 ## 正式結果
 

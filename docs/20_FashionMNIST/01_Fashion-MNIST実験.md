@@ -174,7 +174,7 @@ corrected実装ではさらに、train metricsを計算するときも `shuffle=
 
 詳細：
 
-- [[00_基礎理論/19_再現性と乱数管理]]
+- [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 
 ---
@@ -224,4 +224,4 @@ single seedなので、`+0.34pt` を性能改善とは断定せず、**約89%の
 - [[20_FashionMNIST/02_Fashion-MNISTのRank選択]]
 - [[20_FashionMNIST/03_Fashion-MNISTのFine-tuning]]
 - [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
-- [[00_基礎理論/10_SVD圧縮モデルの評価設計]]
+- [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]

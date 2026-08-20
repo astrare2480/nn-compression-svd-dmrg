@@ -467,9 +467,9 @@ conv3
 
 関連：
 
-- [[00_基礎理論/18_CIFAR10の前処理とDataLoader]]
-- [[00_基礎理論/19_再現性と乱数管理]]
-- [[00_基礎理論/20_Global Average PoolingとCIFAR10モデル設計]]
+- [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]]
+- [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
+- [[00_基礎理論/02_ニューラルネットワーク基礎/20_Global Average PoolingとCIFAR10モデル設計]]
 - [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
 
 ---

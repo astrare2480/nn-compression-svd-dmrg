@@ -280,7 +280,7 @@ MNISTでrank評価の基本を確認し、Fashion-MNIST MLPでFine-tuningまで�
 # 関連
 
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
-- [[00_基礎理論/11_理論計算量とベンチマーク]]
+- [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
 - [[20_FashionMNIST/08_CNNのLinear SVD]]
 - [[20_FashionMNIST/09_CNNのConv SVD]]
 - [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]
