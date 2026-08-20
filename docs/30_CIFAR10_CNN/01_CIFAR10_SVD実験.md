@@ -95,7 +95,7 @@ CIFAR-10
 
 という順序にした。
 
-データセット・前処理・データ取得時のメモは [[00_基礎理論/18_CIFAR10の前処理とDataLoader]] を参照。
+データセット・前処理・データ取得時のメモは [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]] を参照。
 
 ---
 
@@ -209,7 +209,7 @@ rank候補のFine-tuningでもseed条件とDataLoader Generator条件を揃え�
 また、train accuracyを再評価するときに `shuffle=True` の学習用loaderを再走査しない。
 評価処理によってGeneratorを進めると、その後のmini-batch順が変わり、候補比較の公平性を壊すためである。
 
-詳細は [[00_基礎理論/19_再現性と乱数管理]] を参照。
+詳細は [[00_基礎理論/04_実験設計/19_再現性と乱数管理]] を参照。
 
 ---
 
@@ -270,7 +270,7 @@ GAPを使うと、最後の特徴マップ `(N, 128, 4, 4)` を `(N, 128)` ま�
 
 CIFAR-10ではConvのrank allocationを主題にしたかったため、GAPでclassifierの肥大化を抑えた。
 
-詳細は [[00_基礎理論/20_Global Average PoolingとCIFAR10モデル設計]] を参照。
+詳細は [[00_基礎理論/02_ニューラルネットワーク基礎/20_Global Average PoolingとCIFAR10モデル設計]] を参照。
 
 ---
 
@@ -656,12 +656,12 @@ historical Notebookは、実験の発展や修正前の問題を学ぶために�
 
 # 関連
 
-- [[00_基礎理論/18_CIFAR10の前処理とDataLoader]]
-- [[00_基礎理論/19_再現性と乱数管理]]
-- [[00_基礎理論/20_Global Average PoolingとCIFAR10モデル設計]]
-- [[00_基礎理論/16_Conv2d重みの行列化とSVD]]
-- [[00_基礎理論/17_Conv2dの低ランク2層置換]]
-- [[00_基礎理論/11_理論計算量とベンチマーク]]
+- [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]]
+- [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
+- [[00_基礎理論/02_ニューラルネットワーク基礎/20_Global Average PoolingとCIFAR10モデル設計]]
+- [[00_基礎理論/03_モデル圧縮理論/16_Conv2d重みの行列化とSVD]]
+- [[00_基礎理論/03_モデル圧縮理論/17_Conv2dの低ランク2層置換]]
+- [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 - [[20_FashionMNIST/09_CNNのConv SVD]]
 - [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]

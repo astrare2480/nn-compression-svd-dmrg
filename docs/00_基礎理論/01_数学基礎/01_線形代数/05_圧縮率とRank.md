@@ -2856,7 +2856,7 @@ fine-tuning後の各候補について再び、
 
 この優先順位自体は数学的必然ではなく、研究目的に基づく選択規則である。
 
-> [!note] Fashion-MNISTでの実適用は [[20_FASHION_MNIST_MLP_SVD/02_Fashion-MNISTのRank選択]] と [[20_FASHION_MNIST_MLP_SVD/03_Fashion-MNISTのFine-tuning]] を参照する。
+> [!note] Fashion-MNISTでの実適用は [[20_FashionMNIST/02_Fashion-MNISTのRank選択]] と [[20_FashionMNIST/03_Fashion-MNISTのFine-tuning]] を参照する。
 
 ## 51. 圧縮指標を計算するPython関数
 
@@ -3856,10 +3856,10 @@ MNIST実験では、rankごとに、
 
 次は、圧縮前後の差を数値で評価する方法を整理する。
 
-- [[00_基礎理論/01_SVDとは]]
-- [[00_基礎理論/02_nn.Linearとは]]
-- [[00_基礎理論/03_SVDによる低ランク近似]]
-- [[00_基礎理論/04_Linear層を2層へ置き換える]]
-- [[00_基礎理論/06_誤差評価]]
-- [[00_基礎理論/07_PyTorch実装]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/01_SVDとは]]
+- [[00_基礎理論/02_ニューラルネットワーク基礎/02_nn.Linearとは]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/03_SVDによる低ランク近似]]
+- [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
+- [[00_基礎理論/05_PyTorch実装/07_PyTorch実装]]
 - [[10_MNIST_MLP_SVD/01_MNIST実験]]
