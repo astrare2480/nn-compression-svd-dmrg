@@ -29,7 +29,7 @@ DMRG
 ## SVD編のまとめ
 
 - [SVD実験まとめ](docs/SVD実験まとめ.md)
-- [基礎理論](docs/00_基礎理論/00_基礎理論/README.md)
+- [基礎理論](docs/00_基礎理論/README.md)
 - [SVD実験で修正した問題と設計原則](docs/05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則.md)
 - [MNIST結果](docs/10_MNIST_MLP_SVD/04_MNISTでの実験結果.md)
 - [Fashion-MNIST MLP結果](docs/20_FashionMNIST/04_Fashion-MNISTでの実験結果.md)
