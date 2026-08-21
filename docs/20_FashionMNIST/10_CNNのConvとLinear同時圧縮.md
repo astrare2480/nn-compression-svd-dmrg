@@ -29,7 +29,7 @@ fc1 rank   = 24
 正式結果は、
 
 ```text
-notebooks/20_fashion_mnist/cnn/05_cnn_conv_linear_svd_corrected.ipynb
+notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb
 results/20_fashion_mnist/05_cnn_conv_linear_svd_corrected/
 ```
 

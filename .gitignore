@@ -34,8 +34,5 @@ tests.zip
 # Training checkpoints at repo root only (keep local copies; do not delete)
 /models/
 
-# Legacy artifacts under code/ (untracked going forward; do not delete locally)
-/code/data/MNIST/
-/code/mnist_mlp_baseline.pth
 
 # Research records (CSV / figures) stay tracked. Do not ignore results/.

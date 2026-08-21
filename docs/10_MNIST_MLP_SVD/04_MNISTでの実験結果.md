@@ -22,7 +22,7 @@ MNIST分類用MLPの `fc1` / `fc2` をSVDで低rank2層へ置換し、rankとacc
 現在の正式結果は、
 
 ```text
-notebooks/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
+notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
 results/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/
 ```
 

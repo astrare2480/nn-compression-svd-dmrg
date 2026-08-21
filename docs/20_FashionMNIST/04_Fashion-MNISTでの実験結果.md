@@ -22,7 +22,7 @@ Fashion-MNIST用MLP `784 → 512 → 256 → 10` の `fc1` / `fc2` をSVD低rank
 現在の正式結果は、
 
 ```text
-notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
+notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
 results/20_fashion_mnist/03_mlp_svd_finetuning_using_src_corrected/
 ```
 

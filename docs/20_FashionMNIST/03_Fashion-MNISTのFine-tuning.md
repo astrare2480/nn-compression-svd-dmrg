@@ -203,7 +203,7 @@ Fine-tuning対象
 公平性を修正したcanonical Notebook：
 
 ```text
-notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
+notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
 ```
 
 Fine-tuning候補：
