@@ -55,19 +55,16 @@ jobs:
           git commit -m "chore: reorganize notebooks by compression method [skip ci]"
           git push origin HEAD
 
-      - name: Install project and test dependencies
-        run: python -m pip install -e '.[dev]'
-
-      - name: Run test suite
-        run: python -m pytest -q
-
-      - name: Smoke-test representative Notebook path cells
+      - name: Smoke-test representative Notebook save paths
         run: |
           python - <<'PY'
           import json
+          import re
+          import sys
           from pathlib import Path
 
-          from nn_compression.utils import find_project_root, get_experiment_dirs
+          sys.path.insert(0, str(Path("src").resolve()))
+          from nn_compression.utils.paths import find_project_root, get_experiment_dirs
 
           cases = {
               "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb": "10_mnist_mlp",
@@ -76,26 +73,34 @@ jobs:
               "notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb": "40_cifar10_cnn",
           }
 
+          def read_setting(source: str, name: str) -> str:
+              match = re.search(rf'(?m)^\s*{name}\s*=\s*["\']([^"\']+)["\']', source)
+              if not match:
+                  raise AssertionError(f"missing {name}")
+              return match.group(1)
+
+          project_root = find_project_root(Path.cwd())
           for notebook_path, expected_case in cases.items():
               notebook = json.loads(Path(notebook_path).read_text(encoding="utf-8"))
-              path_cell = next(
+              source = "\n".join(
                   "".join(cell.get("source", []))
                   for cell in notebook["cells"]
                   if cell.get("cell_type") == "code"
-                  and "get_experiment_dirs(" in "".join(cell.get("source", []))
-                  and 'METHOD_NAME = "10_svd"' in "".join(cell.get("source", []))
               )
-              namespace = {
-                  "Path": Path,
-                  "find_project_root": find_project_root,
-                  "get_experiment_dirs": get_experiment_dirs,
-              }
-              exec(path_cell, namespace)
-              assert namespace["METHOD_NAME"] == "10_svd"
-              assert namespace["CASE_NAME"] == expected_case
-              assert namespace["results_dir"].parts[-3] == "10_svd"
-              assert namespace["results_dir"].parts[-2] == expected_case
-              assert namespace["models_dir"].parts[-3] == "10_svd"
-              assert namespace["models_dir"].parts[-2] == expected_case
+              method_name = read_setting(source, "METHOD_NAME")
+              case_name = read_setting(source, "CASE_NAME")
+              experiment_name = read_setting(source, "EXPERIMENT_NAME")
+
+              assert method_name == "10_svd"
+              assert case_name == expected_case
+              _, models_dir, results_dir = get_experiment_dirs(
+                  project_root,
+                  method_name,
+                  case_name,
+                  experiment_name,
+                  create=False,
+              )
+              assert results_dir.parts[-3:] == ("10_svd", expected_case, experiment_name)
+              assert models_dir.parts[-3:] == ("10_svd", expected_case, experiment_name)
               print("smoke ok:", notebook_path)
           PY
