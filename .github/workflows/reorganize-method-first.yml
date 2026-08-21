@@ -1,0 +1,93 @@
+name: Reorganize method-first layout
+
+on:
+  push:
+    branches:
+      - chore/method-first-notebook-layout
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply repository migration
+        run: python tools/_repo_reorg_once.py
+
+      - name: Compile source
+        run: python -m compileall -q src
+
+      - name: Commit migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            .cursor/rules \
+            .gitignore \
+            README.md \
+            code \
+            docs \
+            notebooks \
+            plan \
+            results \
+            src/nn_compression/utils/paths.py \
+            tests/test_paths.py \
+            tools/regen_notebook_cell_ids.py
+          git commit -m "chore: reorganize notebooks by compression method [skip ci]"
+          git push origin HEAD
+
+      - name: Install project and test dependencies
+        run: python -m pip install -e '.[dev]'
+
+      - name: Run test suite
+        run: python -m pytest -q
+
+      - name: Smoke-test representative Notebook path cells
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          from nn_compression.utils import find_project_root, get_experiment_dirs
+
+          cases = {
+              "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb": "10_mnist_mlp",
+              "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb": "20_fashion_mnist_mlp",
+              "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb": "30_fashion_mnist_cnn",
+              "notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb": "40_cifar10_cnn",
+          }
+
+          for notebook_path, expected_case in cases.items():
+              notebook = json.loads(Path(notebook_path).read_text(encoding="utf-8"))
+              path_cell = next(
+                  "".join(cell.get("source", []))
+                  for cell in notebook["cells"]
+                  if cell.get("cell_type") == "code"
+                  and "get_experiment_dirs(" in "".join(cell.get("source", []))
+                  and 'METHOD_NAME = "10_svd"' in "".join(cell.get("source", []))
+              )
+              namespace = {
+                  "Path": Path,
+                  "find_project_root": find_project_root,
+                  "get_experiment_dirs": get_experiment_dirs,
+              }
+              exec(path_cell, namespace)
+              assert namespace["METHOD_NAME"] == "10_svd"
+              assert namespace["CASE_NAME"] == expected_case
+              assert namespace["results_dir"].parts[-3] == "10_svd"
+              assert namespace["results_dir"].parts[-2] == expected_case
+              assert namespace["models_dir"].parts[-3] == "10_svd"
+              assert namespace["models_dir"].parts[-2] == expected_case
+              print("smoke ok:", notebook_path)
+          PY
