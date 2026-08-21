@@ -32,7 +32,6 @@ tests.zip
 /data/
 
 # Training checkpoints at repo root only (keep local copies; do not delete)
-/models/
 
 
 # Research records (CSV / figures) stay tracked. Do not ignore results/.
