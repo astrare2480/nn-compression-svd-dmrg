@@ -54,7 +54,7 @@ Fine-tuning
 正式結果は、
 
 ```text
-notebooks/30_cifar10/02_svd_global_compression_using_src_corrected.ipynb
+notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb
 results/30_cifar10/02_svd_global_compression_using_src_corrected/
 ```
 

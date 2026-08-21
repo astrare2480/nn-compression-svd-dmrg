@@ -188,7 +188,7 @@ historicalなMLP 02 / 03では、rank sweepとFine-tuningまで実施した。
 そのため、旧runのrankやaccuracyは履歴として残し、現在の正式結果はcorrected Notebookを使う。
 
 ```text
-notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
+notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
 ```
 
 canonical result：

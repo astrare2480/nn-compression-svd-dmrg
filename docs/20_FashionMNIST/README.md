@@ -38,7 +38,7 @@ Fashion-MNISTでは、MNISTから一段進めて、MLP Fine-tuning、CNN、Linea
 ## MLPのcanonical result
 
 ```text
-notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
+notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
 results/20_fashion_mnist/03_mlp_svd_finetuning_using_src_corrected/
 ```
 
@@ -71,7 +71,7 @@ Test acc   0.9175  → 0.9187
 ### Conv-only corrected
 
 ```text
-notebooks/20_fashion_mnist/cnn/04_cnn_conv_svd_corrected.ipynb
+notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb
 results/20_fashion_mnist/04_cnn_conv_svd_corrected/
 ```
 
@@ -85,7 +85,7 @@ Latency    約0.367 → 0.370 ms/batch
 ### Conv + Linear corrected
 
 ```text
-notebooks/20_fashion_mnist/cnn/05_cnn_conv_linear_svd_corrected.ipynb
+notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb
 results/20_fashion_mnist/05_cnn_conv_linear_svd_corrected/
 ```
 

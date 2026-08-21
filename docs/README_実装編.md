@@ -470,19 +470,19 @@ CIFARの最終rank=9/32/48
 
 ```text
 MNIST
-notebooks/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
+notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
 
 Fashion-MNIST MLP
-notebooks/20_fashion_mnist/mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
+notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
 
 Fashion-MNIST CNN Conv
-notebooks/20_fashion_mnist/cnn/04_cnn_conv_svd_corrected.ipynb
+notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb
 
 Fashion-MNIST CNN Conv + Linear
-notebooks/20_fashion_mnist/cnn/05_cnn_conv_linear_svd_corrected.ipynb
+notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb
 
 CIFAR-10
-notebooks/30_cifar10/02_svd_global_compression_using_src_corrected.ipynb
+notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb
 ```
 
 historical Notebookは削除せず、正式な数値引用ではcorrectedを優先する。

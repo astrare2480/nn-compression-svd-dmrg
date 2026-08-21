@@ -14,7 +14,7 @@ MNIST用MLPで、Linear SVDの基本、rank sweep、精度・圧縮率・MACs・
 正式なrank sweep結果は、
 
 ```text
-notebooks/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
+notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
 results/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/
 ```
 

@@ -28,7 +28,7 @@ conv2 = Conv2d(32, 64, kernel_size=3, padding=1)
 正式結果は、
 
 ```text
-notebooks/20_fashion_mnist/cnn/04_cnn_conv_svd_corrected.ipynb
+notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb
 results/20_fashion_mnist/04_cnn_conv_svd_corrected/
 ```
 
