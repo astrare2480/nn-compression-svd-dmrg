@@ -47,7 +47,7 @@ PerplexityでDataset / Subset / Generatorを学んだ際の `45,000 / 5,000` は
 
 ```text
 Notebook:
-notebooks/30_cifar10/02_svd_global_compression_using_src_corrected.ipynb
+notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb
 
 Results:
 results/30_cifar10/02_svd_global_compression_using_src_corrected/
