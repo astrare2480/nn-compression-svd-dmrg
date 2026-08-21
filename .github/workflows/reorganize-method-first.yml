@@ -58,13 +58,20 @@ jobs:
       - name: Smoke-test representative Notebook save paths
         run: |
           python - <<'PY'
+          import importlib.util
           import json
           import re
-          import sys
           from pathlib import Path
 
-          sys.path.insert(0, str(Path("src").resolve()))
-          from nn_compression.utils.paths import find_project_root, get_experiment_dirs
+          # paths.py は pathlib だけに依存するため、package __init__ を通さず直接読み込む。
+          # これにより torch のインストール有無に左右されず、保存先ロジックだけを検証できる。
+          paths_file = Path("src/nn_compression/utils/paths.py").resolve()
+          spec = importlib.util.spec_from_file_location("nn_compression_paths", paths_file)
+          module = importlib.util.module_from_spec(spec)
+          assert spec is not None and spec.loader is not None
+          spec.loader.exec_module(module)
+          find_project_root = module.find_project_root
+          get_experiment_dirs = module.get_experiment_dirs
 
           cases = {
               "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb": "10_mnist_mlp",
