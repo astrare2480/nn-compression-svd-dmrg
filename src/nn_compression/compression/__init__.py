@@ -20,6 +20,13 @@ from .rank_sweep import (
     sweep_layer_ranks,
 )
 from .svd import SVD, retained_energy, retained_energy_from_matrix, truncated_svd
+from .tucker import (
+    compression_factor,
+    hosvd,
+    parameter_ratio,
+    reconstruct_tucker,
+    tucker_parameter_count,
+)
 
 __all__ = [
     "truncated_svd",
@@ -37,6 +44,11 @@ __all__ = [
     "conv2d_weight_matrix",
     "make_two_layer_svd_model",
     "make_one_layer_svd_model",
+    "hosvd",
+    "reconstruct_tucker",
+    "tucker_parameter_count",
+    "parameter_ratio",
+    "compression_factor",
     # 旧名
     "SVD",
     "RebuildSVD",

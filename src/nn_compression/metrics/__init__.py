@@ -1,4 +1,4 @@
-"""圧縮前後のモデルを比較する評価指標・計算量推定。"""
+"""圧縮前後のモデル・テンソルを比較する評価指標・計算量推定。"""
 
 from .cnn_macs import (
     estimate_cnn_conv2_macs,
@@ -26,6 +26,7 @@ from .model_comparison import (
     logits_rmse,
     parameters_reduction,
 )
+from .tensor_approximation import relative_frobenius_error
 
 __all__ = [
     "count_parameters",
@@ -48,4 +49,5 @@ __all__ = [
     "benchmark_inference_print",
     "collect_compression_metrics",
     "take_inference_batch",
+    "relative_frobenius_error",
 ]
