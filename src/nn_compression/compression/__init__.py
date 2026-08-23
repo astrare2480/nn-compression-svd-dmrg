@@ -6,6 +6,7 @@ from .conv_svd import (
     factorize_conv2d_layer,
     factorize_named_conv2d,
 )
+from .conv_tucker import build_tucker2_conv, tucker2_decompose_conv_weight
 from .linear_svd import (
     RebuildSVD,
     factorize_linear_layer,
@@ -49,6 +50,8 @@ __all__ = [
     "tucker_parameter_count",
     "parameter_ratio",
     "compression_factor",
+    "build_tucker2_conv",
+    "tucker2_decompose_conv_weight",
     # 旧名
     "SVD",
     "RebuildSVD",
