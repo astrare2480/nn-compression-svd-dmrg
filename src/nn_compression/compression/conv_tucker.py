@@ -29,6 +29,8 @@ def _unsupported_conv2d(conv: nn.Conv2d) -> None:
             "groups=1 の Conv2d のみ対応しています: "
             f"groups={conv.groups}"
         )
+    if getattr(conv, "transposed", False):
+        raise ValueError("転置畳み込みは未対応です。")
 
 
 def _coerce_tucker2_ranks(
@@ -85,12 +87,10 @@ def build_tucker2_conv(
     factory = _factory_kwargs(conv)
     has_bias = conv.bias is not None
     shape = conv.weight.shape
-    rank_out, rank_in = _coerce_tucker2_ranks(shape, rank_out, rank_in)
-    ranks = {0: rank_out, 1: rank_in}
 
-    core, factors = hosvd(conv.weight, ranks)
-    u_out = factors[0]
-    u_in = factors[1]
+    core, u_out, u_in = tucker2_decompose_conv_weight(
+        conv.weight.detach(), rank_out, rank_in
+    )
 
     input_layer = nn.Conv2d(
         in_channels=shape[1],
@@ -127,5 +127,11 @@ def build_tucker2_conv(
         output_layer.weight.copy_(u_out[:, :, None, None])
         if has_bias:
             output_layer.bias.copy_(conv.bias)
+
+    input_layer.weight.requires_grad = conv.weight.requires_grad
+    core_layer.weight.requires_grad = conv.weight.requires_grad
+    output_layer.weight.requires_grad = conv.weight.requires_grad
+    if has_bias:
+        output_layer.bias.requires_grad = conv.bias.requires_grad
 
     return nn.Sequential(input_layer, core_layer, output_layer)

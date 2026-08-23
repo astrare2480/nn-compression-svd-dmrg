@@ -126,17 +126,49 @@ def test_build_tucker2_conv_with_bias_copied_to_output_layer():
     assert torch.equal(output_layer.bias, conv.bias)
 
 
-def test_build_tucker2_conv_preserves_device_and_dtype():
-    if not torch.cuda.is_available():
-        pytest.skip("CUDA が利用できません")
-    conv = _conv2d(device=torch.device("cuda"), dtype=torch.float64)
+def test_build_tucker2_conv_preserves_dtype_on_cpu():
+    conv = _conv2d(dtype=torch.float64)
+    tucker_conv = build_tucker2_conv(conv, rank_out=32, rank_in=16)
+    for layer in tucker_conv:
+        assert layer.weight.dtype == conv.weight.dtype
+        if layer.bias is not None:
+            assert layer.bias.dtype == conv.weight.dtype
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA が利用できません")
+def test_build_tucker2_conv_preserves_device_on_cuda():
+    conv = _conv2d(device=torch.device("cuda"))
     tucker_conv = build_tucker2_conv(conv, rank_out=32, rank_in=16)
     for layer in tucker_conv:
         assert layer.weight.device == conv.weight.device
-        assert layer.weight.dtype == conv.weight.dtype
         if layer.bias is not None:
             assert layer.bias.device == conv.weight.device
-            assert layer.bias.dtype == conv.weight.dtype
+
+
+def test_build_tucker2_conv_inherits_requires_grad_false():
+    conv = _conv2d(bias=True)
+    conv.weight.requires_grad_(False)
+    conv.bias.requires_grad_(False)
+    input_layer, core_layer, output_layer = build_tucker2_conv(
+        conv, rank_out=32, rank_in=16
+    )
+    assert not input_layer.weight.requires_grad
+    assert not core_layer.weight.requires_grad
+    assert not output_layer.weight.requires_grad
+    assert not output_layer.bias.requires_grad
+
+
+def test_build_tucker2_conv_inherits_requires_grad_true():
+    conv = _conv2d(bias=True)
+    conv.weight.requires_grad_(True)
+    conv.bias.requires_grad_(True)
+    input_layer, core_layer, output_layer = build_tucker2_conv(
+        conv, rank_out=32, rank_in=16
+    )
+    assert input_layer.weight.requires_grad
+    assert core_layer.weight.requires_grad
+    assert output_layer.weight.requires_grad
+    assert output_layer.bias.requires_grad
 
 
 def test_build_tucker2_conv_rejects_grouped_conv():
