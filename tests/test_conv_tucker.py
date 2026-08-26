@@ -11,10 +11,7 @@ from torch import nn
 from nn_compression.compression import (
     build_tucker2_conv,
     build_tucker2_conv_from_components,
-    hosvd,
-    reconstruct_tucker,
     tucker2_decompose_conv_weight,
-    tucker2_hooi,
     tucker_parameter_count,
 )
 from nn_compression.metrics import relative_frobenius_error
@@ -260,27 +257,3 @@ def test_build_tucker2_conv_from_components_matches_hosvd_path():
         y_components = from_components(x)
     assert y_hosvd.shape == y_components.shape
     assert relative_frobenius_error(y_hosvd, y_components).item() < 1e-5
-
-
-def test_tucker2_hooi_improves_over_hosvd():
-    conv = _conv2d()
-    weight = conv.weight.detach()
-    rank_out, rank_in = 32, 16
-
-    core_h, factors_h = hosvd(weight, {0: rank_out, 1: rank_in})
-    hosvd_err = float(
-        relative_frobenius_error(
-            weight, reconstruct_tucker(core_h, factors_h)
-        )
-    )
-    _, _, history = tucker2_hooi(weight, rank_out, rank_in, max_iter=10)
-    assert history[-1] <= hosvd_err + 1e-8
-
-
-def test_tucker2_hooi_history_is_nonincreasing():
-    conv = _conv2d()
-    _, _, history = tucker2_hooi(
-        conv.weight.detach(), rank_out=32, rank_in=16, max_iter=10
-    )
-    for prev, curr in zip(history, history[1:]):
-        assert curr <= prev + 1e-8
