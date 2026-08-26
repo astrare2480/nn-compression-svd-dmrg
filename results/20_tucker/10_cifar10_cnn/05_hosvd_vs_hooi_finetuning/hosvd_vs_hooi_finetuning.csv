@@ -1,0 +1,3 @@
+method,seed,rank_out,rank_in,pre_weight_relative_error,post_weight_relative_error,pre_validation_rank_acc,post_validation_rank_acc,validation_recovery,pre_test_acc,post_test_acc,test_recovery,test_gap_to_baseline,best_epoch,best_validation_loss,epochs_ran,parameters,hooi_iterations
+hosvd,0,32,16,0.4490424394607544,0.48366042971611023,0.628,0.7528,0.12480000000000002,0.6378,0.7508,0.11299999999999999,0.018100000000000005,17,0.7178303350448608,20,117578,0
+hooi,0,32,16,0.44250398874282837,0.4812551438808441,0.6202,0.7528,0.13260000000000005,0.6257,0.7555,0.12979999999999992,0.02279999999999993,17,0.7143870875358581,20,117578,5

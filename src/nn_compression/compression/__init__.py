@@ -6,7 +6,15 @@ from .conv_svd import (
     factorize_conv2d_layer,
     factorize_named_conv2d,
 )
-from .conv_tucker import build_tucker2_conv, tucker2_decompose_conv_weight
+from .conv_tucker import (
+    build_tucker2_conv,
+    build_tucker2_conv_from_components,
+    tucker2_decompose_conv_weight,
+    tucker2_effective_weight,
+    tucker2_hooi,
+    tucker2_hooi_sweep,
+)
+from .hooi import core_from_factors, has_converged, hooi, hooi_sweep
 from .linear_svd import (
     RebuildSVD,
     factorize_linear_layer,
@@ -50,8 +58,16 @@ __all__ = [
     "tucker_parameter_count",
     "parameter_ratio",
     "compression_factor",
+    "has_converged",
+    "hooi_sweep",
+    "core_from_factors",
+    "hooi",
     "build_tucker2_conv",
+    "build_tucker2_conv_from_components",
     "tucker2_decompose_conv_weight",
+    "tucker2_hooi",
+    "tucker2_hooi_sweep",
+    "tucker2_effective_weight",
     # 旧名
     "SVD",
     "RebuildSVD",
