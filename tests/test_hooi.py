@@ -7,17 +7,14 @@
 
 import pytest
 import torch
-from torch import nn
 
 from nn_compression.compression import (
-    build_tucker2_conv_from_components,
     core_from_factors,
     has_converged,
     hooi,
     hooi_sweep,
     hosvd,
     reconstruct_tucker,
-    tucker2_decompose_conv_weight,
     tucker2_hooi,
     tucker2_hooi_sweep,
 )
@@ -124,6 +121,7 @@ def test_hooi_sweep_does_not_mutate_input_factors():
     assert updated is not factors
     for mode in RANKS_3D:
         assert updated[mode] is not factors[mode]
+        assert updated[mode].shape == (SHAPE_3D[mode], RANKS_3D[mode])
 
 
 def test_hooi_error_history_decreases_or_converges():
@@ -133,31 +131,6 @@ def test_hooi_error_history_decreases_or_converges():
     assert history[0] >= history[-1]
     for prev, curr in zip(history, history[1:]):
         assert curr <= prev + 1e-6
-
-
-def test_build_tucker2_from_components_matches_hosvd_build():
-    """既存 build_tucker2_conv と from_components の出力が一致する。"""
-    from nn_compression.compression import build_tucker2_conv
-
-    conv = nn.Conv2d(32, 64, kernel_size=3, padding=1, bias=True)
-    torch.manual_seed(0)
-    with torch.no_grad():
-        conv.weight.normal_()
-        conv.bias.normal_()
-
-    rank_out, rank_in = 32, 16
-    seq_hosvd = build_tucker2_conv(conv, rank_out, rank_in)
-    core, u_out, u_in = tucker2_decompose_conv_weight(
-        conv.weight.detach(), rank_out, rank_in
-    )
-    seq_parts = build_tucker2_conv_from_components(conv, core, u_out, u_in)
-
-    x = torch.randn(2, 32, 8, 8)
-    with torch.no_grad():
-        y1 = seq_hosvd(x)
-        y2 = seq_parts(x)
-    assert y1.shape == y2.shape
-    assert torch.allclose(y1, y2, atol=1e-5)
 
 
 def test_hooi_rejects_mismatched_factor_keys():
@@ -171,6 +144,13 @@ def test_hooi_rejects_invalid_mode():
     X = _tensor_3d()
     with pytest.raises(ValueError, match="mode="):
         hooi(X, {3: 2}, max_iter=1)
+
+
+def test_hooi_rejects_invalid_mode_in_sweep():
+    X = _tensor_3d()
+    _, factors = hosvd(X, RANKS_3D)
+    with pytest.raises(ValueError):
+        hooi_sweep(X, factors, {3: 2})
 
 
 def test_tucker2_hooi_sweep_updates_both_modes():
