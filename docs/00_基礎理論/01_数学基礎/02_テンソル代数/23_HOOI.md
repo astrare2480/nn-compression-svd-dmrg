@@ -18,14 +18,16 @@ tags:
 
 HOOI（Higher-Order Orthogonal Iteration）は、固定したmultilinear rankのTucker近似で、factorを1 modeずつ反復更新して再構成Frobenius誤差を小さくする方法である。
 
-標準的な目的は、
+標準的な直交factorのTucker近似では、目的を
 
 $$
 \boxed{
+\begin{aligned}
 \min_{
 \mathcal{G},
 U^{(0)},\ldots,U^{(N-1)}
 }
+&\quad
 \left\|
 \mathcal{X}
 -
@@ -34,13 +36,57 @@ U^{(0)},\ldots,U^{(N-1)}
 \times_1U^{(1)}
 \cdots
 \times_{N-1}U^{(N-1)}
+\right\|_F^2\\
+\text{s.t.}
+&\quad
+U^{(n)\mathsf T}U^{(n)}=I_{R_n}
+\qquad(n=0,\ldots,N-1)
+\end{aligned}
+}
+$$
+
+と書ける。
+
+今回のsrcでもfactorはSVDの左特異ベクトルから作るため、列直交なfactorを使う。この直交制約を明示すると、現在のfactorに対する最適なcoreは
+
+$$
+\mathcal G
+=
+\mathcal X
+\times_0U^{(0)\mathsf T}
+\times_1U^{(1)\mathsf T}
+\cdots
+\times_{N-1}U^{(N-1)\mathsf T}
+$$
+
+となる。
+
+したがって、factor側から見ると、射影後coreのFrobeniusノルムを大きくする問題としても捉えられる。
+
+$$
+\boxed{
+\max_{
+U^{(0)},\ldots,U^{(N-1)}
+}
+\left\|
+\mathcal X
+\times_0U^{(0)\mathsf T}
+\times_1U^{(1)\mathsf T}
+\cdots
+\times_{N-1}U^{(N-1)\mathsf T}
 \right\|_F^2
 }
 $$
 
-である。
+ただし各factorには
 
-実際には非凸な問題を交互最適化するため、HOOIを「必ずグローバル最小値を返す」とは考えない。HOSVDを高速な初期解として使い、同じrankで再構成誤差を改善する精密化法として理解する。
+$$
+U^{(n)\mathsf T}U^{(n)}=I_{R_n}
+$$
+
+を課す。
+
+この問題はfactorを同時に求めると非凸なので、HOOIは1 modeずつ交互に更新する。したがって「必ずグローバル最小値を返す」とは考えず、HOSVDを高速な初期解として使い、同じrankで再構成誤差を改善する精密化法として理解する。
 
 ---
 
@@ -59,12 +105,15 @@ HOSVDは
 $$
 U^{(n)}
 \leftarrow
-\operatorname{SVD}(X_{(n)})
+\operatorname{top\text{-}}R_n
+\left(
+\operatorname{left\ singular\ vectors}(X_{(n)})
+\right)
 $$
 
-を各modeで独立に行う。
+を各modeで**元の同じTensorから独立に**行う。
 
-HOOIでは、更新対象以外のfactorを使ってTensorを一度rank空間へ射影してから、その対象modeをSVDする。
+HOOIでは、更新対象以外のfactorを使ってTensorをrank空間へ射影してから、その対象modeをunfoldしてSVDする。
 
 ---
 
@@ -79,22 +128,36 @@ $$
 \mathcal{Z}^{(n)}
 =
 \mathcal{X}
-\times_{m\neq n}
+\underset{m\neq n}{\times_m}
 U^{(m)\mathsf{T}}
 }
 $$
 
-とする。
+と略記する。これは、対象mode $n$を除くすべての圧縮対象modeについてmode productを順に行う、という意味である。
 
-ここで「$m\neq n$」が重要で、**更新したいmode自身のfactorはprojectionに使わない**。
+ここで**更新したいmode自身のfactorはprojectionに使わない**。
 
-次に $\mathcal{Z}^{(n)}$ をmode $n$でunfoldする。
+$\mathcal Z^{(n)}$ のshapeは、全modeを圧縮する場合、
+
+$$
+R_0\times\cdots\times R_{n-1}
+\times I_n
+\times R_{n+1}\times\cdots\times R_{N-1}
+$$
+
+となる。
+
+これをmode $n$でunfoldすると、
 
 $$
 Z_{(n)}^{(n)}
-=
-\operatorname{unfold}_n(\mathcal{Z}^{(n)})
+\in
+\mathbb R^{
+I_n\times\prod_{m\neq n}R_m
+}
 $$
+
+である。
 
 そのSVDの上位 $R_n$ 本の左特異ベクトルを新しいfactorにする。
 
@@ -120,6 +183,8 @@ $$
 ```
 
 である。
+
+partial HOOIでは、`ranks` に含まれるmodeだけをこの積と更新の対象にする。圧縮しないmodeは元の次元のまま残る。
 
 ---
 
@@ -159,7 +224,19 @@ $$
 
 である。
 
-mode 0 unfoldingへSVDし、
+mode 0 unfoldingは
+
+$$
+(Z_{\mathrm{out}})_{(0)}
+\in
+\mathbb R^{
+C_{\mathrm{out}}
+\times
+(R_{\mathrm{in}}K_hK_w)
+}
+$$
+
+になる。その上位左特異ベクトルを使って
 
 $$
 \boxed{
@@ -167,7 +244,7 @@ U_{\mathrm{out}}
 \leftarrow
 \operatorname{top\text{-}}R_{\mathrm{out}}
 \left(
-\operatorname{SVD}
+\operatorname{left\ singular\ vectors}
 \left[
 (W\times_1U_{\mathrm{in}}^{\mathsf{T}})_{(0)}
 \right]
@@ -191,7 +268,27 @@ U_{\mathrm{out}}^{\mathsf{T}}
 }
 $$
 
-mode 1 unfoldingへSVDし、
+shapeは
+
+$$
+(C_{\mathrm{out}},C_{\mathrm{in}},K_h,K_w)
+\rightarrow
+(R_{\mathrm{out}},C_{\mathrm{in}},K_h,K_w)
+$$
+
+で、mode 1 unfoldingは
+
+$$
+(Z_{\mathrm{in}})_{(1)}
+\in
+\mathbb R^{
+C_{\mathrm{in}}
+\times
+(R_{\mathrm{out}}K_hK_w)
+}
+$$
+
+になる。したがって、
 
 $$
 \boxed{
@@ -199,7 +296,7 @@ U_{\mathrm{in}}
 \leftarrow
 \operatorname{top\text{-}}R_{\mathrm{in}}
 \left(
-\operatorname{SVD}
+\operatorname{left\ singular\ vectors}
 \left[
 (W\times_0U_{\mathrm{out}}^{\mathsf{T}})_{(1)}
 \right]
@@ -397,7 +494,18 @@ classification accuracy
 
 と考える必要がある。
 
-よりtask-awareにするなら、fine-tuningで例えば
+添付で検討したtask-awareな発展としては、例えば次の目的がある。
+
+| 目的 | 代表的な誤差 |
+| --- | --- |
+| 元weightを再現 | Weight Frobenius |
+| 中間表現を再現 | Feature-map MSE |
+| baseline出力を再現 | Logit MSE / KD |
+| 正解ラベルへ最適化 | Cross Entropy |
+
+ただし、標準HOOIのSVDによる閉形式更新はFrobenius二乗誤差の構造を利用している。Cross Entropy等へ目的を変更する場合は、単にHOOIの誤差関数を差し替えるのではなく、HOSVD/HOOIを初期化としてTucker-2層を作り、通常のbackpropagationでfine-tuningするのが今回の実験に対応する。
+
+fine-tuningで補助損失を使うなら、例えば
 
 $$
 \mathcal{L}
@@ -409,7 +517,7 @@ $$
 \lambda_{\mathrm{logit}}\mathcal{L}_{\mathrm{logit}}
 $$
 
-のような目的を使う発展も考えられる。ただし、今回の標準HOOIそのものがこれらを直接最小化しているわけではない。
+のような発展が考えられる。ただし今回の実験では標準Cross Entropyによるfine-tuningを主に確認しており、この補助損失自体を実験したわけではない。
 
 ---
 
