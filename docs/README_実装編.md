@@ -1,52 +1,45 @@
 ---
-title: SVD実装編 目次
+title: NN圧縮実装編 目次
 aliases:
-  - SVD実装編
   - NN圧縮実装ロードマップ
-  - PyTorch SVD圧縮実装
+  - SVD実装編
+  - Tucker実装編
+  - HOOI実装編
 tags:
   - PyTorch
   - SVD
+  - Tucker
+  - HOSVD
+  - HOOI
   - NN圧縮
-  - Linear
-  - Conv2d
   - 実装
 ---
 
-# SVD実装編 目次
+# NN圧縮実装編 目次
 
 ## サマリー
 
-現在のSVD実装の正本は、旧 `code/` 内のNotebook関数ではなく、
+現在の再利用可能な実装の正本は、旧 `code/` やNotebook内の関数ではなく、
 
 ```text
 src/nn_compression/
 ```
 
-へ分離した共通実装である。
+である。
+
+現在はSVDだけでなく、**Tensor基本演算、Tucker / HOSVD、generic / partial HOOI、Conv2d Tucker-2までsrc化済み**。
 
 Notebookは、
 
 ```text
+学習過程・自作実装
 実験条件
 rank候補
 選択規則
 結果の解釈
 ```
 
-を担当し、再利用可能な処理は `src` に置く。
-
-SVD編のcorrected実験とCodex reviewを通して、SVDの数式だけでなく、
-
-- model非共有
-- rank validation
-- device / dtype / requires_grad
-- DataLoader Generator
-- benchmark公平性
-- nested module replacement
-- Pareto / knee
-
-まで実装契約として整理した。
+を担当し、再利用可能な処理と守るべきcontractを `src` に置く。
 
 ---
 
@@ -54,70 +47,89 @@ SVD編のcorrected実験とCodex reviewを通して、SVDの数式だけでな�
 
 ```text
 src/nn_compression/
+├─ tensor/
+│  └─ operations.py
 ├─ compression/
-├─ datasets/
+│  ├─ svd.py
+│  ├─ linear_svd.py
+│  ├─ conv_svd.py
+│  ├─ tucker.py
+│  ├─ hooi.py
+│  ├─ conv_tucker.py
+│  ├─ mlp_svd.py
+│  ├─ named_layers.py
+│  └─ rank_sweep.py
 ├─ metrics/
+│  ├─ model_comparison.py
+│  ├─ macs.py
+│  ├─ mlp_macs.py
+│  ├─ cnn_macs.py
+│  └─ tensor_approximation.py
 ├─ models/
+├─ datasets/
 ├─ selection/
 ├─ training/
 └─ utils/
 ```
 
-大きく、
+責務は大きく、
 
 ```text
-圧縮
-データ・分割
+Tensor基本演算
+圧縮・分解
 評価
 モデル
+データ・分割
 rank選択
 学習
 共通utility
 ```
 
-へ責務を分けている。
+へ分ける。
 
 ---
 
-# 2. `compression/`
+# 2. `tensor/`
 
-SVD圧縮の中心。
+## `operations.py`
+
+Tucker / HOOIから共通利用するTensor演算を置く。
 
 ```text
-compression/
-├─ svd.py
-├─ linear_svd.py
-├─ conv_svd.py
-├─ mlp_svd.py
-├─ named_layers.py
-└─ rank_sweep.py
+unfold
+fold
+mode_dot
 ```
+
+`unfold(X, mode)` は対象modeを行方向へ置き、残りをflattenする。
+
+```text
+X: I0 × ... × In × ... × IN-1
+↓
+unfold_n(X): In × Π(m≠n) Im
+```
+
+`fold` はその逆操作、`mode_dot` は
+
+$$
+\mathcal Y=\mathcal X\times_nA
+$$
+
+を実装する。
+
+数式・shapeは [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]] を参照。
+
+---
+
+# 3. `compression/` — SVD
 
 ## `svd.py`
 
-モデルに依存しないSVD処理。
+モデル非依存のtruncated SVD、rank validation、retained energy等を扱う。
 
-主な役割：
-
-```text
-truncated SVD
-rank validation
-retained energy
-```
-
-rankは、
-
-```text
-1 <= rank <= mathematical max rank
-```
-
-を要求する。
-
-上限を超えたrankを黙ってclipせず、誤った実験条件として明示的に扱う。
+rankは数学的最大rank以下を要求し、不正rankを黙ってclipしない。
 
 ## `linear_svd.py`
-
-任意の `nn.Linear` を低rank2層へ変換する。
 
 ```text
 Linear(D_in → D_out)
@@ -126,21 +138,11 @@ Linear(D_in → r, bias=False)
 Linear(r → D_out, bias=元bias)
 ```
 
-分解後も、
-
-```text
-device
-dtype
-requires_grad
-```
-
-を元layerから引き継ぐ。
-
-named layerを置換するときはmodelを `deepcopy` し、baselineとParameterを共有しない。
+へ置換する。
 
 ## `conv_svd.py`
 
-`groups=1` の `nn.Conv2d` を対象に、
+`groups=1` のConv2dを、
 
 ```text
 Conv2d(C_in → C_out, K×K)
@@ -149,324 +151,210 @@ Conv2d(C_in → r, K×K, bias=False)
 Conv2d(r → C_out, 1×1, bias=元bias)
 ```
 
-へ分解する。
+へ置換する。
 
-元Convの、
+空間Conv側が元の `stride / padding / dilation / padding_mode` を引き継ぎ、biasは最終層へ置く。
 
-```text
-stride
-padding
-dilation
-padding_mode
-```
+## `mlp_svd.py` / `named_layers.py` / `rank_sweep.py`
 
-は空間畳み込みを行う前段へ引き継ぐ。
+MLP圧縮、named module置換、rank sweepを共通化する。
 
-biasは最終出力側へ置く。
-
-現在のweight flatteningは `groups=1` 前提なので、grouped convolutionは明示的にrejectする。
-
-## `mlp_svd.py`
-
-現在のMLP実験向けhelper。
-
-`fc1_rank` / `fc2_rank` を主APIとし、旧Notebook互換の `r1` / `r2` aliasも扱う。
-
-返す圧縮modelはbaselineとParameterを共有しない。
-
-## `named_layers.py`
-
-複数のnamed Conv / Linearをまとめて圧縮するときの共通処理。
-
-元のmodelを変更せず、コピー側だけを置換する。
-
-## `rank_sweep.py`
-
-層ごとのrank sweepを共通化する。
-
-rank sweep中は、原則としてcandidate model本体を結果表へ保持しない。
-
-```text
-include_model=False
-```
-
-を基本とし、Fine-tuningするcandidateだけrankから再構築する。
-
-これにより、
-
-- 不要なmodel保持
-- DataFrameへのPyTorch object混入
-- CSVへ保存できないrecord
-
-を避ける。
+rank sweepでは `include_model=False` を基本とし、全candidate modelを結果表へ保持せず、Fine-tuning対象だけrankから再構築する。
 
 ---
 
-# 3. `models/`
+# 4. `compression/` — Tucker / HOSVD
+
+## `tucker.py`
+
+主な責務：
 
 ```text
-models/
-├─ mlp.py
-├─ cnn.py
-└─ cifar10.py
+hosvd
+reconstruct_tucker
 ```
 
-## `mlp.py`
-
-MNIST / Fashion-MNIST MLPの共通model。
-
-## `cnn.py`
-
-Fashion-MNIST CNNのmodel。
-
-## `cifar10.py`
-
-CIFAR-10用の、
+HOSVDではfactorを各対象modeについて**元のTensorから独立に**求める。
 
 ```text
-Conv×3
-+ GAP
-+ fc1
-+ Dropout
-+ fc2
+X → mode 0 unfold → SVD → U0
+X → mode 1 unfold → SVD → U1
+...
 ```
 
-構造を持つ。
+factorを求める途中でXを逐次projectしてはいけない。それは標準的な1-pass HOSVDとは別処理になる。
 
-既定構成：
-
-```text
-conv1 3 → 32
-conv2 32 → 64
-conv3 64 → 128
-GAP
-fc1 128 → 256
-Dropout 0.5
-fc2 256 → 10
-```
-
-GAPを使うことで巨大なFlatten→Linearを避け、CIFAR-10実験ではConv圧縮を主題にする。
+coreはfactor転置で射影し、再構成ではfactorを逆向きに掛ける。
 
 ---
 
-# 4. `training/`
+# 5. `compression/hooi.py`
 
-学習・評価・Early Stoppingを共通化する。
+layer固有処理を持たないgeneric HOOIを実装する。
 
-重要な契約は、**学習用shuffle DataLoaderをtrain metricsの再評価で再走査しない**こと。
+公開API：
 
 ```text
-train_loader
-→ shuffle=True
-→ 学習専用
-
-train_eval_loader
-→ shuffle=False
-→ train loss / accuracy確認用
+has_converged
+hooi_sweep
+core_from_factors
+hooi
 ```
 
-学習用loaderを評価で追加走査すると、Generator状態が進み、次epochや次candidateのmini-batch順を変える可能性がある。
+`ranks` のkeyを更新対象modeとして扱う。
 
-このため、現在の実装ではnon-shuffling loaderを評価用に使う。
+```python
+ranks = {0: r0, 1: r1, 2: r2}
+```
 
-詳細：
+なら3-mode HOOI、
 
-- [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
+```python
+ranks = {0: rank_out, 1: rank_in}
+```
+
+なら4階Conv weightのmode 0 / 1だけを更新するpartial HOOIになる。
+
+1 sweep内では、先に更新したfactorを後続mode更新で使うGauss-Seidel型。入力 `factors` はcloneし、呼び出し元を破壊しない。
+
+```text
+HOSVD初期化
+→ initial error
+→ hooi_sweep
+→ core再計算
+→ reconstruction
+→ relative error
+→ convergence判定
+```
+
+を繰り返し、error historyはpandasに依存しない `list[float]` として返す。
 
 ---
 
-# 5. `metrics/`
+# 6. `compression/conv_tucker.py`
+
+Conv2d固有のTucker-2を担当する。
+
+主なAPI：
 
 ```text
-parameters
-accuracy / loss
-agreement
-logits RMSE
-retained energy
-MACs
-latency
+tucker2_decompose_conv_weight
+build_tucker2_conv
+build_tucker2_conv_from_components
+tucker2_hooi
+tucker2_hooi_sweep
+tucker2_effective_weight
 ```
 
-などを扱う。
-
-## latency benchmark
-
-corrected実験では、baselineとcompressedの速度比較条件を揃える。
+Conv weight
 
 ```text
-same input_batch
-same batch size
-same warmup
-same repeats
-proper CUDA synchronize
+(C_out, C_in, K_h, K_w)
 ```
 
-別々にDataLoaderからbatchを取ると、入力条件差がbenchmarkへ混ざる。
+のmode 0 / 1を圧縮し、
 
-したがって比較用 `input_batch` を一度作り、両modelへ同じTensorを渡す。
+```text
+C_in
+→ 1x1 / U_in^T
+→ R_in
+→ kxk / core
+→ R_out
+→ 1x1 / U_out
+→ C_out
+```
 
-## `include_model=False`
+へ置換する。
 
-metrics収集は数値recordを基本とし、rank sweepの全candidate modelを保持しない。
+現在は `groups=1` の通常Conv2dを対象とし、中央core Convが元の `stride / padding / dilation / padding_mode` を継承する。元biasは最後の1x1へ置く。
 
-必要なmodelだけ再構築する。
+HOSVDとHOOIは分解法だけを変え、3層構築処理はcomponents builderで共有する。
 
 ---
 
-# 6. `selection/`
+# 7. `metrics/`
 
-Pareto frontierとknee計算を共通化する。
-
-重要なのは、
+SVD時代のmodel比較・MACs・latencyに加え、Tensor近似用に
 
 ```text
-Pareto / kneeの数式処理
+tensor_approximation.py
 ```
 
-と、
+を追加している。
+
+Tucker/HOOIでは主に
+
+$$
+\frac{\|X-\hat X\|_F}{\|X\|_F}
+$$
+
+を共通関数で計算し、自作HOOIとTensorLyの最終factor/coreも同じ評価式で比較する。
 
 ```text
-どのmetricを使うか
-どの候補をFine-tuningするか
-最終rankをどう決めるか
+parameters reduction
+MACs reduction
+weight relative error
+validation / test accuracy
+decomposition time
+Fine-tuning後accuracy
 ```
 
-を分けること。
-
-前者は `src/selection`、後者は実験Notebookへ残す。
-
-kneeは唯一絶対のrankを証明するものではなく、指定した評価軸に対する折衷点を作る選択規則。
+は別指標として扱う。
 
 ---
 
-# 7. `datasets/`
+# 8. `models/` / `training/` / `datasets/` / `selection/` / `utils/`
 
-Fashion-MNIST用loaderやsplit helperを置く。
+SVDで作った実験基盤をTuckerでも再利用する。
 
-CIFAR-10の前処理・splitは現在Notebook側の実験設計として残っている部分もある。
-
-データ処理で重要なのは、
+重要なcontract：
 
 ```text
-train augmentation
-validation / test fixed transform
-split RNG
-training RNG
+baselineとcompressedでParameterを共有しない
+device / dtype / requires_gradを維持する
+train用shuffle loaderを評価で余分に回さない
+split RNGとtraining RNGを分ける
+benchmarkではsame input batchを使う
+Pareto / kneeの数式処理と実験上の選択規則を分ける
+nested moduleをstrictに置換する
 ```
 
-を区別すること。
-
-- [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]]
-- [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
+これらは分解法に依存しない。
 
 ---
 
-# 8. `utils/`
-
-named moduleの取得・置換などを扱う。
-
-例えば、
+# 9. Notebookとsrcの役割分担
 
 ```text
-layer1.0.conv
-```
-
-のようなnested pathでも既存moduleを置換できるようにする。
-
-`set_submodule(..., strict=True)` を使い、存在しないpathを暗黙に新規作成しない。
-
-このAPIを使用するため、現在の `pyproject.toml` は、
-
-```text
-torch>=2.7
-```
-
-を最低versionとしている。
-
----
-
-# 9. model非共有が重要な理由
-
-圧縮modelをFine-tuningしたとき、baselineのParameterまで変わってはいけない。
-
-NG：
-
-```text
-baseline
-└─ Parameter A
-
-compressed
-└─ 同じ Parameter A
-```
-
-これではbaseline比較が壊れる。
-
-現在は、
-
-```text
-deepcopy
-+
-新しいfactor layer生成
-```
-
-でbaselineとcompressedを分離する。
-
----
-
-# 10. rank / device / dtype / requires_grad
-
-factorization helperは、shapeだけ正しければよいわけではない。
-
-## rank
-
-対象行列の数学的最大rank以下。
-
-## device
-
-CUDA modelの一部だけCPUへ戻さない。
-
-## dtype
-
-float64等の元dtypeを勝手にfloat32へ落とさない。
-
-## requires_grad
-
-frozen parameterを分解した結果、trainableに変えない。
-
-これらをlayer factorizationのAPI contractとして扱う。
-
----
-
-# 11. Notebookとの役割分担
-
-現在の方針：
-
-```text
-src
-→ 再利用可能な実装
-→ 守るべきcontract
-
 Notebook
-→ 実験固有rank
-→ candidate集合
-→ 学習条件
-→ 選択規則
-→ 結果と考察
+→ 学習過程
+→ 自作アルゴリズム
+→ 実験条件
+→ rank候補
+→ 結果・考察
+
+src
+→ reusable implementation
+→ validation
+→ type / docstring
+→ API contract
+→ regression test対象
 ```
 
-したがって、`src` へ、
+そのためTucker編でも、
 
 ```text
-CIFARの最終rank=9/32/48
+02_hooi.ipynb
+04_hooi_tucker2.ipynb
 ```
 
-のような実験固有値をhard-codeしない。
+の自作実装は学習履歴として残し、最終比較Notebookではsrcを利用する。
 
 ---
 
-# 12. corrected Notebook
+# 10. canonical Notebook
 
-正式結果として扱うcorrected Notebook：
+## SVD
 
 ```text
 MNIST
@@ -475,52 +363,67 @@ notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
 Fashion-MNIST MLP
 notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
 
-Fashion-MNIST CNN Conv
+Fashion-MNIST CNN
 notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb
-
-Fashion-MNIST CNN Conv + Linear
 notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb
 
 CIFAR-10
 notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb
 ```
 
-historical Notebookは削除せず、正式な数値引用ではcorrectedを優先する。
+## Tucker / HOOI
+
+```text
+notebooks/20_tucker/00_fundamentals/
+├─ 00_tucker_hosvd_basics.ipynb
+├─ 01_rank_error_tradeoff.ipynb
+└─ 02_hooi.ipynb
+
+notebooks/20_tucker/10_cifar10_cnn/
+├─ 01_tucker2_conv.ipynb
+├─ 02_rank_sweep.ipynb
+├─ 03_finetuning.ipynb
+├─ 04_hooi_tucker2.ipynb
+└─ 05_hosvd_vs_hooi_finetuning.ipynb
+```
+
+`*_before_src.ipynb` やoriginalはhistorical snapshotとして残し、正式な値はcanonical Notebook / resultsを優先する。
 
 ---
 
-# 13. tests
+# 11. tests
 
-SVD実装の最終review時点で、
+SVD実装だけのreview時点では `49 passed` だった。
+
+Tucker / HOOI src化・テスト整理後の**ローカル全pytest**では、
 
 ```text
-python -m pytest tests -q --tb=short
-
-49 passed
+99 passed
+0 failed
 ```
 
 を確認している。
 
-テスト対象には、
+これはローカル実行結果であり、GitHub CIによる独立確認ではない。
 
-- rank contract
-- Linear / Conv factorization
-- device / dtype
-- requires_grad
-- Parameter非共有
-- nested module replacement
-- benchmark helper
-- knee edge case
+主なTucker/HOOI追加確認：
 
-などが含まれる。
+```text
+3-mode HOOI
+4階Conv weightのpartial HOOI
+HOOI errorがHOSVD初期値より悪化しない
+factor / core shape
+hooi_sweepが入力factorを破壊しない
+error history
+invalid mode / rank / factor shape
+Tucker-2 components build
+bias / spatial config
+device / dtype / requires_grad
+```
 
 ---
 
-# 14. 旧 `code/` の位置付け
-
-旧 `code/` のNotebookやartifactは、初期実装・学習履歴として残っている。
-
-現在は、
+# 12. 旧 `code/` の位置付け
 
 ```text
 code/
@@ -530,54 +433,49 @@ src/nn_compression/
 = current reusable implementation
 ```
 
-と考える。
-
-legacyな `code/data/MNIST` や `code/mnist_mlp_baseline.pth` はGit追跡から解除済みで、今後のcanonical実装ではない。
+旧Notebookやartifactは学習履歴として残すが、新しい実装はsrcを正本とする。
 
 ---
 
-# 15. 修正履歴を読む
+# 13. 数式・検証との対応
 
-何が問題で、なぜ今の実装になったかは、
+- [[00_基礎理論/00_数式導出監査]]
+- [[00_基礎理論/01_数学基礎/01_線形代数/02_SVD数式の導出]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
+- [[05_SVD基礎実装検証/README]]
+- [[06_Tucker基礎実装検証/README]]
 
-- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
-
-にまとめている。
-
-srcには長いバグ履歴を書かず、
-
-```text
-なぜ現在のcontractを守る必要があるか
-```
-
-だけを短いdocstring / commentとして残している。
+理論式、Notebookの学習実装、srcの最終API、testsの4層を対応させて読む。
 
 ---
 
-# 16. Tuckerへ持ち越すもの
+# 14. 次の実装
 
-次のTucker decompositionで再利用するのは、SVD専用factorizationそのものではなく、
+次は **TT / MPS**。
+
+SVDで学んだtruncationと、Tucker/HOOIで学んだTensor mode・rank・sweep・収束を土台に、
 
 ```text
-models
-training
-metrics
-benchmark
-selection
-named module操作
-実験結果保存
+tensorization
+→ TT / MPS core
+→ TT rank / bond dimension
+→ TT-SVD
+→ reconstruction / error
+→ NNへの適用
+→ DMRGへの局所sweep接続
 ```
 
-の基盤。
+へ進む。
 
-Tucker用の巨大な万能decomposition frameworkを先回りして作らず、必要になった段階で抽象化する。
+先回りして巨大なTensor Network frameworkを作らず、学習Notebookで必要な最小単位を理解してからsrc化する方針を継続する。
 
 ---
 
 # 関連
 
 - [[README]]
-- [[SVD実験まとめ]]
 - [[00_基礎理論/README]]
-- [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
-- [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
+- [[05_SVD基礎実装検証/README]]
+- [[06_Tucker基礎実装検証/README]]
+- [[30_CIFAR10_CNN/README]]
+- [[40_TensorTrain_MPS/README]]
