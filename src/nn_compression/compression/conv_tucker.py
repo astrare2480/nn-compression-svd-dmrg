@@ -60,6 +60,49 @@ def _validate_tucker2_components(
     u_in: torch.Tensor,
 ) -> tuple[int, int]:
     """core / U_out / U_in の shape が Conv2d weight と整合するか検証する。"""
+    if core.ndim != 4:
+        raise ValueError(
+            f"core は4階テンソルである必要があります: ndim={core.ndim}"
+        )
+    if u_out.ndim != 2:
+        raise ValueError(
+            f"u_out は2次元行列である必要があります: ndim={u_out.ndim}"
+        )
+    if u_in.ndim != 2:
+        raise ValueError(
+            f"u_in は2次元行列である必要があります: ndim={u_in.ndim}"
+        )
+    if core.dtype != conv.weight.dtype:
+        raise ValueError(
+            f"core.dtype={core.dtype} は conv.weight.dtype={conv.weight.dtype} "
+            "と一致する必要があります。"
+        )
+    if u_out.dtype != conv.weight.dtype:
+        raise ValueError(
+            f"u_out.dtype={u_out.dtype} は conv.weight.dtype={conv.weight.dtype} "
+            "と一致する必要があります。"
+        )
+    if u_in.dtype != conv.weight.dtype:
+        raise ValueError(
+            f"u_in.dtype={u_in.dtype} は conv.weight.dtype={conv.weight.dtype} "
+            "と一致する必要があります。"
+        )
+    if core.device != conv.weight.device:
+        raise ValueError(
+            f"core.device={core.device} は conv.weight.device={conv.weight.device} "
+            "と一致する必要があります。"
+        )
+    if u_out.device != conv.weight.device:
+        raise ValueError(
+            f"u_out.device={u_out.device} は conv.weight.device={conv.weight.device} "
+            "と一致する必要があります。"
+        )
+    if u_in.device != conv.weight.device:
+        raise ValueError(
+            f"u_in.device={u_in.device} は conv.weight.device={conv.weight.device} "
+            "と一致する必要があります。"
+        )
+
     rank_out, rank_in = _coerce_tucker2_ranks(
         tuple(conv.weight.shape), u_out.shape[1], u_in.shape[1]
     )
@@ -220,12 +263,106 @@ def tucker2_hooi(
         tuple(weight.shape), rank_out, rank_in
     )
     return hooi(
-        weight,
+        weight.detach(),
         {0: rank_out, 1: rank_in},
         max_iter=max_iter,
         abs_tol=abs_tol,
         rel_tol=rel_tol,
     )
+
+
+def _validate_tucker2_sequential_layers(
+    seq: nn.Sequential,
+) -> tuple[nn.Conv2d, nn.Conv2d, nn.Conv2d]:
+    """Tucker-2 Sequential (1x1 -> kxk -> 1x1) の構造 contract を検証する。"""
+    if len(seq) != 3:
+        raise ValueError(
+            f"Tucker-2 Sequential は3層である必要があります: len={len(seq)}"
+        )
+    input_layer, core_layer, output_layer = seq[0], seq[1], seq[2]
+    for index, layer in enumerate(seq):
+        if not isinstance(layer, nn.Conv2d):
+            raise TypeError(
+                f"Tucker-2 Sequential の各層は nn.Conv2d である必要があります: "
+                f"index={index}, type={type(layer)!r}"
+            )
+
+    if input_layer.kernel_size != (1, 1):
+        raise ValueError(
+            "input projection は 1x1 Conv2d である必要があります: "
+            f"kernel_size={input_layer.kernel_size}"
+        )
+    if input_layer.stride != (1, 1):
+        raise ValueError(
+            "input projection の stride は 1 である必要があります: "
+            f"stride={input_layer.stride}"
+        )
+    if input_layer.padding != (0, 0):
+        raise ValueError(
+            "input projection の padding は 0 である必要があります: "
+            f"padding={input_layer.padding}"
+        )
+    if input_layer.dilation != (1, 1):
+        raise ValueError(
+            "input projection の dilation は 1 である必要があります: "
+            f"dilation={input_layer.dilation}"
+        )
+    if input_layer.groups != 1:
+        raise ValueError(
+            "input projection の groups は 1 である必要があります: "
+            f"groups={input_layer.groups}"
+        )
+    if input_layer.bias is not None:
+        raise ValueError("input projection に bias は許可されません。")
+
+    if core_layer.groups != 1:
+        raise ValueError(
+            "core layer の groups は 1 である必要があります: "
+            f"groups={core_layer.groups}"
+        )
+    if core_layer.bias is not None:
+        raise ValueError("core layer に bias は許可されません。")
+
+    if output_layer.kernel_size != (1, 1):
+        raise ValueError(
+            "output projection は 1x1 Conv2d である必要があります: "
+            f"kernel_size={output_layer.kernel_size}"
+        )
+    if output_layer.stride != (1, 1):
+        raise ValueError(
+            "output projection の stride は 1 である必要があります: "
+            f"stride={output_layer.stride}"
+        )
+    if output_layer.padding != (0, 0):
+        raise ValueError(
+            "output projection の padding は 0 である必要があります: "
+            f"padding={output_layer.padding}"
+        )
+    if output_layer.dilation != (1, 1):
+        raise ValueError(
+            "output projection の dilation は 1 である必要があります: "
+            f"dilation={output_layer.dilation}"
+        )
+    if output_layer.groups != 1:
+        raise ValueError(
+            "output projection の groups は 1 である必要があります: "
+            f"groups={output_layer.groups}"
+        )
+
+    if core_layer.in_channels != input_layer.out_channels:
+        raise ValueError(
+            "input projection と core layer の channel 接続が一致しません: "
+            f"input.out_channels={input_layer.out_channels}, "
+            f"core.in_channels={core_layer.in_channels}"
+        )
+    if output_layer.in_channels != core_layer.out_channels:
+        raise ValueError(
+            "core layer と output projection の channel 接続が一致しません: "
+            f"core.out_channels={core_layer.out_channels}, "
+            f"output.in_channels={output_layer.in_channels}"
+        )
+
+    return input_layer, core_layer, output_layer
 
 
 def tucker2_effective_weight(seq: nn.Sequential) -> torch.Tensor:
@@ -234,15 +371,20 @@ def tucker2_effective_weight(seq: nn.Sequential) -> torch.Tensor:
     fine-tuning 前後の weight 誤差比較など、分解表現を 1 つの Conv weight
     に戻して評価するときに使う。
     """
-    if len(seq) != 3:
-        raise ValueError(
-            f"Tucker-2 Sequential は3層である必要があります: len={len(seq)}"
-        )
-    for layer in seq:
-        if not isinstance(layer, nn.Conv2d):
-            raise TypeError("Tucker-2 Sequential の各層は nn.Conv2d である必要があります。")
+    input_layer, core_layer, output_layer = _validate_tucker2_sequential_layers(seq)
 
-    u_in = seq[0].weight.detach()[:, :, 0, 0].T
-    core = seq[1].weight.detach()
-    u_out = seq[2].weight.detach()[:, :, 0, 0]
+    if input_layer.weight.shape[2:] != (1, 1):
+        raise ValueError(
+            "input projection の weight は 1x1 カーネルである必要があります: "
+            f"shape={tuple(input_layer.weight.shape)}"
+        )
+    if output_layer.weight.shape[2:] != (1, 1):
+        raise ValueError(
+            "output projection の weight は 1x1 カーネルである必要があります: "
+            f"shape={tuple(output_layer.weight.shape)}"
+        )
+
+    u_in = input_layer.weight.detach()[:, :, 0, 0].T
+    core = core_layer.weight.detach()
+    u_out = output_layer.weight.detach()[:, :, 0, 0]
     return reconstruct_tucker(core, {0: u_out, 1: u_in})

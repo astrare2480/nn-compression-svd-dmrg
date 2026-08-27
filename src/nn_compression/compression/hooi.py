@@ -18,8 +18,30 @@ import torch
 
 from ..metrics import relative_frobenius_error
 from ..tensor.operations import mode_dot, unfold
+from ..tensor.validation import validate_tensor_ndim_at_least_2
 from .svd import coerce_rank, truncated_svd
 from .tucker import hosvd, reconstruct_tucker
+from .tucker_validation import (
+    validate_max_iter,
+    validate_non_negative_tolerance,
+    validate_tucker_ranks,
+)
+
+
+def _projected_unfold_max_rank(
+    X: torch.Tensor,
+    factors: dict[int, torch.Tensor],
+    ranks: dict[int, int],
+    target_mode: int,
+) -> int:
+    """target_mode 更新時の truncated SVD で取りうる最大 rank。"""
+    projected = X
+    for other_mode in ranks:
+        if other_mode == target_mode:
+            continue
+        projected = mode_dot(projected, factors[other_mode].T, other_mode)
+    unfolded = unfold(projected, target_mode)
+    return min(unfolded.shape[0], unfolded.shape[1])
 
 
 def _validate_hooi_inputs(
@@ -28,33 +50,57 @@ def _validate_hooi_inputs(
     ranks: dict[int, int],
 ) -> None:
     """HOOI 入出力の mode / rank / factor shape を検証する。"""
-    if X.ndim < 1:
-        raise ValueError(f"テンソルは1次元以上である必要があります: ndim={X.ndim}")
+    validate_tensor_ndim_at_least_2(X, name="X")
     if not ranks:
         raise ValueError("ranks は空にできません。")
 
-    for mode, rank in ranks.items():
-        if not isinstance(mode, int):
-            raise TypeError(f"mode は整数である必要があります: {mode!r}")
-        if not 0 <= mode < X.ndim:
+    validate_tucker_ranks(tuple(X.shape), ranks, allow_empty=False)
+
+    factor_modes = set(factors.keys())
+    rank_modes = set(ranks.keys())
+    if factor_modes != rank_modes:
+        extra = sorted(factor_modes - rank_modes)
+        missing = sorted(rank_modes - factor_modes)
+        if extra:
             raise ValueError(
-                f"mode={mode} は 0〜{X.ndim - 1} の範囲で指定してください。"
+                f"factors に ranks に無い mode があります: {extra}"
             )
-        if mode not in factors:
+        if missing:
             raise ValueError(
-                f"factors に mode={mode} がありません。"
+                f"factors に mode={missing[0]} がありません。"
                 f" ranks の各 mode に対応する factor が必要です。"
             )
+
+    for mode, rank in ranks.items():
         expected_rank = coerce_rank(rank, X.shape[mode], name=f"rank[{mode}]")
         U = factors[mode]
         if U.ndim != 2:
             raise ValueError(
-                f"factors[{mode}] は2次元行列である必要があります: shape={tuple(U.shape)}"
+                f"factors[{mode}] は2次元行列である必要があります: "
+                f"shape={tuple(U.shape)}"
             )
         if U.shape != (X.shape[mode], expected_rank):
             raise ValueError(
                 f"factors[{mode}].shape={tuple(U.shape)} は "
                 f"({X.shape[mode]}, {expected_rank}) である必要があります。"
+            )
+        if U.dtype != X.dtype:
+            raise ValueError(
+                f"factors[{mode}].dtype={U.dtype} は X.dtype={X.dtype} "
+                "と一致する必要があります。"
+            )
+        if U.device != X.device:
+            raise ValueError(
+                f"factors[{mode}].device={U.device} は X.device={X.device} "
+                "と一致する必要があります。"
+            )
+
+    for target_mode in ranks:
+        max_rank = _projected_unfold_max_rank(X, factors, ranks, target_mode)
+        if ranks[target_mode] > max_rank:
+            raise ValueError(
+                f"rank[{target_mode}]={ranks[target_mode]} は "
+                f"projected unfolding で実現可能な上限 {max_rank} を超えています。"
             )
 
 
@@ -142,12 +188,21 @@ def hooi(
     返り値 ``history`` は相対 Frobenius 誤差の list。
     ``history[0]`` は HOSVD 初期値、以降は各 sweep 後の誤差。
     """
-    if max_iter < 0:
-        raise ValueError(f"max_iter は 0 以上である必要があります: {max_iter}")
+    validate_tensor_ndim_at_least_2(X, name="X")
+    if not ranks:
+        raise ValueError("ranks は空にできません。")
+    if torch.linalg.vector_norm(X) == 0:
+        raise ValueError(
+            "X がゼロテンソルなので HOOI の相対 Frobenius 誤差を定義できません。"
+        )
+
+    max_iter = validate_max_iter(max_iter)
+    abs_tol = validate_non_negative_tolerance(abs_tol, name="abs_tol")
+    rel_tol = validate_non_negative_tolerance(rel_tol, name="rel_tol")
 
     core_hosvd, factors_hosvd = hosvd(X, ranks)
     X_hat = reconstruct_tucker(core_hosvd, factors_hosvd)
-    error = float(relative_frobenius_error(X, X_hat))
+    error = float(relative_frobenius_error(X, X_hat).detach())
 
     history: list[float] = [error]
     prev_error = error
@@ -161,7 +216,7 @@ def hooi(
         updated_factors = hooi_sweep(X, updated_factors, ranks)
         core = core_from_factors(X, updated_factors)
         X_hat = reconstruct_tucker(core, updated_factors)
-        error = float(relative_frobenius_error(X, X_hat))
+        error = float(relative_frobenius_error(X, X_hat).detach())
         history.append(error)
 
         if has_converged(error, prev_error, abs_tol=abs_tol, rel_tol=rel_tol):

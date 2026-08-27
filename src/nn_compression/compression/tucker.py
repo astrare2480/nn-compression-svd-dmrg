@@ -16,7 +16,9 @@ from __future__ import annotations
 import torch
 
 from ..tensor.operations import mode_dot, unfold
+from ..tensor.validation import validate_tensor_ndim_at_least_2
 from .svd import truncated_svd
+from .tucker_validation import validate_positive_shape, validate_tucker_ranks
 
 
 def hosvd(
@@ -39,9 +41,13 @@ def hosvd(
     unfolding** から 1 回で求める。逐次更新した core から取ると別の
     アルゴリズムになるため、この順序を変えない。
     """
+    validate_tensor_ndim_at_least_2(X, name="X")
+    validated_ranks = validate_tucker_ranks(
+        tuple(X.shape), ranks, allow_empty=True
+    )
     factors: dict[int, torch.Tensor] = {}
     core = X
-    for mode, rank in ranks.items():
+    for mode, rank in validated_ranks.items():
         factors[mode], _, _ = truncated_svd(unfold(X, mode), rank)
         # truncated_svd が返す Uのshapeは、[:, :rank]
         # 元のmodeの大きさを縮めるには、Tをかける
@@ -80,12 +86,13 @@ def tucker_parameter_count(
     ``ranks`` に無い mode は partial HOSVD と同じく、core に元の
     dimension をそのまま残す（factor も持たない）。
     """
+    validated_ranks = validate_tucker_ranks(shape, ranks, allow_empty=True)
     core_count = 1
     factor_count = 0
 
     for mode, dim in enumerate(shape):
-        if mode in ranks:
-            rank = ranks[mode]
+        if mode in validated_ranks:
+            rank = validated_ranks[mode]
 
             core_count *= rank
             factor_count += dim * rank
@@ -97,17 +104,21 @@ def tucker_parameter_count(
 
 def parameter_ratio(shape: tuple[int, ...], ranks: dict[int, int]) -> float:
     """Tucker 表現の要素数が元テンソルの何割かを返す。小さいほど圧縮。"""
+    validate_positive_shape(shape)
+    validated_ranks = validate_tucker_ranks(shape, ranks, allow_empty=True)
     full_param_count = 1
     for param in shape:
         full_param_count = param * full_param_count
-    reduced_param_count = tucker_parameter_count(shape, ranks)
+    reduced_param_count = tucker_parameter_count(shape, validated_ranks)
     return reduced_param_count / full_param_count
 
 
 def compression_factor(shape: tuple[int, ...], ranks: dict[int, int]) -> float:
     """元テンソルに対して何倍小さい表現かを返す。大きいほど圧縮。"""
+    validate_positive_shape(shape)
+    validated_ranks = validate_tucker_ranks(shape, ranks, allow_empty=True)
     full_param_count = 1
     for param in shape:
         full_param_count = param * full_param_count
-    reduced_param_count = tucker_parameter_count(shape, ranks)
+    reduced_param_count = tucker_parameter_count(shape, validated_ranks)
     return full_param_count / reduced_param_count

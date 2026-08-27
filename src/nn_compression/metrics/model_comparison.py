@@ -9,11 +9,30 @@
 from __future__ import annotations
 
 import time
+from contextlib import contextmanager
 
 import torch
 from torch.utils.data import DataLoader, RandomSampler
 
 from ..training.loops import evaluate
+
+
+@contextmanager
+def _preserve_training_mode(*models):
+    """metrics 実行前後で model.training を復元する。"""
+    states = [model.training for model in models]
+    try:
+        yield
+    finally:
+        for model, state in zip(models, states):
+            model.train(state)
+
+
+def _ensure_nonempty_loader(loader: DataLoader, *, metric_name: str) -> None:
+    if len(loader) == 0:
+        raise ValueError(
+            f"空の DataLoader では {metric_name} を計算できません。"
+        )
 
 
 def count_parameters(model):
@@ -47,22 +66,24 @@ def agreement(baseline_model, compressed_model, loader, device):
     正解ラベルに対する accuracy とは異なり、圧縮前のモデルの判断を
     圧縮後のモデルがどの程度保っているかを測る。
     """
-    baseline_model.eval()
-    compressed_model.eval()
+    _ensure_nonempty_loader(loader, metric_name="agreement")
+    with _preserve_training_mode(baseline_model, compressed_model):
+        baseline_model.eval()
+        compressed_model.eval()
 
-    agreement_count = 0
-    total = 0
-    with torch.inference_mode():
-        for images, _ in loader:
-            images = images.to(device)
-            baseline_prediction = baseline_model(images).argmax(dim=1)
-            compressed_prediction = compressed_model(images).argmax(dim=1)
-            agreement_count += (
-                baseline_prediction == compressed_prediction
-            ).sum().item()
-            total += images.size(0)
+        agreement_count = 0
+        total = 0
+        with torch.inference_mode():
+            for images, _ in loader:
+                images = images.to(device)
+                baseline_prediction = baseline_model(images).argmax(dim=1)
+                compressed_prediction = compressed_model(images).argmax(dim=1)
+                agreement_count += (
+                    baseline_prediction == compressed_prediction
+                ).sum().item()
+                total += images.size(0)
 
-    return agreement_count / total
+        return agreement_count / total
 
 
 def logits_rmse(baseline_model, compressed_model, loader, device):
@@ -71,19 +92,21 @@ def logits_rmse(baseline_model, compressed_model, loader, device):
     agreement が最終クラスだけを見るのに対して、この指標は出力要素全体の
     ずれを評価する。小さいほど圧縮前モデルに近い。クラス数は仮定しない。
     """
-    baseline_model.eval()
-    compressed_model.eval()
+    _ensure_nonempty_loader(loader, metric_name="logits_rmse")
+    with _preserve_training_mode(baseline_model, compressed_model):
+        baseline_model.eval()
+        compressed_model.eval()
 
-    squared_error_sum = 0.0
-    element_count = 0
-    with torch.inference_mode():
-        for images, _ in loader:
-            images = images.to(device)
-            difference = baseline_model(images) - compressed_model(images)
-            squared_error_sum += difference.square().sum().item()
-            element_count += difference.numel()
+        squared_error_sum = 0.0
+        element_count = 0
+        with torch.inference_mode():
+            for images, _ in loader:
+                images = images.to(device)
+                difference = baseline_model(images) - compressed_model(images)
+                squared_error_sum += difference.square().sum().item()
+                element_count += difference.numel()
 
-    return (squared_error_sum / element_count) ** 0.5
+        return (squared_error_sum / element_count) ** 0.5
 
 
 def _synchronize(device: torch.device) -> None:
@@ -151,22 +174,26 @@ def benchmark_inference(
     else:
         images = _as_input_batch(input_batch)
 
-    model.eval()
-    images = images.to(device)
+    was_training = model.training
+    try:
+        model.eval()
+        images = images.to(device)
 
-    with torch.no_grad():
-        for _ in range(warmup):
-            _ = model(images)
+        with torch.no_grad():
+            for _ in range(warmup):
+                _ = model(images)
 
-    _synchronize(device)
-    start = time.perf_counter()
+        _synchronize(device)
+        start = time.perf_counter()
 
-    with torch.no_grad():
-        for _ in range(repeats):
-            _ = model(images)
+        with torch.no_grad():
+            for _ in range(repeats):
+                _ = model(images)
 
-    _synchronize(device)
-    time_s = (time.perf_counter() - start) / repeats
+        _synchronize(device)
+        time_s = (time.perf_counter() - start) / repeats
+    finally:
+        model.train(was_training)
 
     if not return_details:
         return time_s
