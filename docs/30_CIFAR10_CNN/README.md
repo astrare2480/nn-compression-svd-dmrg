@@ -1,8 +1,25 @@
-# CIFAR-10 CNN / SVD
+# CIFAR-10 CNN / SVD・Tucker
 
-Fashion-MNISTで確認したLinear / Conv SVDを、RGB自然画像と複数Conv層へ拡張する章。
+Fashion-MNISTで確認したLinear / Conv SVDを、RGB自然画像と複数Conv層へ拡張し、その同じCIFAR-10 CNNをTucker / HOSVD / HOOIの実験基盤にも使う章。
+
+```text
+Fashion-MNIST
+single-layer rank selection
++ fixed-rank Conv / Linear combination
+        ↓
+CIFAR-10 / SVD
+conv1 / conv2 / conv3 の model-wide rank allocation
+        ↓
+CIFAR-10 / Tucker
+conv2のmode 0 / 1をTucker-2圧縮
+        ↓
+HOOI
+同rankでfactorを反復精密化
+```
 
 ## 読む順番
+
+### CIFAR-10 / SVD
 
 1. [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]]
 2. [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
@@ -11,22 +28,19 @@ Fashion-MNISTで確認したLinear / Conv SVDを、RGB自然画像と複数Conv�
 5. [[00_基礎理論/03_モデル圧縮理論/17_Conv2dの低ランク2層置換]]
 6. [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]]
 
-## この章で進んだ点
+### Tucker / HOOI
 
-```text
-Fashion-MNIST
-single-layer rank selection
-+ fixed-rank Conv/Linear combination
-        ↓
-CIFAR-10
-conv1 / conv2 / conv3 の model-wide rank allocation
-```
-
-CIFAR-10では、学習時だけRandomCrop / HorizontalFlipを使い、評価側では入力条件を固定する。GAPで巨大な全結合層を避け、複数Conv層の圧縮を主題にした。
+1. [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
+2. [[00_基礎理論/01_数学基礎/02_テンソル代数/21_テンソルとmode演算]]
+3. [[00_基礎理論/01_数学基礎/02_テンソル代数/22_Tucker分解とHOSVD]]
+4. [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
+5. [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
+6. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
+7. [[06_Tucker基礎実装検証/README]]
 
 ## canonicalデータ分割
 
-corrected Notebookでは公式train 50,000枚を、
+SVD corrected Notebookでは公式train 50,000枚を、
 
 ```text
 Train                       40,000
@@ -37,13 +51,13 @@ Test（公式test）            10,000
 
 へ分ける。
 
-PerplexityでDataset / Subset / Generatorを学んだ際の `45,000 / 5,000` は基礎説明用の単純例であり、**canonical実験条件は40,000 / 5,000 / 5,000**。
+PerplexityでDataset / Subset / Generatorを学んだ際の `45,000 / 5,000` は基礎説明用の単純例であり、**canonical SVD実験条件は40,000 / 5,000 / 5,000**。
 
 データ取得が極端に遅い場合の `download=False`、展開先、MD5確認などの実務メモも [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]] に残している。
 
-## 正式結果
+## SVDのcanonical result
 
-正式に引用する結果はcorrected版。
+正式に引用するSVD結果はcorrected版。
 
 ```text
 Notebook:
@@ -75,13 +89,11 @@ Balanced     9 / 32 / 32 : 0.4354 → 0.7360
 Conservative 9 / 32 / 48 : 0.4792 → 0.7444
 ```
 
-この `before → after` は **Rank-Selection Validation accuracy** のFine-tuning前後を表す。Early-Stopping Validationやtestの値ではない。
+この `before → after` はRank-Selection Validation accuracyのFine-tuning前後。single seedなので小差を性能改善とは断定せず、圧縮後も精度をほぼ維持したと解釈する。
 
-single seedなので、小さいaccuracy差は改善と断定せず、**圧縮後も精度をほぼ維持した**と解釈する。
+探索は全rank空間のglobal optimumではなく、各層のPareto / knee近傍へ候補を制約したmodel-wide rank allocationである。
 
-探索は全rank空間のglobal optimumではなく、各層のPareto / knee近傍に候補を制約したmodel-wide rank allocationである。
-
-## MACsとlatency
+## SVDのMACsとlatency
 
 corrected benchmarkでは、
 
@@ -101,12 +113,122 @@ Latency: 約0.531 → 0.537 ms/batch
 
 理論演算量削減はwall-clock speedupを保証しなかった。
 
-## 修正履歴を読む
+## Tucker / HOSVD / HOOIへの拡張
 
-旧実験の問題とcorrected版での修正理由は、
+SVDではConv weight
+
+```text
+(C_out, C_in, K_h, K_w)
+```
+
+を行列へreshapeして2次元rankで近似した。
+
+Tuckerでは同じ4階weightのmode構造を保持し、channel mode 0 / 1へ別々のrankを持たせる。
+
+主対象は学習済み
+
+```text
+conv2.weight = (64, 32, 3, 3)
+```
+
+で、Tucker-2では
+
+```text
+C_in
+→ 1x1 / U_in^T
+→ R_in
+→ 3x3 / core
+→ R_out
+→ 1x1 / U_out
+→ C_out
+```
+
+へ置換した。
+
+Tucker/HOOIのcanonical sourceは、
+
+```text
+notebooks/20_tucker/
+results/20_tucker/
+```
+
+で、結果の整理は [[06_Tucker基礎実装検証/README]] を正本とする。
+
+### balanced rank `(32,16)`
+
+baseline：
+
+```text
+validation accuracy = 0.7344
+test accuracy       = 0.7327
+parameters          = 128,842
+```
+
+Tucker-2後：
+
+```text
+parameters             = 117,578
+Conv2 MAC reduction    = 61.11%
+model MAC reduction    = 27.84%
+```
+
+分解直後のweight relative errorは、
+
+```text
+HOSVD = 0.449042
+HOOI  = 0.442504
+```
+
+でHOOIの方が小さかった。一方、validation accuracyは
+
+```text
+HOSVD = 0.6280
+HOOI  = 0.6202
+```
+
+であり、**weight Frobenius誤差を小さくすることがtask accuracy改善を保証しない**ことを確認した。
+
+TensorLy `partial_tucker` は、自作HOOIと最終weight error・圧縮直後accuracyで整合した。
+
+## HOSVD / HOOI同条件Fine-tuning
+
+seed 0の同条件比較では、
+
+```text
+post validation
+HOSVD = 0.7528
+HOOI  = 0.7528
+
+post test
+HOSVD = 0.7508
+HOOI  = 0.7555
+```
+
+となった。
+
+差は0.0047で1 seedのみなので、HOOIの一般的な最終accuracy優位性とは結論しない。
+
+さらにFine-tuning後には元weightへのrelative errorが増えながらaccuracyが改善し、
+
+```text
+元weightへの近さ
+≠
+taskにとって最適なlow-rank weight
+```
+
+であることも実測した。
+
+## canonical / historical
+
+SVDでは `*_corrected.ipynb` と対応するcorrected resultsを正式結果として優先する。
+
+Tucker / HOOIでは `notebooks/20_tucker/` と `results/20_tucker/` の現行Notebook / CSVを優先する。
+
+original / using_src / before_srcはhistorical recordとして残し、別runのabsolute値を同一実験として混ぜない。
+
+## 修正履歴・関連
 
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
-
-へまとめている。
-
-original / using_src / before_srcはhistorical recordとして残し、正式結果はcorrectedを優先する。
+- [[06_Tucker基礎実装検証/README]]
+- [[00_基礎理論/00_数式導出監査]]
+- [[README_実装編]]
