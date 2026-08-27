@@ -35,6 +35,15 @@ def conv2d_macs(conv, out_h: int, out_w: int) -> int:
     return out_h * out_w * out_ch * in_ch_per_group * k_h * k_w
 
 
+def _reject_grouped_conv_for_compressed(conv, *, context: str) -> None:
+    """compressed / estimated MACs は groups=1 の Conv2d のみ対応する。"""
+    if conv.groups != 1:
+        raise ValueError(
+            f"{context} は groups=1 の Conv2d のみ対応しています: "
+            f"groups={conv.groups}"
+        )
+
+
 def compressed_conv2d_macs(conv, rank: int, out_h: int, out_w: int) -> int:
     """``factorize_conv2d_layer`` と同じ 2 層 Conv の MACs を返す。
 
@@ -42,6 +51,7 @@ def compressed_conv2d_macs(conv, rank: int, out_h: int, out_w: int) -> int:
     2 層目: ``Conv(rank -> out, 1×1)``
     空間サイズは分解前の出力と同じ。
     """
+    _reject_grouped_conv_for_compressed(conv, context="compressed_conv2d_macs")
     out_ch, in_ch, k_h, k_w = conv.weight.shape
     first_layer_macs = out_h * out_w * rank * in_ch * k_h * k_w
     second_layer_macs = out_h * out_w * out_ch * rank
@@ -59,6 +69,7 @@ def estimate_conv2d_macs(
     モデル構造には依存しない。空間サイズ ``out_hw`` は呼び出し側が渡す。
     ``compute_reduction`` は ``1 - compressed / baseline``。
     """
+    _reject_grouped_conv_for_compressed(conv, context="estimate_conv2d_macs")
     out_h, out_w = out_hw
     baseline_macs = conv2d_macs(conv, out_h, out_w)
     compressed_macs = compressed_conv2d_macs(conv, rank, out_h, out_w)

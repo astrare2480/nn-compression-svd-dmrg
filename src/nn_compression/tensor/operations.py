@@ -16,6 +16,12 @@ from __future__ import annotations
 
 import torch
 
+from .validation import (
+    validate_mode_index,
+    validate_positive_shape,
+    validate_tensor_ndim_at_least_2,
+)
+
 
 def unfold(X: torch.Tensor, mode: int) -> torch.Tensor:
     """指定した mode を基準に、テンソルを 2 次元行列へ展開する。
@@ -25,10 +31,8 @@ def unfold(X: torch.Tensor, mode: int) -> torch.Tensor:
 
     戻り値の shape は ``(X.shape[mode], 残り全 mode の積)``。
     """
-    if not 0 <= mode < X.ndim:
-        raise ValueError(
-            f"mode={mode} は 0〜{X.ndim - 1} の範囲で指定してください。"
-        )
+    validate_tensor_ndim_at_least_2(X)
+    validate_mode_index(mode, X.ndim)
     # movedim(source, destination)はsourceをdestinationnにうつす
     return X.movedim(mode, 0).flatten(start_dim=1)
 
@@ -46,12 +50,43 @@ def fold(
 
     ``unfold`` の逆操作。``shape`` は ``tuple`` でも ``torch.Size`` でもよい。
     """
-    if not 0 <= mode < len(shape):
+    shape_tuple = tuple(shape)
+    validate_positive_shape(shape_tuple)
+    validate_mode_index(mode, len(shape_tuple))
+
+    if unfolded.ndim != 2:
         raise ValueError(
-            f"mode={mode} は 0〜{len(shape) - 1} の範囲で指定してください。"
+            f"unfolded は2次元行列である必要があります: ndim={unfolded.ndim}"
         )
+
+    expected_rows = shape_tuple[mode]
+    if unfolded.shape[0] != expected_rows:
+        raise ValueError(
+            f"unfolded.shape[0]={unfolded.shape[0]} は "
+            f"shape[{mode}]={expected_rows} と一致する必要があります。"
+        )
+
+    expected_numel = 1
+    for dim in shape_tuple:
+        expected_numel *= dim
+    if unfolded.numel() != expected_numel:
+        raise ValueError(
+            f"unfolded の総要素数 {unfolded.numel()} は "
+            f"shape={shape_tuple} の期待値 {expected_numel} と一致する必要があります。"
+        )
+
+    expected_cols = expected_numel // expected_rows
+    if unfolded.shape[1] != expected_cols:
+        raise ValueError(
+            f"unfolded.shape[1]={unfolded.shape[1]} は "
+            f"期待値 {expected_cols} と一致する必要があります。"
+            " 転置された unfolded を黙って reshape しません。"
+        )
+
     # shape から mode 番目を一度抜いて、先頭に付け直している式
-    moved_shape = (shape[mode],) + tuple(shape[:mode]) + tuple(shape[mode + 1:])
+    moved_shape = (shape_tuple[mode],) + tuple(shape_tuple[:mode]) + tuple(
+        shape_tuple[mode + 1 :]
+    )
 
     # 並びだけが違うが全体としてはもとと等しいテンソルに戻す
     X_moved = unfolded.reshape(*moved_shape)
@@ -75,10 +110,8 @@ def mode_dot(
     ``unfold`` して左から掛け、``fold`` で戻すため、この 3 関数の
     mode 規約は必ず一致させる。
     """
-    if not 0 <= mode < len(X.shape):
-        raise ValueError(
-            f"mode={mode} は 0〜{len(X.shape) - 1} の範囲で指定してください。"
-        )
+    validate_tensor_ndim_at_least_2(X)
+    validate_mode_index(mode, X.ndim)
 
     if not 2 == len(matrix.shape):
         raise ValueError(
