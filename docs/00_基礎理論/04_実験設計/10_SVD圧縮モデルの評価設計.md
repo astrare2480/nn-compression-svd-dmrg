@@ -241,6 +241,16 @@ $$
 
 同じ入力 $X$ を、元Linear層と圧縮Linear層へ与える。
 
+バッチサイズを $N$、出力次元を $D$ として
+
+$$
+X\in\mathbb R^{N\times D_{\mathrm{in}}},
+\qquad
+Y,\hat Y\in\mathbb R^{N\times D}
+$$
+
+とする。
+
 $$
 Y
 =
@@ -253,21 +263,52 @@ $$
 XW_r^{\mathsf{T}}+b
 $$
 
-出力RMSEは、
+差分を
 
 $$
+E=Y-\hat Y
+$$
+
+と置くと、層出力RMSEは**全サンプル・全出力要素**で平均して
+
+$$
+\boxed{
 \operatorname{RMSE}
 =
 \sqrt{
-\frac{1}{N}
-\sum_j
-\left(
-Y_j-\hat{Y}_j
-\right)^2
+\frac{1}{ND}
+\sum_{n=1}^{N}
+\sum_{j=1}^{D}
+E_{nj}^2
+}
 }
 $$
 
 である。
+
+Frobenius normを使えば、
+
+$$
+\begin{aligned}
+\|E\|_F^2
+&=
+\sum_{n=1}^{N}
+\sum_{j=1}^{D}
+E_{nj}^2,
+\end{aligned}
+$$
+
+なので、
+
+$$
+\boxed{
+\operatorname{RMSE}
+=
+\frac{\|Y-\hat Y\|_F}{\sqrt{ND}}
+}
+$$
+
+とも書ける。
 
 重み誤差より、実際の入力分布に対する影響を直接反映する。
 
@@ -307,7 +348,13 @@ $$
 
 を計算する。
 
-このための状態保持クラスを `TensorErrorAccumulator` として実装できる。
+前節の行列出力なら
+
+$$
+\text{number of elements}=ND
+$$
+
+である。Conv feature mapのような高階Tensorでも、`num_elements`を実際の全要素数にすれば同じ定義を使える。
 
 ---
 
@@ -360,21 +407,28 @@ $$
 
 とする。
 
+クラス数を $C$ とすると、
+
 $$
+\boxed{
 \operatorname{RMSE}_{\mathrm{logits}}
 =
 \sqrt{
-\frac{1}{N C}
-\sum_{n,c}
+\frac{1}{NC}
+\sum_{n=1}^{N}
+\sum_{c=1}^{C}
 \left(
 f(x_n)_c
 -
 \hat{f}(x_n)_c
 \right)^2
 }
+}
 $$
 
-ここで $C=10$ である。
+である。
+
+MNIST / Fashion-MNIST / CIFAR-10では $C=10$。
 
 accuracyが同じでもlogitsが大きく変わっている場合があるため、モデル挙動の差をより細かく見られる。
 
@@ -391,9 +445,9 @@ A_{\mathrm{agree}}
 \sum_{n=1}^{N}
 \mathbf{1}
 \left[
-\arg\max f(x_n)
+\arg\max_c f(x_n)_c
 =
-\arg\max \hat{f}(x_n)
+\arg\max_c \hat{f}(x_n)_c
 \right]
 $$
 
@@ -480,13 +534,7 @@ total_loss += loss.item() * images.size(0)
 
 accuracyだけでは、どの数字の誤りが増えたか分からない。
 
-confusion matrixで、
-
-- 3と5
-- 4と9
-- 7と9
-
-など、圧縮後に増えた混同を調べる。
+confusion matrixで、圧縮後に増えた混同を調べる。
 
 ### 比較方法
 
@@ -520,13 +568,7 @@ SVD + fine-tuning
 
 fine-tuningでaccuracyが回復しても、元のdense weightへ戻ったわけではない。2つの小さいLinear層のパラメータだけを更新する。
 
----
-
----
-
-## 13.1 fine-tuning前後は同じRank-Selection Validationで比較する
-
-fine-tuningの効果を測るときは、BeforeとAfterを同じ評価データへ通す。
+### fine-tuning前後は同じRank-Selection Validationで比較する
 
 $$
 \Delta\mathrm{Accuracy}
@@ -550,7 +592,7 @@ Fine-tuningはrankを変えず、低ランク因子の値だけを更新する�
 
 ---
 
-## 14. optimizerはfine-tuning前に作る
+## 14. optimizerと候補モデルを独立させる
 
 圧縮層へ置換した後に、新しいoptimizerを作る。
 
@@ -565,14 +607,6 @@ optimizerを新規作成
 ↓
 fine-tuning
 ```
-
-置換前のoptimizerを使うと、新しい層が正しく更新されない。
-
----
-
----
-
-## 14.1 候補ごとにモデル・optimizer・Early-Stopping状態を独立させる
 
 複数候補をfine-tuningするときは、候補ごとに次を独立にする。
 
@@ -591,30 +625,13 @@ pareto_model = copy.deepcopy(source_model)
 
 のように独立コピーしてから学習する。
 
-直接参照をfine-tuningすると、同じKernel内でセルを再実行したときに、すでにfine-tuning済みのモデルへさらにfine-tuningしてしまうことがある。
-再現実験では `Restart Kernel -> Run All` とseed固定を組み合わせる。
-
-また、optimizerはmodel parameterへの参照を保持するため、別候補へ使い回さず候補ごとに新規作成する。
-
 ---
 
 ## 15. rank sweep
 
 rank候補を複数試す。
 
-プロファイルAの `fc1` では、
-
-$$
-r
-\in
-\{8,16,32,64,128,256\}
-$$
-
-が扱いやすい。
-
-プロファイルBで `fc1` と `fc2` を同じrankへする場合、`fc2` の最大rankが256なので、その範囲に制限される。
-
-ただし、各層に同じrankを与える必要はない。
+各層に同じrankを与える必要はない。
 
 ```text
 fc1 rank = 64
@@ -646,16 +663,7 @@ test
 └── 最終的な1回の報告
 ```
 
-MNISTの公式test setを何度も見ながらrankを決めると、testへ過適合する。
-
----
-
----
-
-## 16.1 Early-Stopping用ValidationとRank選択用Validationを分ける
-
-1つのvalidation setをEarly Stoppingとrank選択の両方へ使うことは一般的には可能である。
-ただし、rank候補を多数比較し、Pareto / kneeなどで何度もモデル選択を行うと、そのvalidation setへの選択過適合が起こりうる。
+### Early-Stopping用ValidationとRank選択用Validation
 
 より厳密に分けるなら、学習用データを、
 
@@ -667,32 +675,9 @@ Rank-Selection Validation
 
 へ分割する。
 
-役割は次のとおり。
+Early Stoppingに使った値とRank-Selection Validationで測ったlossを直接比較しない。異なるデータ集合上の値だからである。
 
-| データ | 用途 |
-|---|---|
-| Train | `backward()` / `optimizer.step()` による重み更新 |
-| Early-Stopping Validation | epoch停止・best state決定 |
-| Rank-Selection Validation | SVD rank、Pareto、knee、fine-tuning後候補の比較 |
-| Test | 最終モデル確定後の最終評価 |
-
-この分離では、Early Stoppingに使った `best_validation_loss` と、Rank-Selection Validationで測ったlossを直接比較しない。
-異なるデータ集合上の値だからである。
-
----
-
----
-
-## 16.2 BaselineもRank-Selection Validation上で評価する
-
-圧縮前後の差を計算するときは、同じデータ集合上の値を使う。
-
-```text
-Baseline → Rank-Selection Validation
-SVDモデル → Rank-Selection Validation
-```
-
-として、
+### Baselineも同じRank-Selection Validation上で評価する
 
 $$
 \Delta\mathrm{Acc}
@@ -702,68 +687,21 @@ $$
 \mathrm{Acc}_{\mathrm{compressed,rankval}}
 $$
 
-を計算する。
-Early-Stopping ValidationのaccuracyをBaseline基準に混ぜない。
+を使う。
+
+Test結果を見てrankを変更するとtest leakageになる。
 
 ---
 
----
-
-## 16.3 Test leakageを避ける
-
-Testを途中のモデル選択へ使うと、Testが実質的にValidationへ変わる。
-特に次は避ける。
-
-```text
-Test結果を見る
-↓
-別rankへ変える
-↓
-Testを再評価
-```
-
-参考コードとしてTest評価セルをNotebookへ残すこと自体は問題ではないが、**最終モデルを確定するまでその値を選択へ使わない**。
-
-推論時間の計測はラベルを使わないため分類性能の選択とは性質が異なるが、評価設計を明確にするなら固定入力やvalidation入力を使い、Testは最終タスク評価として温存すると整理しやすい。
-
----
-
-## 17. 複数seed
+## 17. 複数seedと1-SE rule
 
 1つのseedだけでは、学習初期値やDataLoader順序によるばらつきを評価できない。
 
-最初の動作確認は1 seedでよい。
-
-研究結果としてまとめる段階では、複数seedで、
-
-- 平均
-- 標準偏差
-- 最小・最大
-
-を記録する。
-
-特にaccuracy差が0.1ポイント程度なら、seedばらつきと区別する必要がある。
-
----
-
----
-
-## 17.1 単一baseline + 決定論的rank sweepと1-SE rule
+研究結果としてまとめる段階では複数seedで平均・標準偏差等を記録する。
 
 通常の1-SE ruleは、複数回の学習・交差検証から得た平均値の標準誤差を使う。
 
-単一の学習済みbaselineを固定し、rankだけを決定論的に変える場合、学習手続きのばらつきを表すSEは得られない。
-そのため、この条件では1-SE ruleを主選択法にしない。
-
-複数seedで、
-
-```text
-baseline学習
-→ SVD
-→ rankごとの評価
-```
-
-を繰り返す追加実験を行うなら、mean ± SEと1-SE ruleを導入できる。
+単一の学習済みbaselineを固定し、rankだけを決定論的に変える場合、学習手続きのばらつきを表すSEは得られない。その条件では1-SE ruleを主選択法にしない。
 
 ---
 
@@ -814,8 +752,6 @@ memory_bytes
 7. memory
 8. 複数seed
 
-一度に全部実装せず、段階的に増やす。
-
 ---
 
 ## 20. 評価結果の読み方
@@ -826,7 +762,7 @@ memory_bytes
 
 ### 重み誤差は大きいがaccuracyは維持
 
-捨てた方向がMNIST分類へ強く寄与していない可能性がある。
+捨てた方向が分類へ強く寄与していない可能性がある。
 
 ### 重み誤差は小さいがaccuracyが低下
 
@@ -838,11 +774,11 @@ memory_bytes
 
 ### fine-tuningで大幅回復
 
-低rank表現力は足りているが、単純SVD因子がタスクlossに最適でなかった可能性がある。
+低rank表現力は足りているが、単純SVD因子がtask lossに最適でなかった可能性がある。
 
 ### 理論MACsは減ったがlatencyは改善しない
 
-小さい行列積を2回実行するオーバーヘッドやハードウェア利用効率を確認する。
+小さい行列積を複数回実行するオーバーヘッドやハードウェア利用効率を確認する。
 
 ---
 
@@ -878,30 +814,10 @@ SVD単体の効果が分からない。圧縮直後も残す。
 
 ---
 
-## 22. このノートで押さえるポイント
-
-- 評価を構造、重み、層出力、logits、タスク、システムへ分ける。
-- SVDが直接最小化するのは重み行列誤差である。
-- 相対Frobenius誤差で層間比較をしやすくする。
-- 実データで層出力RMSEを測る。
-- logits RMSEとprediction agreementをaccuracyと分けて記録する。
-- test lossとaccuracyの両方を見る。
-- confusion matrixでクラス別の劣化を見る。
-- 圧縮直後とfine-tuning後を分ける。
-- 各rankは同じbaseline checkpointから作る。
-- rank選択はvalidationで行う。
-- 結果は1 rank 1行のCSVへまとめる。
-
----
-
-> [!note] 実測・実行結果は [[10_MNIST_MLP_SVD/02_MNIST評価で使用した指標と実装]] へ分離した。
-
----
-
-## 22.1 最終モデル選択のルールを明示する
+## 22. 最終モデル選択のルール
 
 Pareto frontierは候補集合を与えるが、常に1モデルへ絞れるとは限らない。
-最終的に1つへ決める場合は、優先順位を明記する。
+最終的に1つへ決める場合は、優先順位をTestを見る前に明記する。
 
 例：
 
@@ -912,14 +828,24 @@ Pareto frontierは候補集合を与えるが、常に1モデルへ絞れると�
 4. 同値ならvalidation_accuracy最大
 ```
 
-この規則をTest結果を見る前に固定する。
-Testは選択済み1モデルを最後に評価する。
+---
 
-> [!note] Fashion-MNISTではこの規則により、fine-tuning後の最終モデルとして `fc1_rank=32, fc2_rank=16` が選ばれた。実測値は [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]] を参照する。
+## 23. このノートで押さえるポイント
+
+- 評価を構造、重み、層出力、logits、タスク、システムへ分ける。
+- SVDが直接最小化するのは重み行列誤差である。
+- 層出力RMSEは全サンプル・全出力要素を分母にする。
+- dataset全体では二乗誤差和と要素数を積算してから平方根を取る。
+- logits RMSEとprediction agreementをaccuracyと分けて記録する。
+- 圧縮直後とfine-tuning後を分ける。
+- 各rankは同じbaseline checkpointから作る。
+- rank選択はvalidationで行う。
+
+---
+
+> [!note] 実測・実行結果は [[10_MNIST_MLP_SVD/02_MNIST評価で使用した指標と実装]] へ分離した。
 
 ## 次に読むノート
-
-理論上の削減量と実際の実行時間を分けて評価する。
 
 - [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
