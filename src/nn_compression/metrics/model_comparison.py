@@ -28,13 +28,6 @@ def _preserve_training_mode(*models):
             model.train(state)
 
 
-def _ensure_nonempty_loader(loader: DataLoader, *, metric_name: str) -> None:
-    if len(loader) == 0:
-        raise ValueError(
-            f"空の DataLoader では {metric_name} を計算できません。"
-        )
-
-
 def count_parameters(model):
     """学習可能・非学習可能を問わず、モデルが保持する全要素数を数える。"""
     return sum(parameter.numel() for parameter in model.parameters())
@@ -66,7 +59,6 @@ def agreement(baseline_model, compressed_model, loader, device):
     正解ラベルに対する accuracy とは異なり、圧縮前のモデルの判断を
     圧縮後のモデルがどの程度保っているかを測る。
     """
-    _ensure_nonempty_loader(loader, metric_name="agreement")
     with _preserve_training_mode(baseline_model, compressed_model):
         baseline_model.eval()
         compressed_model.eval()
@@ -83,6 +75,11 @@ def agreement(baseline_model, compressed_model, loader, device):
                 ).sum().item()
                 total += images.size(0)
 
+        if total == 0:
+            raise ValueError(
+                "空の DataLoader では agreement を計算できません。"
+            )
+
         return agreement_count / total
 
 
@@ -92,7 +89,6 @@ def logits_rmse(baseline_model, compressed_model, loader, device):
     agreement が最終クラスだけを見るのに対して、この指標は出力要素全体の
     ずれを評価する。小さいほど圧縮前モデルに近い。クラス数は仮定しない。
     """
-    _ensure_nonempty_loader(loader, metric_name="logits_rmse")
     with _preserve_training_mode(baseline_model, compressed_model):
         baseline_model.eval()
         compressed_model.eval()
@@ -105,6 +101,11 @@ def logits_rmse(baseline_model, compressed_model, loader, device):
                 difference = baseline_model(images) - compressed_model(images)
                 squared_error_sum += difference.square().sum().item()
                 element_count += difference.numel()
+
+        if element_count == 0:
+            raise ValueError(
+                "空の DataLoader では logits_rmse を計算できません。"
+            )
 
         return (squared_error_sum / element_count) ** 0.5
 
@@ -232,63 +233,64 @@ def collect_compression_metrics(
     表に残さず、メモリと CSV を軽くし、必要な候補は rank から再構築する。
     Fine-tuning 済みなど、保持が必要なときだけ ``include_model=True``。
     """
-    validation_loss, validation_acc = evaluate(
-        compressed_model,
-        loader,
-        criterion,
-        device,
-    )
-    if input_batch is None:
-        input_batch = take_inference_batch(loader)
-    details = benchmark_inference(
-        compressed_model,
-        device=device,
-        warmup=warmup,
-        repeats=repeats,
-        input_batch=input_batch,
-        return_details=True,
-    )
-    row = {
-        "parameters": count_parameters(compressed_model),
-        "parameters_reduction": parameters_reduction(
-            baseline_model,
-            compressed_model,
-        ),
-        "validation_loss": validation_loss,
-        "validation_acc": validation_acc,
-        "accuracy_drop": accuracy_drop(
-            baseline_acc,
-            validation_acc,
-            verbose=False,
-        ),
-        "baseline_time_ms": baseline_time_s * 1000,
-        "compressed_time_ms": details["time_ms"],
-        "benchmark_batch_size": details["batch_size"],
-        "benchmark_input_shape": details["input_shape"],
-        "benchmark_warmup": details["warmup"],
-        "benchmark_repeats": details["repeats"],
-        "agreement": agreement(
-            baseline_model,
+    with _preserve_training_mode(baseline_model, compressed_model):
+        validation_loss, validation_acc = evaluate(
             compressed_model,
             loader,
+            criterion,
             device,
-        ),
-        "logits_rmse": logits_rmse(
-            baseline_model,
+        )
+        if input_batch is None:
+            input_batch = take_inference_batch(loader)
+        details = benchmark_inference(
             compressed_model,
-            loader,
-            device,
-        ),
-    }
-    if include_model:
-        row["model"] = compressed_model
-    if baseline_macs is not None:
-        row["baseline_macs"] = baseline_macs
-    if compressed_macs is not None:
-        row["compressed_macs"] = compressed_macs
-    if compute_reduction is not None:
-        row["compute_reduction"] = compute_reduction
-    return row
+            device=device,
+            warmup=warmup,
+            repeats=repeats,
+            input_batch=input_batch,
+            return_details=True,
+        )
+        row = {
+            "parameters": count_parameters(compressed_model),
+            "parameters_reduction": parameters_reduction(
+                baseline_model,
+                compressed_model,
+            ),
+            "validation_loss": validation_loss,
+            "validation_acc": validation_acc,
+            "accuracy_drop": accuracy_drop(
+                baseline_acc,
+                validation_acc,
+                verbose=False,
+            ),
+            "baseline_time_ms": baseline_time_s * 1000,
+            "compressed_time_ms": details["time_ms"],
+            "benchmark_batch_size": details["batch_size"],
+            "benchmark_input_shape": details["input_shape"],
+            "benchmark_warmup": details["warmup"],
+            "benchmark_repeats": details["repeats"],
+            "agreement": agreement(
+                baseline_model,
+                compressed_model,
+                loader,
+                device,
+            ),
+            "logits_rmse": logits_rmse(
+                baseline_model,
+                compressed_model,
+                loader,
+                device,
+            ),
+        }
+        if include_model:
+            row["model"] = compressed_model
+        if baseline_macs is not None:
+            row["baseline_macs"] = baseline_macs
+        if compressed_macs is not None:
+            row["compressed_macs"] = compressed_macs
+        if compute_reduction is not None:
+            row["compute_reduction"] = compute_reduction
+        return row
 
 
 def benchmark_inference_print(

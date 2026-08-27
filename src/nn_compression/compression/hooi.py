@@ -14,15 +14,18 @@ Conv2d weight ``(C_out, C_in, kH, kW)`` に ``ranks={0: rank_out, 1: rank_in}``
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import torch
 
 from ..metrics import relative_frobenius_error
 from ..tensor.operations import mode_dot, unfold
 from ..tensor.validation import validate_tensor_ndim_at_least_2
-from .svd import coerce_rank, truncated_svd
+from .svd import truncated_svd
 from .tucker import hosvd, reconstruct_tucker
 from .tucker_validation import (
     validate_max_iter,
+    validate_mode_index,
     validate_non_negative_tolerance,
     validate_tucker_ranks,
 )
@@ -51,13 +54,22 @@ def _validate_hooi_inputs(
 ) -> None:
     """HOOI 入出力の mode / rank / factor shape を検証する。"""
     validate_tensor_ndim_at_least_2(X, name="X")
-    if not ranks:
+    if not isinstance(ranks, Mapping):
+        raise TypeError(
+            f"ranks は Mapping である必要があります: {type(ranks)!r}"
+        )
+    if len(ranks) == 0:
         raise ValueError("ranks は空にできません。")
 
-    validate_tucker_ranks(tuple(X.shape), ranks, allow_empty=False)
+    validated_ranks = validate_tucker_ranks(
+        tuple(X.shape), ranks, allow_empty=False
+    )
+
+    for mode in factors:
+        validate_mode_index(mode, X.ndim, name="factor mode")
 
     factor_modes = set(factors.keys())
-    rank_modes = set(ranks.keys())
+    rank_modes = set(validated_ranks.keys())
     if factor_modes != rank_modes:
         extra = sorted(factor_modes - rank_modes)
         missing = sorted(rank_modes - factor_modes)
@@ -71,8 +83,8 @@ def _validate_hooi_inputs(
                 f" ranks の各 mode に対応する factor が必要です。"
             )
 
-    for mode, rank in ranks.items():
-        expected_rank = coerce_rank(rank, X.shape[mode], name=f"rank[{mode}]")
+    for mode, rank in validated_ranks.items():
+        expected_rank = rank
         U = factors[mode]
         if U.ndim != 2:
             raise ValueError(
@@ -95,11 +107,13 @@ def _validate_hooi_inputs(
                 "と一致する必要があります。"
             )
 
-    for target_mode in ranks:
-        max_rank = _projected_unfold_max_rank(X, factors, ranks, target_mode)
-        if ranks[target_mode] > max_rank:
+    for target_mode in validated_ranks:
+        max_rank = _projected_unfold_max_rank(
+            X, factors, validated_ranks, target_mode
+        )
+        if validated_ranks[target_mode] > max_rank:
             raise ValueError(
-                f"rank[{target_mode}]={ranks[target_mode]} は "
+                f"rank[{target_mode}]={validated_ranks[target_mode]} は "
                 f"projected unfolding で実現可能な上限 {max_rank} を超えています。"
             )
 
@@ -116,6 +130,8 @@ def has_converged(
     ``|error - prev_error| <= abs_tol + rel_tol * |prev_error|``
     なら True。``abs_tol`` は絶対許容、``rel_tol`` は前回誤差に比例する相対許容。
     """
+    abs_tol = validate_non_negative_tolerance(abs_tol, name="abs_tol")
+    rel_tol = validate_non_negative_tolerance(rel_tol, name="rel_tol")
     absolute_change = abs(error - prev_error)
     return absolute_change <= abs_tol + rel_tol * abs(prev_error)
 
@@ -189,7 +205,11 @@ def hooi(
     ``history[0]`` は HOSVD 初期値、以降は各 sweep 後の誤差。
     """
     validate_tensor_ndim_at_least_2(X, name="X")
-    if not ranks:
+    if not isinstance(ranks, Mapping):
+        raise TypeError(
+            f"ranks は Mapping である必要があります: {type(ranks)!r}"
+        )
+    if len(ranks) == 0:
         raise ValueError("ranks は空にできません。")
     if torch.linalg.vector_norm(X) == 0:
         raise ValueError(
@@ -201,6 +221,7 @@ def hooi(
     rel_tol = validate_non_negative_tolerance(rel_tol, name="rel_tol")
 
     core_hosvd, factors_hosvd = hosvd(X, ranks)
+    _validate_hooi_inputs(X, factors_hosvd, ranks)
     X_hat = reconstruct_tucker(core_hosvd, factors_hosvd)
     error = float(relative_frobenius_error(X, X_hat).detach())
 
