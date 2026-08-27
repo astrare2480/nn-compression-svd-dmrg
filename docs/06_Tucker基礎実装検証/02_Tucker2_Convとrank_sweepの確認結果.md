@@ -1,43 +1,93 @@
 ---
 title: Tucker-2 Convとrank sweepの確認結果
-tags:
-  - Tucker
-  - CIFAR10
-  - Conv2d
-  - rank sweep
-  - Fine-tuning
+tags: [Tucker, CIFAR10, Conv2d, rank sweep, Fine-tuning]
 ---
 
 # Tucker-2 Convとrank sweepの確認結果
 
-## 1. 対象
+## 1. 対象とbaseline
 
-```text
-notebooks/20_tucker/10_cifar10_cnn/
-├─ 01_tucker2_conv.ipynb
-├─ 02_rank_sweep.ipynb
-└─ 03_finetuning.ipynb
-```
+対象：`01_tucker2_conv.ipynb`、`02_rank_sweep.ipynb`、`03_finetuning.ipynb`。
 
-対象layer：
-
-```text
-conv2.weight = (64, 32, 3, 3)
-```
+$$
+W_{conv2}\in\mathbb R^{64\times32\times3\times3}.
+$$
 
 baseline：
 
 ```text
-validation accuracy = 0.7344
-test accuracy       = 0.7327
-parameters          = 128,842
+val acc = 0.7344
+test acc = 0.7327
+params = 128,842
 ```
 
----
+## 2. parameter式を今回の層へ代入
 
-## 2. rank sweep 全20設定
+元Conv2 weight数：
 
-正式CSV：`results/20_tucker/10_cifar10_cnn/02_rank_sweep/rank_sweep_results.csv`
+$$
+64\times32\times3\times3=18432.
+$$
+
+Tucker-2：
+
+$$
+N=32R_{in}+9R_{out}R_{in}+64R_{out}.
+$$
+
+### `(64,32)`
+
+$$
+\begin{aligned}
+N
+&=32\times32+9\times64\times32+64\times64\\
+&=1024+18432+4096\\
+&=23552.
+\end{aligned}
+$$
+
+$$
+23552-18432=5120
+$$
+
+増えるため、full channel rankでTucker形式にしただけでは圧縮ではない。
+
+### balanced `(32,16)`
+
+$$
+\begin{aligned}
+N
+&=32\times16+9\times32\times16+64\times32\\
+&=512+4608+2048\\
+&=7168.
+\end{aligned}
+$$
+
+Conv2 weight/MACの同一空間位置での削減率は
+
+$$
+1-\frac{7168}{18432}
+=0.611111\ldots
+\approx61.11\%.
+$$
+
+モデル全体parameterは
+
+$$
+128842\rightarrow117578
+$$
+
+なので、
+
+$$
+\begin{aligned}
+1-\frac{117578}{128842}
+&\approx0.087425\\
+&\approx8.74\%.
+\end{aligned}
+$$
+
+## 3. rank sweep 全20設定
 
 | rank_out | rank_in | params | Conv2 weight | param削減 | val acc | acc drop | Conv2 MAC削減 | 全MAC削減 | weight error |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -62,59 +112,48 @@ parameters          = 128,842
 | 8 | 16 | 112,586 | 2,176 | 12.62% | 0.3978 | 0.3366 | 88.19% | 40.18% | 0.729537 |
 | 8 | 8 | 111,754 | 1,344 | 13.26% | 0.3598 | 0.3746 | 92.71% | 42.24% | 0.758660 |
 
----
+## 4. accuracy dropの具体例
 
-## 3. rankを下げたときの傾向
+定義：
 
-全体として、
+$$
+\mathrm{drop}=\mathrm{baseline\ acc}-\mathrm{compressed\ acc}.
+$$
 
-```text
-rank↓
-→ Conv2 parameters↓
-→ MACs↓
-→ weight error↑
-→ validation accuracy↓
-```
+`(64,32)` は
 
-というtrade-offが出た。
+$$
+0.7344-0.7350=-0.0006.
+$$
 
-特に `rank_in=8` はaccuracy低下が大きく、入力channelを極端に絞る影響が強い。
+validation 5000枚なので、1枚分は
 
-一方、`(64,32)` は元channelと同じrankでも、前後の1x1 Convを追加するため
+$$
+1/5000=0.0002
+$$
 
-```text
-parameters +3.97%
-Conv2 MACs +27.78%
-```
+であり、0.0006は3枚分。これは「本質的に精度が上がった」と断定する大きさではない。
 
-となり、Tucker化が必ず圧縮を意味しないことを確認した。
+## 5. rank方向は対称ではない
 
----
-
-## 4. 注目設定
-
-| rank | val acc | acc drop | param削減 | Conv2 MAC削減 | 意味 |
-| --- | ---: | ---: | ---: | ---: | --- |
-| `(48,24)` | 0.7264 | 0.0080 | 3.28% | 22.92% | 軽圧縮で性能維持 |
-| `(48,16)` | 0.7000 | 0.0344 | 6.16% | 43.06% | 中間 |
-| `(32,24)` | 0.6532 | 0.0812 | 6.76% | 47.22% | 強め |
-| `(32,16)` | 0.6280 | 0.1064 | 8.74% | 61.11% | 高圧縮・後段実験のbalanced |
-
-rank sweepの後続実験では、CSVで次の3候補を固定した。
+例：
 
 ```text
-aggressive   = (16, 24)
-balanced     = (32, 16)
-conservative = (32, 24)
+(16,32): val 0.5062
+(32,16): val 0.6280
 ```
 
-ここで名称は「実験比較用の役割」であり、単純にaccuracy順の呼称ではない。
+同じようにrankの積が小さくても、入力channel側と出力channel側のどちらを絞るかでtask影響が異なる。
 
----
+## 6. 選択した3候補
 
-## 5. HOSVD Tucker-2 fine-tuning
+```text
+aggressive   = (16,24)
+balanced     = (32,16)
+conservative = (32,24)
+```
 
-正式CSV：`results/20_tucker/10_cifar10_cnn/03_finetuning/finetuning_comparison.csv`
+## 7. HOSVD Tucker-2 fine-tuning
 
 | role | rank | val before | test before | val after | test after | best epoch | params | Conv2 MAC削減 |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -122,58 +161,20 @@ conservative = (32, 24)
 | balanced | `(32,16)` | 0.6280 | 0.6378 | 0.7628 | 0.7682 | 30 | 117,578 | 61.11% |
 | conservative | `(32,24)` | 0.6532 | 0.6612 | 0.7568 | 0.7571 | 19 | 120,138 | 47.22% |
 
-baselineは
+balancedのtest回復量は、この03 run内では
 
-```text
-val  = 0.7344
-test = 0.7327
-```
+$$
+0.7682-0.6378=0.1304.
+$$
 
-だった。
+baseline testとの差は
 
-3設定ともfine-tuningで圧縮直後から大きく回復し、single runではbaselineを上回るtest accuracyになった。
+$$
+0.7682-0.7327=0.0355.
+$$
 
-ただし、これは分解だけの効果ではなく追加学習を含む。小さい差を「圧縮で精度向上」と一般化しない。
+ただし追加学習込みsingle runなので、「Tucker化そのものが3.55 point改善」とは解釈しない。
 
----
+## 8. 注意
 
-## 6. 最も重要な学び
-
-### rankは圧縮率だけで選べない
-
-最小parameterの `(8,8)` は、val accuracy 0.3598まで低下した。
-
-### weight errorは有用だがtask精度そのものではない
-
-例：
-
-```text
-(32,32) error = 0.344839, val acc = 0.6532
-(32,24) error = 0.377868, val acc = 0.6532
-```
-
-weight近似が違っても同じvalidation accuracyになる例がある。
-
-### fine-tuningは分解後の低rank空間をtaskに合わせて再最適化する
-
-強い圧縮で圧縮直後accuracyが低くても、追加学習で大きく戻る場合がある。
-
----
-
-## 7. 注意
-
-03のbalanced fine-tuning結果
-
-```text
-test = 0.7682
-```
-
-と、後の05で同rank HOSVD初期化を再度同条件比較した結果
-
-```text
-test = 0.7508
-```
-
-は**別実験プロトコルのrun**である。
-
-絶対値を直接混ぜず、それぞれのNotebook内比較として読む。
+03 balanced `0.7682` と、05のHOSVD同rank `0.7508` は別run。絶対値を横断して同じ実験のように扱わない。

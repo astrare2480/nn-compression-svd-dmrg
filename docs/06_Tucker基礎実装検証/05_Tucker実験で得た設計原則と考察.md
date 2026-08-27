@@ -1,178 +1,116 @@
 ---
 title: Tucker実験で得た設計原則と考察
-tags:
-  - Tucker
-  - HOOI
-  - HOSVD
-  - 実験設計
-  - NN圧縮
+tags: [Tucker, HOOI, HOSVD, 実験設計, NN圧縮]
 ---
 
 # Tucker実験で得た設計原則と考察
 
+数式の完全な途中導出：[[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]。
+
 ## 1. Tucker化は自動的に圧縮ではない
 
-Conv Tucker-2は元の1層を3層へ分ける。
-
 $$
-N_{\mathrm{Tucker2}}
-=
-C_{in}R_{in}
-+
-R_{out}R_{in}K_hK_w
-+
-C_{out}R_{out}
+N_{T2}
+=C_{in}R_{in}+R_{out}R_{in}K_hK_w+C_{out}R_{out}.
 $$
 
-なので、rankが大きいと
+今回 `(64,32)` なら、
 
 $$
-N_{\mathrm{Tucker2}}
->
-N_{\mathrm{original}}
+32\times32+9\times64\times32+64\times64
+=23552
 $$
 
-になり得る。
-
-実際 `(64,32)` ではparameterとMACsが増加した。
-
----
-
-## 2. rank_outとrank_inは独立な設計変数
-
-Tucker-2では
+元は
 
 $$
-(R_{out},R_{in})
+64\times32\times9=18432
 $$
 
-を別々に選べる。
+だから、
 
-両者を同じ割合で減らす必要はない。
+$$
+23552-18432=5120
+$$
 
-rank sweepでは `rank_in=8` の劣化が大きく、入力channel側の強い圧縮がtaskへ大きく影響する設定が観察された。
+増える。
 
-したがって、multilinear rankは1つのスカラーrankとして扱わない。
+分解形式を変えることと圧縮に成功することは別。
 
----
+## 2. rank_out / rank_inは独立
+
+$(R_{out},R_{in})$ は2つの設計変数。
+
+例：
+
+```text
+(16,32) val = 0.5062
+(32,16) val = 0.6280
+```
+
+積や総rankだけではtask影響を説明できない。
 
 ## 3. weight errorとaccuracyは別の目的
 
-HOOIの直接目的は
+HOOI：
 
 $$
-\min
-\left\|
-W-\hat W
-\right\|_F^2
+0.449042-0.442504=0.006538
 $$
 
-である。
+だけweight errorを改善。
 
-CNNで欲しいのは、最終的には
+しかしvalidationは
 
 $$
-\min\mathcal L_{task}
+0.6202-0.6280=-0.0078
 $$
 
-である。
+だった。
 
-今回、HOOIは
-
-```text
-weight error: 0.449042 → 0.442504
-```
-
-と改善したが、圧縮直後validationは
-
-```text
-0.6280 → 0.6202
-```
-
-と低下した。
-
-さらにfine-tuningではweight errorが増えながらaccuracyが改善した。
-
-この2つの実験から、
+したがって、
 
 $$
 \boxed{
 \text{weight approximation quality}
-\neq
+\ne
 \text{task performance}
 }
 $$
 
-を明確に確認できた。
-
----
+である。
 
 ## 4. HOSVDは弱い方法ではない
 
-今回の設定では、HOSVDは
-
-- HOOIより高速
-- rank sweepへ使いやすい
-- 圧縮直後accuracyはHOOIより高かった
-- fine-tuning後も十分回復した
-
-という結果だった。
-
-したがって、
-
-```text
-rank探索       → HOSVD
-初期モデル作成 → HOSVD
-最終候補精密化 → 必要ならHOOI
-```
-
-という使い分けが合理的。
-
-HOOIが弱いのではなく、**数学的に改善する対象がtask accuracyと一致しない場合、追加コストの費用対効果が小さくなる**。
-
----
+今回HOSVDは、HOOIより分解時間が短く、圧縮直後accuracyも高かった。大量rank探索ではHOSVD、固定rankのweight近似精密化では必要に応じてHOOI、という役割分担が自然。
 
 ## 5. HOOIの価値
 
-HOOIは同rankでfactorを協調させ、HOSVDよりweight再構成を精密化する。
-
-今回、
-
-- HOSVDより低い最終error
-- 6 sweepで収束
-- TensorLyと同一の外部再計算error
-- TensorLyと同じvalidation/test accuracy
-
-を得た。
-
-したがって、学習目的としては
+同rank・同params・同MACsのまま、factor方向だけを協調更新する。
 
 ```text
-初期分解
-vs
-反復最適化
+HOSVD: 0.449042
+HOOI : 0.442504
+TensorLy: 0.442504
 ```
 
-を実装レベルで理解できたことが大きい。
+自作HOOIとTensorLyが一致したことが、実装検証として重要。
 
-これはTT-SVDからDMRGへ進むときの
+## 6. fine-tuningは別最適化
 
-```text
-初期分解
-→ 固定rankで局所的に更新
-→ sweep
-→ 収束判定
-```
+HOSVD post error増加：
 
-という考え方への橋渡しになる。
+$$
+0.483660-0.449042=0.034618.
+$$
 
----
+HOOI post error増加：
 
-## 6. fine-tuningは別の最適化
+$$
+0.481255-0.442504=0.038751.
+$$
 
-分解は元weightを近似する初期化。
-
-fine-tuningは、低rank構造を保ったままtask lossへ再最適化する。
+それでもpost testは0.7508 / 0.7555まで回復した。
 
 ```text
 HOSVD / HOOI
@@ -182,114 +120,47 @@ Fine-tuning
 → task-space optimization
 ```
 
-そのためfine-tuning後に元weightとの差が増えること自体は矛盾ではない。
+という分離で理解する。
 
----
+## 7. single seed
 
-## 7. 分解法比較とfine-tuning比較を混ぜない
-
-主比較を分ける。
-
-```text
-分解法の比較
-→ 圧縮直後
-→ weight error / decomposition time / accuracy
-
-実用モデルの比較
-→ fine-tuning後
-→ val/test accuracy / recovery / learning curve
-```
-
-fine-tuning後の数値だけでHOOI/HOSVDの分解品質を評価しない。
-
----
-
-## 8. single seedの扱い
-
-05のHOSVD/HOOI fine-tuning比較はseed 0のみ。
-
-HOOI test 0.7555、HOSVD 0.7508の差は
+05 test差：
 
 $$
-0.0047
+0.7555-0.7508=0.0047
 $$
 
-である。
+= 0.47 percentage point。
 
-これは今回のrunの観測値として記録するが、統計的な優位性を主張しない。
+1 seedなので「HOOIが統計的に優れる」とは言わない。
 
-複数seedは「HOOIが最終accuracyで優れる」と強く主張する場合に必要で、Tucker/HOOIの学習を終えるための必須条件ではない。
-
----
-
-## 9. TensorLy timingの扱い
-
-今回TensorLyは自作HOOIより遅かったが、
-
-- 問題Tensorが小さい
-- 同じ6 iteration
-- 数十ms規模のGPU計測
-- 汎用libraryの固定overhead
-
-という条件がある。
-
-速度比をライブラリ一般の結論にしない。
-
-性能比較の主目的は、自作HOOIの**数値結果がTensorLyと整合したこと**である。
-
----
-
-## 10. src化で得た設計原則
-
-最終的に責務を次のように分けた。
+## 8. TensorLy timing
 
 ```text
-operations.py
-→ Tensorの基本演算
-
-tucker.py
-→ HOSVD / Tucker再構成
-
-hooi.py
-→ layerに依存しない汎用HOOI
-
-conv_tucker.py
-→ Conv2d固有のTucker-2
+self HOOI 41.65 ms
+TensorLy  83.83 ms
 ```
 
-重要なのは、
+両方6 iteration。TensorLyが余計に反復したからではない。対象weightは
 
-- `ranks` のkeyを更新modeとしてpartial HOOIを表現
-- Notebookの自作実装は学習履歴として残す
-- 実験Notebookはsrc化後に重複処理を共通化
-- public helperとprivate validationを分ける
-- pandasを汎用compression moduleへ持ち込まない
-- 入力factorを破壊しない
+$$
+64\times32\times3\times3=18432
+$$
 
-という点。
+要素と小さく、固定overheadが相対的に見えやすい。単発の速度比を一般化しない。
 
----
-
-## 11. Tucker/HOOI編の到達点
-
-今回までで、
+## 9. src化で固定した責務
 
 ```text
-Tensor mode演算
-→ Tucker / HOSVD
-→ Conv Tucker-2
-→ rank sweep
-→ fine-tuning
-→ HOOI
-→ TensorLy照合
-→ HOSVD/HOOI同条件fine-tuning
-→ src共通化
-→ 回帰テスト
+operations.py → Tensor基本演算
+tucker.py     → HOSVD / reconstruction
+hooi.py       → 汎用HOOI
+conv_tucker.py→ Conv2d Tucker-2
 ```
 
-まで完了した。
+partial HOOIは `ranks` のkeyを更新対象modeにすることで表現する。
 
-次のTT/MPSでも、同じ評価軸
+## 10. 次のTT/MPSへ持ち越す評価軸
 
 ```text
 weight relative error
@@ -300,10 +171,4 @@ decomposition time
 必要ならfine-tuning後accuracy
 ```
 
-を維持する。
-
-特に今回得た
-
-> Frobenius weight errorを下げる分解法が、必ずtask accuracyを改善するわけではない。
-
-という観察を、TT/MPS・DMRGでも意識する。
+今回得た最大の注意点は、Frobenius weight errorを下げることとtask accuracyを上げることを同一視しないこと。
