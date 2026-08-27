@@ -19,7 +19,7 @@ import torch
 from .validation import (
     validate_mode_index,
     validate_positive_shape,
-    validate_tensor_ndim_at_least_2,
+    validate_tensor_shape,
 )
 
 
@@ -31,7 +31,7 @@ def unfold(X: torch.Tensor, mode: int) -> torch.Tensor:
 
     戻り値の shape は ``(X.shape[mode], 残り全 mode の積)``。
     """
-    validate_tensor_ndim_at_least_2(X)
+    validate_tensor_shape(X)
     validate_mode_index(mode, X.ndim)
     # movedim(source, destination)はsourceをdestinationnにうつす
     return X.movedim(mode, 0).flatten(start_dim=1)
@@ -110,7 +110,7 @@ def mode_dot(
     ``unfold`` して左から掛け、``fold`` で戻すため、この 3 関数の
     mode 規約は必ず一致させる。
     """
-    validate_tensor_ndim_at_least_2(X)
+    validate_tensor_shape(X)
     validate_mode_index(mode, X.ndim)
 
     if not 2 == len(matrix.shape):

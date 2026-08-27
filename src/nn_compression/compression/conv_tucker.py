@@ -220,7 +220,11 @@ def build_tucker2_conv(
     rank_out: int,
     rank_in: int,
 ) -> nn.Sequential:
-    """1 つの Conv2d を HOSVD Tucker-2 分解し、1x1 -> kHxkW -> 1x1 の Sequential を返す。"""
+    """1 つの Conv2d を HOSVD Tucker-2 分解し、1x1 -> kHxkW -> 1x1 の Sequential を返す。
+
+    学習済み weight の分解は初期化処理なので ``detach()`` し、
+    元 Conv の autograd graph を保持しない。
+    """
     _unsupported_conv2d(conv)
     core, u_out, u_in = tucker2_decompose_conv_weight(
         conv.weight.detach(), rank_out, rank_in
@@ -258,12 +262,15 @@ def tucker2_hooi(
 
     HOSVD を初期値に ``ranks={0: rank_out, 1: rank_in}`` で反復する。
     返り値 ``history[0]`` は HOSVD 初期誤差。
+
+    低レベル Tensor API のため ``weight`` は ``detach()`` しない。
+    autograd 境界は ``build_tucker2_conv()`` など module 構築側が担う。
     """
     rank_out, rank_in = _coerce_tucker2_ranks(
         tuple(weight.shape), rank_out, rank_in
     )
     return hooi(
-        weight.detach(),
+        weight,
         {0: rank_out, 1: rank_in},
         max_iter=max_iter,
         abs_tol=abs_tol,

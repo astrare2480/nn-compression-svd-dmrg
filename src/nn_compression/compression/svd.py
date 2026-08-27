@@ -21,6 +21,10 @@ def coerce_rank(rank, max_rank: int, *, name: str = "rank") -> int:
     ``max_rank`` は対象行列の数学的上限（``min(shape)``）。0 や超過は
     切り捨てではなくエラーにする。
     """
+    if isinstance(rank, bool):
+        raise TypeError(
+            f"{name} は bool 以外の整数である必要があります: {rank!r}"
+        )
     try:
         rank_int = operator.index(rank)
     except TypeError as exc:

@@ -66,28 +66,36 @@ def evaluate(
 
     ``model.eval()`` と ``torch.no_grad()`` により、推論モードで
     BatchNorm / Dropout の挙動を固定し、勾配計算を省略する。
+    呼び出し前の ``model.training`` は finally で復元する。
     """
-    model.eval()
+    was_training = model.training
+    try:
+        model.eval()
 
-    total_loss = 0.0
-    correct = 0
-    total = 0
+        total_loss = 0.0
+        correct = 0
+        total = 0
 
-    with torch.no_grad():
-        for images, labels in loader:
-            images = images.to(device)
-            labels = labels.to(device)
+        with torch.no_grad():
+            for images, labels in loader:
+                images = images.to(device)
+                labels = labels.to(device)
 
-            outputs = model(images)
-            loss = criterion(outputs, labels)
+                outputs = model(images)
+                loss = criterion(outputs, labels)
 
-            total_loss += loss.item() * images.size(0)
+                total_loss += loss.item() * images.size(0)
 
-            predicted = torch.argmax(outputs, dim=1)
-            correct += (predicted == labels).sum().item()
-            total += labels.size(0)
+                predicted = torch.argmax(outputs, dim=1)
+                correct += (predicted == labels).sum().item()
+                total += labels.size(0)
 
-    avg_loss = total_loss / total
-    accuracy = correct / total
+        if total == 0:
+            raise ValueError("空の DataLoader では評価できません。")
 
-    return avg_loss, accuracy
+        avg_loss = total_loss / total
+        accuracy = correct / total
+
+        return avg_loss, accuracy
+    finally:
+        model.train(was_training)
