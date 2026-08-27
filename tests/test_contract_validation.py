@@ -22,7 +22,8 @@ from nn_compression.compression import (
     tucker_parameter_count,
 )
 from nn_compression.compression.linear_svd import factorize_linear_layer
-from nn_compression.compression.svd import coerce_rank, truncated_svd
+from nn_compression.compression.svd import coerce_integer_scalar, coerce_rank, truncated_svd
+from nn_compression.compression.tucker_validation import validate_max_iter
 from nn_compression.metrics import (
     agreement,
     benchmark_inference,
@@ -96,6 +97,35 @@ def test_tucker_ranks_rejects_non_mapping(ranks):
 def test_coerce_rank_rejects_bool(rank):
     with pytest.raises(TypeError, match="bool"):
         coerce_rank(rank, 5)
+
+
+np = pytest.importorskip("numpy")
+
+
+@pytest.mark.parametrize("rank", [np.bool_(True), np.bool_(False)])
+def test_coerce_rank_rejects_numpy_bool(rank):
+    with pytest.raises(TypeError, match="bool"):
+        coerce_rank(rank, 5)
+
+
+@pytest.mark.parametrize("rank", [torch.tensor(True), torch.tensor(False)])
+def test_coerce_rank_rejects_torch_bool_tensor(rank):
+    with pytest.raises(TypeError, match="Tensor scalar"):
+        coerce_rank(rank, 5)
+
+
+def test_coerce_rank_accepts_numpy_int64():
+    assert coerce_rank(np.int64(2), 5) == 2
+
+
+@pytest.mark.parametrize("max_iter", [np.bool_(True), np.bool_(False), torch.tensor(True)])
+def test_validate_max_iter_rejects_boolean_scalars(max_iter):
+    with pytest.raises(TypeError):
+        validate_max_iter(max_iter)
+
+
+def test_validate_max_iter_accepts_numpy_int64():
+    assert validate_max_iter(np.int64(3)) == 3
 
 
 @pytest.mark.parametrize("rank", [True, False])
@@ -615,12 +645,67 @@ def test_collect_compression_metrics_preserves_training_modes():
     assert compressed.training is True
 
 
+def test_logits_rmse_restores_training_mode_on_forward_error():
+    class BrokenBaseline(nn.Module):
+        def forward(self, x: torch.Tensor) -> torch.Tensor:
+            raise RuntimeError("logits failed")
+
+    baseline = BrokenBaseline()
+    compressed = nn.Linear(4, 3)
+    baseline.train(True)
+    compressed.train(True)
+    loader = _metric_loader()
+    with pytest.raises(RuntimeError, match="logits failed"):
+        logits_rmse(baseline, compressed, loader, torch.device("cpu"))
+    assert baseline.training is True
+    assert compressed.training is True
+
+
+def test_logits_rmse_accepts_iterable_dataset_without_len():
+    baseline = nn.Linear(4, 3)
+    compressed = nn.Linear(4, 3)
+    loader = DataLoader(_FeatureIterable(8), batch_size=4)
+    value = logits_rmse(baseline, compressed, loader, torch.device("cpu"))
+    assert value >= 0.0
+
+
+def test_collect_compression_metrics_restores_training_on_evaluate_error():
+    from unittest.mock import patch
+
+    baseline = nn.Linear(4, 3)
+    compressed = nn.Linear(4, 3)
+    baseline.train(True)
+    compressed.train(True)
+    loader = _metric_loader()
+    with patch(
+        "nn_compression.metrics.model_comparison.evaluate",
+        side_effect=RuntimeError("evaluate failed"),
+    ):
+        with pytest.raises(RuntimeError, match="evaluate failed"):
+            collect_compression_metrics(
+                baseline,
+                compressed,
+                loader,
+                nn.CrossEntropyLoss(),
+                torch.device("cpu"),
+                baseline_acc=0.5,
+                baseline_time_s=0.001,
+                warmup=0,
+                repeats=1,
+            )
+    assert baseline.training is True
+    assert compressed.training is True
+
+
 def test_hosvd_preserves_requires_grad():
     weight = torch.randn(8, 4, 3, 3, requires_grad=True)
     core, u_out, u_in = tucker2_decompose_conv_weight(weight, 4, 2)
     assert core.requires_grad
     assert u_out.requires_grad
     assert u_in.requires_grad
+    (core.sum() + u_out.sum() + u_in.sum()).backward()
+    assert weight.grad is not None
+    assert torch.isfinite(weight.grad).all()
 
 
 def test_hooi_preserves_requires_grad():
@@ -628,6 +713,10 @@ def test_hooi_preserves_requires_grad():
     core, factors, _ = hooi(X, {0: 3, 1: 2, 2: 2}, max_iter=1)
     assert core.requires_grad
     assert all(U.requires_grad for U in factors.values())
+    loss = core.sum() + sum(U.sum() for U in factors.values())
+    loss.backward()
+    assert X.grad is not None
+    assert torch.isfinite(X.grad).all()
 
 
 def test_tucker2_hooi_preserves_requires_grad():
@@ -636,6 +725,10 @@ def test_tucker2_hooi_preserves_requires_grad():
     assert core.requires_grad
     assert factors[0].requires_grad
     assert factors[1].requires_grad
+    loss = core.sum() + factors[0].sum() + factors[1].sum()
+    loss.backward()
+    assert weight.grad is not None
+    assert torch.isfinite(weight.grad).all()
 
 
 def test_build_tucker2_conv_parameters_are_leaf_and_not_shared():
@@ -677,7 +770,7 @@ def test_builder_seq_forward_matches_effective_weight_conv_float64():
     with torch.no_grad():
         y_seq = seq(x)
         y_equiv = equivalent(x)
-    assert relative_frobenius_error(y_seq, y_equiv).item() < 1e-5
+    torch.testing.assert_close(y_seq, y_equiv, atol=1e-12, rtol=1e-12)
 
 
 def test_tucker2_effective_weight_rejects_non_three_layers():

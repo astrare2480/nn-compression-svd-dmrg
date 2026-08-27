@@ -6,10 +6,9 @@ mode / rank / shape の contract を public API 境界で統一する。
 from __future__ import annotations
 
 import math
-import operator
 from collections.abc import Mapping
 
-from .svd import coerce_rank
+from .svd import coerce_integer_scalar, coerce_rank
 
 
 def mode_unfold_max_rank(shape: tuple[int, ...], mode: int) -> int:
@@ -98,14 +97,7 @@ def validate_non_negative_tolerance(value: float, *, name: str) -> float:
 
 def validate_max_iter(max_iter: int) -> int:
     """max_iter が bool ではない 0 以上の整数であることを確認する。"""
-    if isinstance(max_iter, bool):
-        raise TypeError(f"max_iter は bool 以外の整数である必要があります: {max_iter!r}")
-    try:
-        max_iter_int = operator.index(max_iter)
-    except TypeError as exc:
-        raise TypeError(
-            f"max_iter は整数である必要があります: {max_iter!r}"
-        ) from exc
+    max_iter_int = coerce_integer_scalar(max_iter, name="max_iter")
     if max_iter_int < 0:
         raise ValueError(
             f"max_iter は 0 以上である必要があります: {max_iter_int}"

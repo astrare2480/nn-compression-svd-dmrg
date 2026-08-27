@@ -15,22 +15,46 @@ import torch
 from torch import nn
 
 
+def coerce_integer_scalar(value, *, name: str = "value") -> int:
+    """boolean / Tensor scalar を拒否し、整数 scalar を ``int`` へ変換する。
+
+    rank / max_iter 向け。``np.int64(2)`` 等の numpy 整数 scalar は許可する。
+    """
+    if isinstance(value, bool):
+        raise TypeError(
+            f"{name} は bool 以外の整数である必要があります: {value!r}"
+        )
+    if torch.is_tensor(value):
+        raise TypeError(
+            f"{name} に Tensor scalar は指定できません: {value!r}"
+        )
+
+    try:
+        import numpy as np
+
+        if isinstance(value, np.generic):
+            if np.issubdtype(value.dtype, np.bool_):
+                raise TypeError(
+                    f"{name} は bool 以外の整数である必要があります: {value!r}"
+                )
+    except ImportError:
+        pass
+
+    try:
+        return operator.index(value)
+    except TypeError as exc:
+        raise TypeError(
+            f"{name} は整数である必要があります: {value!r}"
+        ) from exc
+
+
 def coerce_rank(rank, max_rank: int, *, name: str = "rank") -> int:
     """``rank`` を整数化し、``1 <= rank <= max_rank`` を検証する。
 
     ``max_rank`` は対象行列の数学的上限（``min(shape)``）。0 や超過は
     切り捨てではなくエラーにする。
     """
-    if isinstance(rank, bool):
-        raise TypeError(
-            f"{name} は bool 以外の整数である必要があります: {rank!r}"
-        )
-    try:
-        rank_int = operator.index(rank)
-    except TypeError as exc:
-        raise TypeError(
-            f"{name} は整数である必要があります: {rank!r}"
-        ) from exc
+    rank_int = coerce_integer_scalar(rank, name=name)
 
     if max_rank < 1:
         raise ValueError(f"{name} の上限 {max_rank} が 1 未満です。")
