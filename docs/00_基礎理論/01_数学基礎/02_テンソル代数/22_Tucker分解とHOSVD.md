@@ -17,23 +17,25 @@ tags:
 
 ## サマリー
 
-Tucker分解は、Tensorを**小さいcore Tensorと、各modeのfactor行列**で近似する。
+Tucker分解は、Tensorを**core Tensorと各modeのfactor行列**で表す方法である。
 
-$N$階Tensor
+$N$階Tensorを
 
 $$
-\mathcal{X}
+\mathcal X
 \in
-\mathbb{R}^{I_0\times I_1\times\cdots\times I_{N-1}}
+\mathbb R^{I_0\times I_1\times\cdots\times I_{N-1}}
 $$
 
-に対し、Tucker近似は
+とする。
+
+全modeを圧縮するTucker近似は
 
 $$
 \boxed{
-\mathcal{X}
-\approx
-\mathcal{G}
+\hat{\mathcal X}
+=
+\mathcal G
 \times_0 U^{(0)}
 \times_1 U^{(1)}
 \cdots
@@ -41,249 +43,362 @@ $$
 }
 $$
 
-と書く。
+である。
 
 factorは
 
 $$
-U^{(n)}
-\in
-\mathbb{R}^{I_n\times R_n}
+U^{(n)}\in\mathbb R^{I_n\times R_n},
 $$
 
 coreは
 
 $$
-\mathcal{G}
+\mathcal G
 \in
-\mathbb{R}^{R_0\times R_1\times\cdots\times R_{N-1}}
+\mathbb R^{R_0\times R_1\times\cdots\times R_{N-1}}
 $$
 
-である。
+となる。
 
-$(R_0,R_1,\ldots,R_{N-1})$ がmultilinear rank（Tucker rank）を表す。
-
-HOSVDは、このfactorを**各modeの元Tensor unfoldingに対するSVDから独立に求める**標準的な初期分解法である。
+HOSVDは、各modeの元Tensor unfoldingへSVDを行い、上位左特異ベクトルからfactorを作る。
 
 ---
 
-## 1. Tucker分解の意味
+## 1. exact multilinear rankと指定Tucker rankを区別する
 
-行列SVDでは、1つのrank $r$ を使って
+Tensor $\mathcal X$ 自身のmultilinear rankは、各mode unfoldingの行列rankを並べたものとして
 
 $$
-W_r=U_r\Sigma_rV_r^{\mathsf{T}}
+\boxed{
+\operatorname{rank}_{\mathrm{ML}}(\mathcal X)
+=
+\left(
+\operatorname{rank}(X_{(0)}),
+\operatorname{rank}(X_{(1)}),
+\ldots,
+\operatorname{rank}(X_{(N-1)})
+\right)
+}
 $$
 
-と近似した。
+と定義する。
 
-Tensorではmodeごとに異なるrankを持てる。
+一方、近似計算でこちらが選ぶ
 
 $$
 (R_0,R_1,\ldots,R_{N-1})
 $$
 
-したがって、
+は**target Tucker ranks**である。
 
-```text
-mode 0は強く圧縮
-mode 1は弱く圧縮
-mode 2は圧縮しない
-```
-
-のような設計が可能になる。
-
-Tucker-2でConv weightのchannel軸だけを圧縮するのは、この性質を使っている。
-
----
-
-## 2. factorとcoreの役割
-
-factor $U^{(n)}$ は、mode $n$ のrank空間と元空間の対応を持つ。
+Tucker近似
 
 $$
-U^{(n)}:
-\mathbb{R}^{R_n}
-\rightarrow
-\mathbb{R}^{I_n}
+\hat{\mathcal X}
+=
+\mathcal G
+\times_0U^{(0)}
+\cdots
+\times_{N-1}U^{(N-1)}
 $$
 
-転置は逆方向の射影として使う。
-
-$$
-U^{(n)\mathsf{T}}:
-\mathbb{R}^{I_n}
-\rightarrow
-\mathbb{R}^{R_n}
-$$
-
-factorの列が直交規格化されているとき、現在のfactorに対応するcoreは
+では、mode $n$ unfoldingのrankはfactor列数を超えないため
 
 $$
 \boxed{
-\mathcal{G}
-=
-\mathcal{X}
-\times_0 U^{(0)\mathsf{T}}
-\times_1 U^{(1)\mathsf{T}}
-\cdots
-\times_{N-1}U^{(N-1)\mathsf{T}}
+\operatorname{rank}(\hat X_{(n)})
+\le R_n
 }
 $$
 
-で計算できる。
+となる。
 
-再構成は逆向きに
+したがって、学習ノートで $(R_0,\ldots,R_{N-1})$ を「Tucker rank」と呼ぶ場合は、厳密には**指定する上限rank / target multilinear rank**として読む。
+
+---
+
+## 2. factorとcoreのshape
+
+factor
+
+$$
+U^{(n)}
+\in
+\mathbb R^{I_n\times R_n}
+$$
+
+はrank空間から元mode空間への写像である。
+
+$$
+U^{(n)}:
+\mathbb R^{R_n}
+\rightarrow
+\mathbb R^{I_n}
+$$
+
+転置は元空間からrank空間への射影に使う。
+
+$$
+U^{(n)\mathsf T}:
+\mathbb R^{I_n}
+\rightarrow
+\mathbb R^{R_n}
+$$
+
+列直交なら
+
+$$
+U^{(n)\mathsf T}U^{(n)}=I_{R_n}.
+$$
+
+全mode Tuckerのcoreは
 
 $$
 \boxed{
-\hat{\mathcal{X}}
+\mathcal G
 =
-\mathcal{G}
-\times_0 U^{(0)}
-\times_1 U^{(1)}
+\mathcal X
+\times_0U^{(0)\mathsf T}
+\times_1U^{(1)\mathsf T}
+\cdots
+\times_{N-1}U^{(N-1)\mathsf T}
+}
+$$
+
+である。
+
+各mode productにより
+
+$$
+I_n\rightarrow R_n
+$$
+
+と変わるので、最終的に
+
+$$
+\mathcal G
+\in
+\mathbb R^{R_0\times\cdots\times R_{N-1}}
+$$
+
+となる。
+
+再構成は逆方向に
+
+$$
+\boxed{
+\hat{\mathcal X}
+=
+\mathcal G
+\times_0U^{(0)}
+\times_1U^{(1)}
 \cdots
 \times_{N-1}U^{(N-1)}
 }
 $$
 
-とする。
+で、各modeが
+
+$$
+R_n\rightarrow I_n
+$$
+
+へ戻る。
 
 ---
 
-## 3. HOSVD
+## 3. HOSVDのfactorを1 modeずつ作る
 
-mode $n$ unfoldingを
+mode $n$ unfoldingは
 
 $$
 X_{(n)}
 \in
-\mathbb{R}^{I_n\times\prod_{m\neq n}I_m}
+\mathbb R^{
+I_n\times\prod_{m\ne n}I_m
+}.
 $$
 
-とする。
-
-その行列SVDを
+Reduced SVDを
 
 $$
 X_{(n)}
 =
-U_n\Sigma_nV_n^{\mathsf{T}}
+Q_n\Sigma_nV_n^{\mathsf T}
 $$
 
-とし、上位 $R_n$ 本の左特異ベクトルをfactorに採用する。
+とする。
+
+左特異ベクトルを
 
 $$
-U^{(n)}
+Q_n
 =
 \begin{bmatrix}
-u^{(n)}_1 & u^{(n)}_2 & \cdots & u^{(n)}_{R_n}
+q^{(n)}_1&q^{(n)}_2&\cdots
 \end{bmatrix}
 $$
 
-概念的には、
+と書けば、HOSVD factorは
 
 $$
+\boxed{
 U^{(n)}
-\leftarrow
-\operatorname{top\text{-}}R_n
-\left(
-\operatorname{left\ singular\ vectors}(X_{(n)})
-\right)
+=
+\begin{bmatrix}
+q^{(n)}_1&q^{(n)}_2&\cdots&q^{(n)}_{R_n}
+\end{bmatrix}
+}
 $$
 
 である。
 
-全対象modeでこれを**元の同じTensorに対して独立に**行い、最後にfactorの転置を掛けてcoreを作る。
+Pythonの0始まりsliceなら
 
-```text
-元Tensor X
-├─ mode 0 unfold → SVD → U0
-├─ mode 1 unfold → SVD → U1
-├─ ...
-└─ mode n unfold → SVD → Un
-
-X ×0 U0.T ×1 U1.T ... → core G
+```python
+U_n = Q_n[:, :R_n]
 ```
 
-### 重要
+となる。
 
-HOSVDのfactor計算は、先に求めたfactorを使って次のfactorを求めるわけではない。
+`[:, 1:R_n]` では第1列を落としてしまうので別物である。
+
+### HOSVDで重要な点
+
+factorを求めるときは、それぞれ**元の同じ $\mathcal X$** をunfoldする。
 
 ```text
-HOSVD:
-X → U0
-X → U1
-X → U2
+X → unfold mode 0 → SVD → U^(0)
+X → unfold mode 1 → SVD → U^(1)
+X → unfold mode 2 → SVD → U^(2)
+...
 ```
 
-と各modeを独立に見る。
+先に求めたfactorで $X$ を射影してから次factorを計算するのではない。
 
-これがHOOIとの最大の違いになる。
+この「各modeを独立に初期化する」点がHOOIとの大きな違いである。
 
 ---
 
-## 4. Partial HOSVD / Tucker-2
+## 4. HOSVDのcoreと再構成
+
+factorをすべて得た後、元Tensorをfactor転置で射影する。
+
+$$
+\begin{aligned}
+\mathcal X
+&\xrightarrow{\times_0U^{(0)\mathsf T}}
+\mathcal X^{(1)}\\
+&\xrightarrow{\times_1U^{(1)\mathsf T}}
+\mathcal X^{(2)}\\
+&\quad\vdots\\
+&\xrightarrow{\times_{N-1}U^{(N-1)\mathsf T}}
+\mathcal G.
+\end{aligned}
+$$
+
+したがって
+
+$$
+\boxed{
+\mathcal G
+=
+\mathcal X
+\times_0U^{(0)\mathsf T}
+\times_1U^{(1)\mathsf T}
+\cdots
+\times_{N-1}U^{(N-1)\mathsf T}
+}
+$$
+
+である。
+
+再構成は
+
+$$
+\boxed{
+\hat{\mathcal X}
+=
+\mathcal G
+\times_0U^{(0)}
+\times_1U^{(1)}
+\cdots
+\times_{N-1}U^{(N-1)}
+}
+$$
+
+となる。
+
+---
+
+## 5. Partial HOSVD / Tucker-2
 
 全modeを圧縮する必要はない。
+
+圧縮対象mode集合を
+
+$$
+\mathcal M
+\subseteq
+\{0,1,\ldots,N-1\}
+$$
+
+とする。
+
+partial Tuckerでは
+
+$$
+\boxed{
+\mathcal G
+=
+\mathcal X
+\underset{m\in\mathcal M}{\times_m}
+U^{(m)\mathsf T}
+}
+$$
+
+$$
+\boxed{
+\hat{\mathcal X}
+=
+\mathcal G
+\underset{m\in\mathcal M}{\times_m}
+U^{(m)}
+}
+$$
+
+となり、$m\notin\mathcal M$ のmodeは元shapeのままcoreに残る。
 
 Conv2d weight
 
 $$
 W
 \in
-\mathbb{R}^{C_{\mathrm{out}}\times C_{\mathrm{in}}\times K_h\times K_w}
-$$
-
-で、mode 0 / 1だけを対象にすれば、
-
-$$
-U_{\mathrm{out}}
-\in
-\mathbb{R}^{C_{\mathrm{out}}\times R_{\mathrm{out}}}
-$$
-
-$$
-U_{\mathrm{in}}
-\in
-\mathbb{R}^{C_{\mathrm{in}}\times R_{\mathrm{in}}}
-$$
-
-$$
-G
-\in
-\mathbb{R}^{R_{\mathrm{out}}\times R_{\mathrm{in}}\times K_h\times K_w}
-$$
-
-を得る。
-
-近似式は
-
-$$
-\boxed{
-W
-\approx
-G
-\times_0 U_{\mathrm{out}}
-\times_1 U_{\mathrm{in}}
+\mathbb R^{
+C_{out}\times C_{in}\times K_h\times K_w
 }
 $$
 
-要素表示では、
+でchannel mode 0 / 1だけを圧縮するTucker-2では
 
 $$
-\boxed{
-W_{o,i,a,b}
-\approx
-\sum_{\alpha=1}^{R_{\mathrm{out}}}
-\sum_{\beta=1}^{R_{\mathrm{in}}}
-U^{\mathrm{out}}_{o,\alpha}
-G_{\alpha,\beta,a,b}
-U^{\mathrm{in}}_{i,\beta}
-}
+\mathcal M=\{0,1\}.
 $$
 
-となる。
+factorは
+
+$$
+U_{out}
+\in
+\mathbb R^{C_{out}\times R_{out}},
+$$
+
+$$
+U_{in}
+\in
+\mathbb R^{C_{in}\times R_{in}}.
+$$
 
 coreは
 
@@ -292,106 +407,202 @@ $$
 G
 =
 W
-\times_0 U_{\mathrm{out}}^{\mathsf{T}}
-\times_1 U_{\mathrm{in}}^{\mathsf{T}}
+\times_0U_{out}^{\mathsf T}
+\times_1U_{in}^{\mathsf T}
 }
 $$
 
-である。
-
----
-
-## 5. 再構成誤差
-
-今回の実験では、分解品質を相対Frobenius誤差で統一する。
+で、shapeは
 
 $$
 \boxed{
-e_{\mathrm{rel}}
-=
-\frac{
-\lVert \mathcal{X}-\hat{\mathcal{X}}\rVert_F
-}{
-\lVert \mathcal{X}\rVert_F
-}
-}
+G
+\in
+\mathbb R^{R_{out}\times R_{in}\times K_h\times K_w}
+}.
 $$
 
-Conv weightなら、
+再構成は
 
 $$
-e_W
+\boxed{
+\hat W
 =
-\frac{
-\lVert W-\hat W\rVert_F
-}{
-\lVert W\rVert_F
+G
+\times_0U_{out}
+\times_1U_{in}
+}.
+$$
+
+---
+
+## 6. Tucker-2の要素表示をmode productから出す
+
+まずmode 0を展開すると
+
+$$
+H_{o,\beta,a,b}
+=
+\sum_{\alpha=1}^{R_{out}}
+U^{out}_{o,\alpha}
+G_{\alpha,\beta,a,b}.
+$$
+
+次にmode 1へ $U_{in}$ を掛けると
+
+$$
+\hat W_{o,i,a,b}
+=
+\sum_{\beta=1}^{R_{in}}
+H_{o,\beta,a,b}
+U^{in}_{i,\beta}.
+$$
+
+$H$ を代入して
+
+$$
+\begin{aligned}
+\hat W_{o,i,a,b}
+&=
+\sum_{\beta=1}^{R_{in}}
+\left(
+\sum_{\alpha=1}^{R_{out}}
+U^{out}_{o,\alpha}
+G_{\alpha,\beta,a,b}
+\right)
+U^{in}_{i,\beta}\\
+&=
+\boxed{
+\sum_{\alpha=1}^{R_{out}}
+\sum_{\beta=1}^{R_{in}}
+U^{out}_{o,\alpha}
+G_{\alpha,\beta,a,b}
+U^{in}_{i,\beta}
+}.
+\end{aligned}
+$$
+
+---
+
+## 7. 再構成誤差
+
+Tensor Frobenius normは
+
+$$
+\boxed{
+\|\mathcal X\|_F
+=
+\sqrt{
+\sum_{i_0=1}^{I_0}
+\sum_{i_1=1}^{I_1}
+\cdots
+\sum_{i_{N-1}=1}^{I_{N-1}}
+X_{i_0,\ldots,i_{N-1}}^2
+}
 }
 $$
 
 である。
 
-TensorのFrobeniusノルムは、全要素の二乗和の平方根。
+relative errorは
 
 $$
-\lVert\mathcal{X}\rVert_F
+\boxed{
+e_{rel}
 =
-\sqrt{
-\sum_{i_0}\sum_{i_1}\cdots\sum_{i_{N-1}}
-X_{i_0,i_1,\ldots,i_{N-1}}^2
+\frac{
+\|\mathcal X-\hat{\mathcal X}\|_F
+}{
+\|\mathcal X\|_F
+}
 }
 $$
 
-### 注意
+で、Conv weightなら
 
-小さいweight relative errorは「元weightに近い」ことを表すが、分類accuracyを直接最適化しているわけではない。
+$$
+\boxed{
+e_W
+=
+\frac{
+\|W-\hat W\|_F
+}{
+\|W\|_F
+}
+}.
+$$
 
-今回のHOOI実験では、この違いが実際に観測された。
+これは元weightへの近さを測る指標であって、classification lossを直接測るものではない。
 
 ---
 
-## 6. Tuckerのパラメータ数
+## 8. Tuckerのparameter数
 
-全modeをTucker分解すると、factorとcoreの要素数は概念的に
+全modeを圧縮する場合、coreの要素数は
 
 $$
-N_{\mathrm{Tucker}}
+P_{core}
 =
+\prod_{n=0}^{N-1}R_n.
+$$
+
+factor $n$ の要素数は
+
+$$
+P_n
+=I_nR_n.
+$$
+
+したがって合計は
+
+$$
+\begin{aligned}
+P_{Tucker}
+&=P_{core}+\sum_{n=0}^{N-1}P_n\\
+&=
+\boxed{
 \prod_{n=0}^{N-1}R_n
 +
 \sum_{n=0}^{N-1}I_nR_n
+}.
+\end{aligned}
 $$
 
-となる。
+partial Tuckerでは、圧縮しないmodeの次元がcoreにそのまま残るため、この全mode用の式を機械的に使わず、実際のcore shapeから数える。
 
-ただしpartial Tuckerでは、圧縮しないmodeをcoreにそのまま残すため、そのshapeに合わせて数える。
-
-Conv Tucker-2の具体式は
-[[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
-で扱う。
+Conv Tucker-2の式は [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]] で導出する。
 
 ---
 
-## 7. HOSVDは何を保証するか
+## 9. HOSVDは行列SVDと同じ意味でのglobal optimumではない
 
-行列のtruncated SVDでは、固定rankにおける最良近似をEckart–Young–Mirskyの定理で得られる。
+行列のtruncated SVDでは、Eckart–Young–Mirskyにより固定rankの最良近似を得る。
 
-一方、高階Tensorの固定multilinear rank近似は一般に行列ほど単純ではなく、各modeを独立にSVDするHOSVDが固定rankの**全体最適解そのものになるとは限らない**。
+HOSVDでは各modeを独立に最適化するため、高階Tensorの固定target multilinear rank
 
-HOSVDは、
+$$
+(R_0,\ldots,R_{N-1})
+$$
 
-- 高速
-- 一度のmode-wise SVDでfactorを得られる
-- 実装しやすい
-- HOOIの良い初期値になる
+に対する全体最適解そのものとは限らない。
 
-という位置づけで使う。
+```text
+行列 truncated SVD
+→ 固定rankに対するglobal best approximation
 
-HOOIは、このHOSVD解を同じrankのまま反復的に精密化する。
+HOSVD
+→ mode-wise SVDを組み合わせた高速な初期近似
+
+HOOI
+→ HOSVD factorを初期値にして同rankで交互精密化
+```
+
+> [!note] 補足一般理論
+> この節の「global optimumではない」という区別は標準的なTucker理論による補足であり、添付資料の実験値から導いた主張ではない。今回の実験では実際にHOOIがHOSVDよりFrobenius errorを下げたことを、別の検証ノートで確認している。
 
 ---
 
-## 8. srcとの対応
+## 10. srcとの対応
 
 ```text
 src/nn_compression/compression/tucker.py
@@ -402,9 +613,10 @@ src/nn_compression/metrics/tensor_approximation.py
 └─ relative_frobenius_error
 ```
 
-HOSVD実装では、各factorを**元のXから独立に**求めることが重要である。
+実装上の重要点は、HOSVD factorを各modeについて**元のXから独立に**求めること。
 
-次に読む：
+詳細な途中式：
 
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
 - [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
