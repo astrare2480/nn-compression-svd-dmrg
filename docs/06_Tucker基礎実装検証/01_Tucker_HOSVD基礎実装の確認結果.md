@@ -1,15 +1,11 @@
 ---
 title: Tucker・HOSVD基礎実装の確認結果
-tags:
-  - Tucker
-  - HOSVD
-  - 実装検証
-  - PyTorch
+tags: [Tucker, HOSVD, HOOI, 実装検証, PyTorch]
 ---
 
 # Tucker・HOSVD基礎実装の確認結果
 
-## 1. 対象
+## 対象
 
 ```text
 notebooks/20_tucker/00_fundamentals/
@@ -18,182 +14,119 @@ notebooks/20_tucker/00_fundamentals/
 └─ 02_hooi.ipynb
 ```
 
-最終src：
+最終src：`tensor/operations.py`、`compression/tucker.py`、`compression/hooi.py`、`metrics/tensor_approximation.py`。
 
-```text
-src/nn_compression/tensor/operations.py
-src/nn_compression/compression/tucker.py
-src/nn_compression/compression/hooi.py
-src/nn_compression/metrics/tensor_approximation.py
-```
+数式導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]] を参照する。
 
----
-
-## 2. 基礎実装で確認した契約
-
-### unfold / fold
-
-mode $n$について
+## 1. unfold / fold
 
 $$
-X_{(n)}\in\mathbb{R}^{I_n\times\prod_{m\neq n}I_m}
+X_{(n)}\in\mathbb R^{I_n\times\prod_{m\ne n}I_m}
 $$
 
-となり、
+であり、
 
 $$
 \operatorname{fold}_n(\operatorname{unfold}_n(X))=X
 $$
 
-を満たすこと。
+を確認する。
 
-### mode product
-
-$$
-Y=X\times_n A
-$$
-
-で、行列 $A\in\mathbb{R}^{J\times I_n}$ を掛けたmodeだけ
-
-$$
-I_n\rightarrow J
-$$
-
-へ変わること。
-
-### HOSVD
-
-factorを各対象modeについて元のXから独立に求め、
-
-$$
-G=X\times_0U_0^T\times_1U_1^T\cdots
-$$
-
-からcoreを得ること。
-
-### reconstruction
-
-$$
-\hat X=G\times_0U_0\times_1U_1\cdots
-$$
-
-で元shapeへ戻ること。
-
----
-
-## 3. src化後のHOOI random tensor数値確認
+## 2. random 3階Tensor
 
 seed 0、
 
 $$
-X\in\mathbb{R}^{6\times5\times4}
+X\in\mathbb R^{6\times5\times4},
+\qquad
+(R_0,R_1,R_2)=(3,2,2).
 $$
 
-rank
-
-$$
-(3,2,2)
-$$
-
-で確認した。
+結果：
 
 | 指標 | 値 |
 | --- | ---: |
-| HOSVD relative error | 0.865671 |
-| HOOI final relative error | 0.768581 |
-| 改善量 | 0.097089 |
-| core shape | `(3, 2, 2)` |
-| 実行したsweep | 10 |
+| HOSVD error | 0.865671 |
+| HOOI error | 0.768581 |
+| core | `(3,2,2)` |
+| sweep | 10 |
 
-この数値確認では、HOOIがHOSVD初期値より明確に誤差を下げる方向に動作した。
-
-これは特定random tensorに対するsanity checkであり、一般的な改善幅を意味しない。
-
----
-
-## 4. Conv-like random weightのpartial HOOI確認
-
-seed 0、
+改善量を算術で出すと、
 
 $$
-W\in\mathbb{R}^{64\times32\times3\times3}
+\begin{aligned}
+\Delta e
+&=e_{\mathrm{HOSVD}}-e_{\mathrm{HOOI}}\\
+&=0.865671-0.768581\\
+&=0.097090.
+\end{aligned}
 $$
 
-rank
+このrandom tensorではHOOIがHOSVD初期値から誤差を下げる方向に動いた。改善幅そのものを一般化しない。
+
+## 3. Conv-like 4階weightのpartial HOOI
 
 $$
-(R_{out},R_{in})=(32,16)
+W\in\mathbb R^{64\times32\times3\times3},
+\qquad
+(R_{out},R_{in})=(32,16).
 $$
 
-で確認した。
+mode 2/3を保持するのでcoreは
+
+$$
+\begin{aligned}
+(64,32,3,3)
+&\xrightarrow{\times_0U_{out}^T}
+(32,32,3,3)\\
+&\xrightarrow{\times_1U_{in}^T}
+(32,16,3,3).
+\end{aligned}
+$$
+
+結果：
 
 | 指標 | 値 |
 | --- | ---: |
-| HOSVD relative error | 0.755302 |
-| HOOI final relative error | 0.727775 |
-| 改善量 | 0.027528 |
-| core shape | `(32, 16, 3, 3)` |
-| $U_{out}$ | `(64, 32)` |
-| $U_{in}$ | `(32, 16)` |
-| 実行したsweep | 10 |
+| HOSVD error | 0.755302 |
+| HOOI error | 0.727775 |
+| core | `(32,16,3,3)` |
+| `U_out` | `(64,32)` |
+| `U_in` | `(32,16)` |
+| sweep | 10 |
 
-mode 2 / 3を圧縮しないpartial HOOIでも、core shapeが
+改善量は
 
 $$
-(R_{out},R_{in},K_h,K_w)
+\begin{aligned}
+0.755302-0.727775
+&=0.027527.
+\end{aligned}
 $$
 
-になることを確認できた。
+## 4. Conv構築一致
 
----
+同じHOSVD componentsから `build_tucker2_conv` と `build_tucker2_conv_from_components` を作り、forward差のrelative errorが
 
-## 5. Conv構築の一致
+$$
+0.00\times10^0=0
+$$
 
-同じHOSVD componentsから
+になった。
 
-```text
-build_tucker2_conv
-build_tucker2_conv_from_components
-```
+これは分解値が同じなら共通builderが同じforwardを作ることのsanity check。
 
-で構築したモデルのforward出力relative errorは
+## 5. 回帰テスト
 
-```text
-0.00e+00
-```
-
-となり一致した。
-
-これにより、分解ロジックと3層構築ロジックを分離しても同じforwardを再現できることを確認した。
-
----
-
-## 6. 回帰テスト
-
-src整理後、HOOIとConv Tucker-2の重複テストを統合し、全pytestを実行した。
+src整理後の全pytest：
 
 ```text
 99 passed
 0 failed
 ```
 
-主な確認項目：
+主な確認：3階HOOI、partial HOOI、factor/core shape、入力factor非破壊、収束history、invalid mode/rank、Conv bias/spatial config/device/dtype/requires_grad。
 
-- 3階HOOI
-- Conv weight partial HOOI
-- HOOI errorがHOSVD初期値より悪化しない
-- factor/core shape
-- `hooi_sweep` が入力factorを破壊しない
-- error historyが許容誤差内で非増加
-- invalid mode / rank / factor shape validation
-- HOSVD構築とcomponents構築のforward一致
-- Convのbias / stride / padding / dilation
-- device / dtype / requires_grad
+## 結論
 
----
-
-## 7. 結論
-
-基礎Tensor操作、HOSVD、Tucker再構成、partial HOOIを同じmode演算の上に構成でき、random tensorと回帰テストの両面で実装契約を確認した。
-
-次のCNN実験では、この基礎実装を実際の学習済み `conv2.weight` に適用する。
+Tensorのmode演算→HOSVD→HOOIを同じ基本演算上に構成し、3階full Tuckerと4階partial Tucker-2の両方でshapeと誤差改善方向を確認した。
