@@ -17,7 +17,7 @@ tags:
 
 ## 位置づけ
 
-Tucker / HOSVD / HOOIで使う式を、shapeと途中式を飛ばさず一本にまとめる。
+Tucker / HOSVD / HOOIで使う式を、**定義 → shape → 途中式 → 最終式**の順で追えるようにまとめる。
 
 このノートではPyTorchのaxis番号に合わせ、modeを0始まりで数える。
 
@@ -46,11 +46,22 @@ mode 3 = K_w
 
 とする。
 
+> [!important]
+> `CNN CIFAR-10→Tuckerを考える.md` に現れるTucker/HOSVD/HOOIの式・考察を基礎にし、元資料で途中変形が省略されている箇所は数学的補足として展開している。特に直交射影からcore norm最大化への変形、HOOIの局所更新が上位左特異ベクトルになる導出は**補足導出**であり、元添付からの直接引用ではない。
+
 ---
 
 ## 1. mode-n unfolding
 
-mode $n$ を行方向へ置き、残りのmodeを列方向へまとめる。
+$N$階Tensor
+
+$$
+\mathcal X
+\in
+\mathbb R^{I_0\times I_1\times\cdots\times I_{N-1}}
+$$
+
+に対し、mode $n$ を行方向へ置き、残りのmodeを列方向へまとめる。
 
 $$
 \boxed{
@@ -58,6 +69,17 @@ X_{(n)}
 \in
 \mathbb R^{I_n\times\prod_{m\ne n}I_m}
 }
+$$
+
+要素数は変わらないので、
+
+$$
+I_n
+\left(
+\prod_{m\ne n}I_m
+\right)
+=
+\prod_{m=0}^{N-1}I_m.
 $$
 
 例えば
@@ -69,33 +91,93 @@ $$
 なら
 
 $$
+\begin{aligned}
 W_{(0)}
-\in
-\mathbb R^{64\times(32\cdot3\cdot3)}
-=
-\mathbb R^{64\times288}
+&\in
+\mathbb R^{64\times(32\cdot3\cdot3)}\\
+&=
+\mathbb R^{64\times288},
+\end{aligned}
 $$
 
 $$
+\begin{aligned}
 W_{(1)}
-\in
-\mathbb R^{32\times(64\cdot3\cdot3)}
-=
+&\in
+\mathbb R^{32\times(64\cdot3\cdot3)}\\
+&=
 \mathbb R^{32\times576}.
+\end{aligned}
 $$
 
-unfoldは並べ替えであり、要素数を変えない。
+要素数を確認すると、
 
 $$
 64\cdot32\cdot3\cdot3
-=18432
-=
-64\cdot288.
+=18432,
 $$
+
+$$
+64\cdot288
+=18432,
+$$
+
+$$
+32\cdot576
+=18432.
+$$
+
+したがってunfoldは**並べ替え・行列化**であって、要素を捨てる処理ではない。
 
 ---
 
-## 2. mode-n product
+## 2. fold
+
+`fold` はunfoldの逆操作である。
+
+$$
+\boxed{
+\operatorname{fold}_n
+\left(
+X_{(n)}
+\right)
+=
+\mathcal X
+}
+$$
+
+したがって、正しい実装では
+
+$$
+\boxed{
+\operatorname{fold}_n
+\left(
+\operatorname{unfold}_n(\mathcal X)
+\right)
+=
+\mathcal X
+}
+$$
+
+が成立する。
+
+shapeで見ると、
+
+$$
+I_n\times\prod_{m\ne n}I_m
+$$
+
+という行列を、元の
+
+$$
+I_0\times I_1\times\cdots\times I_{N-1}
+$$
+
+へ戻す。
+
+---
+
+## 3. mode-n product
 
 行列
 
@@ -113,7 +195,21 @@ $$
 
 と書く。
 
-unfold表示では
+要素表示では、
+
+$$
+\boxed{
+Y_{i_0,\ldots,i_{n-1},j,i_{n+1},\ldots,i_{N-1}}
+=
+\sum_{i_n=1}^{I_n}
+A_{j,i_n}
+X_{i_0,\ldots,i_n,\ldots,i_{N-1}}
+}
+$$
+
+である。
+
+これをmode $n$でunfoldすると、
 
 $$
 \boxed{
@@ -122,13 +218,15 @@ Y_{(n)}
 }
 $$
 
-である。
+になる。
 
 shapeは
 
 $$
 (J\times I_n)
-\left(I_n\times\prod_{m\ne n}I_m\right)
+\left(
+I_n\times\prod_{m\ne n}I_m
+\right)
 =
 J\times\prod_{m\ne n}I_m.
 $$
@@ -157,14 +255,23 @@ U_{in}^{\mathsf T}
 \mathbb R^{R_{in}\times32}.
 $$
 
-よって
+mode 1 unfoldingは
+
+$$
+W_{(1)}
+\in
+\mathbb R^{32\times576}.
+$$
+
+したがって、
 
 $$
 \begin{aligned}
 U_{in}^{\mathsf T}W_{(1)}
 &:
 (R_{in}\times32)(32\times576)\\
-&\rightarrow R_{in}\times576.
+&\rightarrow
+R_{in}\times576.
 \end{aligned}
 $$
 
@@ -180,7 +287,7 @@ $$
 
 ---
 
-## 3. factorの転置が圧縮方向になる理由
+## 4. factorの転置が圧縮方向になる理由
 
 factorを
 
@@ -198,7 +305,7 @@ $$
 x\in\mathbb R^{I_n}
 $$
 
-をrank空間へ射影すると
+をrank空間へ射影すると、
 
 $$
 \begin{aligned}
@@ -209,7 +316,7 @@ z
 \end{aligned}
 $$
 
-逆にrank空間から元空間へ戻すと
+逆にrank空間から元空間へ戻すと、
 
 $$
 \begin{aligned}
@@ -229,9 +336,31 @@ rank空間 → 元空間 : U
 
 である。
 
+factorの列が直交規格化されていれば、
+
+$$
+U^{(n)\mathsf T}U^{(n)}=I_{R_n}.
+$$
+
+元空間へ戻してからもう一度射影すると、
+
+$$
+U^{(n)\mathsf T}
+\left(
+U^{(n)}z
+\right)
+=
+\left(
+U^{(n)\mathsf T}U^{(n)}
+\right)z
+=z.
+$$
+
+つまりfactor列空間の内部では、この圧縮・展開は整合する。
+
 ---
 
-## 4. Tucker分解とcore
+## 5. Tucker分解とcore
 
 直交factorを用いるTucker近似を
 
@@ -249,11 +378,29 @@ $$
 
 とする。
 
+各factorは
+
 $$
+U^{(n)}
+\in
+\mathbb R^{I_n\times R_n},
+\qquad
 U^{(n)\mathsf T}U^{(n)}=I_{R_n}
 $$
 
-なら、factorが固定されたときのcoreは
+を満たす。
+
+全modeを圧縮する場合、core shapeは
+
+$$
+\boxed{
+\mathcal G
+\in
+\mathbb R^{R_0\times R_1\times\cdots\times R_{N-1}}
+}.
+$$
+
+factorが固定されたとき、元Tensorを各factor列空間へ射影してcoreを得る。
 
 $$
 \boxed{
@@ -267,7 +414,21 @@ $$
 }
 $$
 
-で得られる。
+再構成は逆方向に
+
+$$
+\boxed{
+\hat{\mathcal X}
+=
+\mathcal G
+\times_0U^{(0)}
+\times_1U^{(1)}
+\cdots
+\times_{N-1}U^{(N-1)}
+}
+$$
+
+とする。
 
 partial Tuckerでは圧縮対象mode集合を
 
@@ -289,11 +450,23 @@ U^{(m)\mathsf T}
 }
 $$
 
+$$
+\boxed{
+\hat{\mathcal X}
+=
+\mathcal G
+\underset{m\in\mathcal M}{\times_m}
+U^{(m)}
+}
+$$
+
 とする。
+
+圧縮しないmodeはcoreに元の次元 $I_m$ のまま残る。
 
 ---
 
-## 5. Tucker-2 coreのshape
+## 6. Tucker-2 coreのshape
 
 Conv weightでmode 0 / 1だけを圧縮する。
 
@@ -302,29 +475,48 @@ $$
 $$
 
 $$
+W
+\in
+\mathbb R^{C_{out}\times C_{in}\times K_h\times K_w},
+$$
+
+$$
 U_{out}
 \in
-\mathbb R^{64\times R_{out}},
+\mathbb R^{C_{out}\times R_{out}},
 \qquad
 U_{in}
 \in
-\mathbb R^{32\times R_{in}}.
+\mathbb R^{C_{in}\times R_{in}}.
 $$
 
-まずmode 0を射影すると
+まずmode 0を射影する。
 
 $$
-(64,32,3,3)
-\xrightarrow{\times_0U_{out}^{\mathsf T}}
-(R_{out},32,3,3).
+\begin{aligned}
+W^{(0)}
+&=
+W\times_0U_{out}^{\mathsf T},\\
+(C_{out},C_{in},K_h,K_w)
+&\rightarrow
+(R_{out},C_{in},K_h,K_w).
+\end{aligned}
 $$
 
-次にmode 1を射影すると
+次にmode 1を射影する。
 
 $$
-(R_{out},32,3,3)
-\xrightarrow{\times_1U_{in}^{\mathsf T}}
-(R_{out},R_{in},3,3).
+\begin{aligned}
+G
+&=
+W^{(0)}\times_1U_{in}^{\mathsf T}\\
+&=
+W\times_0U_{out}^{\mathsf T}
+\times_1U_{in}^{\mathsf T},\\
+(R_{out},C_{in},K_h,K_w)
+&\rightarrow
+(R_{out},R_{in},K_h,K_w).
+\end{aligned}
 $$
 
 したがって
@@ -332,82 +524,126 @@ $$
 $$
 \boxed{
 G
-=
-W
-\times_0U_{out}^{\mathsf T}
-\times_1U_{in}^{\mathsf T}
-}
-$$
-
-$$
-\boxed{
-G
 \in
-\mathbb R^{R_{out}\times R_{in}\times3\times3}
+\mathbb R^{R_{out}\times R_{in}\times K_h\times K_w}
 }.
 $$
 
 再構成は
 
 $$
-\boxed{
+\begin{aligned}
 \hat W
-=
-G
-\times_0U_{out}
-\times_1U_{in}
-}
+&=
+G\times_0U_{out}\times_1U_{in},\\
+(R_{out},R_{in},K_h,K_w)
+&\xrightarrow{\times_0U_{out}}
+(C_{out},R_{in},K_h,K_w)\\
+&\xrightarrow{\times_1U_{in}}
+(C_{out},C_{in},K_h,K_w).
+\end{aligned}
 $$
 
-で元shapeへ戻る。
+よって元weightと同じshapeへ戻る。
 
 ---
 
-## 6. HOSVDを1 stepずつ追う
+## 7. HOSVDを1 stepずつ追う
 
 HOSVDでは各factorを**元の同じTensorから独立に**求める。
 
-### mode 0
+### 7.1 一般mode $n$
+
+mode-$n$ unfoldingを
+
+$$
+X_{(n)}
+\in
+\mathbb R^{I_n\times\prod_{m\ne n}I_m}
+$$
+
+とし、Reduced SVDを
+
+$$
+\boxed{
+X_{(n)}
+=Q_n\Sigma_nV_n^{\mathsf T}
+}
+$$
+
+とする。
+
+左特異ベクトルを
+
+$$
+Q_n
+=
+\begin{bmatrix}
+q^{(n)}_1 & q^{(n)}_2 & \cdots
+\end{bmatrix}
+$$
+
+と書けば、rank $R_n$ のfactorは
+
+$$
+\boxed{
+U^{(n)}
+=
+\begin{bmatrix}
+q^{(n)}_1 & q^{(n)}_2 & \cdots & q^{(n)}_{R_n}
+\end{bmatrix}
+}
+$$
+
+である。
+
+shapeは
+
+$$
+U^{(n)}
+\in
+\mathbb R^{I_n\times R_n}.
+$$
+
+Pythonの0始まりsliceでは
+
+```python
+U_n = Q_n[:, :R_n]
+```
+
+となる。
+
+> [!important]
+> 数学の「第1列〜第 $R_n$ 列」と、Pythonの `[:, 1:R_n]` を混同しない。Pythonでは `[:, :R_n]` が上位 $R_n$ 本である。
+
+### 7.2 Conv mode 0
 
 $$
 W_{(0)}
-=U_0\Sigma_0V_0^{\mathsf T}
+=Q_0\Sigma_0V_0^{\mathsf T}.
 $$
 
-とSVDする。
-
-数学的には上位 $R_{out}$ 本を
+上位 $R_{out}$ 本を
 
 $$
 \boxed{
 U_{out}
 =
 \begin{bmatrix}
-u_{0,1}&u_{0,2}&\cdots&u_{0,R_{out}}
+q^{(0)}_1 & q^{(0)}_2 & \cdots & q^{(0)}_{R_{out}}
 \end{bmatrix}
 }
 $$
 
-と取る。
+とする。
 
-Pythonでは
-
-```python
-U_out = U0[:, :R_out]
-```
-
-である。
-
-> [!important]
-> `U0[:, 1:R_out]` ではない。Python sliceは0始まりなので、それでは第1左特異ベクトルを落とし、本数も $R_{out}-1$ になる。
-
-### mode 1
+### 7.3 Conv mode 1
 
 mode 0でprojectしたTensorではなく、**再び元の $W$** をmode 1でunfoldする。
 
 $$
 W_{(1)}
-=U_1\Sigma_1V_1^{\mathsf T}.
+=Q_1\Sigma_1V_1^{\mathsf T}.
 $$
 
 上位 $R_{in}$ 本を
@@ -417,22 +653,23 @@ $$
 U_{in}
 =
 \begin{bmatrix}
-u_{1,1}&u_{1,2}&\cdots&u_{1,R_{in}}
+q^{(1)}_1 & q^{(1)}_2 & \cdots & q^{(1)}_{R_{in}}
 \end{bmatrix}
 }
 $$
 
-と取る。
+とする。
 
-Pythonでは
+最後に両factorで**元の $W$** を射影してcoreを作る。
 
-```python
-U_in = U1[:, :R_in]
-```
-
-である。
-
-最後に両factorで元 $W$ を射影してcoreを作る。
+$$
+\boxed{
+G
+=
+W\times_0U_{out}^{\mathsf T}
+\times_1U_{in}^{\mathsf T}
+}
+$$
 
 ```text
 元W → mode0 unfold → SVD → U_out
@@ -448,7 +685,7 @@ U_in = U1[:, :R_in]
 
 ---
 
-## 7. Tucker-2の要素表示
+## 8. Tucker-2の要素表示
 
 Tucker-2 weightは
 
@@ -466,6 +703,44 @@ $$
 
 である。
 
+この式はmode productを要素で展開したものになる。
+
+まずmode 1を戻すと、
+
+$$
+H_{\alpha,i,a,b}
+=
+\sum_{\beta=1}^{R_{in}}
+G_{\alpha,\beta,a,b}
+U^{in}_{i,\beta}.
+$$
+
+次にmode 0を戻すと、
+
+$$
+\begin{aligned}
+\hat W_{o,i,a,b}
+&=
+\sum_{\alpha=1}^{R_{out}}
+U^{out}_{o,\alpha}
+H_{\alpha,i,a,b}\\
+&=
+\sum_{\alpha=1}^{R_{out}}
+U^{out}_{o,\alpha}
+\left(
+\sum_{\beta=1}^{R_{in}}
+G_{\alpha,\beta,a,b}
+U^{in}_{i,\beta}
+\right)\\
+&=
+\sum_{\alpha=1}^{R_{out}}
+\sum_{\beta=1}^{R_{in}}
+U^{out}_{o,\alpha}
+G_{\alpha,\beta,a,b}
+U^{in}_{i,\beta}.
+\end{aligned}
+$$
+
 channelの流れは
 
 $$
@@ -478,9 +753,9 @@ $$
 
 ---
 
-## 8. Tucker-2を3層Convへ展開する
+## 9. Tucker-2を3層Convへ展開する
 
-### input projection
+### 9.1 input projection
 
 $$
 \boxed{
@@ -502,16 +777,17 @@ $$
 
 で、行列としては $U_{in}^{\mathsf T}$ を使う。
 
-### core convolution
+### 9.2 core convolution
 
-簡略化してstride 1 / dilation 1の場合
+stride 1 / dilation 1で境界処理を省略した概念式なら、
 
 $$
 \boxed{
 T_{\alpha,h,w}
 =
 \sum_{\beta=1}^{R_{in}}
-\sum_a\sum_b
+\sum_{a=0}^{K_h-1}
+\sum_{b=0}^{K_w-1}
 G_{\alpha,\beta,a,b}
 Z_{\beta,h+a,w+b}
 }
@@ -519,7 +795,7 @@ $$
 
 である。
 
-### output projection
+### 9.3 output projection
 
 $$
 \boxed{
@@ -534,12 +810,55 @@ $$
 
 である。
 
-この3式を代入すると
+### 9.4 3式を代入する
+
+まずcore式をoutput projectionへ代入する。
 
 $$
 \begin{aligned}
 Y_{o,h,w}
-&=
+={}&
+\sum_{\alpha}
+U^{out}_{o,\alpha}
+\left[
+\sum_{\beta,a,b}
+G_{\alpha,\beta,a,b}
+Z_{\beta,h+a,w+b}
+\right]
++b_o\\
+={}&
+\sum_{\alpha,\beta,a,b}
+U^{out}_{o,\alpha}
+G_{\alpha,\beta,a,b}
+Z_{\beta,h+a,w+b}
++b_o.
+\end{aligned}
+$$
+
+さらにinput projection
+
+$$
+Z_{\beta,h+a,w+b}
+=
+\sum_i
+U^{in}_{i,\beta}
+X_{i,h+a,w+b}
+$$
+
+を代入すると、
+
+$$
+\begin{aligned}
+Y_{o,h,w}
+={}&
+\sum_{\alpha,\beta,a,b}
+U^{out}_{o,\alpha}
+G_{\alpha,\beta,a,b}
+\left[
+\sum_iU^{in}_{i,\beta}X_{i,h+a,w+b}
+\right]
++b_o\\
+={}&
 \sum_{i,a,b}
 \left[
 \sum_{\alpha,\beta}
@@ -552,7 +871,20 @@ X_{i,h+a,w+b}
 \end{aligned}
 $$
 
-角括弧内がeffective weight $\hat W_{o,i,a,b}$ である。
+したがって角括弧内がeffective weightであり、
+
+$$
+\boxed{
+\hat W_{o,i,a,b}
+=
+\sum_{\alpha,\beta}
+U^{out}_{o,\alpha}
+G_{\alpha,\beta,a,b}
+U^{in}_{i,\beta}
+}
+$$
+
+と一致する。
 
 stride / padding / dilationを含む一般形は
 [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
@@ -560,7 +892,7 @@ stride / padding / dilationを含む一般形は
 
 ---
 
-## 9. Tucker-2 parameter数
+## 10. Tucker-2 parameter数
 
 元Conv weightのparameter数は
 
@@ -571,18 +903,65 @@ N_{orig}
 }.
 $$
 
-Tucker-2は
+Tucker-2は3つのweightからなる。
+
+入力1x1 Conv：
 
 $$
-\boxed{
+N_{in}
+=C_{in}R_{in}.
+$$
+
+core Conv：
+
+$$
+N_{core}
+=R_{out}R_{in}K_hK_w.
+$$
+
+出力1x1 Conv：
+
+$$
+N_{out}
+=C_{out}R_{out}.
+$$
+
+したがって、
+
+$$
+\begin{aligned}
 N_{Tucker2}
-=C_{in}R_{in}
+&=N_{in}+N_{core}+N_{out}\\
+&=
+\boxed{
+C_{in}R_{in}
 +R_{out}R_{in}K_hK_w
 +C_{out}R_{out}
 }.
+\end{aligned}
 $$
 
-今回の
+biasは元Convと圧縮後の最終1x1 Convでともに $C_{out}$ 個なので、biasを保存する同一条件でweight圧縮成立条件を比較すると相殺できる。
+
+圧縮条件は
+
+$$
+N_{Tucker2}<N_{orig}
+$$
+
+すなわち
+
+$$
+\boxed{
+C_{in}R_{in}
++R_{out}R_{in}K_hK_w
++C_{out}R_{out}
+<
+C_{out}C_{in}K_hK_w
+}.
+$$
+
+### 今回の具体値
 
 $$
 (C_{out},C_{in},K_h,K_w)
@@ -597,7 +976,13 @@ N_{orig}
 =18432.
 $$
 
-balanced rank $(R_{out},R_{in})=(32,16)$ では
+balanced rank
+
+$$
+(R_{out},R_{in})=(32,16)
+$$
+
+では
 
 $$
 \begin{aligned}
@@ -626,28 +1011,131 @@ $$
 (R_{out},R_{in})=(64,32)
 $$
 
-とすると
+とすると、
 
 $$
-32\cdot32
+\begin{aligned}
+N_{Tucker2}
+&=32\cdot32
 +64\cdot32\cdot9
-+64\cdot64
-=23552
++64\cdot64\\
+&=1024+18432+4096\\
+&=23552,
+\end{aligned}
 $$
 
-となり、元18432より増える。
+となり、
+
+$$
+23552-18432=5120
+$$
+
+だけ元Convより増える。
 
 つまりTucker形式にしただけでは圧縮にはならない。
 
 ---
 
-## 10. HOOIの目的関数
+## 11. Tucker-2 MACs
 
-標準的な直交Tucker近似では
+元Convの出力空間を
+
+$$
+H_{out}\times W_{out}
+$$
+
+とすると、
 
 $$
 \boxed{
-\min
+\operatorname{MACs}_{orig}
+=
+H_{out}W_{out}
+C_{out}C_{in}K_hK_w
+}.
+$$
+
+圧縮後は3層を別々に数える。
+
+入力1x1 Convは入力空間で実行されるので、
+
+$$
+\operatorname{MACs}_{in}
+=
+H_{in}W_{in}C_{in}R_{in}.
+$$
+
+core Convは、
+
+$$
+\operatorname{MACs}_{core}
+=
+H_{out}W_{out}
+R_{out}R_{in}K_hK_w.
+$$
+
+出力1x1 Convは、
+
+$$
+\operatorname{MACs}_{out}
+=
+H_{out}W_{out}
+R_{out}C_{out}.
+$$
+
+したがって一般形は、
+
+$$
+\boxed{
+\begin{aligned}
+\operatorname{MACs}_{Tucker2}
+={}&
+H_{in}W_{in}C_{in}R_{in}\\
+&+
+H_{out}W_{out}R_{out}R_{in}K_hK_w\\
+&+
+H_{out}W_{out}R_{out}C_{out}.
+\end{aligned}
+}
+$$
+
+もし
+
+$$
+H_{in}W_{in}=H_{out}W_{out}=HW
+$$
+
+なら、
+
+$$
+\boxed{
+\operatorname{MACs}_{Tucker2}
+=
+HW
+\left(
+C_{in}R_{in}
++R_{out}R_{in}K_hK_w
++C_{out}R_{out}
+\right)
+}.
+$$
+
+この簡略化は**空間サイズが実際に同じ場合だけ**使う。stride 1だけでは、paddingやkernel sizeによっては空間サイズが変わるため十分条件ではない。
+
+---
+
+## 12. HOOIの目的関数
+
+標準的な直交Tucker近似では、
+
+$$
+\boxed{
+\begin{aligned}
+\min_{
+\mathcal G,
+U^{(0)},\ldots,U^{(N-1)}
+}
+&\quad
 \left\|
 \mathcal X
 -
@@ -655,43 +1143,76 @@ $$
 \times_0U^{(0)}
 \cdots
 \times_{N-1}U^{(N-1)}
-\right\|_F^2
+\right\|_F^2\\
+\text{s.t.}
+&\quad
+U^{(n)\mathsf T}U^{(n)}=I_{R_n}
+\end{aligned}
 }
 $$
 
-subject to
+である。
 
-$$
-U^{(n)\mathsf T}U^{(n)}=I_{R_n}.
-$$
+partial HOOIではactive mode集合を $\mathcal M$ とし、$n\in\mathcal M$ のfactorだけを最適化する。
 
-HOOIはrankを固定したままfactorを1 modeずつ更新する。
+HOOIはrankを固定したままfactorを1 modeずつ更新するため、各更新は局所的には最適でも、factor全体を同時に見た非凸問題のglobal optimumを保証しない。
 
 ---
 
-## 11. 誤差最小化とcore norm最大化
+## 13. 誤差最小化とcore norm最大化
 
-現在のfactorで作る直交射影を $\hat{\mathcal X}$ とする。
+ここからは**補足導出**。
+
+現在の直交factorで再構成したTensorを
+
+$$
+\hat{\mathcal X}
+$$
+
+とし、残差を
+
+$$
+\mathcal R
+=
+\mathcal X-\hat{\mathcal X}
+$$
+
+とする。
+
+直交射影なので、残差と射影部分は直交する。
+
+$$
+\boxed{
+\langle\mathcal R,\hat{\mathcal X}\rangle_F=0
+}
+$$
+
+元Tensorは
+
+$$
+\mathcal X
+=
+\mathcal R+\hat{\mathcal X}
+$$
+
+なので、
 
 $$
 \begin{aligned}
-\|\mathcal X-\hat{\mathcal X}\|_F^2
-={}&
 \|\mathcal X\|_F^2
--2\langle\mathcal X,\hat{\mathcal X}\rangle_F
+&=
+\|\mathcal R+\hat{\mathcal X}\|_F^2\\
+&=
+\|\mathcal R\|_F^2
++2\langle\mathcal R,\hat{\mathcal X}\rangle_F
++\|\hat{\mathcal X}\|_F^2\\
+&=
+\|\mathcal R\|_F^2
 +\|\hat{\mathcal X}\|_F^2.
 \end{aligned}
 $$
 
-残差 $\mathcal X-\hat{\mathcal X}$ は射影部分と直交するため
-
-$$
-\langle\mathcal X,\hat{\mathcal X}\rangle_F
-=
-\|\hat{\mathcal X}\|_F^2.
-$$
-
-よって
+したがって、
 
 $$
 \boxed{
@@ -703,15 +1224,75 @@ $$
 }.
 $$
 
-列直交factorはFrobenius normを保つので
+次に、列直交factorをmode productしてもFrobenius normが変わらないことを確認する。
 
 $$
+\mathcal Y
+=
+\mathcal G\times_nU^{(n)}
+$$
+
+なら、
+
+$$
+Y_{(n)}
+=
+U^{(n)}G_{(n)}.
+$$
+
+したがって、
+
+$$
+\begin{aligned}
+\|\mathcal Y\|_F^2
+&=
+\|Y_{(n)}\|_F^2\\
+&=
+\operatorname{tr}
+\left[
+(U^{(n)}G_{(n)})^{\mathsf T}
+(U^{(n)}G_{(n)})
+\right]\\
+&=
+\operatorname{tr}
+\left[
+G_{(n)}^{\mathsf T}
+U^{(n)\mathsf T}U^{(n)}
+G_{(n)}
+\right]\\
+&=
+\operatorname{tr}
+\left[
+G_{(n)}^{\mathsf T}G_{(n)}
+\right]\\
+&=
+\|\mathcal G\|_F^2.
+\end{aligned}
+$$
+
+これを各active modeへ順に適用すると、
+
+$$
+\boxed{
 \|\hat{\mathcal X}\|_F
 =
-\|\mathcal G\|_F.
+\|\mathcal G\|_F
+}.
 $$
 
-したがって
+よって、
+
+$$
+\boxed{
+\|\mathcal X-\hat{\mathcal X}\|_F^2
+=
+\|\mathcal X\|_F^2
+-
+\|\mathcal G\|_F^2
+}.
+$$
+
+$\|\mathcal X\|_F^2$ は固定なので、
 
 $$
 \boxed{
@@ -721,13 +1302,21 @@ $$
 }.
 $$
 
+これが「HOOIは射影後coreへできるだけ多くのFrobenius energyを残すようにfactorを更新する」と読める理由である。
+
 ---
 
-## 12. HOOIの1 factor更新
+## 14. HOOIの1 factor更新
 
-更新対象をmode $n$ とする。
+更新対象をmode
 
-active mode集合を $\mathcal M$ とすれば、更新対象以外を現在factorで射影する。
+$$
+n\in\mathcal M
+$$
+
+とする。
+
+更新対象以外を現在factorで射影する。
 
 $$
 \boxed{
@@ -742,26 +1331,45 @@ $$
 mode $n$ unfoldingを
 
 $$
-Z=Z_{(n)}^{(n)}
+Z
+=Z_{(n)}^{(n)}
 $$
 
 と書く。
 
-候補factor $U$ による最終射影のcore unfoldingは
+候補factorを
 
 $$
+U
+\in
+\mathbb R^{I_n\times R_n},
+\qquad
+U^{\mathsf T}U=I_{R_n}
+$$
+
+とする。
+
+このfactorまで適用したcoreのmode-$n$ unfoldingは
+
+$$
+\boxed{
 G_{(n)}
-=U^{\mathsf T}Z.
+=U^{\mathsf T}Z
+}.
 $$
 
-したがって局所問題は
+前節より、他factorを固定した局所問題は
 
 $$
-\max_{U^{\mathsf T}U=I}
-\|U^{\mathsf T}Z\|_F^2.
+\boxed{
+\max_{U^{\mathsf T}U=I_{R_n}}
+\|U^{\mathsf T}Z\|_F^2
+}
 $$
 
-trace表示すると
+である。
+
+Frobenius normをtraceへ変形する。
 
 $$
 \begin{aligned}
@@ -769,28 +1377,74 @@ $$
 &=
 \operatorname{tr}
 \left[
-(U^{\mathsf T}Z)(U^{\mathsf T}Z)^{\mathsf T}
+(U^{\mathsf T}Z)
+(U^{\mathsf T}Z)^{\mathsf T}
 \right]\\
 &=
 \operatorname{tr}
-(U^{\mathsf T}ZZ^{\mathsf T}U).
+\left[
+U^{\mathsf T}ZZ^{\mathsf T}U
+\right].
 \end{aligned}
 $$
+
+したがって、
+
+$$
+\boxed{
+\max_{U^{\mathsf T}U=I_{R_n}}
+\operatorname{tr}
+\left(
+U^{\mathsf T}ZZ^{\mathsf T}U
+\right)
+}
+$$
+
+を解けばよい。
 
 SVDを
 
 $$
-Z=Q\Sigma V^{\mathsf T}
+Z
+=Q\Sigma V^{\mathsf T}
 $$
 
-とすると
+とすると、
 
 $$
+\begin{aligned}
 ZZ^{\mathsf T}
-=Q\Sigma\Sigma^{\mathsf T}Q^{\mathsf T}.
+&=
+Q\Sigma V^{\mathsf T}
+V\Sigma^{\mathsf T}Q^{\mathsf T}\\
+&=
+Q\Sigma\Sigma^{\mathsf T}Q^{\mathsf T}.
+\end{aligned}
 $$
 
-したがって、最大の $R_n$ 個の固有値に対応する $Q$ の列を取ればよい。
+したがって $ZZ^{\mathsf T}$ の固有ベクトルは $Q$ の列で、固有値は
+
+$$
+\sigma_1^2\ge\sigma_2^2\ge\cdots\ge0
+$$
+
+である。
+
+Rayleigh–Ritz / Ky Fanの最大化原理から、$R_n$ 次元直交部分空間でtraceを最大にするには、最大の $R_n$ 個の固有値に対応する固有ベクトルを選べばよい。
+
+よって、
+
+$$
+\boxed{
+U^{(n)}
+\leftarrow
+\begin{bmatrix}
+q_1&q_2&\cdots&q_{R_n}
+\end{bmatrix}
+}
+$$
+
+すなわち、
 
 $$
 \boxed{
@@ -798,7 +1452,9 @@ U^{(n)}
 \leftarrow
 \operatorname{top\text{-}}R_n
 \operatorname{leftSVD}
-(Z_{(n)}^{(n)})
+\left(
+Z_{(n)}^{(n)}
+\right)
 }.
 $$
 
@@ -810,9 +1466,11 @@ U_new = Q[:, :R_n]
 
 である。
 
+ここで重要なのは、**更新対象自身の古いfactorはprojectionへ入れず、他factorだけを固定して対象modeの最適部分空間を再計算する**ことである。
+
 ---
 
-## 13. Tucker-2 HOOIを $t\rightarrow t+1$ で追う
+## 15. Tucker-2 HOOIを $t\rightarrow t+1$ で追う
 
 初期値はHOSVD。
 
@@ -822,47 +1480,111 @@ U_{out}^{(0)},
 U_{in}^{(0)}.
 $$
 
-### 13.1 $U_{out}$ 更新
+### 15.1 $U_{out}$ 更新
+
+iteration $t$ の入力factorを使って、
 
 $$
+\boxed{
 Z_{out}^{(t)}
 =
 W\times_1
-(U_{in}^{(t)})^{\mathsf T}.
+(U_{in}^{(t)})^{\mathsf T}
+}
 $$
 
+を作る。
+
+shapeは
+
 $$
+(C_{out},C_{in},K_h,K_w)
+\rightarrow
+(C_{out},R_{in},K_h,K_w).
+$$
+
+mode 0 unfoldingは
+
+$$
+(Z_{out}^{(t)})_{(0)}
+\in
+\mathbb R^{C_{out}\times(R_{in}K_hK_w)}.
+$$
+
+その上位左特異ベクトルを取り、
+
+$$
+\boxed{
 U_{out}^{(t+1)}
 =
 \operatorname{top\text{-}}R_{out}
 \operatorname{leftSVD}
-\left[(Z_{out}^{(t)})_{(0)}\right].
+\left[
+(Z_{out}^{(t)})_{(0)}
+\right]
+}
 $$
 
-### 13.2 $U_{in}$ 更新
+と更新する。
 
-同じsweep内で更新済みの $U_{out}^{(t+1)}$ を使う。
+### 15.2 $U_{in}$ 更新
+
+同じsweep内で**更新済み**の
 
 $$
+U_{out}^{(t+1)}
+$$
+
+を使う。
+
+$$
+\boxed{
 Z_{in}^{(t)}
 =
 W\times_0
-(U_{out}^{(t+1)})^{\mathsf T}.
+(U_{out}^{(t+1)})^{\mathsf T}
+}
 $$
 
+shapeは
+
 $$
+(C_{out},C_{in},K_h,K_w)
+\rightarrow
+(R_{out},C_{in},K_h,K_w).
+$$
+
+mode 1 unfoldingは
+
+$$
+(Z_{in}^{(t)})_{(1)}
+\in
+\mathbb R^{C_{in}\times(R_{out}K_hK_w)}.
+$$
+
+したがって、
+
+$$
+\boxed{
 U_{in}^{(t+1)}
 =
 \operatorname{top\text{-}}R_{in}
 \operatorname{leftSVD}
-\left[(Z_{in}^{(t)})_{(1)}\right].
+\left[
+(Z_{in}^{(t)})_{(1)}
+\right]
+}
 $$
+
+と更新する。
 
 この最新factorを同一sweepで使う更新が、現在srcのGauss-Seidel型 `hooi_sweep()` に対応する。
 
 ---
 
-## 14. core・再構成・error
+## 16. core・再構成・error
+
+1 sweep後のfactorからcoreを作る。
 
 $$
 \boxed{
@@ -874,6 +1596,8 @@ W
 }
 $$
 
+再構成は
+
 $$
 \boxed{
 \hat W^{(t+1)}
@@ -883,6 +1607,8 @@ G^{(t+1)}
 \times_1U_{in}^{(t+1)}
 }
 $$
+
+である。
 
 relative Frobenius errorは
 
@@ -898,9 +1624,27 @@ e_{t+1}
 }.
 $$
 
+したがって1 sweepは
+
+```text
+U_out^(t), U_in^(t)
+↓
+U_out^(t+1) を更新
+↓
+新 U_out^(t+1) を使って U_in^(t+1) を更新
+↓
+G^(t+1)
+↓
+W_hat^(t+1)
+↓
+e_(t+1)
+```
+
+という一続きの処理になる。
+
 ---
 
-## 15. 収束判定
+## 17. 収束判定
 
 単純な絶対差なら
 
@@ -908,9 +1652,19 @@ $$
 |e_t-e_{t-1}|<\mathrm{tol}
 $$
 
-である。
+で止められる。
 
-現在srcでは
+相対改善だけを見る案なら、
+
+$$
+\frac{|e_t-e_{t-1}|}
+{\max(|e_{t-1}|,\epsilon)}
+<\mathrm{tol}
+$$
+
+と書ける。
+
+現在srcでは絶対許容と相対許容を合わせて
 
 $$
 \boxed{
@@ -923,6 +1677,16 @@ $$
 $$
 
 を使う。
+
+右辺は
+
+```text
+絶対的にこれ以下なら停止
++
+現在のerrorスケールに比例する許容
+```
+
+を合わせたものになる。
 
 例えば
 
@@ -938,16 +1702,23 @@ $$
 e_{t-1}\approx0.44
 $$
 
-なら右辺は
+なら、
 
 $$
-10^{-8}+10^{-5}\cdot0.44
-\approx4.41\times10^{-6}.
+\begin{aligned}
+\varepsilon_{abs}
++
+\varepsilon_{rel}|e_{t-1}|
+&=
+10^{-8}+10^{-5}\cdot0.44\\
+&=10^{-8}+4.4\times10^{-6}\\
+&=4.41\times10^{-6}.
+\end{aligned}
 $$
 
 ---
 
-## 16. 実験値を式で確認する
+## 18. 実験値を式で確認する
 
 balanced rank $(32,16)$ では
 
@@ -962,24 +1733,34 @@ $$
 絶対改善量は
 
 $$
+\begin{aligned}
 \Delta e
-=0.449042-0.442504
-=0.006538.
+&=e_{HOSVD}-e_{HOOI}\\
+&=0.449042-0.442504\\
+&=0.006538.
+\end{aligned}
 $$
 
 HOSVD error基準の相対改善は
 
 $$
-\frac{0.006538}{0.449042}
-\approx0.01456
-\approx1.46\%.
+\begin{aligned}
+\frac{\Delta e}{e_{HOSVD}}
+&=
+\frac{0.006538}{0.449042}\\
+&\approx0.01456\\
+&\approx1.46\%.
+\end{aligned}
 $$
 
 一方、圧縮直後validation accuracyは
 
 $$
+\begin{aligned}
 0.6280-0.6202
-=0.0078
+&=0.0078\\
+&=0.78\text{ percentage point}
+\end{aligned}
 $$
 
 だけHOSVDの方が高かった。
@@ -998,31 +1779,38 @@ $$
 
 ---
 
-## 17. fine-tuning前後
+## 19. fine-tuning前後
 
 同条件比較ではtest accuracyが
 
 $$
+\begin{aligned}
 0.7555-0.7508
-=0.0047
+&=0.0047\\
+&=0.47\text{ percentage point}
+\end{aligned}
 $$
 
 だけHOOI初期化側で高かった。
 
-これは0.47 percentage pointだが、seed 0の1runだけなので統計的優位性とはしない。
+ただしseed 0の1runだけなので統計的優位性とはしない。
 
 weight errorはHOSVDで
 
 $$
+\begin{aligned}
 0.483660-0.449042
-=0.034618
+&=0.034618,
+\end{aligned}
 $$
 
-増え、HOOIで
+HOOIで
 
 $$
+\begin{aligned}
 0.481255-0.442504
-=0.038751
+&=0.038751
+\end{aligned}
 $$
 
 増えた。
@@ -1035,37 +1823,46 @@ $$
 \min\|W-\hat W\|_F
 $$
 
-ではなくtask lossを最適化していることと整合する。
+を解いているのではなく、分類task lossを勾配法で最適化していることと整合する。
 
 ---
 
-## 18. このノートの結論
+## 20. このノートの結論
 
 ```text
 unfold
 → modeを行方向へ出す
-→ shapeを確認
+→ shape / 要素数を確認
 
 mode product
+→ 要素表示
 → Y_(n)=A X_(n)
 → foldして対象modeだけ置換
 
+Tucker
+→ factor^Tでrank空間へ射影
+→ core
+→ factorで元空間へ再構成
+
 HOSVD
-→ 各modeを元Tensorから独立にSVD
+→ 各modeを元Tensorから独立にunfold
+→ SVD
 → top-R left singular vectors
 → Pythonでは [:, :R]
-→ factor^Tでcore
-→ factorで再構成
+→ 元Tensorをfactor^Tで射影してcore
 
 Tucker-2
 → C_in → R_in → R_out → C_out
 → 1x1 → kxk → 1x1
+→ 3式を代入するとeffective weightへ戻る
 
 HOOI
 → HOSVD初期化
 → 他factorでproject
 → target modeをunfold
-→ local objectiveをSVDで最適化
+→ core norm最大化の局所問題
+→ trace最大化
+→ top-R left singular vectors
 → 同一sweepでは最新factorを使用
 → core / reconstruction / error
 → convergence
