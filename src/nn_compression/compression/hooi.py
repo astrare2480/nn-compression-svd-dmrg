@@ -27,6 +27,7 @@ from .tucker_validation import (
     validate_max_iter,
     validate_mode_index,
     validate_non_negative_tolerance,
+    validate_real_dtype,
     validate_tucker_ranks,
 )
 
@@ -54,6 +55,7 @@ def _validate_hooi_inputs(
 ) -> None:
     """HOOI 入出力の mode / rank / factor shape を検証する。"""
     validate_tensor_ndim_at_least_2(X, name="X")
+    validate_real_dtype(X, name="X")
     if not isinstance(ranks, Mapping):
         raise TypeError(
             f"ranks は Mapping である必要があります: {type(ranks)!r}"
@@ -183,6 +185,7 @@ def core_from_factors(
     ``core = X ×_0 U_0^T ×_1 U_1^T × ...``。
     各 mode で元テンソルの dimension を rank まで落とした低 rank core になる。
     """
+    validate_real_dtype(X, name="X")
     core = X
     for mode, U in factors.items():
         core = mode_dot(core, U.T, mode)
