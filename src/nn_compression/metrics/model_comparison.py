@@ -305,35 +305,36 @@ def benchmark_inference_print(
     input_batch=None,
 ):
     """圧縮前後の平均推論時間を、同じ入力バッチで測定して返す。"""
-    if input_batch is None:
-        input_batch = take_inference_batch(data_loader)
-    baseline_details = benchmark_inference(
-        baseline_model,
-        device=device,
-        warmup=warmup,
-        repeats=repeats,
-        input_batch=input_batch,
-        return_details=True,
-    )
-    compressed_details = benchmark_inference(
-        compressed_model,
-        device=device,
-        warmup=warmup,
-        repeats=repeats,
-        input_batch=input_batch,
-        return_details=True,
-    )
-    if verbose:
-        print(
-            "batch_size:",
-            baseline_details["batch_size"],
-            "input_shape:",
-            baseline_details["input_shape"],
-            "warmup:",
-            warmup,
-            "repeats:",
-            repeats,
+    with _preserve_training_mode(baseline_model, compressed_model):
+        if input_batch is None:
+            input_batch = take_inference_batch(data_loader)
+        baseline_details = benchmark_inference(
+            baseline_model,
+            device=device,
+            warmup=warmup,
+            repeats=repeats,
+            input_batch=input_batch,
+            return_details=True,
         )
-        print(f"Baseline: {baseline_details['time_ms']:.3f} ms/batch")
-        print(f"Compressed: {compressed_details['time_ms']:.3f} ms/batch")
-    return baseline_details["time_s"], compressed_details["time_s"]
+        compressed_details = benchmark_inference(
+            compressed_model,
+            device=device,
+            warmup=warmup,
+            repeats=repeats,
+            input_batch=input_batch,
+            return_details=True,
+        )
+        if verbose:
+            print(
+                "batch_size:",
+                baseline_details["batch_size"],
+                "input_shape:",
+                baseline_details["input_shape"],
+                "warmup:",
+                warmup,
+                "repeats:",
+                repeats,
+            )
+            print(f"Baseline: {baseline_details['time_ms']:.3f} ms/batch")
+            print(f"Compressed: {compressed_details['time_ms']:.3f} ms/batch")
+        return baseline_details["time_s"], compressed_details["time_s"]

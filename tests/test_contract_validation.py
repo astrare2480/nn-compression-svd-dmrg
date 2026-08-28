@@ -27,6 +27,7 @@ from nn_compression.compression.tucker_validation import validate_max_iter
 from nn_compression.metrics import (
     agreement,
     benchmark_inference,
+    benchmark_inference_print,
     collect_compression_metrics,
     compressed_conv2d_macs,
     estimate_conv2d_macs,
@@ -164,6 +165,13 @@ def test_hosvd_rejects_unfolding_impossible_rank():
     X = torch.randn(100, 2)
     with pytest.raises(ValueError):
         hosvd(X, {0: 50})
+
+
+def test_tucker2_decompose_rejects_unfolding_impossible_rank_out():
+    """Tucker-2入口を通過後、generic Tucker validationで拒否される rank。"""
+    weight = torch.randn(100, 2, 3, 3)
+    with pytest.raises(ValueError):
+        tucker2_decompose_conv_weight(weight, rank_out=50, rank_in=2)
 
 
 @pytest.mark.parametrize("max_iter", [0, 1])
@@ -536,6 +544,76 @@ def test_benchmark_inference_restores_training_mode():
         input_batch=batch,
     )
     assert model.training is True
+
+
+def test_benchmark_inference_print_restores_training_mode_when_train():
+    baseline = nn.Linear(4, 3)
+    compressed = nn.Linear(4, 3)
+    baseline.train(True)
+    compressed.train(True)
+    batch = torch.randn(2, 4)
+    loader = _metric_loader()
+    benchmark_inference_print(
+        baseline,
+        compressed,
+        loader,
+        torch.device("cpu"),
+        verbose=False,
+        warmup=0,
+        repeats=1,
+        input_batch=batch,
+    )
+    assert baseline.training is True
+    assert compressed.training is True
+
+
+def test_benchmark_inference_print_restores_training_mode_when_eval():
+    baseline = nn.Linear(4, 3)
+    compressed = nn.Linear(4, 3)
+    baseline.eval()
+    compressed.eval()
+    batch = torch.randn(2, 4)
+    loader = _metric_loader()
+    benchmark_inference_print(
+        baseline,
+        compressed,
+        loader,
+        torch.device("cpu"),
+        verbose=False,
+        warmup=0,
+        repeats=1,
+        input_batch=batch,
+    )
+    assert baseline.training is False
+    assert compressed.training is False
+
+
+def test_benchmark_inference_print_restores_training_mode_on_exception():
+    from unittest.mock import patch
+
+    baseline = nn.Linear(4, 3)
+    compressed = nn.Linear(4, 3)
+    baseline.train(True)
+    compressed.train(True)
+    batch = torch.randn(2, 4)
+    loader = _metric_loader()
+    with patch(
+        "nn_compression.metrics.model_comparison.benchmark_inference",
+        side_effect=RuntimeError("benchmark failed"),
+    ):
+        with pytest.raises(RuntimeError, match="benchmark failed"):
+            benchmark_inference_print(
+                baseline,
+                compressed,
+                loader,
+                torch.device("cpu"),
+                verbose=False,
+                warmup=0,
+                repeats=1,
+                input_batch=batch,
+            )
+    assert baseline.training is True
+    assert compressed.training is True
 
 
 def test_agreement_rejects_empty_loader():
