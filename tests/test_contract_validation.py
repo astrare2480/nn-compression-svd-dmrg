@@ -16,6 +16,7 @@ from nn_compression.compression import (
     hooi_sweep,
     hosvd,
     parameter_ratio,
+    reconstruct_tucker,
     tucker2_decompose_conv_weight,
     tucker2_effective_weight,
     tucker2_hooi,
@@ -30,6 +31,7 @@ from nn_compression.metrics import (
     benchmark_inference_print,
     collect_compression_metrics,
     compressed_conv2d_macs,
+    compressed_linear_macs,
     estimate_conv2d_macs,
     logits_rmse,
     relative_frobenius_error,
@@ -361,6 +363,42 @@ def test_hosvd_allows_empty_ranks():
     assert factors == {}
 
 
+# --- 実数 dtype contract（複素数は明示的に未対応） ---
+
+
+def test_hosvd_rejects_complex_dtype():
+    X = torch.randn(3, 4, 2, dtype=torch.complex128)
+    with pytest.raises(TypeError, match="複素数"):
+        hosvd(X, {0: 2, 1: 2, 2: 2})
+
+
+def test_hooi_rejects_complex_dtype():
+    X = torch.randn(3, 4, 2, dtype=torch.complex128)
+    with pytest.raises(TypeError, match="複素数"):
+        hooi(X, {0: 2, 1: 2, 2: 2}, max_iter=1)
+
+
+def test_hooi_sweep_rejects_complex_dtype():
+    X_real = torch.randn(3, 4, 2)
+    _, factors_real = hosvd(X_real, {0: 2, 1: 2})
+    X = X_real.to(torch.complex128)
+    factors = {m: U.to(torch.complex128) for m, U in factors_real.items()}
+    with pytest.raises(TypeError, match="複素数"):
+        hooi_sweep(X, factors, {0: 2, 1: 2})
+
+
+def test_hosvd_full_rank_reconstruction_unaffected_by_complex_guard():
+    """複素数を拒否する guard 追加後も、実数 full-rank 再構成精度は変わらない。"""
+    torch.manual_seed(0)
+    X = torch.randn(3, 4, 2, dtype=torch.float64)
+    core, factors = hosvd(X, {0: 3, 1: 4, 2: 2})
+    X_hat = reconstruct_tucker(core, factors)
+    relative_error = (
+        torch.linalg.vector_norm(X - X_hat) / torch.linalg.vector_norm(X)
+    ).item()
+    assert relative_error < 1e-10
+
+
 def test_hooi_sweep_uses_gauss_seidel_update():
     """mode 0 更新後の factor を mode 1 更新に使う（Jacobi 型と区別できる）。"""
     torch.manual_seed(42)
@@ -503,6 +541,51 @@ def test_estimate_conv2d_macs_rejects_grouped_conv():
 def test_baseline_conv2d_macs_allows_grouped_conv():
     from nn_compression.metrics import conv2d_macs
 
+    conv = nn.Conv2d(4, 8, kernel_size=3, padding=1, groups=2)
+    assert conv2d_macs(conv, 8, 8) > 0
+
+
+# --- compressed MACs rank contract (SVD 側と統一) ---
+
+
+@pytest.mark.parametrize("rank", [True, False, 0, -1, 5])
+def test_compressed_linear_macs_rejects_invalid_rank(rank):
+    # in_features=4, out_features=3 -> max_rank = min(4, 3) = 3
+    with pytest.raises((TypeError, ValueError)):
+        compressed_linear_macs(4, 3, rank)
+
+
+def test_compressed_linear_macs_accepts_boundary_rank():
+    assert compressed_linear_macs(4, 3, 3) == 4 * 3 + 3 * 3
+
+
+@pytest.mark.parametrize("rank", [True, False, 0, -1, 99])
+def test_compressed_conv2d_macs_rejects_invalid_rank(rank):
+    conv = nn.Conv2d(3, 5, kernel_size=3)
+    # out_ch=5, in_ch*kH*kW=27 -> max_rank = min(5, 27) = 5
+    with pytest.raises((TypeError, ValueError)):
+        compressed_conv2d_macs(conv, rank=rank, out_h=8, out_w=8)
+
+
+def test_compressed_conv2d_macs_accepts_boundary_rank():
+    conv = nn.Conv2d(3, 5, kernel_size=3)
+    macs = compressed_conv2d_macs(conv, rank=5, out_h=8, out_w=8)
+    assert macs == 8 * 8 * 5 * 3 * 9 + 8 * 8 * 5 * 5
+
+
+@pytest.mark.parametrize("rank", [True, 0, -1, 99])
+def test_estimate_conv2d_macs_rejects_invalid_rank(rank):
+    conv = nn.Conv2d(3, 5, kernel_size=3)
+    with pytest.raises((TypeError, ValueError)):
+        estimate_conv2d_macs(conv, rank=rank, out_hw=(8, 8), verbose=False)
+
+
+def test_baseline_linear_conv_macs_unaffected_by_rank_validation():
+    # rank validation は compressed 側のみ。baseline はrankを取らない。
+    from nn_compression.metrics import conv2d_macs, linear_macs
+
+    layer = nn.Linear(4, 3)
+    assert linear_macs(layer) == 12
     conv = nn.Conv2d(4, 8, kernel_size=3, padding=1, groups=2)
     assert conv2d_macs(conv, 8, 8) > 0
 

@@ -18,7 +18,11 @@ import torch
 from ..tensor.operations import mode_dot, unfold
 from ..tensor.validation import validate_tensor_ndim_at_least_2
 from .svd import truncated_svd
-from .tucker_validation import validate_positive_shape, validate_tucker_ranks
+from .tucker_validation import (
+    validate_positive_shape,
+    validate_real_dtype,
+    validate_tucker_ranks,
+)
 
 
 def hosvd(
@@ -42,6 +46,7 @@ def hosvd(
     アルゴリズムになるため、この順序を変えない。
     """
     validate_tensor_ndim_at_least_2(X, name="X")
+    validate_real_dtype(X, name="X")
     validated_ranks = validate_tucker_ranks(
         tuple(X.shape), ranks, allow_empty=True
     )

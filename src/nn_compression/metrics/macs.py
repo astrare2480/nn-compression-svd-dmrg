@@ -3,6 +3,32 @@
 Linear は ``in * out``、Conv2d は出力空間サイズ × カーネル積和で見積もる。
 """
 
+import operator
+
+
+def _coerce_macs_rank(rank: int, max_rank: int, *, name: str = "rank") -> int:
+    """compressed MACs 計算用に rank を整数化し、``1 <= rank <= max_rank`` を検証する。
+
+    SVD 側の ``coerce_rank`` と同じ contract（bool 拒否・範囲チェック）を
+    ここでも独立に確認する。実際に生成できない分解（rank=0 / 負 / 元の
+    行列の最大 rank 超過）に対して、もっともらしい MACs 値を返さない。
+    metrics モジュールが compression パッケージへ依存しないよう、
+    ``coerce_rank`` を import せずここで小さく再実装する。
+    """
+    if isinstance(rank, bool):
+        raise TypeError(
+            f"{name} は bool 以外の整数である必要があります: {rank!r}"
+        )
+    try:
+        rank_int = operator.index(rank)
+    except TypeError as exc:
+        raise TypeError(f"{name} は整数である必要があります: {rank!r}") from exc
+    if not 1 <= rank_int <= max_rank:
+        raise ValueError(
+            f"{name} は 1〜{max_rank} の範囲で指定してください: {rank_int}"
+        )
+    return rank_int
+
 
 def linear_macs(layer) -> int:
     """1サンプルを Linear 層へ通すときの MACs を返す。
@@ -19,7 +45,12 @@ def compressed_linear_macs(in_features: int, out_features: int, rank: int) -> in
 
     元の ``in -> out`` を ``in -> r -> out`` に置き換えるため、
     演算量は ``in * r + r * out`` で見積もる。
+    rank は SVD 側と同じ contract（bool 拒否、``1 <= rank <=
+    min(in_features, out_features)``）で検証する。
     """
+    rank = _coerce_macs_rank(
+        rank, min(in_features, out_features), name="rank"
+    )
     return in_features * rank + rank * out_features
 
 
@@ -50,9 +81,17 @@ def compressed_conv2d_macs(conv, rank: int, out_h: int, out_w: int) -> int:
     1 層目: ``Conv(in -> rank, kH×kW)``
     2 層目: ``Conv(rank -> out, 1×1)``
     空間サイズは分解前の出力と同じ。
+    rank は SVD 側と同じ contract（bool 拒否、``1 <= rank <=
+    min(out_ch, in_ch * kH * kW)``）で検証する。
     """
     _reject_grouped_conv_for_compressed(conv, context="compressed_conv2d_macs")
     out_ch, in_ch, k_h, k_w = conv.weight.shape
+    rank = _coerce_macs_rank(rank, min(out_ch, in_ch * k_h * k_w), name="rank")
+    if out_h <= 0 or out_w <= 0:
+        raise ValueError(
+            f"out_h/out_w は正の整数である必要があります: "
+            f"out_h={out_h}, out_w={out_w}"
+        )
     first_layer_macs = out_h * out_w * rank * in_ch * k_h * k_w
     second_layer_macs = out_h * out_w * out_ch * rank
     return first_layer_macs + second_layer_macs
