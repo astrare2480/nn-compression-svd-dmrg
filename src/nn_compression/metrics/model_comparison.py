@@ -8,24 +8,46 @@
 
 from __future__ import annotations
 
+import operator
 import time
 from contextlib import contextmanager
 
 import torch
 from torch.utils.data import DataLoader, RandomSampler
 
-from ..training.loops import evaluate
+from ..training.loops import _preserve_module_training_modes, evaluate
 
 
 @contextmanager
 def _preserve_training_mode(*models):
-    """metrics 実行前後で model.training を復元する。"""
-    states = [model.training for model in models]
-    try:
+    """metrics 実行前後で、root だけでなく全 submodule の training を復元する。
+
+    以前は ``model.train(state)`` で root の状態だけ保存・復元していたが、
+    これは全 submodule へ再帰的に同じ状態を設定してしまうため、frozen
+    BatchNorm のように個別に eval() にしていた submodule の状態を壊して
+    いた。training.loops 側の共通 helper に処理を委譲し、root/submodule
+    双方を個別に復元する。
+    """
+    with _preserve_module_training_modes(*models):
         yield
-    finally:
-        for model, state in zip(models, states):
-            model.train(state)
+
+
+def _coerce_int_scalar(value, *, name: str) -> int:
+    """warmup / repeats 用に、bool を拒否しつつ整数へ変換する（範囲チェックは呼び出し側）。
+
+    compression 側の ``coerce_integer_scalar`` と同じ contract
+    （bool 拒否）だが、``metrics`` パッケージが ``compression`` へ
+    依存すると循環 import になる（``compression.hooi`` が
+    ``metrics`` を import している）ため、ここでも小さく再実装する。
+    """
+    if isinstance(value, bool):
+        raise TypeError(
+            f"{name} は bool 以外の整数である必要があります: {value!r}"
+        )
+    try:
+        return operator.index(value)
+    except TypeError as exc:
+        raise TypeError(f"{name} は整数である必要があります: {value!r}") from exc
 
 
 def count_parameters(model):
@@ -163,6 +185,8 @@ def benchmark_inference(
     """
     if device is None:
         raise TypeError("device が必要です。")
+    warmup = _coerce_int_scalar(warmup, name="warmup")
+    repeats = _coerce_int_scalar(repeats, name="repeats")
     if warmup < 0:
         raise ValueError(f"warmup は 0 以上にしてください: {warmup}")
     if repeats <= 0:
@@ -175,8 +199,7 @@ def benchmark_inference(
     else:
         images = _as_input_batch(input_batch)
 
-    was_training = model.training
-    try:
+    with _preserve_training_mode(model):
         model.eval()
         images = images.to(device)
 
@@ -193,8 +216,6 @@ def benchmark_inference(
 
         _synchronize(device)
         time_s = (time.perf_counter() - start) / repeats
-    finally:
-        model.train(was_training)
 
     if not return_details:
         return time_s

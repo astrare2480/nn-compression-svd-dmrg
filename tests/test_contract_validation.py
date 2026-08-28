@@ -37,7 +37,7 @@ from nn_compression.metrics import (
     relative_frobenius_error,
 )
 from nn_compression.tensor import fold, mode_dot, unfold
-from nn_compression.training import evaluate
+from nn_compression.training import evaluate, train_one_epoch
 
 
 def _conv2d(**kwargs) -> nn.Conv2d:
@@ -783,6 +783,181 @@ def test_evaluate_rejects_empty_loader():
     )
     with pytest.raises(ValueError, match="空"):
         evaluate(model, empty, nn.CrossEntropyLoss(), torch.device("cpu"))
+
+
+# --- submodule 個別の training 状態復元 ---
+
+
+def _mixed_state_model() -> nn.Module:
+    """root=train() だが、内部の BatchNorm だけ eval() にしたモデル。"""
+    model = nn.Sequential(
+        nn.Linear(4, 4),
+        nn.BatchNorm1d(4),
+        nn.Linear(4, 3),
+    )
+    model.train()
+    model[1].eval()  # frozen BatchNorm を想定
+    return model
+
+
+def _capture_training_states(model: nn.Module) -> list[bool]:
+    return [module.training for module in model.modules()]
+
+
+def test_evaluate_restores_all_submodule_training_states_after_success():
+    model = _mixed_state_model()
+    before = _capture_training_states(model)
+    loader = _metric_loader()
+    evaluate(model, loader, nn.CrossEntropyLoss(), torch.device("cpu"))
+    assert _capture_training_states(model) == before
+
+
+def test_evaluate_restores_all_submodule_training_states_on_exception():
+    model = _mixed_state_model()
+    before = _capture_training_states(model)
+
+    def _broken_forward(x):
+        raise RuntimeError("forward failed")
+
+    model.forward = _broken_forward
+    loader = _metric_loader()
+    with pytest.raises(RuntimeError, match="forward failed"):
+        evaluate(model, loader, nn.CrossEntropyLoss(), torch.device("cpu"))
+    assert _capture_training_states(model) == before
+
+
+def test_evaluate_submodule_training_states_unchanged_when_root_eval():
+    model = _mixed_state_model()
+    model.eval()
+    model[0].train()  # root=eval だが一部 submodule だけ train() にする
+    before = _capture_training_states(model)
+    loader = _metric_loader()
+    evaluate(model, loader, nn.CrossEntropyLoss(), torch.device("cpu"))
+    assert _capture_training_states(model) == before
+
+
+def test_agreement_restores_all_submodule_training_states():
+    baseline = _mixed_state_model()
+    compressed = _mixed_state_model()
+    before_baseline = _capture_training_states(baseline)
+    before_compressed = _capture_training_states(compressed)
+    loader = _metric_loader()
+    agreement(baseline, compressed, loader, torch.device("cpu"))
+    assert _capture_training_states(baseline) == before_baseline
+    assert _capture_training_states(compressed) == before_compressed
+
+
+def test_benchmark_inference_restores_all_submodule_training_states():
+    model = _mixed_state_model()
+    before = _capture_training_states(model)
+    batch = torch.randn(4, 4)
+    benchmark_inference(
+        model,
+        device=torch.device("cpu"),
+        warmup=0,
+        repeats=1,
+        input_batch=batch,
+    )
+    assert _capture_training_states(model) == before
+
+
+def test_collect_compression_metrics_restores_all_submodule_training_states():
+    baseline = _mixed_state_model()
+    compressed = _mixed_state_model()
+    before_baseline = _capture_training_states(baseline)
+    before_compressed = _capture_training_states(compressed)
+    loader = _metric_loader()
+    collect_compression_metrics(
+        baseline,
+        compressed,
+        loader,
+        nn.CrossEntropyLoss(),
+        torch.device("cpu"),
+        baseline_acc=0.5,
+        baseline_time_s=0.001,
+        warmup=0,
+        repeats=1,
+    )
+    assert _capture_training_states(baseline) == before_baseline
+    assert _capture_training_states(compressed) == before_compressed
+
+
+# --- train_one_epoch の empty loader contract ---
+
+
+def test_train_one_epoch_rejects_empty_dataloader():
+    model = nn.Linear(4, 3)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    empty = DataLoader(
+        TensorDataset(torch.empty(0, 4), torch.empty(0, dtype=torch.long)),
+        batch_size=4,
+    )
+    with pytest.raises(ValueError, match="空"):
+        train_one_epoch(
+            model, empty, nn.CrossEntropyLoss(), optimizer, torch.device("cpu")
+        )
+
+
+def test_train_one_epoch_rejects_empty_iterable_without_len():
+    model = nn.Linear(4, 3)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    loader = DataLoader(_FeatureIterable(0), batch_size=4)
+    with pytest.raises(ValueError, match="空"):
+        train_one_epoch(
+            model, loader, nn.CrossEntropyLoss(), optimizer, torch.device("cpu")
+        )
+
+
+def test_train_one_epoch_normal_behavior_unaffected():
+    model = nn.Linear(4, 3)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    loader = _metric_loader()
+    avg_loss, accuracy = train_one_epoch(
+        model, loader, nn.CrossEntropyLoss(), optimizer, torch.device("cpu")
+    )
+    assert avg_loss >= 0.0
+    assert 0.0 <= accuracy <= 1.0
+
+
+# --- benchmark_inference の warmup / repeats contract ---
+
+
+@pytest.mark.parametrize(
+    "warmup,repeats",
+    [
+        (False, 1),
+        (-1, 1),
+        (1.5, 1),
+        (1, False),
+        (1, 0),
+        (1, -1),
+        (1, 1.5),
+    ],
+)
+def test_benchmark_inference_rejects_invalid_warmup_repeats(warmup, repeats):
+    model = nn.Linear(4, 3)
+    batch = torch.randn(2, 4)
+    with pytest.raises((TypeError, ValueError)):
+        benchmark_inference(
+            model,
+            device=torch.device("cpu"),
+            warmup=warmup,
+            repeats=repeats,
+            input_batch=batch,
+        )
+
+
+def test_benchmark_inference_accepts_boundary_warmup_and_repeats():
+    model = nn.Linear(4, 3)
+    batch = torch.randn(2, 4)
+    time_s = benchmark_inference(
+        model,
+        device=torch.device("cpu"),
+        warmup=0,
+        repeats=1,
+        input_batch=batch,
+    )
+    assert time_s >= 0.0
 
 
 def test_collect_compression_metrics_preserves_training_modes():
