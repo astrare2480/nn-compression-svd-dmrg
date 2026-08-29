@@ -13,6 +13,8 @@ aliases:
 
 Core API v1はPyPI等へ公開したsemantic versionではなく、このリポジトリ内部の安定化境界である。
 
+Public APIの基本判定は各sub-packageの `__all__` とする。
+
 ---
 
 ## 2. Stability Level
@@ -55,6 +57,7 @@ linear_max_rank
 conv2d_max_rank
 _validate_hooi_inputs
 _preserve_module_training_modes
+_coerce_positive_int_scalar
 _coerce_macs_rank
 _coerce_int_scalar
 ```
@@ -167,6 +170,7 @@ Conv(in -> rank, original kernel/stride/padding/dilation)
 固定するcontract：
 
 - `groups=1` の通常Conv2dのみ
+- rank上限は `min(out_ch, in_ch*kH*kW)`
 - 元biasは2層目
 - 元 `padding_mode` は1層目へ継承
 - device / dtype / requires_grad維持
@@ -255,10 +259,11 @@ compression_factor(
 ) -> float
 ```
 
-`ranks` contract：
+固定するcontract：
 
 ```text
-Mapping
+X / coreは2階以上
+ranksはMapping
 {mode: rank}
 mode = bool以外のint
 rank = bool以外の整数scalar
@@ -266,6 +271,8 @@ rank <= mode-n unfoldingの最大rank
 ```
 
 `hosvd` / count系では空 `{}` をidentity指定として許可する。
+
+`reconstruct_tucker(core,{})` もidentity再構成としてcoreを返すが、core自体は2階以上を要求する。
 
 `hosvd` はfactorを**逐次projectしたcoreではなく、元のXの各unfoldingから独立に求める**。
 
@@ -309,17 +316,19 @@ hooi(
 固定するcontract：
 
 - HOOIの `ranks` は空不可
-- Xは2階以上・実数Tensor
+- `hooi / hooi_sweep / core_from_factors` のXは2階以上・実数Tensor
 - HOSVD初期化
 - `history[0]` はHOSVD初期誤差
 - `max_iter=0` は初期値だけ返す
-- factor keys == rank keys
+- factor keys == rank keys（`hooi_sweep` / `hooi` のvalidation経路）
 - factor shape `(X.shape[mode], rank)`
 - factor dtype/device == X
 - projected unfoldingの実現可能rankを反復前に検証
 - `hooi_sweep` は入力factorsを破壊しない
 - sweepは `ranks` の挿入順
 - toleranceは有限・0以上、bool拒否
+
+`core_from_factors` は単独utilityとしてfactor key集合とranksの完全一致までは検証しない。各factorは `mode_dot` のshape/mode contractに従う。
 
 ---
 
@@ -378,16 +387,33 @@ C_in
 → C_out
 ```
 
+共通contract：
+
 - `groups=1` の通常Conv2d
 - core layerが元stride/padding/dilation/padding_modeを継承
 - biasはoutput projectionのみ
-- `rank_out <= C_out`
-- `rank_in <= C_in`
+- rankはbool以外の整数scalar
+- component builderでは `rank_out <= C_out`, `rank_in <= C_in`
 - componentsはconv.weightとdtype/device一致
 - Module構築後Parameterはleafで元weight storageを共有しない
 - `build_tucker2_conv` は元weightをdetachして初期化
 - Tensor-level `tucker2_hooi` は入力weightをdetachしない
 - `tucker2_effective_weight` は評価用effective weightを返す
+
+### 分解APIの追加rank上限
+
+`tucker2_decompose_conv_weight` / `tucker2_hooi` / `tucker2_hooi_sweep` と、それらを使う `build_tucker2_conv` では、generic HOSVD/HOOI側のmode-unfolding feasibilityも適用される。
+
+4階weight `(C_out,C_in,kH,kW)` では、
+
+```text
+mode 0 max = min(C_out, C_in*kH*kW)
+mode 1 max = min(C_in, C_out*kH*kW)
+```
+
+を超えるrankはrejectする。
+
+`build_tucker2_conv_from_components` は「既に計算されたcomponentsをModuleへ写す」APIなので、channel shape整合を確認し、分解時のunfolding feasibilityを再計算する責務は持たない。
 
 複素dtypeについては「分解API」が実数限定。componentsからのModule構築・再構成utility自体には全関数一律のcomplex guardを置いていない。詳細は [[07_src設計/04_compression設計]]。
 
@@ -583,11 +609,10 @@ factorized_conv2d_macs = compressed_conv2d_macs
 固定する主contract：
 
 - compressed rankはSVDと同じ数学的最大rankを超えない
+- `conv2d_macs / compressed_conv2d_macs / estimate_conv2d_macs` の出力空間sizeはbool以外の正の整数
 - compressed Convはgroups=1のみ
 - baseline `conv2d_macs` はPyTorch weight shapeを使うためgrouped Convも計算可能
 - MACsは理論積和回数でありlatencyではない
-
-`out_h/out_w` の型validationの現状は既知の制約として [[07_src設計/07_既知の制約と拡張方針]] に記載する。
 
 ---
 
@@ -734,6 +759,8 @@ MNISTMLP: fc1, fc2, fc3
 FashionMNISTCNN: conv1, conv2, fc1, fc2
 CIFAR10CNN: conv1, conv2, conv3, fc1, fc2
 ```
+
+`FashionMNISTCNN.inspect_shapes(x=None) -> int` も既存の学習用public methodとして維持する。
 
 新しいarchitectureが必要なら既存classの意味を変更せず、新classまたは新explicit optionを追加する。
 
