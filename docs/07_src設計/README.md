@@ -14,15 +14,19 @@ aliases:
 
 SVD → Tucker / HOSVD / HOOI までの学習・実験・src共通化・contract reviewが一段落した時点を **Core API v1** として区切り、以後のTT/MPS・DMRG実装で既存APIを不用意に壊さないために作成した。
 
-設計書のsource of truthは、作成時点の `main` のsrc実装である。
+設計書作成時のsource baselineは `main` の `49836bc`（src codex rv6）。このbaselineではローカル回帰テスト `252 passed / 0 failed` を確認済み。
+
+設計書作成後のself reviewで、freeze前に残っていた小さなcontract gapだけを追加修正した。
 
 ```text
-src baseline commit: 49836bc
-review state: src codex rv6
-local regression tests: 252 passed / 0 failed
+- Conv MACs の out_h / out_w を正整数contractへ統一
+- reconstruct_tucker / core_from_factors の ndim>=2 contractを統一
+- 上記境界のcontract testを追加
 ```
 
-この設計書を追加する変更自体は `src/` を変更しない。
+HOSVD/HOOI/Tucker-2の中心数式は変更していない。
+
+self review後の追加src/test差分については、GitHub CIが設定されていないため、Core API v1の最終確定前にローカルpytestのgreen確認を必要とする。
 
 ---
 
