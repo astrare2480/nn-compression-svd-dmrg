@@ -4,7 +4,12 @@ import pytest
 import torch
 from torch import nn
 
-from nn_compression.compression import core_from_factors, reconstruct_tucker
+from nn_compression.compression import (
+    core_from_factors,
+    hooi,
+    hosvd,
+    reconstruct_tucker,
+)
 from nn_compression.metrics import (
     benchmark_inference,
     compressed_conv2d_macs,
@@ -90,6 +95,20 @@ def test_benchmark_inference_rejects_tensor_scalar_counts(warmup, repeats):
             repeats=repeats,
             input_batch=torch.randn(1, 2),
         )
+
+
+@pytest.mark.parametrize("dtype", [torch.int64, torch.bool])
+def test_hosvd_rejects_non_floating_real_dtype(dtype):
+    X = torch.ones((3, 4), dtype=dtype)
+    with pytest.raises(TypeError, match="浮動小数点"):
+        hosvd(X, {0: 2})
+
+
+@pytest.mark.parametrize("dtype", [torch.int64, torch.bool])
+def test_hooi_rejects_non_floating_real_dtype_before_linalg(dtype):
+    X = torch.ones((3, 4), dtype=dtype)
+    with pytest.raises(TypeError, match="浮動小数点"):
+        hooi(X, {0: 2}, max_iter=0)
 
 
 def test_reconstruct_tucker_rejects_1d_core_even_without_factors():
