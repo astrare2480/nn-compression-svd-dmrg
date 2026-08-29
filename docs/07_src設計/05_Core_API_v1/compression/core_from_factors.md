@@ -18,12 +18,12 @@ core_from_factors(
 
 ## 引数
 
-- `X`: 2階以上の実数浮動小数点Tensor。
-- `factors`: `{mode: U}`。
+- `X`: coreを求めたい元Tensor。2階以上の実数浮動小数点Tensorで、factorを掛ける前の元dimensionを持つ。
+- `factors`: `{mode: U}`形式の現在のfactor集合。各`U`は元mode dimensionからrank dimensionへの基底を表し、core計算では`U.T`を作用させる。
 
 ## 戻り値
 
-各指定modeを`U.T`でprojectionしたcore Tensor。
+`factors`で指定された各modeを対応rank dimensionへ射影したTucker core Tensor。factor未指定modeは元のdimensionを保つ。
 
 ## 使用場面
 

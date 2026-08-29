@@ -20,13 +20,13 @@ factorize_named_layers(
 
 ## 引数
 
-- `model`: baseline model。
-- `conv_ranks`: `{layer_name: rank}`形式のConv圧縮指定。
-- `linear_ranks`: `{layer_name: rank}`形式のLinear圧縮指定。
+- `model`: 圧縮元となるbaseline model。関数内ではこのmodel自体を変更せず、各指定層の未分解weightを分解元として使う。
+- `conv_ranks`: Conv2dを圧縮する指定。`{layer_name: rank}`形式で、keyはnamed module path、valueはそのConv2dに残すSVD rank。`None`ならConv2dは置換しない。
+- `linear_ranks`: Linearを圧縮する指定。`{layer_name: rank}`形式で、keyはnamed module path、valueはそのLinearに残すSVD rank。`None`ならLinearは置換しない。
 
 ## 戻り値
 
-指定された複数層をfactorized Moduleへ置換したmodel copy。
+指定されたConv2d / Linearだけをfactorized Moduleへ置換した**baselineとは独立なmodel copy**。指定されていない層は`deepcopy`された構造をそのまま保持し、元modelのParameterとは共有しない。
 
 ## 使用場面
 
@@ -52,25 +52,25 @@ CIFAR-10などで複数Convを同時に圧縮するmodel-wide SVD、Conv+Linear�
 
 ```mermaid
 flowchart TD
-    A["baseline model を deepcopy"] --> B{"未処理の conv_ranks がある?"}
-
-    B -- Yes --> C["baseline から対象層を取得"]
-    C --> D{"Conv2d?"}
-    D -- No --> X["TypeError"]
-    D -- Yes --> E["分解して copy 側の同じ path を置換"]
-    E --> B
-
-    B -- No --> F{"未処理の linear_ranks がある?"}
-    F -- Yes --> G["baseline から対象層を取得"]
-    G --> H{"Linear?"}
-    H -- No --> X
-    H -- Yes --> I["分解して copy 側の同じ path を置換"]
-    I --> F
-
-    F -- No --> J["compressed model を返す"]
+    A["baseline model"] --> B["deepcopy して compressed model を作る"]
+    B --> C{"未処理の conv_ranks がある?"}
+    C -- Yes --> D["元 baseline から named Conv2d を取得"]
+    D --> E{"Conv2d?"}
+    E -- No --> X["TypeError"]
+    E -- Yes --> F["factorize_conv2d_layer"]
+    F --> G["copy 側の同 path を置換"]
+    G --> C
+    C -- No --> H{"未処理の linear_ranks がある?"}
+    H -- Yes --> I["元 baseline から named Linear を取得"]
+    I --> J{"Linear?"}
+    J -- No --> X
+    J -- Yes --> K["factorize_linear_layer"]
+    K --> L["copy 側の同 path を置換"]
+    L --> H
+    H -- No --> M["compressed model を返す"]
 ```
 
-この図は、**Conv指定をすべて処理してからLinear指定へ進むこと、各指定層を反復処理すること、型が不正なら異常終了すること**という制御フローを示す。
+この図は、**Conv指定とLinear指定の反復、型判定、異常終了、Convを全件処理してからLinearへ進む制御フロー**を示す。分解APIと置換処理は別工程として残し、処理概要を単に箱へ並べ替えた図にはしない。
 
 ### シーケンス図
 

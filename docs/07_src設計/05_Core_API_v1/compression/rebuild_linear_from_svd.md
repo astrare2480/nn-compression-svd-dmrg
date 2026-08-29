@@ -20,12 +20,14 @@ rebuild_linear_from_svd(
 
 ## 引数
 
-- `U_r`, `S_r`, `Vh_r`: truncated SVD成分。
-- `layer`: shape・bias・device/dtype・trainabilityの基準となる元Linear。
+- `U_r`: truncated SVDの左特異ベクトル。元weightの出力dimensionとrankを結ぶ成分で、shapeは通常`(out_features, rank)`。
+- `S_r`: 残した特異値。各rank成分の強さを持つ1次元Tensorで、shapeは`(rank,)`。
+- `Vh_r`: truncated SVDの右特異ベクトル転置。rankと元weightの入力dimensionを結ぶ成分で、shapeは通常`(rank, in_features)`。
+- `layer`: 再構築先の外形・属性の基準となる元Linear。`in_features/out_features`、bias、device/dtype、`requires_grad`を参照する。
 
 ## 戻り値
 
-元と同じ `in_features/out_features` の新しい`nn.Linear`。
+`U_r @ diag(S_r) @ Vh_r`で再構成した低rank近似weightを持つ、新しい単一`nn.Linear`。入出力dimensionは元`layer`と同じで、元layer自体やParameter storageは変更・共有しない。
 
 ## 使用場面
 

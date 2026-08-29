@@ -18,13 +18,18 @@ compression_factor(
 
 ## 引数
 
-`shape`と`{mode: rank}`。
+- `shape`: 圧縮前Tensorのshape。元Tensorの総要素数と各modeのdimensionを決める。
+- `ranks`: `{mode: rank}`形式のTucker rank指定。keyは圧縮するmode、valueはそのmodeに残すrankで、未指定modeは元dimensionをcoreに残す。
 
 ## 戻り値
+
+元TensorがTucker表現の何倍の要素数を持つかを表す圧縮倍率の`float`。
 
 ```text
 original_element_count / tucker_parameter_count(shape, ranks)
 ```
+
+`1.0`なら要素数は同じ、`2.0`ならTucker表現は元の約1/2、値が大きいほど強く圧縮されている。
 
 ## 使用場面
 

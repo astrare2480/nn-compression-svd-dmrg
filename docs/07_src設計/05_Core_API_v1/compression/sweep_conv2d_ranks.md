@@ -30,11 +30,23 @@ sweep_conv2d_ranks(
 
 ## 引数
 
-`model`, 対象Conv名、rank列、対象Convの出力空間`out_hw`、評価/benchmark条件。
+- `model`: 各rank candidateを作るbaseline model。対象Convはこのmodelの未圧縮layerを正本にする。
+- `layer_name`: SVD rank sweep対象となるConv2dのnamed path。
+- `ranks`: 順番に評価するSVD rank候補。
+- `out_hw`: 対象Convの実際の出力feature map size`(H, W)`。各rankの理論MACs計算に使う。
+- `loader`: candidateのvalidation性能・agreement・logits RMSEを評価するloader。
+- `criterion`: validation loss計算に使うloss関数。
+- `device`: candidate評価とlatency benchmarkを実行するdevice。
+- `baseline_acc`: 圧縮前modelのaccuracy。candidateごとのaccuracy dropの基準。
+- `baseline_time_s`: 圧縮前modelの推論時間。latency比較の基準。
+- `warmup`: latency本計測前のwarmup forward回数。
+- `repeats`: latency平均を求める本計測forward回数。
+- `verbose`: 下位評価APIの表示を有効にするか。
+- `input_batch`: 全rankで共通利用するoptional benchmark入力。指定するとcandidate間で入力batchを固定できる。
 
 ## 戻り値
 
-rank候補ごとのmetrics record list。
+rank候補ごとの`list[dict]`。各recordはgeneric `sweep_layer_ranks()`の共通metricsに加え、対象`layer`、評価した`rank`、retained energy、Conv用MACs情報を持つ。
 
 ## 使用場面
 

@@ -19,11 +19,13 @@ extract_pareto_frontier(
 
 ## 引数
 
-候補DataFrameと、最小化する2列名。
+- `df`: rank sweep等で得た候補全体のDataFrame。各rowを1 candidateとして扱う。
+- `x_column`: Pareto判定の第1目的として使う列名。**小さいほど良い**値であることを前提とする。
+- `y_column`: Pareto判定の第2目的として使う列名。こちらも**小さいほど良い**値であることを前提とする。
 
 ## 戻り値
 
-非支配候補だけを`x_column`昇順へ並べ、indexを振り直した新しいDataFrame。
+`x_column / y_column`の2目的で他候補に支配されていないrowだけを抽出した新しいDataFrame。`x_column`昇順に並べ、indexは0から振り直す。元`df`自体は変更しない。
 
 ## 使用場面
 

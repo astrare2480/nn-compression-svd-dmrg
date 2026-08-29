@@ -19,11 +19,17 @@ estimate_cnn_linear_macs(
 
 ## 引数
 
-CNN model、fc1 rank、表示有無。
+- `model`: `fc1 / fc2`を持つ対象CNN。Linear部のbaseline shapeを読み取る。
+- `fc1_rank`: `fc1`をSVD 2層化するときの中間rank。`fc2`はこのAPIでは圧縮しない。
+- `verbose`: `True`ならbaseline/compressed Linear MACsと削減率を表示する。
 
 ## 戻り値
 
 `(baseline_macs, compressed_macs, compute_reduction_rate)`。
+
+- `baseline_macs`: 未圧縮`fc1 + fc2`の理論MAC総数。
+- `compressed_macs`: `fc1`だけを指定rankで2層化し、`fc2`を未圧縮のままにした理論MAC総数。
+- `compute_reduction_rate`: Linear部baselineに対する理論MAC削減率。
 
 ## 使用場面
 

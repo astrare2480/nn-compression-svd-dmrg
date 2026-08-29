@@ -15,13 +15,18 @@ line_equation(p0, p1)
 
 ## 引数
 
-`p0`, `p1`: `(x, y)`座標。
+- `p0`: 基準直線の第1端点を表す`(x0, y0)`座標。
+- `p1`: 基準直線の第2端点を表す`(x1, y1)`座標。
+
+通常はPareto frontierの両端を渡し、その間を結ぶ直線をknee距離の基準にする。
 
 ## 戻り値
 
-- 通常線: `(slope, y_intercept)`。
-- 垂直線: `(math.inf, x_constant)`。
-- 完全に同じ点: `(0.0, y0)`。
+後続の距離計算で使う2要素tuple。
+
+- 通常線: `(slope, y_intercept)`。`y = slope * x + y_intercept`を表す。
+- 垂直線: `(math.inf, x_constant)`。第2値はy切片ではなく一定x座標。
+- 完全に同じ点: `(0.0, y0)`。退化した水平線として扱う。
 
 ## 使用場面
 

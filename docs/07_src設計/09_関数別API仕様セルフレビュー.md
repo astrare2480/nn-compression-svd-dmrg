@@ -2,15 +2,27 @@
 
 ## 1. 目的
 
-Core API v1を関数・クラス単位の仕様へ分割し、各APIの処理説明を日本語で詳細化したうえで、必要なAPIにだけMermaid図を追加した。次を照合した。
+Core API v1の関数・クラス別仕様について、今回あらためて**全77仕様**を横断確認した。
+
+確認対象は次の対応関係。
 
 ```text
-各sub-packageの __all__
+各sub-packageの __all__ / public method
 ↕
-現行srcのsignature / docstring / behavior
+現行srcのsignature / behavior
 ↕
-05_Core_API_v1/ の関数別md
+05_Core_API_v1/ の関数・クラス別md
 ```
+
+今回の重点は、
+
+1. `引数`が型・shape・identifierの列挙だけでなく、**その値の日本語での意味と役割**を説明しているか。
+2. `戻り値`がtuple / dict / scalar / Moduleの**中身と読み方**を説明しているか。
+3. Mermaid図が単なる文章の描き直しではなく、**制御・責務分担・構造**のいずれかを追加で理解できるか。
+
+の3点。
+
+`Compatibility_API.md`はalias対応表のため77件の個別仕様数には含めず、互換名の集約資料として別扱いする。
 
 ## 2. レビュー結果
 
@@ -22,145 +34,192 @@ Core API v1を関数・クラス単位の仕様へ分割し、各APIの処理説
 
 なし。
 
-### Documentation Minor
+### Documentation Minor — 修正済み
 
-`FashionMNISTCNN.inspect_shapes()`は引数省略時にCPU Tensorを作るため、modelをGPUへ移動した状態ではdummy inputとdeviceが一致しない。この利用条件を個別仕様へ明記した。
+今回、次の傾向を修正した。
+
+- `2モデル、評価loader、device`のように異なる役割の引数を一文へまとめていた箇所。
+- `shape`や`(R_out, R_in, ...)`だけで、Tensorが**何を表すか**を書いていなかった箇所。
+- tuple / dictを返すAPIで、各要素・主要keyの意味が弱かった箇所。
+- model classの戻り値が単に`nn.Module instance`となっていた箇所。
+- `factorize_named_layers()`のフローチャートを簡略化しすぎ、番号付き`処理概要`の縦並びに近くなっていた箇所。
+
+`factorize_named_layers()`は、Conv/Linearの反復・型判定・`TypeError`・分解API・copy側置換を別工程として追える粒度へ戻した。
 
 ## 3. Public API coverage
 
-関数別仕様の対象：
+個別仕様の内訳は次のとおり。
 
 ```text
-tensor
-compression
-training
-metrics
-selection
-datasets
-models
-utils
+tensor        3
+compression  30
+training      4
+metrics      19
+selection     7
+datasets      4
+models        4
+utils         6
+----------------
+合計         77
 ```
 
-各sub-packageの`__all__`にあるprimary / experiment-support APIを個別ファイル化した。
+READMEのリンク一覧と実ファイルinventoryを正本として全77件を確認した。
 
-単純aliasは重複説明を避け、`05_Core_API_v1/Compatibility_API.md`へ集約した。
+単純aliasは重複説明を避け、`05_Core_API_v1/Compatibility_API.md`へ集約する。
 
-追加で、`__all__`そのものではないが利用者が直接呼ぶpublic methodとして、`FashionMNISTCNN.inspect_shapes()`も個別仕様化した。
+`FashionMNISTCNN.inspect_shapes()`は`__all__`そのものではないが、利用者が直接呼ぶpublic methodとして個別仕様化している。
 
-PyTorch標準の`forward()`とprivate helperは個別ファイル化せず、class仕様または関連Public APIの処理説明内で扱う。
+PyTorch標準`forward()`とprivate helperは個別ファイル化せず、class仕様または関連Public APIの処理説明内で扱う。
 
-## 4. 各ファイルの基本項目
+## 4. 引数・戻り値レビュー
 
-```text
-責務
-Signature
-引数
-戻り値
-使用場面
-処理概要
-フローチャート / 構造図（必要な場合のみ）
-主なcontract / 注意事項
-関連API
-```
+全77仕様について`## 引数`と`## 戻り値`を再確認した。
 
-`処理概要`は番号付き日本語を基本とし、英語identifierだけの短いフローを本文の代わりにしない。
+### 修正した代表例
 
-## 5. Mermaid図の要否判断
+- `truncated_svd`: `matrix / rank`が何を決めるか、`U_r / S_r / Vh_r`各成分の意味。
+- `rebuild_linear_from_svd`: 3つのSVD componentと元`layer`の役割。
+- Tucker系: `shape / ranks / core / factors / rank_out / rank_in`がどのmode・channelを表すか。
+- `build_tucker2_conv_from_components`: `core / u_out / u_in`が構築後のどのConv weightへ入るか。
+- rank sweep系: baseline値、callback、MACs callback、fixed input batchの意味。
+- metrics系: baseline/compressed model、loader、device、benchmark条件、optional MACsの役割。
+- Dataset系: split用seedとtrain shuffle用Generatorの責務分離、loader dict各keyの用途。
+- selection系: x/y列、基準直線、endpoint、knee戻り値の意味。
+- model class: constructorが返すbaseline architectureと安定named layer。
+- `get_experiment_dirs`: `method / case / experiment`各階層と3つの戻りdirectoryの意味。
 
-全APIへ機械的に図を付けると、単純関数まで大きくなり可読性が落ちる。そのため次の場合だけ図を付ける。
+### 無変更とした仕様
 
-1. 反復がある。
-2. 条件分岐が重要である。
-3. 複数の下位APIをまたいで状態・中間表現が変わる。
-4. Module構造変換を視覚化する価値がある。
+すでに、
 
-今回、図を追加したAPIは次の10個。
+- 引数の役割が日本語で個別に書かれている。
+- 戻り値のshapeだけでなく意味も本文・戻り値節から一意に分かる。
+- 短いscalar utilityでも式と値の読み方が十分明確である。
+
+ものは、文章量だけを増やす変更を行っていない。
+
+今回、77件中42件を実際に更新し、残り35件は現状の説明で十分と判断した。
+
+## 5. 図の種類と要否判断
+
+Mermaidは次の3種類に分けて判断した。
+
+### フローチャート
+
+反復・分岐・異常終了・収束、または複数段階のbuild順など**制御フロー**を示す。
+
+### シーケンス図
+
+wrapper / orchestratorが複数API・objectへ処理を委譲する場合に、**誰が誰を呼び、何を受け渡すか**を示す。
+
+### 構造図 / Component配置図
+
+Tensor factor・Parameter・Moduleがどこへ配置されるか、model architectureがどう接続されるかという**構造**を示す。
+
+複数図を同じファイルへ入れる場合は、各図が別の問いに答えることを条件とした。
+
+## 6. 最終的に図を使う代表仕様
 
 ```text
 factorize_conv2d_layer
+  フローチャート
+
 factorize_named_layers
+  フローチャート + シーケンス図 + コンポーネント図
+
 sweep_layer_ranks
-hosvd
-hooi_sweep
-hooi
+  フローチャート + シーケンス図
+
+hosvd / hooi_sweep / hooi
+  フローチャート
+
+build_tucker2_conv
+  シーケンス図
+
 build_tucker2_conv_from_components
+  フローチャート + Component配置図
+
 fit_with_early_stopping
+  フローチャート
+
 benchmark_inference
+  フローチャート
+
 collect_compression_metrics
+  フローチャート + シーケンス図
+
+MNISTMLP / FashionMNISTCNN / CIFAR10CNN
+  構造図
 ```
 
-一方、`count_parameters`, `has_converged`, `linear_macs`, `get_named_module`のような短い計算・判定・委譲utilityには図を追加していない。
+一方、`count_parameters`, `has_converged`, `linear_macs`, `get_named_module`, Pareto/kneeの小helperなどは、図を追加しても文章・式の描き直しになるため追加していない。
 
-## 6. 図と文章の重複整理
+## 7. 図の重複セルフレビュー
 
-以前は、
+### `factorize_named_layers`
 
-```text
-処理の流れ（日本語）
-処理フロー（短縮版）
-```
+3図すべてを残す価値がある。
 
-を併記しており意味が重複していた。
+- フローチャート: Conv/Linear loop、型分岐、異常終了、処理順。
+- シーケンス図: baselineを分解元、copyを置換先とする責務分担。
+- コンポーネント図: model内の指定層だけがfactorized Moduleへ変わる構造。
 
-図を入れるAPIではこれを、
+フローチャート内の`factorize_*`とcopy側置換は別工程として残した。ここを1箱へまとめると、シーケンス図との重複軽減よりも処理理解の損失が大きいと判断した。
 
-```text
-処理概要
-→ 詳細な日本語説明
+### `build_tucker2_conv_from_components`
 
-フローチャート / 構造図
-→ 視覚的な補助
-```
+- フローチャート: component検証 → Module生成 → Parameter配置 → returnの組み立て順。
+- Component配置図: `u_in / core / u_out / bias / spatial config`が3層のどこへ反映されるか。
 
-へ整理した。Mermaidは文章の代替ではなく、反復・分岐・構造変換を一目で確認するための補助とする。
+同じ3層を二度描くことが目的ではなく、**処理順と配置関係**を分離している。
 
-## 7. 代表APIの再照合
+### `sweep_layer_ranks` / `collect_compression_metrics`
 
-現行srcと特に次を再照合した。
-
-- `factorize_conv2d_layer`: 2層構造、factor配置、bias、device/dtype/requires_grad
-- `factorize_named_layers`: baseline deepcopy、元baseline layerを分解元にすること
-- `sweep_layer_ranks`: rank loop、candidate独立性、optional MACs、metrics収集
-- `hosvd`: factorは逐次coreではなく元`X`から求める
-- `hooi_sweep`: factor clone、挿入順、最新factorを使うGauss-Seidel型更新
-- `hooi`: HOSVD初期化、`max_iter=0`、`history[0]`、収束分岐
-- `build_tucker2_conv_from_components`: 3層構造とfactor/core配置
-- `fit_with_early_stopping`: train再評価、best state、patience分岐
-- `benchmark_inference`: fixed input、CUDA同期、return形式
-- `collect_compression_metrics`: loader複数走査、optional model/MACs
-
-図の矢印・分岐は現行srcの処理意味と一致することを確認した。
+フローチャートはloop・optional分岐、シーケンス図はcallback・評価APIへの委譲を担当し、役割を分けた。
 
 ## 8. 今回の変更範囲
 
-今回のMermaid図追加と見出し整理では、`docs/07_src設計/`配下のMarkdownだけを変更する。`src/tests/Notebook/results`は変更しない。
+今回の修正は`docs/07_src設計/`配下のMarkdownのみ。
 
-PR内に既に存在するCore API v1 freeze前のvalidation修正は、それ以前のself reviewで追加した別変更である。
+- 個別API仕様77件をレビュー。
+- そのうち説明不足・図の改善余地があった42件を更新。
+- `05_Core_API_v1/README.md`で記述ルールを明文化。
+- 本セルフレビューを更新。
 
-## 9. 結論
+`src / tests / Notebook / results`は変更しない。
 
-関数別API仕様は、関数名から直接、
+## 9. テスト・実装影響
+
+今回はdocumentation-only変更なので、src挙動・実験値・API signatureは変更していない。
+
+このレビューに対してpytestは新規実行していない。PR内の以前のsrc validation差分については別途最終merge前のローカルpytest確認が必要であり、今回のdocumentation reviewをもって「現PR全体のtests green」とはみなさない。
+
+## 10. 結論
+
+全77の関数・クラス別仕様について、利用者がファイル単体から、
 
 ```text
-何のための関数か
-何を渡すか
-何が返るか
+何のためのAPIか
+各引数は何を意味するか
+戻り値の各要素は何を表すか
 内部で何をどの順番で行うか
 どこで分岐・反復するか
 どの処理を下位APIへ任せるか
+Tensor / Parameter / Moduleがどう配置されるか
 何を壊してはいけないか
 ```
 
-を追える構成になった。
+を追えることを確認した。
 
-今後Public APIを追加する場合は、
+今後Public APIを追加・変更する場合は、
 
 ```text
 src実装
 → __all__
 → contract test
 → 対応する関数別md
-→ 図が本当に必要か判断
+→ 引数 / 戻り値の日本語意味を確認
+→ 図の要否・図種・重複を確認
 → 必要なら上位設計書
 ```
 

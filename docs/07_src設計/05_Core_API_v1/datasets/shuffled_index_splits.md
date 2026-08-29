@@ -20,11 +20,13 @@ shuffled_index_splits(
 
 ## 引数
 
-全件数`n`、各split長、seed。
+- `n`: indexを作る対象Datasetの全sample数。候補indexは`0`から`n-1`。
+- `lengths`: shuffle後のindex列を先頭から何件ずつ切り出すかを指定する各split長。
+- `seed`: index shuffle専用Generatorへ設定するseed。同じ`n / lengths / seed`なら同じindex splitを再現できる。
 
 ## 戻り値
 
-指定lengthごとのindex listを並べたtuple。
+`lengths`と同じ順番で並ぶindex listのtuple。各listにはshuffle済みindexの対応区間が入り、`sum(lengths) < n`の場合は残りindexを返さない。
 
 ## 使用場面
 

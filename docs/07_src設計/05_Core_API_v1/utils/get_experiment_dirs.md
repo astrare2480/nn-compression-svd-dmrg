@@ -22,11 +22,19 @@ get_experiment_dirs(
 
 ## 引数
 
-project root、手法名、ケース名、実験名、directoryを実際に作成するか。
+- `project_root`: repository/projectのroot path。`data / models / results`各directoryを組み立てる基準位置。
+- `method_name`: 圧縮手法を表す階層名。例: `svd`, `tucker`, `tt_mps`。
+- `case_name`: 手法内の対象model/Dataset/ケースを識別する階層名。
+- `experiment_name`: 同じ手法・ケース内の個別実験を識別する最下位directory名。
+- `create`: `True`なら返却前に必要directoryを実際に作成し、`False`ならpath計算だけを行う。
 
 ## 戻り値
 
-`(data_dir, models_dir, results_dir)`。
+`(data_dir, models_dir, results_dir)`の3つの`Path`。
+
+- `data_dir`: `project_root/data`。共通Dataset・入力dataの基準directory。
+- `models_dir`: `project_root/models/method_name/case_name/experiment_name`。checkpoint等のmodel成果物保存先。
+- `results_dir`: `project_root/results/method_name/case_name/experiment_name`。表・JSON・plot等の実験結果保存先。
 
 ## 使用場面
 

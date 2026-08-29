@@ -20,13 +20,14 @@ tucker2_hooi_sweep(
 
 ## 引数
 
-- `weight`: `(C_out, C_in, kH, kW)`のConv weight。
-- `factors`: 現在の`{0: U_out, 1: U_in}`。
-- `rank_out`, `rank_in`: channel ranks。
+- `weight`: factorを1 sweep更新する対象のConv2d weight。shapeは`(C_out, C_in, kH, kW)`。
+- `factors`: sweep開始時点のchannel factor。`{0: U_out, 1: U_in}`で、各factorは現在の近似基底を表す。
+- `rank_out`: mode 0で更新後に保持する出力channel rank。
+- `rank_in`: mode 1で更新後に保持する入力channel rank。
 
 ## 戻り値
 
-1 sweep更新後のfactor dict。
+mode 0→1の1 sweepを終えた新しいfactor dict`{0: U_out_new, 1: U_in_new}`。入力`factors`をそのまま破壊して返すのではなく、generic `hooi_sweep()`の更新結果を返す。
 
 ## 使用場面
 

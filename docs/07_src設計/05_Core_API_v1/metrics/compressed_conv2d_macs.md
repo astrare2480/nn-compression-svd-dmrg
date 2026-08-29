@@ -20,15 +20,22 @@ compressed_conv2d_macs(
 
 ## 引数
 
-元Conv、SVD rank、出力空間size。
+- `conv`: 圧縮前の元Conv2d。`C_in / C_out / kH / kW`を取り出し、SVD 2層化後MACsの基準形状として使う。
+- `rank`: 2層Conv間の中間channel数。`factorize_conv2d_layer()`で使うSVD rankと同じ意味。
+- `out_h`: 対象Convが生成する出力feature mapの高さ。
+- `out_w`: 対象Convが生成する出力feature mapの幅。
 
 ## 戻り値
+
+SVD 2層化後の**1 output batch/sampleあたりの理論MAC（multiply-accumulate）総数**を表す整数。
 
 ```text
 out_h*out_w*rank*in_ch*kH*kW
 +
 out_h*out_w*out_ch*rank
 ```
+
+前半が元kernelを持つ`C_in → rank` Conv、後半が`rank → C_out`の1x1 Convの計算量。
 
 ## 使用場面
 

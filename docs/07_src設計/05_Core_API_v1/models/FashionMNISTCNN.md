@@ -15,11 +15,11 @@ FashionMNISTCNN()
 
 ## 引数
 
-なし。
+なし。1channel 28×28 Fashion-MNIST入力と10クラス分類を前提とした固定baseline architectureを作る。
 
 ## 戻り値
 
-`nn.Module` instance。
+2段Conv + 2段LinearでFashion-MNIST画像を10クラスlogitsへ変換する`nn.Module` instance。主要named layer`conv1 / conv2 / fc1 / fc2`はConv/Linear SVDとMACs計算から参照される。
 
 ## 使用場面
 
@@ -50,6 +50,23 @@ Fashion-MNISTのConv SVD、Linear SVD、Conv+Linear同時圧縮、MACs・latency
 3. **feature mapをflattenする。**
 4. **`fc1 → relu3`を通す。**
 5. **`fc2`で10クラスlogitsを作って返す。**
+
+### 構造図
+
+```mermaid
+flowchart LR
+    X["入力<br/>1×28×28"] --> C1["conv1<br/>1 → 32<br/>3×3"]
+    C1 --> P1["ReLU + MaxPool<br/>32×14×14"]
+    P1 --> C2["conv2<br/>32 → 64<br/>3×3"]
+    C2 --> P2["ReLU + MaxPool<br/>64×7×7"]
+    P2 --> F["Flatten<br/>3136"]
+    F --> FC1["fc1<br/>3136 → 128"]
+    FC1 --> R["ReLU"]
+    R --> FC2["fc2<br/>128 → 10"]
+    FC2 --> Y["class logits"]
+```
+
+この図は、**Conv/Poolでchannelと空間sizeがどう変わり、どのnamed layerを圧縮対象として参照するか**を示す構造図。
 
 ## 主なcontract / 注意事項
 

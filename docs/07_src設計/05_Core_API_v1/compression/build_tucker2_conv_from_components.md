@@ -20,18 +20,22 @@ build_tucker2_conv_from_components(
 
 ## 引数
 
-- `conv`: 元の`groups=1` Conv2d。channel数、kernel、stride/padding/dilation、bias等の基準。
-- `core`: `(R_out, R_in, kH, kW)`。
-- `u_out`: `(C_out, R_out)`。
-- `u_in`: `(C_in, R_in)`。
+- `conv`: 構築後Moduleの外形と属性の基準になる元の`groups=1` Conv2d。`C_in / C_out`、kernel、stride/padding/dilation、bias、device/dtype、`requires_grad`を参照する。
+- `core`: Tucker-2分解後の中央core Tensor。shapeは`(R_out, R_in, kH, kW)`で、生成する中央Convのweightになる。
+- `u_out`: 出力channel方向のfactor matrix。shapeは`(C_out, R_out)`で、低rank出力`R_out`を元の出力channel`C_out`へ戻す最後の1x1 Convのweightになる。
+- `u_in`: 入力channel方向のfactor matrix。shapeは`(C_in, R_in)`で、転置して元の入力channel`C_in`を低rank入力`R_in`へ射影する最初の1x1 Convのweightになる。
 
 ## 戻り値
+
+指定componentを次の3層へ配置した`nn.Sequential`。入力channel数と最終出力channel数は元Convと同じで、中央だけが`R_in / R_out`の低rank channel空間になる。
 
 ```text
 1x1 Conv(C_in → R_in, bias=False)
 → core Conv(R_in → R_out, original spatial config, bias=False)
 → 1x1 Conv(R_out → C_out, bias=original)
 ```
+
+元ConvのParameter storageは共有せず、生成後の3層は独立したleaf ParameterとしてFine-tuningできる。
 
 ## 使用場面
 
@@ -63,19 +67,16 @@ HOSVD/HOOIなど分解方法を問わず、同じTucker-2 Module表現へ変換�
 ```mermaid
 flowchart TD
     A["入力: conv / core / u_out / u_in"] --> B["conv が groups=1 の通常 Conv2d か検証"]
-    B --> C["core / u_out / u_in の ndim と shape を検証"]
-    C --> D["dtype / device が conv.weight と一致するか検証"]
-    D --> E["元 conv の device / dtype を使って<br/>3つの Conv2d を新規作成"]
-    E --> F["u_in^T を入力 1x1 Conv の weight に配置"]
-    F --> G["core を中央 Conv の weight に配置"]
-    G --> H["u_out を出力 1x1 Conv の weight に配置"]
-    H --> I["元 bias を出力 1x1 Conv にコピー"]
-    I --> J["requires_grad を各層へ反映"]
-    J --> K["3層を nn.Sequential にまとめる"]
-    K --> L["返却"]
+    B --> C["component の ndim / shape / dtype / device を検証"]
+    C --> D["3つの Conv2d を新規作成"]
+    D --> E["U_in^T → 入力 1x1 Conv"]
+    E --> F["core → 中央 Conv"]
+    F --> G["U_out → 出力 1x1 Conv"]
+    G --> H["bias / requires_grad を継承"]
+    H --> I["nn.Sequential として返す"]
 ```
 
-この図は、**この関数がどの順番で検証・生成・重み配置を行うか**を示す。
+この図は、**component検証からModule生成・Parameter配置・返却までの組み立て順**を示す。配置先そのものは下のComponent配置図で分けて確認する。
 
 ### Component配置図
 

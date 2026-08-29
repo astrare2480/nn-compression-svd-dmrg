@@ -15,11 +15,11 @@ conv2d_weight_matrix(weight: torch.Tensor) -> torch.Tensor
 
 ## 引数
 
-`weight`: Conv2dのweight Tensor。
+- `weight`: 行列化したいConv2dのweight Tensor。axis 0を出力channel、残りのaxisを入力channelとkernel空間として解釈する。
 
 ## 戻り値
 
-先頭dimensionを維持し、残りdimensionをflattenした2次元Tensor。
+出力channelを行に保ち、入力channel・kernel高さ・kernel幅を1つの列dimensionへまとめたSVD用2次元Tensor。通常の4階Conv weightならshapeは`(C_out, C_in * kH * kW)`になる。
 
 ## 使用場面
 

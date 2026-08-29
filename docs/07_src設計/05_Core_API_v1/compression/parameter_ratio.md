@@ -18,13 +18,18 @@ parameter_ratio(
 
 ## 引数
 
-`shape`と`{mode: rank}`。
+- `shape`: 圧縮前Tensorのshape。元Tensorの総要素数と各modeのdimensionを決める。
+- `ranks`: `{mode: rank}`形式のTucker rank指定。指定modeのfactor sizeとcore dimensionを決める。
 
 ## 戻り値
+
+Tucker表現の総要素数が元Tensorの何割・何倍に相当するかを表す`float`。
 
 ```text
 tucker_parameter_count(shape, ranks) / original_element_count
 ```
+
+例えば`0.25`ならTucker表現の要素数は元Tensorの25%。値が小さいほど表現サイズが小さい。
 
 ## 使用場面
 

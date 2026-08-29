@@ -15,11 +15,14 @@ get_first_point(df, column, x, y)
 
 ## 引数
 
-DataFrame、sortに使う列名、座標として読むx/y列名。
+- `df`: 先頭candidateを選ぶ候補DataFrame。
+- `column`: candidateを昇順に並べるためのsort列名。
+- `x`: 選ばれたcandidateのx座標として読む列名。
+- `y`: 選ばれたcandidateのy座標として読む列名。
 
 ## 戻り値
 
-`(float_x, float_y)`。
+`column`昇順sort後の先頭candidateを表す`(float_x, float_y)`。元DataFrameのrowそのものではなく、指定x/y列の座標値をPython floatで返す。
 
 ## 使用場面
 

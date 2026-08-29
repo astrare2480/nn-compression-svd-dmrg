@@ -20,11 +20,14 @@ agreement(
 
 ## 引数
 
-2モデル、評価loader、device。
+- `baseline_model`: 圧縮前の基準model。同じ入力に対する予測classを比較の正本として使う。
+- `compressed_model`: 圧縮後の比較対象model。baselineと同じ入力で推論し、予測classが一致するかを数える。
+- `loader`: 比較に使う入力sampleを供給する評価loader。ground-truth labelは一致率そのものには使わない。
+- `device`: 両modelへ入力を渡して推論するdevice。
 
 ## 戻り値
 
-予測class一致率 `[0, 1]`。
+loader全sampleのうち、baselineとcompressedが同じ`argmax`予測classを出したsampleの割合を表す`float`。値域は`[0, 1]`で、`1.0`なら全sampleで予測classが一致する。
 
 ## 使用場面
 

@@ -19,13 +19,19 @@ compressed_linear_macs(
 
 ## 引数
 
-入力dimension、出力dimension、SVD rank。
+- `in_features`: 圧縮前Linearの入力feature数。
+- `out_features`: 圧縮前Linearの出力feature数。
+- `rank`: SVD 2層化後の中間dimension。第1層の出力数かつ第2層の入力数になる。
 
 ## 戻り値
+
+2層Linearの理論MAC総数を表す整数。
 
 ```text
 in_features * rank + rank * out_features
 ```
+
+第1項が`in_features → rank`、第2項が`rank → out_features`の計算量。
 
 ## 使用場面
 

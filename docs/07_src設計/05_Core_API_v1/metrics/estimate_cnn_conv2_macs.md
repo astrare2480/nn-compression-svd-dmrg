@@ -22,11 +22,19 @@ estimate_cnn_conv2_macs(
 
 ## 引数
 
-model、rank、対象layer名、出力空間size。`out_hw=None`ならhistorical Fashion-MNIST `conv2`の14×14を使う。
+- `model`: MACsを評価するnamed Conv2dを含むmodel。
+- `rank`: 対象ConvをSVD 2層化するときの中間channel rank。
+- `verbose`: `True`ならbaseline/compressed MACsと削減率を表示する。
+- `layer_name`: model内で評価するConv2dのnamed path。既定`"conv2"`はhistorical Fashion-MNIST実験互換。
+- `out_hw`: 対象Convの実際の出力feature map size`(H, W)`。`None`ならhistorical `conv2`用の`(14, 14)`を使う。
 
 ## 戻り値
 
-`estimate_conv2d_macs()`と同じ`(baseline, compressed, reduction)`。
+`(baseline_macs, compressed_macs, compute_reduction)`。
+
+- `baseline_macs`: 指定named Conv2dの未圧縮MACs。
+- `compressed_macs`: 指定rankで2層化した場合のMACs。
+- `compute_reduction`: baselineに対する理論MAC削減率。
 
 ## 使用場面
 

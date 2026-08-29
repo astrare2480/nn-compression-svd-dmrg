@@ -30,11 +30,19 @@ sweep_conv_svd_ranks(
 
 ## 引数
 
-意味は`sweep_conv2d_ranks()`と同じ。`rank_list`だけが旧名。
+- `model`: candidate作成元となるbaseline model。
+- `layer_name`: rank sweep対象Conv2dのnamed path。
+- `rank_list`: 評価するSVD rank候補。現行`sweep_conv2d_ranks()`の`ranks`と同じ意味を持つhistorical引数名。
+- `out_hw`: 対象Convの出力feature map size`(H, W)`。
+- `loader`, `criterion`, `device`: candidateのvalidation・比較評価条件。
+- `baseline_acc`, `baseline_time_s`: accuracy dropとlatency比較のbaseline値。
+- `warmup`, `repeats`: latency benchmarkの反復条件。
+- `verbose`: 下位APIの表示を有効にするか。
+- `input_batch`: candidate間で固定利用するoptional benchmark入力。
 
 ## 戻り値
 
-`sweep_conv2d_ranks()`が返すrank sweep record list。
+`sweep_conv2d_ranks()`と同じrank sweep recordの`list[dict]`。wrapper独自の列や変換は追加せず、旧`rank_list`を現行`ranks`へ読み替えた結果をそのまま返す。
 
 ## 使用場面
 

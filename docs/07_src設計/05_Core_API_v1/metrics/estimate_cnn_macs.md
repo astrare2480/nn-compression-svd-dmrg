@@ -25,15 +25,22 @@ estimate_cnn_macs(
 
 ## 引数
 
-- positional `conv2_rank/fc1_rank`: Fashion-MNIST historical互換。
-- `conv_ranks`: `{conv_name: rank}`。
-- `linear_ranks`: `{linear_name: rank}`。
-- `conv_output_hw`: `{conv_name: (H,W)}`。
-- `linear_layer_names`: 集計対象Linear名。
+- `model`: MACsを集計するCNN。指定されたnamed Conv/Linearをこのmodelから取得する。
+- `conv2_rank`: historical Fashion-MNIST互換の`conv2`圧縮rank。`conv_ranks`未指定時に`{"conv2": conv2_rank}`へ正規化する。
+- `fc1_rank`: historical互換の`fc1`圧縮rank。`linear_ranks`未指定時に`{"fc1": fc1_rank}`へ正規化する。
+- `verbose`: `True`ならbaseline/compressed全体MACsと削減率を表示する。
+- `conv_ranks`: `{conv_name: rank}`形式で圧縮するConv層を指定する。未指定Convはbaselineと同じMACsをcompressed側にも加える。
+- `linear_ranks`: `{linear_name: rank}`形式で圧縮するLinear層を指定する。未指定Linearは未圧縮として集計する。
+- `conv_output_hw`: `{conv_name: (H, W)}`形式の各Conv出力空間size。Conv MACsを正しく計算するために使う。
+- `linear_layer_names`: model-level集計へ含めるLinearのnamed path一覧。既定は`("fc1", "fc2")`。
 
 ## 戻り値
 
-`(baseline_macs, compressed_macs, reduction)`。
+`(baseline_macs, compressed_macs, reduction)`の3要素tuple。
+
+- `baseline_macs`: 集計対象Conv/Linearをすべて未圧縮として計算した理論MAC総数。
+- `compressed_macs`: `conv_ranks / linear_ranks`で指定した層だけ圧縮した場合の理論MAC総数。
+- `reduction`: `1 - compressed_macs / baseline_macs`で求めるmodel-level計算量削減率。
 
 ## 使用場面
 

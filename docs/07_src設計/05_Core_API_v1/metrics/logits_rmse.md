@@ -20,11 +20,14 @@ logits_rmse(
 
 ## 引数
 
-2モデル、評価loader、device。
+- `baseline_model`: 圧縮前の基準model。各入力に対するlogitsを比較基準として使う。
+- `compressed_model`: 圧縮後の比較対象model。baselineと同じ入力に対するlogitsとの差を測る。
+- `loader`: logits差をdataset全体で集計する評価loader。
+- `device`: 両modelの推論と入力Tensor配置に使うdevice。
 
 ## 戻り値
 
-全sample・全logit要素をまとめたRMSE。
+全sample・全logit要素に対する`baseline_logits - compressed_logits`のRMSEを表す`float`。`0.0`なら比較した全logit値が一致し、値が大きいほどbaselineからの出力値のずれが大きい。
 
 ## 使用場面
 

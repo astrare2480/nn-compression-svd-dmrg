@@ -25,9 +25,18 @@ make_fashion_mnist_loaders(
 
 ## 引数
 
-各Dataset、batch size、optional rank-selection Dataset、train shuffle用Generator。
+- `train_dataset`: optimizer更新に使う学習Dataset。
+- `validation_dataset`: Early Stoppingや通常のvalidation評価に使うDataset。
+- `test_dataset`: 最終test評価に使うDataset。
+- `train_batch_size`: 学習loaderの1 batchあたりsample数。
+- `validation_batch_size`: validation系loaderの1 batchあたりsample数。rank-validation loaderにも同じsizeを使う。
+- `test_batch_size`: test loaderの1 batchあたりsample数。
+- `rank_validation_dataset`: rank選択専用のoptional Dataset。指定時だけ`validation_loader_rank`を追加する。
+- `train_generator`: train loaderの`shuffle=True`で使う専用`torch.Generator`。学習sample順の再現性を制御する。
 
 ## 戻り値
+
+用途別DataLoaderを名前付きでまとめたdict。
 
 ```text
 {
@@ -38,6 +47,12 @@ make_fashion_mnist_loaders(
   ["validation_loader_rank": ...]
 }
 ```
+
+- `train_loader`: 学習更新用。唯一`shuffle=True`。
+- `validation_loader`: 通常validation評価用。`shuffle=False`。
+- `test_loader`: 最終test評価用。`shuffle=False`。
+- `train_eval_loader`: train Datasetを固定順で再評価するためのloader。学習shuffle用Generatorを消費しない。
+- `validation_loader_rank`: `rank_validation_dataset`指定時だけ作るrank候補比較用loader。
 
 ## 使用場面
 
