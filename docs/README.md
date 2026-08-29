@@ -64,7 +64,8 @@ Tensor mode演算
 → HOOI
 → TensorLy照合
 → HOSVD/HOOI同条件Fine-tuning
-→ src共通化・回帰テスト
+→ src共通化・public API contract review
+→ Core API v1設計書
 ```
 
 まで確認した。
@@ -82,7 +83,7 @@ SVD/Tuckerの式だけでなく、
 
 も実験を通して整理している。
 
-SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]] を参照。
+SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、現行srcの設計は [[07_src設計/README]] を参照。
 
 ---
 
@@ -147,8 +148,9 @@ flowchart TD
     H --> I["model-wide rank allocation"]
     I --> J["Tucker / HOSVD"]
     J --> J2["HOOI"]
-    J2 --> K["TT / MPS"]
-    K --> L["DMRG"]
+    J2 --> K["Core API v1"]
+    K --> L["TT / MPS"]
+    L --> M["DMRG"]
 ```
 
 ---
@@ -453,12 +455,14 @@ corrected実験は基本的にsingle seed。
 ```text
 src/nn_compression/
 ├─ tensor/
-│  └─ operations.py
+│  ├─ operations.py
+│  └─ validation.py
 ├─ compression/
 │  ├─ svd.py
 │  ├─ linear_svd.py
 │  ├─ conv_svd.py
 │  ├─ tucker.py
+│  ├─ tucker_validation.py
 │  ├─ hooi.py
 │  ├─ conv_tucker.py
 │  ├─ mlp_svd.py
@@ -478,14 +482,44 @@ src/nn_compression/
 共通して、
 
 - baselineとParameterを共有しない
-- rank / mode / shapeをvalidationする
+- rank / mode / shapeをpublic API境界でvalidationする
 - device / dtype / requires_gradを維持する
+- 評価・benchmark後はroot + 全submoduleのtrain/eval状態を復元する
+- empty loaderを偶発的なZeroDivisionErrorへ落とさず明示的に扱う
+- benchmarkではsame input batchと同じwarmup / repeatsを使う
 - 学習Notebookは自作実装を学習履歴として残す
 - reusable処理はsrcへ分離する
 
 という方針を取る。
 
-Tucker/HOOIの実装詳細は [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]、実装寄りの既存索引は [[README_実装編]] を参照。
+Tucker/HOOIではさらに、
+
+- `ranks` はMapping
+- bool/Tensor scalar rankを拒否
+- rank上限はmode-n unfoldingの数学的最大rank
+- HOOIのprojected rank feasibilityを反復前に検証
+- 現行HOSVD/HOOI/Tucker-2分解APIは**実数浮動小数点Tensor限定**
+- Tensor-level `tucker2_hooi()` は入力weightをdetachせず、Module構築時にautograd境界を置く
+
+をcontractとして固定している。
+
+contract review baseline `49836bc` のローカル全pytestでは、
+
+```text
+252 passed
+0 failed
+```
+
+を確認済み。Core API v1 self reviewで追加したvalidation/test差分は、GitHub CIが無いため最終freeze前にローカルpytest確認を行う。
+
+設計・API仕様：
+
+- [[07_src設計/README]]
+- [[07_src設計/01_アーキテクチャ設計]]
+- [[07_src設計/05_Core_API_v1]]
+- [[07_src設計/06_テスト設計]]
+
+Tucker/HOOIの実装詳細は [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]、実装寄り索引は [[README_実装編]] を参照。
 
 ---
 
@@ -591,6 +625,7 @@ taskにとって最適なlow-rank weight
 5. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
 6. [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]
 7. [[06_Tucker基礎実装検証/README]]
+8. [[07_src設計/README]]
 
 CIFAR-10のコードを理解しながらSVD編を読む場合は、途中に、
 
