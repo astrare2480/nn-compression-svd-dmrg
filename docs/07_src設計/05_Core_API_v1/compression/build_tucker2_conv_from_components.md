@@ -58,6 +58,25 @@ HOSVD/HOOIなど分解方法を問わず、同じTucker-2 Module表現へ変換�
    新Parameterは独立したleaf ParameterとしてFine-tuning可能。
 10. **3層を`nn.Sequential`として返す。**
 
+### フローチャート
+
+```mermaid
+flowchart TD
+    A["入力: conv / core / u_out / u_in"] --> B["conv が groups=1 の通常 Conv2d か検証"]
+    B --> C["core / u_out / u_in の ndim と shape を検証"]
+    C --> D["dtype / device が conv.weight と一致するか検証"]
+    D --> E["元 conv の device / dtype を使って<br/>3つの Conv2d を新規作成"]
+    E --> F["u_in^T を入力 1x1 Conv の weight に配置"]
+    F --> G["core を中央 Conv の weight に配置"]
+    G --> H["u_out を出力 1x1 Conv の weight に配置"]
+    H --> I["元 bias を出力 1x1 Conv にコピー"]
+    I --> J["requires_grad を各層へ反映"]
+    J --> K["3層を nn.Sequential にまとめる"]
+    K --> L["返却"]
+```
+
+この図は、**この関数がどの順番で検証・生成・重み配置を行うか**を示す。
+
 ### Component配置図
 
 ```mermaid
