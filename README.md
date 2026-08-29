@@ -225,19 +225,21 @@ Notebookは学習過程・自作実装を残し、再利用可能な処理をsrc
 - Tensor / Tucker coreは2次元以上・各dimension正
 - mode / rankでboolを整数として受理しない
 - Tucker `ranks` はMapping、rank上限はmode-n unfoldingの最大rank
-- HOSVD / HOOIと、それらを使うTucker-2分解APIは現時点で実数Tensor限定
+- HOSVD / HOOIと、それらを使うTucker-2分解APIは現時点で**実数浮動小数点Tensor限定**
 - HOOI feasibilityは `max_iter=0` でも反復前に検証
 - Tucker-2のTensor-level HOOIは入力weightをdetachせず、Module構築時にautogradを切る
 - 評価・ベンチマーク後はrootだけでなく全submoduleのtrain/eval状態を復元
 - empty loaderは明示的に拒否し、対応箇所では `len(loader)` を仮定しない
-- Conv MACsの `out_h / out_w` はbool以外の正の整数
+- MACs rank / 出力空間size、benchmark countではTensor scalarを整数として受理しない
 
 src contract reviewのbaseline `49836bc` ではローカル全pytest `252 passed / 0 failed` を確認済み。Core API v1 self reviewで追加したvalidation/test差分については、GitHub CIが無いため最終merge前にローカルpytest確認を行う。
 
 詳細：
 
-- [src設計書 / Core API v1](docs/07_src設計/README.md)
-- [Core API v1 freeze list](docs/07_src設計/02_Core_API_v1.md)
+- [src設計書](docs/07_src設計/README.md)
+- [アーキテクチャ設計](docs/07_src設計/01_アーキテクチャ設計.md)
+- [Core API v1 / 関数仕様](docs/07_src設計/05_Core_API_v1.md)
+- [テスト設計](docs/07_src設計/06_テスト設計.md)
 - [実装編](docs/README_実装編.md)
 - [Tucker基礎実装検証](docs/06_Tucker基礎実装検証/README.md)
 
