@@ -55,16 +55,82 @@ flowchart TD
     A["baseline model"] --> B["deepcopy して compressed model を作る"]
     B --> C{"未処理の conv_ranks がある?"}
     C -- Yes --> D["元 baseline から named Conv2d を取得"]
-    D --> E["型確認 → factorize_conv2d_layer"]
-    E --> F["copy 側の同 path を置換"]
-    F --> C
-    C -- No --> G{"未処理の linear_ranks がある?"}
-    G -- Yes --> H["元 baseline から named Linear を取得"]
-    H --> I["型確認 → factorize_linear_layer"]
-    I --> J["copy 側の同 path を置換"]
-    J --> G
-    G -- No --> K["compressed model を返す"]
+    D --> E{"Conv2d?"}
+    E -- No --> X["TypeError"]
+    E -- Yes --> F["factorize_conv2d_layer"]
+    F --> G["copy 側の同 path を置換"]
+    G --> C
+    C -- No --> H{"未処理の linear_ranks がある?"}
+    H -- Yes --> I["元 baseline から named Linear を取得"]
+    I --> J{"Linear?"}
+    J -- No --> X
+    J -- Yes --> K["factorize_linear_layer"]
+    K --> L["copy 側の同 path を置換"]
+    L --> H
+    H -- No --> M["compressed model を返す"]
 ```
+
+この図は、**Conv指定とLinear指定をどの順番で処理し、どこで型検証・反復・終了判定を行うか**を示す。
+
+### シーケンス図
+
+```mermaid
+sequenceDiagram
+    participant Caller as 呼び出し元
+    participant API as factorize_named_layers
+    participant Base as baseline model
+    participant ConvSVD as factorize_conv2d_layer
+    participant LinearSVD as factorize_linear_layer
+    participant Copy as compressed model copy
+
+    Caller->>API: model, conv_ranks, linear_ranks
+    API->>API: deepcopy(model)
+
+    loop conv_ranks の各 layer_name / rank
+        API->>Base: get_named_module(layer_name)
+        Base-->>API: 元 Conv2d
+        API->>API: Conv2d 型を確認
+        API->>ConvSVD: layer, rank
+        ConvSVD-->>API: factorized Conv Module
+        API->>Copy: set_named_module(layer_name, replacement)
+    end
+
+    loop linear_ranks の各 layer_name / rank
+        API->>Base: get_named_module(layer_name)
+        Base-->>API: 元 Linear
+        API->>API: Linear 型を確認
+        API->>LinearSVD: layer, rank
+        LinearSVD-->>API: factorized Linear Module
+        API->>Copy: set_named_module(layer_name, replacement)
+    end
+
+    API-->>Caller: compressed model
+```
+
+この図は、**分解元は常にbaseline model、置換先はcompressed model copyであり、層ごとの分解を専用APIへ委譲する**という責務分担を示す。
+
+### コンポーネント図
+
+```mermaid
+flowchart LR
+    subgraph BASE["baseline model"]
+        BC["指定 Conv2d"]
+        BL["指定 Linear"]
+        BO["その他の層"]
+    end
+
+    subgraph COMP["compressed model = deepcopy(baseline)"]
+        CC["factorized Conv<br/>spatial Conv → 1x1 Conv"]
+        CL["factorized Linear<br/>Linear → Linear"]
+        CO["その他の層<br/>deepcopyされたまま"]
+    end
+
+    BC -->|"factorize_conv2d_layer<br/>同じ named path へ置換"| CC
+    BL -->|"factorize_linear_layer<br/>同じ named path へ置換"| CL
+    BO -->|"構造を変更しない"| CO
+```
+
+この図は、**model全体をcopyしたうえで、指定されたConv/Linearだけがfactorized Moduleへ構造変換され、対象外の層はそのまま残る**ことを示す。
 
 ## 主なcontract / 注意事項
 
