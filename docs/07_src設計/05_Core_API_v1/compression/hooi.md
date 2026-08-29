@@ -36,7 +36,7 @@ hooi(
 
 HOSVDのrankを固定したままfactorを反復最適化し、元Tensorへの再構成誤差を改善したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力Tensorを検証する。**  
    `ndim >= 2`、実数浮動小数点dtype、`ranks`が空でないMappingであることを確認する。
@@ -68,20 +68,22 @@ HOSVDのrankを固定したままfactorを反復最適化し、元Tensorへの�
 
 反復sweepは1回も行わないが、HOSVD初期化・factor/rank feasibility検証・初期誤差計算までは行う。そのため不可能rankが`max_iter=0`だけ通ることはない。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-入力 / tolerance検証
-→ HOSVD初期化
-→ HOOI feasibility検証
-→ 初期再構成
-→ history[0]
-→ [hooi_sweep
-   → core再計算
-   → 再構成
-   → relative error
-   → 収束判定] を反復
-→ core, factors, history
+```mermaid
+flowchart TD
+    A["入力 / tolerance を検証"] --> B["HOSVD で初期化"]
+    B --> C["HOOI feasibility を検証"]
+    C --> D["初期再構成誤差を history[0] に保存"]
+    D --> E{"sweep 回数 < max_iter ?"}
+    E -- No --> K["core / factors / history を返す"]
+    E -- Yes --> F["hooi_sweep"]
+    F --> G["core_from_factors"]
+    G --> H["Tensor を再構成して相対誤差を計算"]
+    H --> I{"収束した?"}
+    I -- Yes --> K
+    I -- No --> J["prev_error を更新"]
+    J --> E
 ```
 
 ## 主なcontract / 注意事項

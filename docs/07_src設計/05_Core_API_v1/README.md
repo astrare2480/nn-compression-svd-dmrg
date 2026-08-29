@@ -12,13 +12,13 @@ Signature
 引数
 戻り値
 使用場面
-処理の流れ（日本語）
-処理フロー（短縮版。必要な場合）
+処理概要
+フローチャート / 構造図（必要な場合のみ）
 主なcontract / 注意事項
 関連API
 ```
 
-### 処理説明の記述ルール
+## 処理説明の記述ルール
 
 - 関数名・変数名・PyTorch API名はコード上のidentifierをそのまま残す。
 - ただし処理内容は英語identifierの羅列だけにせず、**各段階で何をしているかを日本語で説明する**。
@@ -27,6 +27,32 @@ Signature
 - Module builderは、Parameterをどこへ配置するか、bias/device/dtype/requires_grad/autogradをどう扱うかを書く。
 - wrapper / convenience APIは、自身が持つ処理と、どの下位APIへ委譲しているかを分けて書く。
 - 数行で終わる単純utilityでも、入力解釈・内部操作・副作用・戻り値が分かる粒度を保つ。
+
+## Mermaid図を入れる基準
+
+図は**必要なAPIだけ**に追加する。以下のいずれかに当てはまり、文章だけより処理構造が理解しやすくなる場合を対象とする。
+
+1. 反復処理がある。
+2. 条件分岐が処理結果や状態遷移に影響する。
+3. 複数の下位APIをまたいで状態や中間表現が変化する。
+4. 1つのModuleを複数Moduleへ変換するなど、構造変換を視覚化する価値がある。
+
+逆に、単純な数式計算、1回の委譲だけのwrapper、短い一本道utilityにはMermaid図を付けない。
+
+現在、図を付ける代表APIは次のとおり。
+
+```text
+factorize_conv2d_layer
+factorize_named_layers
+sweep_layer_ranks
+hosvd
+hooi_sweep
+hooi
+build_tucker2_conv_from_components
+fit_with_early_stopping
+benchmark_inference
+collect_compression_metrics
+```
 
 ### Stability
 
@@ -134,7 +160,7 @@ Signature
 - [[07_src設計/05_Core_API_v1/models/FashionMNISTCNN.inspect_shapes]]
 - [[07_src設計/05_Core_API_v1/models/CIFAR10CNN]]
 
-`forward()`はPyTorch標準の呼び出し境界なので個別ファイルへ分離せず、各class仕様の「処理の流れ」で扱う。
+`forward()`はPyTorch標準の呼び出し境界なので個別ファイルへ分離せず、各class仕様の処理説明で扱う。
 
 ## utils
 

@@ -37,7 +37,7 @@ build_tucker2_conv_from_components(
 
 HOSVD/HOOIなど分解方法を問わず、同じTucker-2 Module表現へ変換したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **元ConvがTucker-2対応範囲か確認する。**  
    `groups=1`の通常Convだけを受理する。
@@ -58,16 +58,14 @@ HOSVD/HOOIなど分解方法を問わず、同じTucker-2 Module表現へ変換�
    新Parameterは独立したleaf ParameterとしてFine-tuning可能。
 10. **3層を`nn.Sequential`として返す。**
 
-### 処理フロー（短縮版）
+### 構造図
 
-```text
-conv + core + U_out + U_in
-→ semantic / shape / dtype / device検証
-→ input 1x1生成 ← U_in.T
-→ core Conv生成 ← core + 元spatial config
-→ output 1x1生成 ← U_out + 元bias
-→ requires_grad継承
-→ 3層Sequential
+```mermaid
+flowchart LR
+    X["入力 C_in"] --> A["1x1 Conv\nC_in → R_in\nweight = U_in^T"]
+    A --> B["core Conv\nR_in → R_out\n元 kernel / stride / padding / dilation"]
+    B --> C["1x1 Conv\nR_out → C_out\nweight = U_out\nbias = 元 bias"]
+    C --> Y["出力 C_out"]
 ```
 
 ## 主なcontract / 注意事項

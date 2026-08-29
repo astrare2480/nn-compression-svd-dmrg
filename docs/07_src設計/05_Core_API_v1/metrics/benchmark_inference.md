@@ -41,7 +41,7 @@ benchmark_inference(
 
 理論MACsとは別に、実際のhardware/framework上でwall-clock latencyを比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **deviceが指定されているか確認する。**  
    benchmark対象の実行場所を曖昧にしない。
@@ -66,20 +66,29 @@ benchmark_inference(
 13. **要求形式で返す。**  
     通常はfloat、詳細指定時は計測条件を含むdict。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-引数検証
-→ fixed input決定
-→ model状態保存 / eval
-→ warmup
-→ CUDA sync
-→ timer start
-→ repeats forward
-→ CUDA sync
-→ 平均時間
-→ 状態復元
-→ float または details dict
+```mermaid
+flowchart TD
+    A["device / warmup / repeats を検証"] --> B{"input_batch 指定?"}
+    B -- Yes --> C["指定 batch を使用"]
+    B -- No --> D["take_inference_batch(data_loader)"]
+    C --> E["training 状態保存 → eval → device へ移動"]
+    D --> E
+    E --> F["warmup forward"]
+    F --> G{"CUDA?"}
+    G -- Yes --> H["計測前 synchronize"]
+    G -- No --> I["timer start"]
+    H --> I
+    I --> J["同じ input で repeats 回 forward"]
+    J --> K{"CUDA?"}
+    K -- Yes --> L["計測後 synchronize"]
+    K -- No --> M["平均時間を計算"]
+    L --> M
+    M --> N["training 状態を復元"]
+    N --> O{"return_details?"}
+    O -- Yes --> P["details dict を返す"]
+    O -- No --> Q["平均秒数 float を返す"]
 ```
 
 ## 主なcontract / 注意事項
