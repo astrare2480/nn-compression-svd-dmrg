@@ -52,19 +52,25 @@ CIFAR-10などで複数Convを同時に圧縮するmodel-wide SVD、Conv+Linear�
 
 ```mermaid
 flowchart TD
-    A["baseline model を受け取る"] --> B["deepcopy して compressed model を作る"]
-    B --> C["conv_ranks の指定層を順に処理"]
-    C --> D["baseline から Conv2d を取得・検証"]
-    D --> E["factorize_conv2d_layer で分解"]
-    E --> F["copy 側の同じ path を置換"]
-    F --> G["linear_ranks の指定層を順に処理"]
-    G --> H["baseline から Linear を取得・検証"]
-    H --> I["factorize_linear_layer で分解"]
-    I --> J["copy 側の同じ path を置換"]
-    J --> K["compressed model を返す"]
+    A["baseline model を deepcopy"] --> B{"未処理の conv_ranks がある?"}
+
+    B -- Yes --> C["baseline から対象層を取得"]
+    C --> D{"Conv2d?"}
+    D -- No --> X["TypeError"]
+    D -- Yes --> E["分解して copy 側の同じ path を置換"]
+    E --> B
+
+    B -- No --> F{"未処理の linear_ranks がある?"}
+    F -- Yes --> G["baseline から対象層を取得"]
+    G --> H{"Linear?"}
+    H -- No --> X
+    H -- Yes --> I["分解して copy 側の同じ path を置換"]
+    I --> F
+
+    F -- No --> J["compressed model を返す"]
 ```
 
-この図は、**実装上の細かな分岐ではなく、model copy作成 → Conv圧縮 → Linear圧縮 → 返却という主処理の流れ**を示す。
+この図は、**Conv指定をすべて処理してからLinear指定へ進むこと、各指定層を反復処理すること、型が不正なら異常終了すること**という制御フローを示す。
 
 ### シーケンス図
 
