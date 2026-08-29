@@ -87,7 +87,58 @@ $$
 \end{aligned}
 $$
 
-## 3. rank sweep 全20設定
+## 3. 現行 `conv_tucker.py` のTucker-2構造
+
+Conv2d weight
+
+```text
+(C_out, C_in, kH, kW)
+```
+
+のmode 0 / 1を圧縮し、
+
+```text
+C_in
+→ 1x1 Conv / U_in^T
+→ R_in
+→ kHxkW Conv / core
+→ R_out
+→ 1x1 Conv / U_out
+→ C_out
+```
+
+へ置換する。
+
+対応するshapeは、
+
+```text
+U_in  : (C_in,  R_in)
+core  : (R_out, R_in, kH, kW)
+U_out : (C_out, R_out)
+```
+
+である。
+
+現行builderでは、中央core Convだけが元Convの `stride / padding / dilation / padding_mode` を引き継ぎ、前後のprojectionは1x1・stride=1・padding=0・dilation=1。元biasは最後の1x1 Convへ置く。
+
+現在のTucker-2 Convは `groups=1` の通常 `nn.Conv2d` のみを対象とし、grouped convolutionや転置畳み込みを黙って近似しない。
+
+## 4. rank contract
+
+`rank_out` / `rank_in` は独立に検証する。
+
+```text
+1 <= rank_out <= C_out
+1 <= rank_in  <= C_in
+```
+
+boolは整数として受理せず拒否する。
+
+汎用HOSVD/HOOI側ではmode-n unfolding上の最大rankまで検証するが、Tucker-2 Convではmode 0 / 1のchannel rankとして上記範囲を入口で固定する。
+
+HOOIではさらに、他modeをfactorで射影した後のprojected unfolding上でそのrankが実現可能かを反復前に検証する。
+
+## 5. rank sweep 全20設定
 
 | rank_out | rank_in | params | Conv2 weight | param削減 | val acc | acc drop | Conv2 MAC削減 | 全MAC削減 | weight error |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -112,7 +163,7 @@ $$
 | 8 | 16 | 112,586 | 2,176 | 12.62% | 0.3978 | 0.3366 | 88.19% | 40.18% | 0.729537 |
 | 8 | 8 | 111,754 | 1,344 | 13.26% | 0.3598 | 0.3746 | 92.71% | 42.24% | 0.758660 |
 
-## 4. accuracy dropの具体例
+## 6. accuracy dropの具体例
 
 定義：
 
@@ -134,7 +185,7 @@ $$
 
 であり、0.0006は3枚分。これは「本質的に精度が上がった」と断定する大きさではない。
 
-## 5. rank方向は対称ではない
+## 7. rank方向は対称ではない
 
 例：
 
@@ -145,7 +196,7 @@ $$
 
 同じようにrankの積が小さくても、入力channel側と出力channel側のどちらを絞るかでtask影響が異なる。
 
-## 6. 選択した3候補
+## 8. 選択した3候補
 
 ```text
 aggressive   = (16,24)
@@ -153,7 +204,7 @@ balanced     = (32,16)
 conservative = (32,24)
 ```
 
-## 7. HOSVD Tucker-2 fine-tuning
+## 9. HOSVD Tucker-2 fine-tuning
 
 | role | rank | val before | test before | val after | test after | best epoch | params | Conv2 MAC削減 |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -175,6 +226,24 @@ $$
 
 ただし追加学習込みsingle runなので、「Tucker化そのものが3.55 point改善」とは解釈しない。
 
-## 8. 注意
+## 10. MACs contract
+
+Tucker-2の実験表では理論MACsと実測latencyを分けて扱う。
+
+現行 `metrics/macs.py` の圧縮MACs helperでは、生成不可能なrankに対してもっともらしいMACs値を返さないため、rankをbool拒否・正整数・最大rank以下として検証する。また圧縮Convの `out_h / out_w` は正であることを要求する。
+
+SVD向け `compressed_conv2d_macs()` は `groups=1` のみを対象とする。Tucker-2の層MACsも同じく、実際に構築する3層構造の演算量として評価し、parameter削減率とMAC削減率を混同しない。
+
+さらに、MACsが減ってもGPU latencyが必ず短くなるとは限らない。これはSVD編でも確認した通り、kernel launch、メモリアクセス、層分割のoverhead等が影響するためである。
+
+## 11. Autograd / Parameterの扱い
+
+`build_tucker2_conv()` は学習済みConvを新しい3層moduleへ置換する初期化APIなので、元weightをdetachした上で値をcopyする。新しい3層のParameterはleafで、元ConvのParameterと共有しない。
+
+一方 `tucker2_hooi()` は低レベルTensor分解APIなので入力weightをdetachしない。この2つを混同しない。
+
+## 12. 注意
 
 03 balanced `0.7682` と、05のHOSVD同rank `0.7508` は別run。絶対値を横断して同じ実験のように扱わない。
+
+また、現行srcのvalidation強化は入力contractを明示化したもので、上記rank sweep / Fine-tuningの保存済み実験結果を再計算して置き換える変更ではない。

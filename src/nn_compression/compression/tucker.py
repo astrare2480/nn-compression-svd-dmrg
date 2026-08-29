@@ -69,8 +69,10 @@ def reconstruct_tucker(
     全mode分解と部分mode分解の両方を扱う。
 
     ``factors`` は ``{mode: U}`` なので、未指定 mode は掛け戻さず
-    core の dimension がそのまま残る。
+    core の dimension がそのまま残る。Tucker系Public APIと同じく、
+    ``core`` は2次元以上を要求する。
     """
+    validate_tensor_ndim_at_least_2(core, name="core")
     original = core
     for mode, U in factors.items():
         original = mode_dot(original, U, mode)

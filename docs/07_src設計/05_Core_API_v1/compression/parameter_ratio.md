@@ -1,0 +1,52 @@
+# `parameter_ratio`
+
+**Stability:** A  
+**定義:** `src/nn_compression/compression/tucker.py`
+
+## 責務
+
+Tucker表現の要素数が元Tensor要素数の何倍かを比率で返す。値が小さいほど保存量が小さい。
+
+## Signature
+
+```python
+parameter_ratio(
+    shape: tuple[int, ...],
+    ranks: dict[int, int],
+) -> float
+```
+
+## 引数
+
+- `shape`: 圧縮前Tensorのshape。元Tensorの総要素数と各modeのdimensionを決める。
+- `ranks`: `{mode: rank}`形式のTucker rank指定。指定modeのfactor sizeとcore dimensionを決める。
+
+## 戻り値
+
+Tucker表現の総要素数が元Tensorの何割・何倍に相当するかを表す`float`。
+
+```text
+tucker_parameter_count(shape, ranks) / original_element_count
+```
+
+例えば`0.25`ならTucker表現の要素数は元Tensorの25%。値が小さいほど表現サイズが小さい。
+
+## 使用場面
+
+rank sweepでTucker表現の圧縮の強さを「元の何割か」で比較するとき。
+
+## 処理概要
+
+1. **元shapeが正のdimensionだけで構成されているか検証する。**
+2. **ranksをTucker共通contractで検証する。**
+3. **元Tensorの総要素数をshapeの積で計算する。**
+4. **`tucker_parameter_count()`でTucker表現の総要素数を計算する。**
+5. **Tucker要素数を元要素数で割って返す。**
+
+## 主なcontract / 注意事項
+
+`ranks={}`ではidentity表現となり、factorがなくcoreが元Tensorそのものなのでratioは1.0相当になる。
+
+## 関連API
+
+`tucker_parameter_count`, `compression_factor`

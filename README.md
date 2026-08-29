@@ -11,6 +11,7 @@
 - HOSVD / HOOIを同条件でFine-tuning比較
 - Tucker / HOOI処理を `src/nn_compression/` へ共通化
 - SVDからHOOIまでの基礎理論を、shape・途中式・成立条件まで含めて再監査
+- src全体のpublic API contractをレビューし、SVD〜Tucker/HOOIを **Core API v1** として固定する設計書を作成
 
 ## 現在の到達点
 
@@ -32,6 +33,9 @@ Tucker / HOSVD
         ↓
 HOOI
   iterative refinement / TensorLy照合 / Fine-tuning比較
+        ↓
+Core API v1
+  public contract freeze
         ↓
 TT / MPS
         ↓
@@ -196,12 +200,14 @@ historical Notebookは削除せず、何が問題で、なぜcorrected版・src�
 ```text
 src/nn_compression/
 ├─ tensor/
-│  └─ operations.py        # unfold / fold / mode product
+│  ├─ operations.py        # unfold / fold / mode product
+│  └─ validation.py        # tensor shape / mode contract
 ├─ compression/
 │  ├─ svd.py
 │  ├─ linear_svd.py
 │  ├─ conv_svd.py
 │  ├─ tucker.py            # HOSVD / Tucker reconstruction
+│  ├─ tucker_validation.py # Tucker/HOOI contract
 │  ├─ hooi.py              # generic / partial HOOI
 │  └─ conv_tucker.py       # Conv2d Tucker-2
 ├─ models/
@@ -214,7 +220,28 @@ src/nn_compression/
 
 Notebookは学習過程・自作実装を残し、再利用可能な処理をsrcへ共通化する方針としている。
 
-Tucker/HOOI src化後の回帰テストについて、ローカル実行では `99 passed / 0 failed` を確認している。
+現行srcで固定する主なcontract：
+
+- Tensor / Tucker coreは2次元以上・各dimension正
+- mode / rankでboolを整数として受理しない
+- Tucker `ranks` はMapping、rank上限はmode-n unfoldingの最大rank
+- HOSVD / HOOIと、それらを使うTucker-2分解APIは現時点で**実数浮動小数点Tensor限定**
+- HOOI feasibilityは `max_iter=0` でも反復前に検証
+- Tucker-2のTensor-level HOOIは入力weightをdetachせず、Module構築時にautogradを切る
+- 評価・ベンチマーク後はrootだけでなく全submoduleのtrain/eval状態を復元
+- empty loaderは明示的に拒否し、対応箇所では `len(loader)` を仮定しない
+- MACs rank / 出力空間size、benchmark countではTensor scalarを整数として受理しない
+
+src contract reviewのbaseline `49836bc` ではローカル全pytest `252 passed / 0 failed` を確認済み。Core API v1 self reviewで追加したvalidation/test差分については、GitHub CIが無いため最終merge前にローカルpytest確認を行う。
+
+詳細：
+
+- [src設計書](docs/07_src設計/README.md)
+- [アーキテクチャ設計](docs/07_src設計/01_アーキテクチャ設計.md)
+- [Core API v1 / 関数仕様](docs/07_src設計/05_Core_API_v1.md)
+- [テスト設計](docs/07_src設計/06_テスト設計.md)
+- [実装編](docs/README_実装編.md)
+- [Tucker基礎実装検証](docs/06_Tucker基礎実装検証/README.md)
 
 ## 次
 
