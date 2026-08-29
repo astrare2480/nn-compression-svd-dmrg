@@ -5,7 +5,7 @@
 
 ## 責務
 
-baselineに対するcompressed modelのParameter削減率を計算する。
+baselineに対してcompressed modelのParameter総要素数がどれだけ減ったか、削減率として計算する。
 
 ## Signature
 
@@ -26,17 +26,33 @@ baseline modelとcompressed model。
 1 - compressed_parameters / baseline_parameters
 ```
 
+0.9なら90%削減、0なら削減なし。負値ならcompressed側のParameter数が増えている。
+
 ## 使用場面
 
-model-levelの圧縮率評価。
+model-levelの圧縮効果をparameter数で比較するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-両modelへ`count_parameters()`を適用して比率を計算する。
+1. **baselineへ`count_parameters()`を適用する。**
+2. **compressed modelにも同じ関数を適用する。**
+3. **compressed / baselineの比率を計算する。**
+4. **1からその比率を引いて削減率へ変換する。**
+5. **floatを返す。**
+
+### 処理フロー（短縮版）
+
+```text
+baseline params
++ compressed params
+→ compressed / baseline
+→ 1 - ratio
+→ reduction
+```
 
 ## 主なcontract / 注意事項
 
-0.9なら90%削減を意味する。
+accuracyやMACsの削減率とは別指標。Parameterが減ってもlatency短縮を保証しない。
 
 ## 関連API
 

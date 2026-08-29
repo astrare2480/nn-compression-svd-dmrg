@@ -5,7 +5,7 @@
 
 ## 責務
 
-元Tensorと近似Tensorの相対Frobenius誤差を計算する。
+元Tensorと近似Tensorの差をFrobenius normで測り、元Tensorのnormで正規化した相対誤差を返す。
 
 ## Signature
 
@@ -30,17 +30,36 @@ relative_frobenius_error(
 
 ## 使用場面
 
-SVD/Tucker/HOOIのweight再構成誤差比較、自作実装とTensorLy照合。
+SVD/Tucker/HOOIのweight再構成誤差比較、自作分解とTensorLy等の数値照合。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-shape確認 → `||X||`計算 → zero確認 → 差のnormを分母で割る。
+1. **`X`と`X_hat`のshapeが一致するか確認する。**
+2. **元TensorのFrobenius normを計算する。**  
+   `torch.linalg.vector_norm(X)`を分母にする。
+3. **分母が0でないか確認する。**  
+   zero tensorでは相対誤差を定義できないため`ValueError`にする。
+4. **差Tensor`X - X_hat`のFrobenius normを計算する。**
+5. **差のnormを元Tensorのnormで割る。**
+6. **scalar Tensorのまま返す。**  
+   関数内で`detach()`やPython float化をしないため、必要なら呼び出し側がautograd graphを利用できる。
+
+### 処理フロー（短縮版）
+
+```text
+shape一致確認
+→ ||X||_F
+→ zero確認
+→ ||X-X_hat||_F
+→ 分子 / 分母
+→ scalar Tensor
+```
 
 ## 主なcontract / 注意事項
 
 - shape不一致は`ValueError`。
-- zero tensorでは相対値が定義できないため`ValueError`。
-- 関数内でdetach/float化せずTensorを返す。
+- zero tensorは`ValueError`。
+- weight errorの小ささはtask accuracyの高さを保証しない。
 
 ## 関連API
 

@@ -5,7 +5,7 @@
 
 ## 責務
 
-baseline/compressed modelを同一input条件で連続benchmarkし、必要なら結果を表示する。
+baseline/compressed modelを同じinput batch・同じbenchmark条件で連続計測し、必要なら比較結果を表示するconvenience API。
 
 ## Signature
 
@@ -25,7 +25,7 @@ benchmark_inference_print(
 
 ## 引数
 
-2モデル、batch取得元、device、benchmark条件。
+2モデル、batch取得元、device、表示有無、benchmark条件。
 
 ## 戻り値
 
@@ -33,20 +33,35 @@ benchmark_inference_print(
 
 ## 使用場面
 
-Notebookで圧縮前後latencyを簡単に比較・表示するとき。
+Notebook上で圧縮前後latencyを同条件で簡単に比較したいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **両modelのtraining状態を保存する。**
+2. **共通input batchを1つ決める。**  
+   `input_batch`が未指定なら`take_inference_batch(data_loader)`を1回だけ呼ぶ。
+3. **baseline modelを`benchmark_inference()`で計測する。**  
+   共通input、warmup、repeatsを渡し、詳細dictを受け取る。
+4. **compressed modelもまったく同じ条件で計測する。**
+5. **`verbose=True`ならbatch size・shape・warmup/repeats・両時間を表示する。**
+6. **秒単位の2つの平均時間をtupleで返す。**
+7. **処理前の両modelのtraining状態を復元する。**
+
+### 処理フロー（短縮版）
 
 ```text
-必要なら共通input_batchを1回取得
+2モデル状態保存
+→ 共通input_batchを1回確保
 → baseline benchmark
 → compressed benchmark
-→ verboseなら条件/時間表示
+→ optional print
+→ (baseline_time, compressed_time)
+→ 状態復元
 ```
 
 ## 主なcontract / 注意事項
 
-両modelのtraining状態を処理前後で復元する。
+入力差をlatency差へ混ぜないため、両modelへ同一Tensorを渡す。
 
 ## 関連API
 

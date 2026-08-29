@@ -5,7 +5,7 @@
 
 ## 責務
 
-HOOIの前回誤差と現在誤差の差が、絶対・相対tolerance内か判定する。
+HOOIの前回誤差と現在誤差の変化が、絶対・相対toleranceの組合せで十分小さくなったか判定する。
 
 ## Signature
 
@@ -21,30 +21,47 @@ has_converged(
 
 ## 引数
 
-- `error`: 現在の誤差。
-- `prev_error`: 前回誤差。
-- `abs_tol`: 絶対許容値。
-- `rel_tol`: 前回誤差に比例する相対許容値。
+- `error`: 現在の再構成誤差。
+- `prev_error`: 1回前の再構成誤差。
+- `abs_tol`: 誤差の絶対変化に対する許容値。
+- `rel_tol`: 前回誤差の大きさに比例する相対許容値。
 
 ## 戻り値
+
+次を満たせば`True`。
 
 ```python
 abs(error - prev_error) <= abs_tol + rel_tol * abs(prev_error)
 ```
 
-なら`True`。
-
 ## 使用場面
 
-HOOI等の反復法の停止判定。
+HOOIなど、誤差の改善量を見て反復を止める処理。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-`tolerance validation → 誤差変化量計算 → 閾値比較`。
+1. **`abs_tol`を検証する。**  
+   boolではない有限数で、0以上であることを要求する。
+2. **`rel_tol`を同様に検証する。**
+3. **現在誤差と前回誤差の絶対変化量を計算する。**  
+   `absolute_change = abs(error - prev_error)`。
+4. **許容閾値を計算する。**  
+   `abs_tol + rel_tol * abs(prev_error)`として、絶対許容とスケール依存の相対許容を足す。
+5. **変化量が閾値以下かをboolで返す。**
+
+### 処理フロー（短縮版）
+
+```text
+abs_tol / rel_tol検証
+→ |error - prev_error|
+→ abs_tol + rel_tol*|prev_error|
+→ 比較
+→ bool
+```
 
 ## 主なcontract / 注意事項
 
-`tolerance`は有限・0以上・bool不可。
+収束判定は「誤差そのものが小さいか」ではなく、**前回からの変化が小さいか**を見ている。
 
 ## 関連API
 

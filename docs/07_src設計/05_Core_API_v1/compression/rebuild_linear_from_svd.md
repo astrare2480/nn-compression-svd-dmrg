@@ -5,7 +5,7 @@
 
 ## 責務
 
-truncated SVD成分から、元layerと同じ入出力shapeの単一`nn.Linear`を再構築する。
+truncated SVD成分から、元layerと同じ入出力shapeを持つ単一`nn.Linear`を再構築する。層数・Parameter shapeは圧縮前と同じなので、parameter削減ではなく低rank近似誤差だけを評価するためのAPI。
 
 ## Signature
 
@@ -29,22 +29,41 @@ rebuild_linear_from_svd(
 
 ## 使用場面
 
-パラメータ削減をせず、「低rank近似weightに置き換えたら精度がどう変わるか」を確認するとき。
+「低rank近似したweightに置き換えた場合のaccuracy低下」を、2層化によるparameter削減とは切り分けて確認するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **SVD成分から近似weightを再構成する。**  
+   `W_r = U_r @ diag(S_r) @ Vh_r`を計算し、元Linearと同shapeの低rank近似行列を作る。
+2. **元layerのdeviceとdtypeを取得する。**  
+   新しいModuleをCPU/float32へ勝手に戻さず、元layerと同じ配置・精度で作るため。
+3. **元と同じ入出力dimensionのLinearを新規作成する。**  
+   元layerにbiasがある場合だけ、新layerにもbiasを持たせる。
+4. **近似weightを新layerへcopyする。**  
+   `torch.no_grad()`内でParameterへ値をコピーし、copy操作自体をautograd graphへ入れない。
+5. **biasを必要に応じてコピーする。**  
+   元biasが存在する場合だけ、その値を新layerへ引き継ぐ。
+6. **`requires_grad`を元layerから引き継ぐ。**  
+   frozen layerを意図せずtrainableにしない。
+7. **新しい独立layerを返す。**  
+   元layer自体は変更しない。
+
+### 処理フロー（短縮版）
 
 ```text
-U_r @ diag(S_r) @ Vh_r
-→ 元と同shapeの新Linear作成
-→ weight/biasをcopy
-→ requires_gradを継承
+U_r, S_r, Vh_r
+→ W_rを再構成
+→ 元device/dtypeで同shape Linearを新規作成
+→ weight / biasをcopy
+→ requires_grad継承
+→ 新Linear
 ```
 
 ## 主なcontract / 注意事項
 
 - 新しいlayerを返し、入力layerは変更しない。
 - 元biasがある場合のみbiasを持つ。
-- device/dtype/requires_gradを維持。
+- device/dtype/requires_gradを維持する。
 
 ## 関連API
 

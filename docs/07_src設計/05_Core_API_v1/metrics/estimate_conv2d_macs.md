@@ -5,7 +5,7 @@
 
 ## 責務
 
-1つのConv2dについてbaseline/compressed MACsと削減率をまとめて計算する。
+1つのConv2dについてbaseline MACs、SVD 2層化後MACs、削減率をまとめて計算する。
 
 ## Signature
 
@@ -24,21 +24,25 @@ estimate_conv2d_macs(
 
 ## 戻り値
 
-```text
-(baseline_macs, compressed_macs, compute_reduction)
-```
+`(baseline_macs, compressed_macs, compute_reduction)`。
 
 ## 使用場面
 
 Notebookやrank sweepで1 Convの理論計算量を比較するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-`conv2d_macs()`と`compressed_conv2d_macs()`を計算し、`1 - compressed/baseline`を返す。
+1. **圧縮対象として`groups=1` Convか確認する。**
+2. **`out_hw`を`out_h`, `out_w`へ分ける。**
+3. **`conv2d_macs()`で元ConvのMACsを計算する。**
+4. **`compressed_conv2d_macs()`でSVD 2層ConvのMACsを計算する。**
+5. **`1 - compressed / baseline`で削減率を求める。**
+6. **`verbose=True`なら3つの値を表示する。**
+7. **3要素tupleを返す。**
 
 ## 主なcontract / 注意事項
 
-`out_hw`は呼び出し側が実際の出力shapeに合わせて渡す。
+`out_hw`は呼び出し側が対象Convの実際の出力shapeに合わせて渡す。
 
 ## 関連API
 

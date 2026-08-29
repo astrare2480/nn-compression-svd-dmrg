@@ -5,7 +5,7 @@
 
 ## 責務
 
-baseline accuracyからcompressed accuracyがどれだけ低下したか計算する。
+baseline accuracyからcompressed accuracyがどれだけ低下したかを差分で返す。
 
 ## Signature
 
@@ -19,7 +19,9 @@ accuracy_drop(
 
 ## 引数
 
-baseline/compressed accuracyと表示有無。
+- `baseline_accuracy`: 圧縮前accuracy。
+- `compressed_accuracy`: 圧縮後accuracy。
+- `verbose`: 2つのaccuracyと差分を表示するか。
 
 ## 戻り値
 
@@ -27,15 +29,25 @@ baseline/compressed accuracyと表示有無。
 
 ## 使用場面
 
-圧縮前後のtask性能差を簡潔に記録するとき。
+圧縮によるtask性能差を、絶対accuracyと別の1列として比較表へ入れるとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-2つのaccuracyを引き、必要なら表示する。
+1. **baseline accuracyからcompressed accuracyを引く。**
+2. **`verbose=True`なら比較元・比較先・差分を表示する。**
+3. **差分をfloat相当の値として返す。**
+
+### 値の読み方
+
+```text
+正の値 → compressed側のaccuracyが低い
+0       → 同じaccuracy
+負の値 → compressed側のaccuracyが高い
+```
 
 ## 主なcontract / 注意事項
 
-正なら精度低下、負ならcompressed側のaccuracyが高い。
+この関数は統計的有意性を判定しない。single seedの小差を「改善」と強く解釈するかどうかは実験設計側の責務。
 
 ## 関連API
 

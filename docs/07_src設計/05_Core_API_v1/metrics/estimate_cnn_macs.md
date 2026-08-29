@@ -25,7 +25,7 @@ estimate_cnn_macs(
 
 ## 引数
 
-- positional `conv2_rank/fc1_rank`: Fashion-MNIST互換。
+- positional `conv2_rank/fc1_rank`: Fashion-MNIST historical互換。
 - `conv_ranks`: `{conv_name: rank}`。
 - `linear_ranks`: `{linear_name: rank}`。
 - `conv_output_hw`: `{conv_name: (H,W)}`。
@@ -37,21 +37,35 @@ estimate_cnn_macs(
 
 ## 使用場面
 
-複数層SVD圧縮のmodel-level理論計算量比較。
+複数Conv/Linearを同時圧縮した場合のmodel-level理論計算量を比較するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **Conv出力空間指定を決める。**  
+   未指定ならFashion-MNIST互換の`conv1:28x28`, `conv2:14x14`を使う。
+2. **圧縮rank指定を正規化する。**  
+   `conv_ranks`がなければlegacy `conv2_rank`から`{"conv2": rank}`を作る。Linearも同様に`fc1_rank`を`linear_ranks`へ変換する。
+3. **Conv層を1つずつ集計する。**  
+   named moduleを取得し、baseline MACsを常に加算する。圧縮rankが指定された層だけ`compressed_conv2d_macs()`、未指定層はbaseline値をcompressed側にも加える。
+4. **Linear層を1つずつ集計する。**  
+   baselineは`linear_macs()`、rank指定層だけ`compressed_linear_macs()`を使う。
+5. **全対象層のbaseline/compressed MACsを合計する。**
+6. **`1 - compressed/baseline`で削減率を求める。**
+7. **必要なら表示し、3要素tupleを返す。**
+
+### 処理フロー（短縮版）
 
 ```text
-各Convをbaseline計算
-→ rank指定層だけcompressed式へ置換
-→ 各Linearも同様
+引数をnamed rank辞書へ正規化
+→ 各Conv: baseline + 圧縮有無でcompressed式を選択
+→ 各Linear: baseline + 圧縮有無でcompressed式を選択
 → 全層合計
 → reduction
 ```
 
 ## 主なcontract / 注意事項
 
-default値はFashion-MNIST historical実験互換。CIFAR等ではnamed引数で対象層・空間sizeを明示する。
+default値はFashion-MNIST historical実験互換。CIFAR-10等では`conv_ranks`, `conv_output_hw`, `linear_ranks`を明示して使う。
 
 ## 関連API
 

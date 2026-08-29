@@ -5,7 +5,7 @@
 
 ## 責務
 
-Fashion-MNIST学習Datasetを、seed固定で再現可能な複数Subsetへ分割する。
+Fashion-MNIST学習Datasetを、指定lengthとseedに従って再現可能な複数Subsetへ分割する。
 
 ## Signature
 
@@ -20,7 +20,7 @@ split_fashion_mnist_dataset(
 
 ## 引数
 
-Dataset、各Subsetの長さ、split seed。
+Dataset、各Subsetの長さ、split専用seed。
 
 ## 戻り値
 
@@ -28,15 +28,20 @@ Dataset、各Subsetの長さ、split seed。
 
 ## 使用場面
 
-train / Early-Stopping validation / rank-selection validationを分離するとき。
+train / Early-Stopping validation / rank-selection validationを再現可能に分離するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-`make_torch_generator(seed)` → `random_split(dataset, lengths, generator=...)`。
+1. **split専用の`torch.Generator`を作る。**  
+   `make_torch_generator(seed)`を使い、global RNGや学習shuffle用Generatorと分ける。
+2. **Datasetと`split_lengths`を`random_split()`へ渡す。**
+3. **専用Generatorでindex割当を決める。**  
+   同じseed・同じDataset長・同じsplit lengthsなら同じ分割を再現できる。
+4. **生成されたSubset群をそのまま返す。**
 
 ## 主なcontract / 注意事項
 
-split乱数と学習DataLoader shuffle乱数を別Generatorとして扱う。
+split乱数とtraining DataLoaderのshuffle乱数を同じGeneratorで共有しない。
 
 ## 関連API
 

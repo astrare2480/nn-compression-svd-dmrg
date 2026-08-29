@@ -5,7 +5,7 @@
 
 ## 責務
 
-modelが保持するParameterの総要素数を数える。
+modelが保持するすべての`torch.nn.Parameter`の総要素数を数える。
 
 ## Signature
 
@@ -19,19 +19,33 @@ count_parameters(model) -> int
 
 ## 戻り値
 
-全`model.parameters()`の`numel()`合計。
+`model.parameters()`に含まれる各Parameterの`numel()`合計。
 
 ## 使用場面
 
-baseline/compressed modelのサイズ比較。
+baseline/compressed modelの保存Parameter量を比較するとき、圧縮率recordを作るとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-全Parameterを走査して要素数を加算する。
+1. **`model.parameters()`でParameterを順に取得する。**
+2. **各Parameterの`numel()`を求める。**  
+   shapeに関係なく、そのParameterが保持するscalar数へ変換する。
+3. **全Parameterの要素数を合計する。**
+4. **整数として返す。**
+
+### 処理フロー（短縮版）
+
+```text
+model.parameters()
+→ 各parameter.numel()
+→ sum
+→ total parameters
+```
 
 ## 主なcontract / 注意事項
 
-`requires_grad=False`のParameterも数える。
+- `requires_grad=False`のParameterも数える。これは「学習可能Parameter数」ではなく「modelが保持するParameter総数」の指標。
+- bufferは含めない。
 
 ## 関連API
 

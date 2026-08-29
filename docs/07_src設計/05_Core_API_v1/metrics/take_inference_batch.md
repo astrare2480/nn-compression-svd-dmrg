@@ -5,7 +5,7 @@
 
 ## 責務
 
-benchmark比較用に固定した1 input batchをDataLoaderから取得する。
+latency benchmarkでbaseline/compressedへ同じ入力を渡すため、DataLoaderから固定した1 input batchを取得する。
 
 ## Signature
 
@@ -21,25 +21,40 @@ take_inference_batch(
 
 ## 戻り値
 
-画像等のinput Tensor。`(inputs, labels)`型batchなら先頭要素を返す。
+入力Tensor。batchが`(inputs, labels)`などtuple/listなら先頭要素を返す。
 
 ## 使用場面
 
-baseline/compressed benchmarkへ**同じ入力Tensor**を渡すとき。
+baseline/compressed modelのbenchmark条件から「入力batchの違い」を排除したいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **DataLoaderのsamplerを確認する。**
+2. **`RandomSampler`なら取得を拒否する。**  
+   shuffle付きloaderから`next(iter(loader))`すると専用Generator状態を消費し、その後の学習順やcandidate比較条件を変える可能性があるため。
+3. **`next(iter(data_loader))`で1 batch取得する。**
+4. **StopIterationならempty loaderとして`ValueError`へ変換する。**
+5. **batch形式を入力Tensorへ正規化する。**  
+   batchがTensorならそのまま、tuple/listなら先頭要素をinputとして取り出す。
+6. **固定input batchを返す。**  
+   baselineとcompressedの両方へ同じTensorを渡すのは呼び出し側の責務。
+
+### 処理フロー（短縮版）
 
 ```text
-sampler確認
-→ next(iter(loader))
-→ Tensorまたはtuple/listの先頭をinputとして抽出
+DataLoader
+→ sampler確認
+→ RandomSamplerなら拒否
+→ 1 batch取得
+→ Tensor / tuple / listをinput Tensorへ正規化
+→ fixed input_batch
 ```
 
 ## 主なcontract / 注意事項
 
 - `RandomSampler`はshuffle Generator消費を避けるため拒否。
 - empty loaderは`ValueError`。
-- custom samplerの乱数消費までは自動判定しない。
+- 任意custom samplerの乱数消費までは自動判定しない既知制約。
 
 ## 関連API
 

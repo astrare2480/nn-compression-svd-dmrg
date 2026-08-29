@@ -4,7 +4,7 @@
 
 `src/nn_compression/` のPublic APIを、**1関数または1クラスにつき1ファイル**で確認できるようにする。
 
-各ファイルは次を共通項目として持つ。
+各ファイルは原則として次を共通項目として持つ。
 
 ```text
 責務
@@ -12,10 +12,21 @@ Signature
 引数
 戻り値
 使用場面
-ざっくりした処理
+処理の流れ（日本語）
+処理フロー（短縮版。必要な場合）
 主なcontract / 注意事項
 関連API
 ```
+
+### 処理説明の記述ルール
+
+- 関数名・変数名・PyTorch API名はコード上のidentifierをそのまま残す。
+- ただし処理内容は英語identifierの羅列だけにせず、**各段階で何をしているかを日本語で説明する**。
+- 処理順は現行`src`の実装順・意味と一致させる。
+- アルゴリズム系APIは、validation・中間表現・更新・再構成・収束判定などの段階を分けて書く。
+- Module builderは、Parameterをどこへ配置するか、bias/device/dtype/requires_grad/autogradをどう扱うかを書く。
+- wrapper / convenience APIは、自身が持つ処理と、どの下位APIへ委譲しているかを分けて書く。
+- 数行で終わる単純utilityでも、入力解釈・内部操作・副作用・戻り値が分かる粒度を保つ。
 
 ### Stability
 
@@ -123,7 +134,7 @@ Signature
 - [[07_src設計/05_Core_API_v1/models/FashionMNISTCNN.inspect_shapes]]
 - [[07_src設計/05_Core_API_v1/models/CIFAR10CNN]]
 
-`forward()` はPyTorch標準の呼び出し境界なので個別ファイルへ分離せずclass仕様内で扱う。
+`forward()`はPyTorch標準の呼び出し境界なので個別ファイルへ分離せず、各class仕様の「処理の流れ」で扱う。
 
 ## utils
 

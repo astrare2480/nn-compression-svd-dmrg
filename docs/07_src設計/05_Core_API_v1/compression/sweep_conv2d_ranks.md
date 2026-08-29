@@ -5,7 +5,7 @@
 
 ## 責務
 
-Conv2d SVD用に、factorizationとMACs計算を組み合わせたrank sweepを実行する。
+1つのnamed Conv2dについて、SVD rank候補を評価するための`factorize_conv2d_layer`＋MACs付きwrapper。
 
 ## Signature
 
@@ -30,24 +30,39 @@ sweep_conv2d_ranks(
 
 ## 引数
 
-- `out_hw`: 対象Convの出力空間 `(H, W)`。
-- その他はrank候補・評価条件。
+`model`, 対象Conv名、rank列、対象Convの出力空間`out_hw`、評価/benchmark条件。
 
 ## 戻り値
 
-rankごとの評価record list。
+rank候補ごとのmetrics record list。
 
 ## 使用場面
 
-Conv SVDのrank候補比較。
+Conv SVDのrank sweepをNotebookから簡潔に実行するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-`estimate_conv2d_macs`用callbackを作り、`sweep_layer_ranks()`へ処理を委譲する。
+1. **Conv SVD用のMACs callbackを内部で定義する。**  
+   元Convとrankを受け取り、`estimate_conv2d_macs()`でcompressed MACsと削減率を返す形にする。
+2. **generic `sweep_layer_ranks()`へ処理を委譲する。**
+3. **factorize callbackとして`factorize_conv2d_layer`を渡す。**  
+   各rankで同じConv SVD実装を使う。
+4. **対象Convの`out_hw`をMACs計算へ渡す。**  
+   理論計算量が実際のfeature map sizeと対応するようにする。
+5. **generic sweepが返したrecord listをそのまま返す。**
+
+### 処理フロー（短縮版）
+
+```text
+Conv用macs_fnを用意
+→ factorize= factorize_conv2d_layer
+→ sweep_layer_ranksへ委譲
+→ Conv rank sweep records
+```
 
 ## 主なcontract / 注意事項
 
-出力空間sizeは自動推定せず呼び出し側が与える。
+`out_hw`は対象Convの実際の出力空間sizeを呼び出し側が与える。
 
 ## 関連API
 

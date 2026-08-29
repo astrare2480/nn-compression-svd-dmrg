@@ -5,7 +5,7 @@
 
 ## 責務
 
-既に計算済みのTucker-2 core/factorsから、等価な3層Conv Moduleを構築する。
+すでに計算済みのTucker-2 core / factorから、元Conv2dと等価な入出力shape・空間semanticsを持つ3層Conv Moduleを構築する。
 
 ## Signature
 
@@ -20,7 +20,7 @@ build_tucker2_conv_from_components(
 
 ## 引数
 
-- `conv`: 元の`groups=1` Conv2d。shape/stride/padding/bias等の基準。
+- `conv`: 元の`groups=1` Conv2d。channel数、kernel、stride/padding/dilation、bias等の基準。
 - `core`: `(R_out, R_in, kH, kW)`。
 - `u_out`: `(C_out, R_out)`。
 - `u_in`: `(C_in, R_in)`。
@@ -35,24 +35,46 @@ build_tucker2_conv_from_components(
 
 ## 使用場面
 
-HOSVD/HOOIなど分解法を問わず、共通のTucker-2 Moduleへ変換したいとき。
+HOSVD/HOOIなど分解方法を問わず、同じTucker-2 Module表現へ変換したいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **元ConvがTucker-2対応範囲か確認する。**  
+   `groups=1`の通常Convだけを受理する。
+2. **componentのndim・shapeを検証する。**  
+   coreが4階、factorが2階であり、`u_out=(C_out,R_out)`, `u_in=(C_in,R_in)`, `core=(R_out,R_in,kH,kW)`で接続可能か確認する。
+3. **componentのdtype/deviceが元Conv weightと一致するか確認する。**  
+   暗黙のCPU/GPU転送やdtype変換を行わない。
+4. **3つのConv2d Moduleを元device/dtypeで新規作成する。**
+5. **入力projectionへ`U_in^T`を配置する。**  
+   `u_in.T[:, :, None, None]`を1x1 Conv weightへcopyし、`C_in → R_in`へ射影する。
+6. **中央Convへcoreを配置する。**  
+   元Convの`kernel_size / stride / padding / dilation / padding_mode`をこの層へ継承する。
+7. **出力projectionへ`U_out`を配置する。**  
+   1x1 Convで`R_out → C_out`へ戻す。
+8. **元biasを出力projectionだけへコピーする。**  
+   入力projection・core Convにはbiasを置かない。
+9. **`requires_grad`を元Convから継承する。**  
+   新Parameterは独立したleaf ParameterとしてFine-tuning可能。
+10. **3層を`nn.Sequential`として返す。**
+
+### 処理フロー（短縮版）
 
 ```text
-Conv/components validation
-→ 3層Convを元device/dtypeで生成
-→ U_in.T/core/U_outをcopy
-→ biasを出力projectionへcopy
+conv + core + U_out + U_in
+→ semantic / shape / dtype / device検証
+→ input 1x1生成 ← U_in.T
+→ core Conv生成 ← core + 元spatial config
+→ output 1x1生成 ← U_out + 元bias
 → requires_grad継承
+→ 3層Sequential
 ```
 
 ## 主なcontract / 注意事項
 
-- componentsのshape/dtype/deviceを厳密に確認。
-- 新Parameterはleafで元weight storageを共有しない。
-- これは分解APIではないためmode-unfolding rank feasibilityを再計算しない。
+- 新Parameterは元weightのstorageを共有しない。
+- これは**componentsからModuleを組み立てるAPI**であり、HOSVD/HOOIのrank feasibilityを再計算する分解APIではない。
 
 ## 関連API
 
-`build_tucker2_conv`, `tucker2_decompose_conv_weight`, `tucker2_hooi`
+`build_tucker2_conv`, `tucker2_decompose_conv_weight`, `tucker2_hooi`, `tucker2_effective_weight`

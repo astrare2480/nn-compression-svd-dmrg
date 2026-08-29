@@ -5,7 +5,7 @@
 
 ## 責務
 
-Fashion-MNIST CNNのLinear部について、fc1だけを低rank2層化したMACsを比較する。
+Fashion-MNIST CNNのLinear部について、`fc1`だけをSVD 2層化した場合の理論MACsを比較する。
 
 ## Signature
 
@@ -29,13 +29,17 @@ CNN model、fc1 rank、表示有無。
 
 Fashion-MNIST CNNのLinear-only SVD実験。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-baselineはfc1+fc2、compressedはfactorized fc1+original fc2として集計する。
+1. **baseline Linear部を`fc1 + fc2`として計算する。**
+2. **compressed側の`fc1`を`in → rank → out`の2層式で計算する。**
+3. **`fc2`は未圧縮なのでbaselineと同じMACsを加える。**
+4. **全体削減率を計算する。**
+5. **必要なら値を表示し、3要素tupleを返す。**
 
 ## 主なcontract / 注意事項
 
-現行CNNの`fc1/fc2`名を前提とするexperiment-support API。
+現行CNNの`fc1/fc2`属性名を前提とするexperiment-support API。
 
 ## 関連API
 

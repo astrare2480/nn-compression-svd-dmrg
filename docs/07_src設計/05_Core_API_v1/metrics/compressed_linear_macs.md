@@ -5,7 +5,7 @@
 
 ## 責務
 
-`Linear(in→rank) → Linear(rank→out)` の理論MACsを計算する。
+SVDで`Linear(in → out)`を`Linear(in → rank) → Linear(rank → out)`へ2層化した場合の理論MACsを計算する。
 
 ## Signature
 
@@ -29,11 +29,28 @@ in_features * rank + rank * out_features
 
 ## 使用場面
 
-Linear SVDのrank候補を理論計算量で比較するとき。
+Linear SVD rank候補を理論計算量で比較するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-rankを分解可能上限でvalidationし、2つのLinear MACsを加算する。
+1. **元行列で可能な最大rankを求める。**  
+   `min(in_features, out_features)`。
+2. **rankを整数・範囲contractで検証する。**
+3. **入力側LinearのMACsを計算する。**  
+   `in_features * rank`。
+4. **出力側LinearのMACsを計算する。**  
+   `rank * out_features`。
+5. **2層分を合計して返す。**
+
+### 処理フロー（短縮版）
+
+```text
+rank検証
+→ in*rank
+→ rank*out
+→ 加算
+→ compressed MACs
+```
 
 ## 主なcontract / 注意事項
 

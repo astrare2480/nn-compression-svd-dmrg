@@ -5,7 +5,7 @@
 
 ## 責務
 
-2目的で非支配な候補だけをDataFrameから抽出する。
+2目的で非支配な候補だけをDataFrameから抽出し、Pareto frontierとして返す。
 
 ## Signature
 
@@ -23,19 +23,38 @@ extract_pareto_frontier(
 
 ## 戻り値
 
-非支配候補だけを`x_column`昇順へ並べた新しいDataFrame。
+非支配候補だけを`x_column`昇順へ並べ、indexを振り直した新しいDataFrame。
 
 ## 使用場面
 
-rank sweep結果から、明らかに劣る候補を除外するとき。
+rank sweep結果から「両目的で他候補より明らかに劣る点」を除外するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-各rowへ`is_pareto_candidate()`を適用 → 非支配indexを抽出 → x順sort → index reset。
+1. **保持するrow index用listを作る。**
+2. **DataFrameを1行ずつ走査する。**
+3. **各rowへ`is_pareto_candidate()`を適用する。**  
+   他候補に支配されていないかを2目的で判定する。
+4. **非支配なら元indexを保持listへ追加する。**
+5. **保持indexだけを元DataFrameからcopyする。**  
+   元DataFrame自体は変更しない。
+6. **`x_column`の昇順へsortする。**
+7. **indexを0から振り直して返す。**
+
+### 処理フロー（短縮版）
+
+```text
+全candidate
+→ 各rowをPareto判定
+→ 非支配rowだけ抽出
+→ x_columnでsort
+→ reset_index
+→ Pareto DataFrame
+```
 
 ## 主なcontract / 注意事項
 
-maximize目的を自動変換しない。
+maximize目的を自動変換しない。x/yとも小さいほど良い値へ事前に揃える。
 
 ## 関連API
 

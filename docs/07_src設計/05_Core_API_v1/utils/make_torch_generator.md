@@ -5,7 +5,7 @@
 
 ## 責務
 
-DataLoader shuffleやrandom_split用のseed固定`torch.Generator`を作る。
+DataLoader shuffleや`random_split`などへ個別に渡す、seed固定の`torch.Generator`を新規作成する。
 
 ## Signature
 
@@ -17,23 +17,36 @@ make_torch_generator(
 
 ## 引数
 
-`seed`: Generator seed。
+`seed`: 新Generatorへ設定するseed。
 
 ## 戻り値
 
-`manual_seed(seed)`済み`torch.Generator`。
+`manual_seed(seed)`済みの新しい`torch.Generator`。
 
 ## 使用場面
 
-candidate間でsplitやmini-batch順を再現したいとき。
+split乱数とtraining shuffle乱数を分離したいとき、candidate間でmini-batch順を再現したいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-Generator生成 → `manual_seed(seed)` → return。
+1. **新しい`torch.Generator()`を生成する。**  
+   global PyTorch RNGとは別の独立したstateを持つ。
+2. **`generator.manual_seed(seed)`を呼ぶ。**
+3. **seed設定済みGeneratorを返す。**
+4. **以後、そのGeneratorを使う処理が乱数を生成するたびに内部stateが進む。**  
+   関数が毎回自動resetするわけではない。
+
+### 処理フロー（短縮版）
+
+```text
+new torch.Generator
+→ manual_seed(seed)
+→ independent RNG generator
+```
 
 ## 主なcontract / 注意事項
 
-`next(iter(loader))`等でshuffle付きloaderを先読みするとGenerator stateを消費する。
+`next(iter(loader))`等でshuffle付きloaderを先読みすると、そのloaderに渡したGenerator stateが消費される。benchmark用batch取得ではこの点を意識する。
 
 ## 関連API
 
