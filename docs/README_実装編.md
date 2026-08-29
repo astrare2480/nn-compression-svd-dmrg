@@ -41,6 +41,8 @@ rank候補
 
 を担当し、再利用可能な処理と守るべきcontractを `src` に置く。
 
+src全体のアーキテクチャ、各moduleの責務、処理フロー、Public APIの責務・引数・戻り値・使用場面は [[07_src設計/README]] を正本とする。
+
 ---
 
 # 1. 現在のディレクトリ構成
@@ -146,7 +148,7 @@ foldのtarget shapeは2次元以上かつ正
 
 モデル非依存のtruncated SVD、rank validation、retained energy等を扱う。
 
-rankは数学的最大rank以下を要求し、不正rankを黙ってclipしない。boolは整数rankとして扱わない。
+rankは数学的最大rank以下を要求し、不正rankを黙ってclipしない。bool/Tensor scalarは整数rankとして扱わない。
 
 ## `linear_svd.py`
 
@@ -216,9 +218,9 @@ Tucker/HOOI固有のpublic contractをまとめる。
 ranksはMapping
 bool rankを拒否
 mode-n unfolding上の最大rank
-実数dtype限定
+実数浮動小数点dtype限定
 abs_tol / rel_tolは有限かつ0以上
-max_iterはboolではない0以上の整数
+max_iterはbool/Tensor scalarではない0以上の整数
 ```
 
 rank上限は単なるmode dimensionではなく、
@@ -229,7 +231,7 @@ $$
 
 というmode-n unfoldingのSVD最大rankで統一する。
 
-現行HOSVD/HOOIはfactor射影に `U.T` を用いるため**実数Tensor限定**。複素Tensorは共役転置が必要なので、silent failureを避けるため入口で `TypeError` とする。
+現行HOSVD/HOOIはfactor射影に `U.T` を用いるため**実数浮動小数点Tensor限定**。複素Tensorは共役転置が必要で、integer/bool Tensorも線形代数分解の正式対象外なので、Public API入口で `TypeError` とする。
 
 `tucker.py` と `tucker_validation.py` を分けることで、中心数式と入力contractを分離する。
 
@@ -374,10 +376,10 @@ Fine-tuning後accuracy
 圧縮MACs helperは、実際の分解で生成できないrankに対して値だけ返さない。
 
 ```text
-bool rankを拒否
+bool / Tensor scalar rankを拒否
 1 <= rank <= 最大rank
 compressed Convはgroups=1
-out_h / out_wは正
+out_h / out_wはbool/Tensor scalar以外の正整数scalar
 ```
 
 を要求する。
@@ -398,7 +400,7 @@ collect_compression_metrics
 
 等を持つ。
 
-`benchmark_inference()` の `warmup` は0以上、`repeats` は1以上のboolではない整数を要求する。同一比較ではsame input batchを使う。
+`benchmark_inference()` の `warmup` は0以上、`repeats` は1以上の整数を要求し、bool/Tensor scalarは拒否する。同一比較ではsame input batchを使う。
 
 `agreement` / `logits_rmse` は `len(loader)` に依存せず、実走査後にempty loaderを検出するため `IterableDataset` に対応する。
 
@@ -521,7 +523,7 @@ notebooks/20_tucker/10_cifar10_cnn/
 
 SVD実装だけのreview時点では `49 passed`、Tucker/HOOI src化直後は `99 passed` だった。
 
-その後、src全体のpublic API contract reviewを複数回行い、現行src（rv6）ではローカル全pytestで、
+その後、src全体のpublic API contract reviewを複数回行い、baseline `49836bc` ではローカル全pytestで、
 
 ```text
 252 passed
@@ -530,19 +532,19 @@ SVD実装だけのreview時点では `49 passed`、Tucker/HOOI src化直後は `
 
 を確認している。
 
-これはリポジトリ全体のtest suiteであり、Tucker専用テスト数ではない。またGitHub CIによる独立確認ではない。
+Core API v1 self reviewでは、追加で `tests/test_core_api_v1_contract.py` を作成し、境界validationを補強した。この追加差分はGitHub CIが無いため、最終freeze前にローカルpytest確認を行う。
 
-主な追加確認：
+主な確認：
 
 ```text
 Tensor ndim / positive shape
 mode bool拒否 / 範囲
 Tucker ranks Mapping限定
-bool rank拒否
+bool/Tensor scalar rank拒否
 mode-n unfolding最大rank
 HOOI projected rank feasibility
 max_iter=0でもfeasibility検証
-複素dtype拒否
+complex / integer / bool dtype拒否
 Tucker-2 autograd境界
 leaf Parameter / storage非共有
 empty loader / IterableDataset
@@ -561,7 +563,7 @@ CUDA / device contract
 NumPy scalar受理方針は全APIで完全統一していない
 collect_compression_metricsは再走査可能なloaderを前提とする
 validation helperに小規模な重複がある
-複素Tensorは未対応
+HOSVD/HOOIは複素・integer・bool Tensor未対応
 ```
 
 validation helperの重複は、単にまとめればよいとは限らない。`compression.hooi` が `metrics` を利用する現在の依存関係では、`metrics` から `compression` のhelperをimportすると循環importを作るためである。
@@ -591,8 +593,9 @@ src/nn_compression/
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
 - [[05_SVD基礎実装検証/README]]
 - [[06_Tucker基礎実装検証/README]]
+- [[07_src設計/README]]
 
-理論式、Notebookの学習実装、srcの最終API、testsの4層を対応させて読む。
+理論式、Notebookの学習実装、srcの最終API、tests、設計書を対応させて読む。
 
 ---
 
@@ -635,5 +638,6 @@ empty / Iterable loaderを意識する
 - [[00_基礎理論/README]]
 - [[05_SVD基礎実装検証/README]]
 - [[06_Tucker基礎実装検証/README]]
+- [[07_src設計/README]]
 - [[30_CIFAR10_CNN/README]]
 - [[40_TensorTrain_MPS/README]]
