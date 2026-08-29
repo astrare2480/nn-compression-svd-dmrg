@@ -52,25 +52,19 @@ CIFAR-10などで複数Convを同時に圧縮するmodel-wide SVD、Conv+Linear�
 
 ```mermaid
 flowchart TD
-    A["baseline model"] --> B["deepcopy して compressed model を作る"]
-    B --> C{"未処理の conv_ranks がある?"}
-    C -- Yes --> D["元 baseline から named Conv2d を取得"]
-    D --> E{"Conv2d?"}
-    E -- No --> X["TypeError"]
-    E -- Yes --> F["factorize_conv2d_layer"]
-    F --> G["copy 側の同 path を置換"]
-    G --> C
-    C -- No --> H{"未処理の linear_ranks がある?"}
-    H -- Yes --> I["元 baseline から named Linear を取得"]
-    I --> J{"Linear?"}
-    J -- No --> X
-    J -- Yes --> K["factorize_linear_layer"]
-    K --> L["copy 側の同 path を置換"]
-    L --> H
-    H -- No --> M["compressed model を返す"]
+    A["baseline model を受け取る"] --> B["deepcopy して compressed model を作る"]
+    B --> C["conv_ranks の指定層を順に処理"]
+    C --> D["baseline から Conv2d を取得・検証"]
+    D --> E["factorize_conv2d_layer で分解"]
+    E --> F["copy 側の同じ path を置換"]
+    F --> G["linear_ranks の指定層を順に処理"]
+    G --> H["baseline から Linear を取得・検証"]
+    H --> I["factorize_linear_layer で分解"]
+    I --> J["copy 側の同じ path を置換"]
+    J --> K["compressed model を返す"]
 ```
 
-この図は、**Conv指定とLinear指定をどの順番で処理し、どこで型検証・反復・終了判定を行うか**を示す。
+この図は、**実装上の細かな分岐ではなく、model copy作成 → Conv圧縮 → Linear圧縮 → 返却という主処理の流れ**を示す。
 
 ### シーケンス図
 
