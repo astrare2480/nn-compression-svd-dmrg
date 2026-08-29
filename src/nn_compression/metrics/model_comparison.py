@@ -33,16 +33,20 @@ def _preserve_training_mode(*models):
 
 
 def _coerce_int_scalar(value, *, name: str) -> int:
-    """warmup / repeats 用に、bool を拒否しつつ整数へ変換する（範囲チェックは呼び出し側）。
+    """warmup / repeats 用に、bool / Tensor scalar を拒否して整数へ変換する。
 
-    compression 側の ``coerce_integer_scalar`` と同じ contract
-    （bool 拒否）だが、``metrics`` パッケージが ``compression`` へ
-    依存すると循環 import になる（``compression.hooi`` が
-    ``metrics`` を import している）ため、ここでも小さく再実装する。
+    compression 側の ``coerce_integer_scalar`` と同じ scalar contract だが、
+    ``metrics`` パッケージが ``compression`` へ依存すると循環 import に
+    なる（``compression.hooi`` が ``metrics`` を import している）ため、
+    ここでも小さく再実装する。範囲チェックは呼び出し側で行う。
     """
     if isinstance(value, bool):
         raise TypeError(
             f"{name} は bool 以外の整数である必要があります: {value!r}"
+        )
+    if torch.is_tensor(value):
+        raise TypeError(
+            f"{name} に Tensor scalar は指定できません: {value!r}"
         )
     try:
         return operator.index(value)
