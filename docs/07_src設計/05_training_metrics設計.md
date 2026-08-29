@@ -55,8 +55,6 @@ model.train()
 → loss / accuracy集計
 ```
 
-### loss集計
-
 criterionがbatch meanを返す前提で、
 
 ```python
@@ -65,13 +63,17 @@ total_loss += loss.item() * images.size(0)
 
 とサンプル数で重み付けし、最後に全サンプル数で割る。
 
-最後のbatch sizeが異なっても正しいdataset平均になる。
+返り値は、
+
+```text
+(avg_loss, accuracy)
+```
+
+の2-tuple。
 
 ### empty loader
 
-実際に走査した `total == 0` を確認する。
-
-`len(loader)` に依存しない。
+`len(loader)` に依存せず、実際に走査した `total == 0` を確認する。
 
 emptyなら、
 
@@ -83,9 +85,7 @@ ValueError("空の DataLoader では学習できません。")
 
 ### mode semantics
 
-学習関数なので `model.train()` を設定する。
-
-評価APIのように呼び出し前のtraining modeへ戻す契約ではない。
+学習関数なので `model.train()` を設定する。評価APIのように呼び出し前のtraining modeへ戻す契約ではない。
 
 ---
 
@@ -108,54 +108,34 @@ loss / accuracy
 元のtraining状態を復元
 ```
 
+返り値は `(avg_loss, accuracy)`。
+
 ### 全submodule状態復元
 
-rootの `model.training` だけ保存して、最後に
-
-```python
-model.train(was_training)
-```
-
-とすると、全submoduleが一律同じ状態になる。
-
-これは、
+rootの `model.training` だけを保存して `model.train(was_training)` で戻すと、全submoduleが一律同じ状態になる。
 
 ```text
 root = train
 BatchNorm = eval
 ```
 
-のような個別設定を壊す。
+のような個別設定を壊さないため、現行実装は全 `model.modules()` の `.training` を個別に保存し、`finally` で直接復元する。
 
-現行実装は全 `model.modules()` の `.training` を個別に保存し、finallyで直接復元する。
-
-正常終了・例外発生のどちらでも元状態へ戻す。
-
-このcontractはCore API v1で固定する。
+正常終了・例外発生のどちらでも元状態へ戻す。このcontractはCore API v1で固定する。
 
 ### empty loader
 
-`len(loader)` ではなく、実際のtotalを確認する。
-
-emptyならValueError。
+`len(loader)` ではなく、実際のtotalを確認する。emptyならValueError。
 
 ---
 
 # 4. IterableDataset方針
 
-`evaluate`、`agreement`、`logits_rmse` は、
-
-```text
-len(loader)
-```
-
-を前提にしない。
+`evaluate`、`agreement`、`logits_rmse` は `len(loader)` を前提にしない。
 
 そのため `IterableDataset` を持つDataLoaderでも、通常の1回走査として利用できる。
 
-ただし、複数回再走査するhigher-level APIは別。
-
-`collect_compression_metrics()` は同じloaderを、
+ただし、`collect_compression_metrics()` は同じloaderを、
 
 ```text
 evaluate
@@ -165,7 +145,7 @@ logits_rmse
 
 等で複数回走査する。
 
-したがってone-shot iteratorではなく**再iterableなloader**を前提とする。この制約は [[07_src設計/07_既知の制約と拡張方針]] に明記する。
+したがってone-shot iteratorではなく**再iterableなloader**を前提とする。詳細は [[07_src設計/07_既知の制約と拡張方針]]。
 
 ---
 
@@ -197,6 +177,29 @@ best_validation_loss - min_delta > validation_loss
 
 best stateは `copy.deepcopy(model.state_dict())` で保存する。
 
+### return structure
+
+返り値dictのキーはCore API v1で維持する。
+
+```text
+model
+best_epoch
+best_validation_loss
+train_loss_history
+validation_loss_history
+history
+```
+
+`history` の各要素：
+
+```text
+epoch
+train_acc
+train_loss
+validation_loss
+validation_acc
+```
+
 ### train metric再評価
 
 shuffle付き `train_loader` を評価で再走査すると、専用Generatorの状態が進み、次epochのmini-batch順を変える。
@@ -216,15 +219,13 @@ shuffle付き `train_loader` を評価で再走査すると、専用Generatorの
 
 元DataLoaderと同じDatasetを `shuffle=False` で再走査するためのutility。
 
-主に、
+主用途：
 
 ```text
 training順序を変えずtrain metricsを取り直す
 ```
 
-ために使う。
-
-現在は一般の任意DataLoader構成を完全cloneするAPIではない。custom sampler / batch_sampler等の完全再現は保証しない。
+任意DataLoader構成を完全cloneするAPIではない。custom sampler / batch_sampler等の完全再現は保証しない。
 
 ---
 
@@ -236,22 +237,15 @@ training順序を変えずtrain metricsを取り直す
 sum(p.numel() for p in model.parameters())
 ```
 
-`requires_grad` に関係なく、モデルが保持する全Parameter要素数を数える。
-
-「学習可能parameter数」とは別定義。
-
----
+`requires_grad` に関係なく、モデルが保持する全Parameter要素数を数える。「学習可能parameter数」とは別定義。
 
 ## `parameters_reduction`
 
 $$
-1-
-\frac{N_{compressed}}{N_{baseline}}
+1-\frac{N_{compressed}}{N_{baseline}}
 $$
 
 負なら圧縮後の方がparameter数が多い。
-
----
 
 ## `accuracy_drop`
 
@@ -259,9 +253,7 @@ $$
 Acc_{baseline}-Acc_{compressed}
 $$
 
-正なら精度低下、負ならcompressedのaccuracyが高い。
-
-single seedの微小負値を一般的な性能改善と解釈するかは実験側の責務。
+正なら精度低下、負ならcompressedのaccuracyが高い。single seedの微小負値を性能改善と一般化するかは実験側の責務。
 
 ---
 
@@ -270,9 +262,7 @@ single seedの微小負値を一般的な性能改善と解釈するかは実験
 baselineとcompressedの予測クラス一致率。
 
 $$
-\frac{1}{N}
-\sum_i
-\mathbf 1[
+\frac{1}{N}\sum_i\mathbf 1[
 \arg\max f(x_i)=\arg\max \hat f(x_i)
 ]
 $$
@@ -290,18 +280,12 @@ $$
 baseline / compressedの出力Tensor全要素について、
 
 $$
-\sqrt{
-\frac{\sum (z-\hat z)^2}{\text{num elements}}
-}
+\sqrt{\frac{\sum (z-\hat z)^2}{\text{num elements}}}
 $$
 
 を計算する。
 
-クラス数10を固定しない。
-
-batchごとのRMSEを平均せず、全要素の二乗誤差和からdataset全体のRMSEを計算する。
-
-empty loaderはValueError。
+クラス数10を固定しない。batchごとのRMSEを平均せず、全要素の二乗誤差和からdataset全体のRMSEを計算する。empty loaderはValueError。
 
 ---
 
@@ -319,9 +303,7 @@ or
 shuffle=False loaderから取る
 ```
 
-を基本とする。
-
-empty loaderはValueError。
+を基本とする。empty loaderはValueError。
 
 ---
 
@@ -353,19 +335,9 @@ modelを一時的にeval
 終了後に全submodule状態復元
 ```
 
-### GPU同期
+CUDAでは計測区間の前後で対象deviceを明示して `torch.cuda.synchronize(device)` を行う。
 
-CUDAでは計測区間の前後で、対象deviceを明示して
-
-```python
-torch.cuda.synchronize(device)
-```
-
-を行う。
-
-### return
-
-既定は1batchあたりの平均秒数 `float`。
+既定returnは1batchあたり平均秒数 `float`。
 
 `return_details=True` では、
 
@@ -379,8 +351,6 @@ repeats
 ```
 
 をdictで返す。
-
-return structureはCore API v1で固定する。
 
 ---
 
@@ -429,36 +399,24 @@ model
 
 を追加する。
 
-`include_model=False` が既定。
+`include_model=False` が既定。rank sweepで全candidate modelをDataFrameへ保持しないための設計。
 
-rank sweepで全candidate modelをDataFrameへ保持しないための設計。
-
-### state contract
-
-内部でevaluate / benchmark / agreement等を呼ぶが、higher-level API全体としてもbaseline/compressedのtraining stateを呼出前へ復元する。
+higher-level API全体としてbaseline/compressedのtraining stateを呼出前へ復元する。
 
 ---
 
 # 12. Linear MACs
 
-## baseline
+baseline：
 
 $$
-MACs
-=
-D_{in}D_{out}
+MACs=D_{in}D_{out}
 $$
 
-## factorized
-
-```text
-D_in -> r -> D_out
-```
+factorized：
 
 $$
-MACs
-=
-D_{in}r+rD_{out}
+MACs=D_{in}r+rD_{out}
 $$
 
 `compressed_linear_macs` のrankは、
@@ -472,6 +430,19 @@ $$
 ---
 
 # 13. Conv2d MACs
+
+## output spatial contract
+
+`conv2d_macs`、`compressed_conv2d_macs`、`estimate_conv2d_macs` で使う出力空間sizeは、
+
+```text
+out_h / out_w
+→ bool以外の正の整数scalar
+```
+
+を要求する。
+
+floatや0/負数を暗黙に計算へ流さない。
 
 ## baseline
 
@@ -489,19 +460,14 @@ $$
 
 を計算する。
 
-したがって `conv2d_macs` 自体はgrouped Convのweight shapeにも対応する。
-
----
+`conv2d_macs` 自体はgrouped Convのweight shapeにも対応する。
 
 ## SVD factorized Conv
 
 現在のConv SVDは `groups=1` のみなので、compressed MACsもgrouped Convをrejectする。
 
 $$
-H_{out}W_{out}
-\left(
-rC_{in}K_hK_w+C_{out}r
-\right)
+H_{out}W_{out}\left(rC_{in}K_hK_w+C_{out}r\right)
 $$
 
 rank上限：
@@ -518,16 +484,16 @@ $$
 
 `estimate_mlp_macs`、`estimate_cnn_linear_macs`、`estimate_cnn_conv2_macs`、`estimate_cnn_macs` は既存実験構造に合わせた集計API。
 
-層単位の式は `macs.py` を正本とする。
+層単位の式・input validationは `macs.py` を正本とする。
 
-特に `estimate_cnn_macs` は、
+`estimate_cnn_macs` は、
 
 - `conv_output_hw`
 - `conv_ranks`
 - `linear_ranks`
 - `linear_layer_names`
 
-を渡して、Fashion-MNIST以外にもある程度一般化している。
+を引数化している。
 
 一方 `estimate_mlp_macs` は現行784→512→256→10 MLPに強く依存するためexperiment-support APIとする。
 
@@ -563,16 +529,7 @@ compression.hooi
 
 という依存がある。
 
-そのため、
-
-```text
-metrics
-→ compression
-```
-
-を追加すると循環importの危険がある。
-
-このためrank/integer validationが一部局所実装されている。
+そのため `metrics → compression` を追加すると循環importの危険がある。このためrank/integer validationが一部局所実装されている。
 
 単純なDRY化より依存方向を優先する。
 
@@ -593,13 +550,4 @@ metrics
 
 は原則再利用する。
 
-新しい圧縮表現のMACsだけは、既存SVD/Tucker式へ無理に押し込まず専用関数を追加する。
-
-例：
-
-```text
-tt_parameter_count
-tt_linear_macs
-```
-
-既存 `compressed_linear_macs` の意味をTT用に変更しない。
+新しい圧縮表現のMACsだけは既存SVD/Tucker式へ無理に押し込まず、`tt_parameter_count` / `tt_linear_macs` 等の専用関数を追加する。
