@@ -210,6 +210,7 @@ def hooi(
     ``history[0]`` は HOSVD 初期値、以降は各 sweep 後の誤差。
     """
     validate_tensor_ndim_at_least_2(X, name="X")
+    validate_real_dtype(X, name="X")
     if not isinstance(ranks, Mapping):
         raise TypeError(
             f"ranks は Mapping である必要があります: {type(ranks)!r}"
