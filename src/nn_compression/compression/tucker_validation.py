@@ -12,17 +12,26 @@ from .svd import coerce_integer_scalar, coerce_rank
 
 
 def validate_real_dtype(tensor, *, name: str = "X") -> None:
-    """HOSVD/HOOI の factor 射影が複素数で誤った結果になることを防ぐ。
+    """HOSVD/HOOI が対応する実数浮動小数点 dtype であることを確認する。
 
     ``hosvd`` / ``hooi`` は factor の射影に ``U.T`` を使う。実数では
     転置で正しいが、複素数では本来 共役転置 ``U.mH`` が必要で、
     ``U.T`` のままでは full rank でも再構成できない（silent failure）。
     ``torch.linalg.svd`` 自体は複素 dtype を処理できてしまうため、
     今回は複素対応を追加せず、public API の入口で明示的に拒否する。
+
+    また ``torch.linalg.svd`` は整数 / bool Tensorを受理しないため、
+    それらをPyTorch内部のRuntimeErrorまで流さず、同じpublic API境界で
+    TypeErrorとして拒否する。
     """
     if tensor.is_complex():
         raise TypeError(
             f"{name} は実数 dtype である必要があります（複素数は未対応）: "
+            f"dtype={tensor.dtype}"
+        )
+    if not tensor.is_floating_point():
+        raise TypeError(
+            f"{name} は実数浮動小数点 dtype である必要があります: "
             f"dtype={tensor.dtype}"
         )
 
