@@ -22,8 +22,14 @@ Tucker/HOOI編では、Notebookで自作して理解した処理を、最終的�
 Tensor演算
 → tensor/operations.py
 
+Tensor入力contract
+→ tensor/validation.py
+
 HOSVD / Tucker再構成
 → compression/tucker.py
+
+Tucker / HOOI固有contract
+→ compression/tucker_validation.py
 
 汎用HOOI
 → compression/hooi.py
@@ -43,13 +49,14 @@ Tensor近似誤差
 
 ```text
 src/nn_compression/tensor/operations.py
+src/nn_compression/tensor/validation.py
 ```
 
 主な関数：
 
 ```python
 unfold(X, mode)
-fold(matrix, mode, shape)
+fold(unfolded, mode, shape)
 mode_dot(X, matrix, mode)
 ```
 
@@ -61,12 +68,23 @@ $$
 
 を実装し、HOSVD/HOOI双方から使う。
 
+現行public contractでは、Tensor APIへ渡すshapeは2次元以上で各dimensionが正であることを要求する。`mode` はboolではない整数で、
+
+$$
+0\le n < \operatorname{ndim}(X)
+$$
+
+を満たす必要がある。
+
+`fold` は単に総要素数が一致すればreshapeするのではなく、unfoldedの行数・列数が指定modeと元shapeに一致するかを確認する。転置されたunfoldedを黙って受理しない。
+
 ---
 
 ## 2. HOSVD / Tucker
 
 ```text
 src/nn_compression/compression/tucker.py
+src/nn_compression/compression/tucker_validation.py
 ```
 
 主な関数：
@@ -74,6 +92,9 @@ src/nn_compression/compression/tucker.py
 ```python
 hosvd(X, ranks)
 reconstruct_tucker(core, factors)
+tucker_parameter_count(shape, ranks)
+parameter_ratio(shape, ranks)
+compression_factor(shape, ranks)
 ```
 
 `hosvd` の重要な実装契約は、factorを各modeについて**元のXから独立に**求めること。
@@ -85,6 +106,36 @@ X → mode1 unfold → SVD → U1
 ```
 
 factor計算中にXを順次projectしてはいけない。それをすると標準的な一回のHOSVDとは異なる処理になる。
+
+### rank contract
+
+`ranks` は `{mode: rank}` 形式の `Mapping` とする。空 `{}` はHOSVD/Tucker parameter計算ではidentity指定として扱えるが、HOOIでは更新対象が無いため拒否する。
+
+mode-n unfolding
+
+$$
+X_{(n)}\in\mathbb R^{I_n\times\prod_{m\ne n}I_m}
+$$
+
+に対して取りうるSVD rank上限は、
+
+$$
+\boxed{
+R_n
+\le
+\min\left(I_n,\prod_{m\ne n}I_m\right)
+}
+$$
+
+である。現行srcではHOSVD、parameter count、ratio、compression factorでこの上限を共通contractとして使う。
+
+boolはPython上 `int` のsubclassだが、rankやmodeとしては明示的に拒否する。
+
+### dtype contract
+
+現行HOSVD/HOOIはfactor射影に `U.T` を使う**実数Tensor向け実装**である。
+
+複素Tensorでは本来共役転置 `U.mH` が必要であり、`torch.linalg.svd` 自体は複素dtypeを処理できてしまう。silent failureを避けるため、現行srcでは複素Tensorを入口で `TypeError` として拒否する。
 
 ---
 
@@ -134,7 +185,22 @@ ranks = {0: rank_out, 1: rank_in}
 
 なら4階Conv weightのmode 0 / 1だけを更新するpartial HOOIになる。
 
-入力 `factors` はcloneし、破壊的に変更しない。
+入力 `factors` はcloneし、破壊的に変更しない。1 sweep内では先に更新したfactorを後続mode更新に使うGauss-Seidel型である。
+
+### HOOI入力validation
+
+反復前に、
+
+- `ranks` がMappingで空でない
+- factor keyとrank keyが一致
+- factorが2次元
+- factor shapeが `(X.shape[mode], rank)`
+- factorのdevice / dtypeがXと一致
+- rankが元unfoldingだけでなく、他factorで射影した後のprojected unfoldingでも実現可能
+
+を確認する。
+
+このfeasibility確認は反復loopより前に行うため、`max_iter=0` でも不可能なrankを受理しない。
 
 ### `core_from_factors`
 
@@ -153,6 +219,7 @@ $$
 
 ```text
 HOSVD初期化
+→ factor / rank feasibility確認
 → initial errorをhistory[0]へ保存
 → hooi_sweep
 → core再計算
@@ -164,6 +231,10 @@ HOSVD初期化
 を繰り返す。
 
 historyはpandasに依存しない `list[float]` とし、Notebook側でDataFrame化する。
+
+HOOIではrelative Frobenius errorを使うため、分母が0になるzero Tensorは明示的に拒否する。
+
+`max_iter` はboolではない0以上の整数、`abs_tol / rel_tol` は有限かつ0以上を要求する。`has_converged()` 単体でも同じtolerance contractを検証する。
 
 ---
 
@@ -210,6 +281,17 @@ C_in
 
 HOSVDとHOOIで分解法が違っても、3層を作る処理は共通化できる。
 
+現行実装は `groups=1` の通常 `nn.Conv2d` を対象とする。中央core Convが元Convの `stride / padding / dilation / padding_mode` を継承し、元biasは最後の1x1 Convへ置く。
+
+`rank_out / rank_in` はboolを拒否し、
+
+```text
+1 <= rank_out <= C_out
+1 <= rank_in  <= C_in
+```
+
+を入口で要求する。
+
 ### `tucker2_effective_weight`
 
 fine-tuning後の3層から
@@ -224,17 +306,27 @@ $$
 
 ---
 
-## 5. `detach()` と `no_grad()`
+## 5. Autograd境界：`detach()` と `no_grad()`
 
-### 分解対象
+現行srcでは、**Tensor-level decomposition** と **Module構築** でautograd境界を分ける。
+
+### Tensor-level HOOI
 
 ```python
-weight = conv.weight.detach()
+tucker2_hooi(weight, ...)
 ```
 
-分解は既存学習グラフのbackpropagationを目的にしないので、学習済みParameterから切り離して扱う。
+は低レベルTensor APIなので、内部で入力 `weight` を `detach()` しない。入力が `requires_grad=True` なら、分解計算のgraphを不要に切らない。
 
-### 新しい層へのコピー
+### Module構築
+
+```python
+build_tucker2_conv(conv, ...)
+```
+
+は学習済みConvから新しい3層Moduleを作る**初期化処理**なので、ここで元 `conv.weight` を `detach()` して分解する。
+
+新しい層への値コピーは、
 
 ```python
 with torch.no_grad():
@@ -243,50 +335,67 @@ with torch.no_grad():
     output_layer.weight.copy_(...)
 ```
 
-これは「分解結果を新しいParameterの初期値としてセットする」処理であり、コピー自体のgradient historyは不要。
+とする。
 
-`no_grad()` はその後の
+これはコピー操作のgradient historyを不要にするためであり、コピー後のParameterを学習不能にするものではない。`requires_grad` は元Convから引き継ぎ、fine-tuningでは通常どおり
 
 ```python
 loss.backward()
 optimizer.step()
 ```
 
-を禁止しない。`requires_grad` を元Convから引き継げば、fine-tuningで通常どおり更新できる。
+で更新できる。
+
+置換後の3層Parameterはleafであり、元ConvのParameter storageを共有しない。
+
+### effective weight評価
+
+`tucker2_effective_weight()` はfine-tuning前後の3層を評価用の1つの4階weightへ戻すhelperなので、各layer weightをdetachして再構成する。
 
 ---
 
-## 6. validation
+## 6. validationの責務
 
-srcでは最低限、
+現行srcでは、中心アルゴリズムと入力contractを分ける。
 
-- mode範囲
-- rank範囲
-- factor key
-- factor shape
-- Conv2d weightの4階shape
-- `groups=1`
-- component shape
+```text
+tensor/validation.py
+→ Tensor ndim / positive shape / mode
 
-を確認する。
+compression/tucker_validation.py
+→ Tucker shape / rank Mapping / unfolding最大rank
+→ 実数dtype
+→ tolerance / max_iter
 
-HOOIのfactor shapeは
+conv_tucker.py内部validation
+→ Conv2d 4階shape
+→ rank_out / rank_in
+→ component shape / dtype / device
+→ groups=1 / Sequential構造
+```
 
-$$
-U^{(n)}\in\mathbb{R}^{I_n\times R_n}
-$$
+似た整数・shape validationが一部に重複しているが、現時点では依存方向を壊す大規模refactorを避けている。特に `compression.hooi` が `metrics` を利用するため、metrics側からcompression helperを安易にimportすると循環importを作る。
 
-Tucker-2 coreは
-
-$$
-G\in\mathbb{R}^{R_{\mathrm{out}}\times R_{\mathrm{in}}\times K_h\times K_w}
-$$
-
-を契約とする。
+NumPy scalarをどのAPIまで受理するかは全体で完全統一しておらず、後続のAPI設計課題として残している。
 
 ---
 
-## 7. Notebookとsrcの役割分担
+## 7. 評価・学習側で固定したcontract
+
+Tucker/HOOIの分解実装だけでなく、比較実験の共通基盤もsrc reviewで固定した。
+
+- `evaluate()` は処理前後でroot + 全submoduleの `.training` 状態を個別に復元
+- `agreement()` / `logits_rmse()` / `benchmark_inference()` / `collect_compression_metrics()` も同じ状態復元contractを利用
+- `train_one_epoch()` / `evaluate()` はempty loaderを明示的に拒否
+- `agreement()` / `logits_rmse()` は `len(loader)` に依存せず `IterableDataset` を扱える
+- `benchmark_inference()` の `warmup` は0以上、`repeats` は1以上のboolではない整数
+- baseline / compressedのlatency比較では同じ `input_batch` を使う
+
+`collect_compression_metrics()` は複数指標でloaderを再走査するため、現状はone-shot iteratorではなく再走査可能なloaderを前提とする。
+
+---
+
+## 8. Notebookとsrcの役割分担
 
 ```text
 Notebook
@@ -317,30 +426,40 @@ src
 
 ---
 
-## 8. 回帰テスト
+## 9. 回帰テスト
 
-整理後は、HOOI系を `tests/test_hooi.py`、Conv構築系を `tests/test_conv_tucker.py` に責務分離した。
+Tucker/HOOI src化直後はローカル `99 passed` だったが、その後src全体のcontract reviewを複数回行った。
 
-全pytestのローカル実行では
+現行rv6では、
 
 ```text
-99 passed
+252 passed
 0 failed
 ```
 
-を確認している。
+をローカル全pytestで確認している。これはTucker専用テスト数ではなくリポジトリ全体のtest suiteであり、GitHub CIによる独立確認を意味しない。
 
 主な確認項目：
 
-- HOOIがHOSVD初期誤差より悪化しない
-- 3階Tensor HOOI
-- 4階Conv weightのpartial HOOI
+- 3階Tensor HOOI / 4階Conv weightのpartial HOOI
 - core / factor shape
 - `hooi_sweep` が入力factorを破壊しない
-- error historyが非増加
+- HOOI error history / convergence
 - HOSVD buildとcomponents buildのforward一致
+- Tensor ndim / positive shape / fold shape
+- mode / rankのbool拒否
+- Tucker ranks Mapping contract
+- mode-n unfolding最大rank
+- projected HOOI rank feasibility
+- `max_iter=0` でもfeasibility検証
+- 複素dtype拒否
 - device / dtype / requires_grad
-- bias / spatial config
-- invalid rank / mode
+- Tucker-2 Tensor-level autograd保持
+- Module構築後Parameterのleaf性・storage非共有
+- bias / spatial config / groups contract
+- empty loader / IterableDataset
+- root + 全submoduleのtrain/eval状態復元
+- benchmark `warmup / repeats` validation
+- CUDA / device contract
 
 検証詳細：[[06_Tucker基礎実装検証/01_Tucker_HOSVD基礎実装の確認結果]]
