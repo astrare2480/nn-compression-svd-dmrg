@@ -58,15 +58,27 @@ HOSVD/HOOIなど分解方法を問わず、同じTucker-2 Module表現へ変換�
    新Parameterは独立したleaf ParameterとしてFine-tuning可能。
 10. **3層を`nn.Sequential`として返す。**
 
-### 構造図
+### Component配置図
 
 ```mermaid
 flowchart LR
-    X["入力 C_in"] --> A["1x1 Conv\nC_in → R_in\nweight = U_in^T"]
-    A --> B["core Conv\nR_in → R_out\n元 kernel / stride / padding / dilation"]
-    B --> C["1x1 Conv\nR_out → C_out\nweight = U_out\nbias = 元 bias"]
-    C --> Y["出力 C_out"]
+    UI["u_in<br/>(C_in, R_in)"] -->|"transposeしてweightへ配置"| A["入力1x1 Conv<br/>C_in → R_in"]
+    CORE["core<br/>(R_out, R_in, kH, kW)"] -->|"weightへ配置"| B["中央Conv<br/>R_in → R_out"]
+    UO["u_out<br/>(C_out, R_out)"] -->|"weightへ配置"| C["出力1x1 Conv<br/>R_out → C_out"]
+
+    X["入力<br/>C_in"] --> A
+    A -->|"R_in"| B
+    B -->|"R_out"| C
+    C --> Y["出力<br/>C_out"]
+
+    CONV["元Conv2d"] -->|"kernel_size / stride / padding / dilation / padding_mode"| B
+    CONV -->|"bias"| C
+    CONV -->|"device / dtype / requires_grad"| A
+    CONV -->|"device / dtype / requires_grad"| B
+    CONV -->|"device / dtype / requires_grad"| C
 ```
+
+この図は3層の並びを再掲するためではなく、**各入力componentと元Convの属性が、構築後のどの層へ反映されるか**を示す。
 
 ## 主なcontract / 注意事項
 
