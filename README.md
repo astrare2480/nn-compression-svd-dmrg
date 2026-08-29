@@ -11,6 +11,7 @@
 - HOSVD / HOOIを同条件でFine-tuning比較
 - Tucker / HOOI処理を `src/nn_compression/` へ共通化
 - SVDからHOOIまでの基礎理論を、shape・途中式・成立条件まで含めて再監査
+- src全体のpublic API contractをレビューし、現行rv6でローカル `252 passed` を確認
 
 ## 現在の到達点
 
@@ -196,12 +197,14 @@ historical Notebookは削除せず、何が問題で、なぜcorrected版・src�
 ```text
 src/nn_compression/
 ├─ tensor/
-│  └─ operations.py        # unfold / fold / mode product
+│  ├─ operations.py        # unfold / fold / mode product
+│  └─ validation.py        # tensor shape / mode contract
 ├─ compression/
 │  ├─ svd.py
 │  ├─ linear_svd.py
 │  ├─ conv_svd.py
 │  ├─ tucker.py            # HOSVD / Tucker reconstruction
+│  ├─ tucker_validation.py # Tucker/HOOI contract
 │  ├─ hooi.py              # generic / partial HOOI
 │  └─ conv_tucker.py       # Conv2d Tucker-2
 ├─ models/
@@ -214,7 +217,27 @@ src/nn_compression/
 
 Notebookは学習過程・自作実装を残し、再利用可能な処理をsrcへ共通化する方針としている。
 
-Tucker/HOOI src化後の回帰テストについて、ローカル実行では `99 passed / 0 failed` を確認している。
+現行srcで固定している主なcontract：
+
+- Tensor shapeは2次元以上・各dimension正
+- mode / rankでboolを整数として受理しない
+- Tucker `ranks` はMapping、rank上限はmode-n unfoldingの最大rank
+- HOSVD / HOOI / Tucker-2は現時点で実数Tensor限定
+- HOOI feasibilityは `max_iter=0` でも反復前に検証
+- Tucker-2のTensor-level HOOIは入力weightをdetachせず、Module構築時にautogradを切る
+- 評価・ベンチマーク後はrootだけでなく全submoduleのtrain/eval状態を復元
+- empty loaderは明示的に拒否し、対応箇所では `len(loader)` を仮定しない
+
+src全体のcontract review後、現行rv6のローカル全pytestでは、
+
+```text
+252 passed
+0 failed
+```
+
+を確認している。これはローカル実行結果であり、GitHub CIによる独立確認を意味しない。
+
+詳細は [実装編](docs/README_実装編.md) と [Tucker基礎実装検証](docs/06_Tucker基礎実装検証/README.md) を参照。
 
 ## 次
 
