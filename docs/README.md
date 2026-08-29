@@ -64,7 +64,7 @@ Tensor mode演算
 → HOOI
 → TensorLy照合
 → HOSVD/HOOI同条件Fine-tuning
-→ src共通化・回帰テスト
+→ src共通化・public API contract review
 ```
 
 まで確認した。
@@ -453,12 +453,14 @@ corrected実験は基本的にsingle seed。
 ```text
 src/nn_compression/
 ├─ tensor/
-│  └─ operations.py
+│  ├─ operations.py
+│  └─ validation.py
 ├─ compression/
 │  ├─ svd.py
 │  ├─ linear_svd.py
 │  ├─ conv_svd.py
 │  ├─ tucker.py
+│  ├─ tucker_validation.py
 │  ├─ hooi.py
 │  ├─ conv_tucker.py
 │  ├─ mlp_svd.py
@@ -478,14 +480,37 @@ src/nn_compression/
 共通して、
 
 - baselineとParameterを共有しない
-- rank / mode / shapeをvalidationする
+- rank / mode / shapeをpublic API境界でvalidationする
 - device / dtype / requires_gradを維持する
+- 評価・benchmark後はroot + 全submoduleのtrain/eval状態を復元する
+- empty loaderを偶発的なZeroDivisionErrorへ落とさず明示的に扱う
+- benchmarkではsame input batchと同じwarmup / repeatsを使う
 - 学習Notebookは自作実装を学習履歴として残す
 - reusable処理はsrcへ分離する
 
 という方針を取る。
 
-Tucker/HOOIの実装詳細は [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]、実装寄りの既存索引は [[README_実装編]] を参照。
+Tucker/HOOIではさらに、
+
+- `ranks` はMapping
+- bool rank / modeを拒否
+- rank上限はmode-n unfoldingの数学的最大rank
+- HOOIのprojected rank feasibilityを反復前に検証
+- 現行HOSVD/HOOI/Tucker-2は実数Tensor限定
+- Tensor-level `tucker2_hooi()` は入力weightをdetachせず、Module構築時にautograd境界を置く
+
+をcontractとして固定している。
+
+現行rv6のローカル全pytestでは、
+
+```text
+252 passed
+0 failed
+```
+
+を確認している。これはリポジトリ全体のtest suiteであり、GitHub CIによる独立確認を意味しない。
+
+Tucker/HOOIの実装詳細は [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]、実装寄りの索引は [[README_実装編]] を参照。
 
 ---
 
