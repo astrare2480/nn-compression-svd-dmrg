@@ -184,7 +184,9 @@ def core_from_factors(
 
     ``core = X ×_0 U_0^T ×_1 U_1^T × ...``。
     各 mode で元テンソルの dimension を rank まで落とした低 rank core になる。
+    Tucker系Public APIと同じく、``X`` は2次元以上を要求する。
     """
+    validate_tensor_ndim_at_least_2(X, name="X")
     validate_real_dtype(X, name="X")
     core = X
     for mode, U in factors.items():
