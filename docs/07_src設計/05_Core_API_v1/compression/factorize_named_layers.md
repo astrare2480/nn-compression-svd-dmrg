@@ -32,7 +32,7 @@ factorize_named_layers(
 
 CIFAR-10などで複数Convを同時に圧縮するmodel-wide SVD、Conv+Linear同時圧縮。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baseline modelを`deepcopy`する。**  
    すべての置換はcopy側だけへ行う。
@@ -48,14 +48,22 @@ CIFAR-10などで複数Convを同時に圧縮するmodel-wide SVD、Conv+Linear�
 
 圧縮途中のcopyから次の分解元を取ると、先に置換した構造の影響やnested path変化が混ざる可能性がある。各指定層は未分解のbaseline layerを正本として独立に分解する。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-baseline model
-→ deepcopy
-→ conv_ranks: 元modelから取得 → 型確認 → Conv SVD → copyを置換
-→ linear_ranks: 元modelから取得 → 型確認 → Linear SVD → copyを置換
-→ compressed model
+```mermaid
+flowchart TD
+    A["baseline model"] --> B["deepcopy して compressed model を作る"]
+    B --> C{"未処理の conv_ranks がある?"}
+    C -- Yes --> D["元 baseline から named Conv2d を取得"]
+    D --> E["型確認 → factorize_conv2d_layer"]
+    E --> F["copy 側の同 path を置換"]
+    F --> C
+    C -- No --> G{"未処理の linear_ranks がある?"}
+    G -- Yes --> H["元 baseline から named Linear を取得"]
+    H --> I["型確認 → factorize_linear_layer"]
+    I --> J["copy 側の同 path を置換"]
+    J --> G
+    G -- No --> K["compressed model を返す"]
 ```
 
 ## 主なcontract / 注意事項

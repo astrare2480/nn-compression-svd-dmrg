@@ -32,7 +32,7 @@ Conv2d(C_in → rank, 元kernel, bias=False)
 
 Conv2dのSVD低rank圧縮、圧縮後Fine-tuningの初期化。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **対象Convが対応範囲か確認する。**  
    現在のflatteningと2層構造は`groups=1`の通常Convを前提とするため、grouped Convやtransposed Convを拒否する。
@@ -55,18 +55,21 @@ Conv2dのSVD低rank圧縮、圧縮後Fine-tuningの初期化。
 10. **2層`nn.Sequential`を返す。**  
     元Conv自体は変更しない。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-Conv2d
-→ semantic / rank検証
-→ weight.detach()
-→ (C_out, C_in*kH*kW)へ行列化
-→ truncated_svd
-→ Vh_rを元kernel Convへ配置
-→ U_r diag(S_r)を1x1 Convへ配置
-→ bias / requires_grad継承
-→ 2層Sequential
+```mermaid
+flowchart TD
+    A["元 Conv2d"] --> B["groups / transposed / rank を検証"]
+    B --> C["weight.detach()"]
+    C --> D["(C_out, C_in*kH*kW) に行列化"]
+    D --> E["truncated SVD"]
+    E --> F["Vh_r を空間 Conv に配置"]
+    E --> G["U_r diag(S_r) を 1x1 Conv に配置"]
+    H["元 bias"] --> G
+    F --> I["Conv2d: C_in → rank"]
+    G --> J["Conv2d: rank → C_out"]
+    I --> J
+    J --> K["2層 nn.Sequential"]
 ```
 
 ## 主なcontract / 注意事項

@@ -48,7 +48,7 @@ rankごとのmetrics dictを並べた`list[dict]`。
 
 SVD以外を含め、層単位factorizationのrank候補を同じ枠組みで比較したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baseline modelから元layerを1回取得する。**  
    すべてのcandidateを同じ未圧縮layerから作るため、sweep開始前に正本を固定する。
@@ -68,17 +68,22 @@ SVD以外を含め、層単位factorizationのrank候補を同じ枠組みで比
 10. **全candidateのrecordを返す。**  
     model本体は既定でrecordへ保持せず、必要な候補はrankから再構築する設計。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-元named layerを固定
-→ rankごとにbaselineをdeepcopy
-→ factorize callback
-→ candidate modelへ置換
-→ optional MACs
-→ collect_compression_metrics
-→ rank / retained_energy追加
-→ record list
+```mermaid
+flowchart TD
+    A["baseline から original_layer を固定"] --> B{"未処理 rank がある?"}
+    B -- Yes --> C["baseline model を deepcopy"]
+    C --> D["factorize(original_layer, rank)"]
+    D --> E["candidate model の named layer を置換"]
+    E --> F{"macs_fn がある?"}
+    F -- Yes --> G["理論 MACs / reduction を計算"]
+    F -- No --> H["共通 metrics を収集"]
+    G --> H
+    H --> I["layer / rank / retained_energy を追加"]
+    I --> J["record を results に追加"]
+    J --> B
+    B -- No --> K["list[dict] を返す"]
 ```
 
 ## 主なcontract / 注意事項

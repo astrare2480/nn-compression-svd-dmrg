@@ -32,7 +32,7 @@ hosvd(
 - Conv weightのTucker-2 HOSVD。
 - HOOIの初期factor生成。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力Tensorの階数とdtypeを検証する。**  
    `X.ndim >= 2`を要求し、現行実装が`U.T`を使うため、complex・integer・boolではなく実数浮動小数点Tensorだけを正式対応とする。
@@ -51,18 +51,21 @@ hosvd(
 
 HOSVDの各mode factorは、元Tensorの各mode-n unfoldingを独立にSVDして求める。先に縮めたcoreから次factorを計算すると、標準的な1-pass HOSVDとは別の逐次アルゴリズムになるため、この順序はCore API v1で固定する。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-X / ranks
-→ ndim・dtype・rankを検証
-→ modeごとに「元X」をunfold
-→ truncated_svd
-→ Uをfactorへ保存
-→ coreへU.Tをmode_dot
-→ 全mode処理
-→ core, factors
+```mermaid
+flowchart TD
+    A["X / ranks を検証"] --> B["core = X, factors = {}"]
+    B --> C{"未処理の圧縮 mode がある?"}
+    C -- Yes --> D["元 X を target mode で unfold"]
+    D --> E["truncated SVD"]
+    E --> F["左特異ベクトル U を factors に保存"]
+    F --> G["core に U^T を mode_dot"]
+    G --> C
+    C -- No --> H["core, factors を返す"]
 ```
+
+図中のSVD入力は毎回**元`X`**であり、更新済み`core`ではない。
 
 ## 主なcontract / 注意事項
 

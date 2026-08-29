@@ -2,7 +2,7 @@
 
 ## 1. 目的
 
-Core API v1を関数・クラス単位の仕様へ分割し、さらに各APIの処理説明を日本語で詳細化した後、次を照合した。
+Core API v1を関数・クラス単位の仕様へ分割し、各APIの処理説明を日本語で詳細化したうえで、必要なAPIにだけMermaid図を追加した。次を照合した。
 
 ```text
 各sub-packageの __all__
@@ -45,19 +45,11 @@ utils
 
 単純aliasは重複説明を避け、`05_Core_API_v1/Compatibility_API.md`へ集約した。
 
-追加で、`__all__`そのものではないが利用者が直接呼ぶpublic methodとして、
-
-```text
-FashionMNISTCNN.inspect_shapes()
-```
-
-も個別仕様化した。
+追加で、`__all__`そのものではないが利用者が直接呼ぶpublic methodとして、`FashionMNISTCNN.inspect_shapes()`も個別仕様化した。
 
 PyTorch標準の`forward()`とprivate helperは個別ファイル化せず、class仕様または関連Public APIの処理説明内で扱う。
 
-## 4. 各ファイルの必須項目
-
-全API仕様は原則として、
+## 4. 各ファイルの基本項目
 
 ```text
 責務
@@ -65,72 +57,83 @@ Signature
 引数
 戻り値
 使用場面
-処理の流れ（日本語）
-処理フロー（短縮版。必要な場合）
+処理概要
+フローチャート / 構造図（必要な場合のみ）
 主なcontract / 注意事項
 関連API
 ```
 
-を持つ構成へ統一した。
+`処理概要`は番号付き日本語を基本とし、英語identifierだけの短いフローを本文の代わりにしない。
 
-## 5. 処理説明のレビュー方針
+## 5. Mermaid図の要否判断
 
-以前の`ざっくりした処理`は、例えば
+全APIへ機械的に図を付けると、単純関数まで大きくなり可読性が落ちる。そのため次の場合だけ図を付ける。
+
+1. 反復がある。
+2. 条件分岐が重要である。
+3. 複数の下位APIをまたいで状態・中間表現が変わる。
+4. Module構造変換を視覚化する価値がある。
+
+今回、図を追加したAPIは次の10個。
 
 ```text
-validation → SVD → return
+factorize_conv2d_layer
+factorize_named_layers
+sweep_layer_ranks
+hosvd
+hooi_sweep
+hooi
+build_tucker2_conv_from_components
+fit_with_early_stopping
+benchmark_inference
+collect_compression_metrics
 ```
 
-のように短く、コードを開かないと中間処理や責務境界を判断しにくかった。
+一方、`count_parameters`, `has_converged`, `linear_macs`, `get_named_module`のような短い計算・判定・委譲utilityには図を追加していない。
 
-今回、次の基準へ変更した。
+## 6. 図と文章の重複整理
 
-1. **処理順を番号付きの日本語で説明する。**
-2. **何をするかだけでなく、重要な箇所はなぜ行うかも書く。**
-3. **Tensor/shapeが途中でどう変化するかを必要に応じて書く。**
-4. **下位APIへ委譲するwrapperは、自身の処理と委譲先の責務を分ける。**
-5. **Module builderはweight/factor配置、bias、device/dtype、requires_grad、autograd境界を説明する。**
-6. **学習・評価系はmodel state、DataLoader走査、empty loader、RNG影響を説明する。**
-7. **短縮版フローは補助として残すが、日本語本文の代わりにはしない。**
+以前は、
 
-## 6. 代表APIの再照合
+```text
+処理の流れ（日本語）
+処理フロー（短縮版）
+```
+
+を併記しており意味が重複していた。
+
+図を入れるAPIではこれを、
+
+```text
+処理概要
+→ 詳細な日本語説明
+
+フローチャート / 構造図
+→ 視覚的な補助
+```
+
+へ整理した。Mermaidは文章の代替ではなく、反復・分岐・構造変換を一目で確認するための補助とする。
+
+## 7. 代表APIの再照合
 
 現行srcと特に次を再照合した。
 
-- `unfold / fold / mode_dot`: validation、axis移動、reshape、逆変換
-- `truncated_svd`: rank validation、economy SVD、slice
-- `factorize_linear_layer / factorize_conv2d_layer`: factor配置、bias、device/dtype/requires_grad
+- `factorize_conv2d_layer`: 2層構造、factor配置、bias、device/dtype/requires_grad
+- `factorize_named_layers`: baseline deepcopy、元baseline layerを分解元にすること
+- `sweep_layer_ranks`: rank loop、candidate独立性、optional MACs、metrics収集
 - `hosvd`: factorは逐次coreではなく元`X`から求める
 - `hooi_sweep`: factor clone、挿入順、最新factorを使うGauss-Seidel型更新
-- `hooi`: HOSVD初期化、`max_iter=0`でもfeasibility検証、`history[0]`、収束判定
-- Tucker-2 APIs: channel mode対応、3層構造、Tensor-levelとModule-levelのautograd境界
-- `evaluate / benchmark_inference`: 全submodule状態復元、CUDA同期、same input
-- `collect_compression_metrics`: loaderを複数回走査することとone-shot iterator制約
-- MACs helpers: 実際に生成するfactorized layer構造と式の対応
-- selection: Pareto支配条件、knee直線・距離計算
-- datasets: split RNGとtraining shuffle RNGの分離
-- utils: named moduleのstrict置換、project root、seed/Generatorの副作用
+- `hooi`: HOSVD初期化、`max_iter=0`、`history[0]`、収束分岐
+- `build_tucker2_conv_from_components`: 3層構造とfactor/core配置
+- `fit_with_early_stopping`: train再評価、best state、patience分岐
+- `benchmark_inference`: fixed input、CUDA同期、return形式
+- `collect_compression_metrics`: loader複数走査、optional model/MACs
 
-上記について、現行実装とのCritical / Majorな不一致は見つからなかった。
+図の矢印・分岐は現行srcの処理意味と一致することを確認した。
 
-## 7. 設計本文との分離
+## 8. 今回の変更範囲
 
-```text
-01〜04
-→ architecture / module responsibility / flow / common design policy
-
-05_Core_API_v1/
-→ function/class-level API specification
-
-06〜09
-→ tests / known constraints / review records
-```
-
-とし、「なぜこのパッケージ構造なのか」と「個々の関数が何をするか」を混ぜない。
-
-## 8. 今回の詳細化でのsrc変更
-
-今回の**処理説明の日本語詳細化ではsrc/tests/Notebook/resultsを変更していない**。
+今回のMermaid図追加と見出し整理では、`docs/07_src設計/`配下のMarkdownだけを変更する。`src/tests/Notebook/results`は変更しない。
 
 PR内に既に存在するCore API v1 freeze前のvalidation修正は、それ以前のself reviewで追加した別変更である。
 
@@ -143,11 +146,12 @@ PR内に既に存在するCore API v1 freeze前のvalidation修正は、それ�
 何を渡すか
 何が返るか
 内部で何をどの順番で行うか
+どこで分岐・反復するか
 どの処理を下位APIへ任せるか
 何を壊してはいけないか
 ```
 
-を日本語で追える構成になった。
+を追える構成になった。
 
 今後Public APIを追加する場合は、
 
@@ -156,6 +160,7 @@ src実装
 → __all__
 → contract test
 → 対応する関数別md
+→ 図が本当に必要か判断
 → 必要なら上位設計書
 ```
 

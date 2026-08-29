@@ -59,7 +59,7 @@ history                  # epochごとのloss / accuracy
 
 baseline学習、圧縮後Fine-tuningを同じEarly Stopping条件で実行するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **最良validation lossと履歴を初期化する。**  
    最良値を`inf`、best stateを未設定として開始する。
@@ -84,19 +84,32 @@ baseline学習、圧縮後Fine-tuningを同じEarly Stopping条件で実行す�
 11. **modelと履歴をdictで返す。**  
     呼び出し側はbest epochやloss推移をそのまま実験記録へ使える。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-train評価loaderを決定
-→ train_one_epoch
-→ validation evaluate
-→ 必要ならtrainをshuffleなし再評価
-→ best判定 / state_dict deepcopy
-→ history追加
-→ patience判定
-→ 繰り返し
-→ best state復元
-→ result dict
+```mermaid
+flowchart TD
+    A["学習状態を初期化"] --> B{"train_eval_loader 指定?"}
+    B -- Yes --> C["指定 loader を train 評価に使用"]
+    B -- No --> D{"reevaluate_train?"}
+    D -- Yes --> E["non_shuffling_loader を作成"]
+    D -- No --> F["train_one_epoch の指標をそのまま使用"]
+    C --> G["train_one_epoch"]
+    E --> G
+    F --> G
+    G --> H["validation evaluate"]
+    H --> I{"train を再評価する?"}
+    I -- Yes --> J["shuffle なし loader で evaluate"]
+    I -- No --> K["学習時の train 指標を使用"]
+    J --> L{"validation loss が min_delta 超で改善?"}
+    K --> L
+    L -- Yes --> M["best state を deepcopy\nno_improvement = 0"]
+    L -- No --> N["no_improvement += 1"]
+    M --> O["history に記録"]
+    N --> O
+    O --> P{"patience 到達 or max_epochs 終了?"}
+    P -- No --> G
+    P -- Yes --> Q["best state を復元"]
+    Q --> R["result dict を返す"]
 ```
 
 ## 主なcontract / 注意事項

@@ -41,7 +41,7 @@ parameters、validation loss/acc、accuracy drop、latency条件、agreement、l
 
 rank sweepや複数圧縮候補の比較表で、列の意味と評価方法を統一したrecordを作るとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baseline/compressed両modelのtraining状態を保存する。**
 2. **compressed modelを`evaluate()`する。**  
@@ -67,20 +67,28 @@ rank sweepや複数圧縮候補の比較表で、列の意味と評価方法を�
 
 validation、agreement、logits RMSEはそれぞれdataset全体を集計するため、同じloaderを独立に走査する。したがって通常のDataLoaderのような**再走査可能なiterable**を前提とする。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-model状態保存
-→ evaluate(compressed)
-→ fixed input確保
-→ benchmark
-→ parameter metrics
-→ accuracy drop
-→ agreement
-→ logits RMSE
-→ optional MACs / model追加
-→ record
-→ 状態復元
+```mermaid
+flowchart TD
+    A["baseline / compressed の training 状態を保存"] --> B["evaluate(compressed)"]
+    B --> C{"input_batch 指定?"}
+    C -- Yes --> D["指定 batch を使用"]
+    C -- No --> E["take_inference_batch(loader)"]
+    D --> F["benchmark_inference"]
+    E --> F
+    F --> G["Parameter数 / 削減率 / accuracy drop"]
+    G --> H["agreement"]
+    H --> I["logits_rmse"]
+    I --> J["共通 record を作成"]
+    J --> K{"include_model?"}
+    K -- Yes --> L["model を record に追加"]
+    K -- No --> M{"MACs 情報が指定されている?"}
+    L --> M
+    M -- Yes --> N["指定された MACs 項目を追加"]
+    M -- No --> O["training 状態を復元"]
+    N --> O
+    O --> P["record を返す"]
 ```
 
 ## 主なcontract / 注意事項

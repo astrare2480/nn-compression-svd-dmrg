@@ -31,7 +31,7 @@ hooi_sweep(
 
 HOOI反復の1単位をテスト・可視化したいとき、Tucker-2 HOOIをgeneric HOOIへ委譲するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **HOOI入力全体を検証する。**  
    `X`のndim/dtype、`ranks`、factor key集合、factor shape/dtype/device、各target modeのprojected unfoldingでrankが実現可能かを確認する。
@@ -53,18 +53,19 @@ HOOI反復の1単位をテスト・可視化したいとき、Tucker-2 HOOIをge
 
 この実装はsweep途中で更新したfactorを後続modeが利用する。すべてを旧factorから同時更新するJacobi型ではない。
 
-### 処理フロー（短縮版）
+### フローチャート
 
-```text
-X / factors / ranks
-→ 全contract検証
-→ factors clone
-→ target modeを順に選択
-   → target以外を「最新factor」でprojection
-   → target mode unfold
-   → truncated_svd
-   → target factor更新
-→ updated_factors
+```mermaid
+flowchart TD
+    A["X / factors / ranks を検証"] --> B["factors を clone"]
+    B --> C{"未処理 target mode がある?"}
+    C -- Yes --> D["projected = X"]
+    D --> E["target 以外を最新 factor で mode_dot"]
+    E --> F["target mode で unfold"]
+    F --> G["truncated SVD"]
+    G --> H["target factor を更新"]
+    H --> C
+    C -- No --> I["updated_factors を返す"]
 ```
 
 ## 主なcontract / 注意事項
