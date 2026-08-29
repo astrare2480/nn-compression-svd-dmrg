@@ -30,22 +30,13 @@ tucker_parameter_count(shape, ranks) / original_element_count
 
 rank sweepでTucker表現の圧縮の強さを「元の何割か」で比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **元shapeが正のdimensionだけで構成されているか検証する。**
 2. **ranksをTucker共通contractで検証する。**
 3. **元Tensorの総要素数をshapeの積で計算する。**
 4. **`tucker_parameter_count()`でTucker表現の総要素数を計算する。**
 5. **Tucker要素数を元要素数で割って返す。**
-
-### 処理フロー（短縮版）
-
-```text
-shape / ranks検証
-→ original element count
-→ tucker_parameter_count
-→ Tucker / original
-```
 
 ## 主なcontract / 注意事項
 

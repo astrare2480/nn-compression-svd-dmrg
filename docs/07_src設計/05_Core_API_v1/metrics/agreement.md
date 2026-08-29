@@ -30,7 +30,7 @@ agreement(
 
 ground-truth accuracyとは別に、「圧縮後modelがbaselineの判断をどれだけ保持したか」を測るとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **両modelのroot・全submoduleのtraining状態を保存する。**
 2. **両modelを一時的に`eval()`へ切り替える。**
@@ -43,18 +43,6 @@ ground-truth accuracyとは別に、「圧縮後modelがbaselineの判断をど�
 8. **空loaderなら明示的に`ValueError`を送出する。**
 9. **一致数 / 総sample数を返す。**
 10. **正常終了・例外のどちらでも両modelの全module training状態を復元する。**
-
-### 処理フロー（短縮版）
-
-```text
-2モデルの状態保存
-→ eval / inference_mode
-→ 同じbatchを両modelへforward
-→ argmax同士を比較
-→ 一致数を集計
-→ agreement
-→ 状態復元
-```
 
 ## 主なcontract / 注意事項
 

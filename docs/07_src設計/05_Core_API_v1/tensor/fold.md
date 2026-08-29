@@ -33,7 +33,7 @@ fold(
 - `mode_dot()`で行列積を行った結果をTensorへ戻すとき。
 - Tensor演算のshape規約が正しいか検証するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **復元先shapeを通常のtupleへ変換する。**  
    `torch.Size`などを含めて同じ扱いにし、以後のshape計算を単純化する。
@@ -49,17 +49,6 @@ fold(
    `unfold()`直後と同じaxis配置を再現してからTensorへ戻す。
 7. **先頭axisを元のmode位置へ戻す。**  
    `movedim(0, mode)` を使い、最終的な元axis配置を復元して返す。
-
-### 処理フロー（短縮版）
-
-```text
-unfolded
-→ shape / mode / 行列次元を検証
-→ rows / columns / numel整合確認
-→ modeを先頭にしたshapeへreshape
-→ movedimで元axis配置へ復元
-→ Tensor
-```
 
 ## 主なcontract / 注意事項
 

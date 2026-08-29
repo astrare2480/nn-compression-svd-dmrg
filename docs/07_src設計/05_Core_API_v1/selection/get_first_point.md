@@ -25,7 +25,7 @@ DataFrame、sortに使う列名、座標として読むx/y列名。
 
 knee計算の端点確認やhistorical Notebook互換処理。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力DataFrameとx/y列を検証する。**  
    空DataFrame、列不足、NaN、infを拒否し、x/yを数値floatとして扱える形へ揃える。

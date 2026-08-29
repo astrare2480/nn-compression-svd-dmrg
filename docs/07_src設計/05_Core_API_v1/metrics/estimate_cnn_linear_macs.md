@@ -29,7 +29,7 @@ CNN model、fc1 rank、表示有無。
 
 Fashion-MNIST CNNのLinear-only SVD実験。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baseline Linear部を`fc1 + fc2`として計算する。**
 2. **compressed側の`fc1`を`in → rank → out`の2層式で計算する。**

@@ -27,7 +27,7 @@ find_knee_point_numpy(
 
 同じknee semanticsをPython loopではなく配列演算でまとめて計算したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **DataFrameを検証し、x/y列をfloat NumPy arrayへ変換する。**
 2. **直線パラメータを検証する。**

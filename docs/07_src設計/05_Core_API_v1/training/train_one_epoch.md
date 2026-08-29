@@ -38,7 +38,7 @@ train_one_epoch(
 
 baseline modelの通常学習、SVD/Tucker圧縮後のFine-tuning。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **modelを学習モードへ切り替える。**  
    `model.train()`を呼び、DropoutやBatchNormを学習時の挙動へする。この関数は学習APIなので、呼び出し前のtrain/eval状態を復元する設計ではない。
@@ -58,21 +58,6 @@ baseline modelの通常学習、SVD/Tucker圧縮後のFine-tuning。
    走査後のsample総数が0なら、偶発的な0除算ではなく`ValueError`を送出する。
 9. **epoch平均を計算して返す。**  
    loss合計をsample総数で割り、正解数もsample総数で割って`(avg_loss, accuracy)`を返す。
-
-### 処理フロー（短縮版）
-
-```text
-model.train()
-→ batchをdeviceへ移動
-→ zero_grad
-→ forward
-→ loss
-→ backward
-→ optimizer.step
-→ loss / 正解数を集計
-→ empty確認
-→ epoch平均を返す
-```
 
 ## 主なcontract / 注意事項
 

@@ -40,22 +40,13 @@ sweep_conv_svd_ranks(
 
 historical Notebookを変更せず再実行するとき。新規コードでは`sweep_conv2d_ranks()`を使用する。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **旧引数名`rank_list`を受け取る。**
 2. **値を変更せず`sweep_conv2d_ranks()`の`ranks`位置へ渡す。**
 3. **その他の評価・benchmark引数もそのまま転送する。**
 4. **primary APIの戻り値をそのまま返す。**  
    wrapper自身は分解・評価ロジックを持たない。
-
-### 処理フロー（短縮版）
-
-```text
-legacy arguments
-→ primary APIの引数へ対応付け
-→ sweep_conv2d_ranks
-→ resultをそのまま返す
-```
 
 ## 主なcontract / 注意事項
 

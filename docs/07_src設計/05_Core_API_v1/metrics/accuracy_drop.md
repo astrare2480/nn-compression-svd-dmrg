@@ -31,7 +31,7 @@ accuracy_drop(
 
 圧縮によるtask性能差を、絶対accuracyと別の1列として比較表へ入れるとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baseline accuracyからcompressed accuracyを引く。**
 2. **`verbose=True`なら比較元・比較先・差分を表示する。**

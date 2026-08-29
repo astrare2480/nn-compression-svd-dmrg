@@ -31,7 +31,7 @@ rebuild_linear_from_svd(
 
 「低rank近似したweightに置き換えた場合のaccuracy低下」を、2層化によるparameter削減とは切り分けて確認するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **SVD成分から近似weightを再構成する。**  
    `W_r = U_r @ diag(S_r) @ Vh_r`を計算し、元Linearと同shapeの低rank近似行列を作る。
@@ -47,17 +47,6 @@ rebuild_linear_from_svd(
    frozen layerを意図せずtrainableにしない。
 7. **新しい独立layerを返す。**  
    元layer自体は変更しない。
-
-### 処理フロー（短縮版）
-
-```text
-U_r, S_r, Vh_r
-→ W_rを再構成
-→ 元device/dtypeで同shape Linearを新規作成
-→ weight / biasをcopy
-→ requires_grad継承
-→ 新Linear
-```
 
 ## 主なcontract / 注意事項
 

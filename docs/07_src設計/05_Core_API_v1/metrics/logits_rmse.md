@@ -30,7 +30,7 @@ logits_rmse(
 
 argmaxが同じかだけでは分からない出力分布のずれを、baselineとの差として測りたいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **両modelのtraining状態を保存し、eval modeへ切り替える。**
 2. **`torch.inference_mode()`でloaderを走査する。**
@@ -42,19 +42,6 @@ argmaxが同じかだけでは分からない出力分布のずれを、baseline
 7. **要素数が0ならempty loaderとして`ValueError`を送出する。**
 8. **二乗誤差平均の平方根を取る。**
 9. **両modelのtraining状態を復元してRMSEを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-2モデル状態保存
-→ eval / inference_mode
-→ logits差
-→ 差の二乗和 + 要素数を全batchで集計
-→ mean squared error
-→ sqrt
-→ RMSE
-→ 状態復元
-```
 
 ## 主なcontract / 注意事項
 

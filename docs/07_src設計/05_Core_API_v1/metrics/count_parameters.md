@@ -25,22 +25,13 @@ count_parameters(model) -> int
 
 baseline/compressed modelの保存Parameter量を比較するとき、圧縮率recordを作るとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`model.parameters()`でParameterを順に取得する。**
 2. **各Parameterの`numel()`を求める。**  
    shapeに関係なく、そのParameterが保持するscalar数へ変換する。
 3. **全Parameterの要素数を合計する。**
 4. **整数として返す。**
-
-### 処理フロー（短縮版）
-
-```text
-model.parameters()
-→ 各parameter.numel()
-→ sum
-→ total parameters
-```
 
 ## 主なcontract / 注意事項
 

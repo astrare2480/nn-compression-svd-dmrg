@@ -26,7 +26,7 @@ retained energyのPython `float`。
 
 Linear/Convのrank sweep結果へ、parameter数やaccuracyとは別にweight近似品質を追加するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **layerのweightを取得する。**  
    Parameterそのものではなく評価用の値として扱う。
@@ -38,16 +38,6 @@ Linear/Convのrank sweep結果へ、parameter数やaccuracyとは別にweight近
    `retained_energy_from_matrix(matrix, rank)`で特異値二乗和の比率を計算する。
 5. **得られたfloatを返す。**  
    layer固有の追加処理は行わない。
-
-### 処理フロー（短縮版）
-
-```text
-layer.weight
-→ detach
-→ (out, -1)へ行列化
-→ retained_energy_from_matrix
-→ retained energy
-```
 
 ## 主なcontract / 注意事項
 

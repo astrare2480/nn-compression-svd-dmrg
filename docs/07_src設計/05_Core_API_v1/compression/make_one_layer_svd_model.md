@@ -34,7 +34,7 @@ make_one_layer_svd_model(
 
 2層分解によるparameter削減を入れる前に、「weightをrank制限したこと自体」がaccuracyへ与える影響を確認するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **primary rank名とlegacy名を解決する。**  
    `fc1_rank`と`r1`などを同時指定した場合は曖昧なのでエラーにする。両層のrankが最終的に必須。
@@ -46,16 +46,6 @@ make_one_layer_svd_model(
 5. **`fc2`も同じ手順で再構築する。**
 6. **shapeは元と同じままの近似modelを返す。**  
    層数・Parameter shapeを変えないため、これは実圧縮ではない。
-
-### 処理フロー（短縮版）
-
-```text
-rank alias解決
-→ model deepcopy
-→ fc1: SVD → 同shape Linear再構築
-→ fc2: SVD → 同shape Linear再構築
-→ approximation-only model
-```
 
 ## 主なcontract / 注意事項
 

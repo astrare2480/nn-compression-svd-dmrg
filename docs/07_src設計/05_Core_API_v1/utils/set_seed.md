@@ -25,7 +25,7 @@ set_seed(seed: int = 0) -> None
 
 実験開始時に学習・candidate比較の再現性を高めたいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`CUBLAS_WORKSPACE_CONFIG`を未設定時だけ設定する。**  
    CUDAの決定的演算を使うため、`setdefault(":4096:8")`で既存ユーザー設定は上書きしない。
@@ -38,19 +38,6 @@ set_seed(seed: int = 0) -> None
 7. **cuDNN benchmarkを無効化する。**  
    入力ごとの高速algorithm探索による非決定性を避ける。
 8. **cuDNN deterministicを有効化する。**
-
-### 処理フロー（短縮版）
-
-```text
-CUBLAS deterministic設定
-→ Python seed
-→ NumPy seed
-→ torch CPU seed
-→ CUDA seed
-→ deterministic algorithms
-→ cudnn benchmark=False
-→ cudnn deterministic=True
-```
 
 ## 主なcontract / 注意事項
 

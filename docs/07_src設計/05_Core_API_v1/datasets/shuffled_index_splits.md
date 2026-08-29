@@ -30,7 +30,7 @@ shuffled_index_splits(
 
 train用と評価用でtransformが異なる別Dataset objectへ、**同じindex split**を適用したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`lengths`の合計を計算する。**
 2. **合計が`n`を超えていないか確認する。**

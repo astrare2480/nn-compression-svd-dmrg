@@ -32,7 +32,7 @@ project root、手法名、ケース名、実験名、directoryを実際に作�
 
 SVD / Tucker / TT-MPS / DMRG Notebookで、保存先を同じ階層規則へ揃えるとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`project_root`を`Path`へ変換する。**
 2. **data directoryを`root/data`として決める。**
@@ -43,17 +43,6 @@ SVD / Tucker / TT-MPS / DMRG Notebookで、保存先を同じ階層規則へ揃�
 5. **`create=True`なら3directoryを作成する。**  
    `parents=True, exist_ok=True`で途中directoryも含めて安全に作る。
 6. **3つの`Path`をtupleで返す。**
-
-### 処理フロー（短縮版）
-
-```text
-project_root
-→ data = root/data
-→ models = root/models/method/case/experiment
-→ results = root/results/method/case/experiment
-→ create=Trueならmkdir
-→ 3 Pathを返す
-```
 
 ## 主なcontract / 注意事項
 

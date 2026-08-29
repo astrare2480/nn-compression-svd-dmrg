@@ -30,7 +30,7 @@ estimate_conv2d_macs(
 
 Notebookやrank sweepで1 Convの理論計算量を比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **圧縮対象として`groups=1` Convか確認する。**
 2. **`out_hw`を`out_h`, `out_w`へ分ける。**

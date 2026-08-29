@@ -30,7 +30,7 @@ Dataset、各Subsetの長さ、split専用seed。
 
 train / Early-Stopping validation / rank-selection validationを再現可能に分離するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **split専用の`torch.Generator`を作る。**  
    `make_torch_generator(seed)`を使い、global RNGや学習shuffle用Generatorと分ける。

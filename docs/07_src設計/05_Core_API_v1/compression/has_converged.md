@@ -38,7 +38,7 @@ abs(error - prev_error) <= abs_tol + rel_tol * abs(prev_error)
 
 HOOIなど、誤差の改善量を見て反復を止める処理。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`abs_tol`を検証する。**  
    boolではない有限数で、0以上であることを要求する。
@@ -48,16 +48,6 @@ HOOIなど、誤差の改善量を見て反復を止める処理。
 4. **許容閾値を計算する。**  
    `abs_tol + rel_tol * abs(prev_error)`として、絶対許容とスケール依存の相対許容を足す。
 5. **変化量が閾値以下かをboolで返す。**
-
-### 処理フロー（短縮版）
-
-```text
-abs_tol / rel_tol検証
-→ |error - prev_error|
-→ abs_tol + rel_tol*|prev_error|
-→ 比較
-→ bool
-```
 
 ## 主なcontract / 注意事項
 

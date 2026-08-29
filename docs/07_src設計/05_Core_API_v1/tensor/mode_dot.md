@@ -33,7 +33,7 @@ mode_dot(
 - HOOIで他modeのfactorを使ってTensorを射影するとき。
 - Tucker coreへfactorを掛け戻して再構成するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力Tensorとmodeを検証する。**  
    `X`のshapeと`mode`がTensor演算の共通contractを満たすことを確認する。
@@ -49,18 +49,6 @@ mode_dot(
    元のshapeを基準に、対象modeだけを新しいdimensionへ置き換える。
 7. **`fold()`でTensorへ戻す。**  
    行列積結果を出力shapeへfoldし、元と同じaxis順序のTensorとして返す。
-
-### 処理フロー（短縮版）
-
-```text
-X / matrix / mode
-→ 入力整合を検証
-→ unfold(X, mode)
-→ matrix @ unfolded
-→ 対象modeだけ変更した出力shapeを作成
-→ fold
-→ mode-n積結果
-```
 
 ## 主なcontract / 注意事項
 

@@ -43,7 +43,7 @@ make_fashion_mnist_loaders(
 
 Fashion-MNIST実験で、学習用のランダム順序と評価用の固定順序を明確に分けたDataLoader群を準備するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **train loaderを作る。**  
    `shuffle=True`とし、指定された`train_generator`を渡す。これだけが学習順をランダム化するloader。

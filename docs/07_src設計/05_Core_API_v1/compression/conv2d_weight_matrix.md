@@ -25,7 +25,7 @@ conv2d_weight_matrix(weight: torch.Tensor) -> torch.Tensor
 
 Conv2d SVDの前処理、Conv weightのrank上限・特異値構造を考えるとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **出力channel軸をそのまま残す。**  
    Conv weightのaxis 0をSVD行列の行に対応させる。
@@ -33,15 +33,6 @@ Conv2d SVDの前処理、Conv weightのrank上限・特異値構造を考える�
    `flatten(start_dim=1)`により`C_in * kH * kW`列の行列にする。
 3. **2次元行列を返す。**  
    この関数ではSVDやrank validationは行わず、行列化だけを担当する。
-
-### 処理フロー（短縮版）
-
-```text
-(C_out, C_in, kH, kW)
-→ axis 0を維持
-→ axis 1以降をflatten
-→ (C_out, C_in*kH*kW)
-```
 
 ## 主なcontract / 注意事項
 

@@ -34,7 +34,7 @@ Linear(in_features → rank, bias=False)
 
 Linearのparameter数・理論MACsを実際に削減するSVD圧縮、圧縮後Fine-tuningの初期化。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **rankが元Linear weightで実現可能か検証する。**  
    最大rankは`min(in_features, out_features)`。範囲外をclipせずエラーにする。
@@ -52,19 +52,6 @@ Linearのparameter数・理論MACsを実際に削減するSVD圧縮、圧縮後F
    元weight/biasがfrozenなら新しい対応Parameterもfrozenにする。
 8. **2層`nn.Sequential`を返す。**  
    入力`layer`自体は変更しない。
-
-### 処理フロー（短縮版）
-
-```text
-Linear weight
-→ rank検証
-→ weight.detach()
-→ truncated_svd
-→ Vh_rを入力側Linearへ配置
-→ U_r diag(S_r)を出力側Linearへ配置
-→ bias / requires_grad継承
-→ 2層Sequential
-```
 
 ## 主なcontract / 注意事項
 

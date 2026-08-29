@@ -27,7 +27,7 @@ project rootの絶対`Path`。
 
 Notebookのcwdが深い階層でも、data/models/results等をrepository root基準で解決したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`start_path`を`Path`へ変換し、`resolve()`する。**  
    相対pathや`..`を解消して探索基準を明確にする。
@@ -36,17 +36,6 @@ Notebookのcwdが深い階層でも、data/models/results等をrepository root�
 4. **各候補で`.git`の存在を確認する。**
 5. **最初に`.git`が見つかったdirectoryをproject rootとして返す。**
 6. **最後まで見つからなければ`FileNotFoundError`を送出する。**
-
-### 処理フロー（短縮版）
-
-```text
-start_path
-→ resolve
-→ self → parent → parent ...
-→ .git存在確認
-→ 最初の一致をreturn
-→ 無ければFileNotFoundError
-```
 
 ## 主なcontract / 注意事項
 

@@ -31,7 +31,7 @@ in_features * rank + rank * out_features
 
 Linear SVD rank候補を理論計算量で比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **元行列で可能な最大rankを求める。**  
    `min(in_features, out_features)`。
@@ -41,16 +41,6 @@ Linear SVD rank候補を理論計算量で比較するとき。
 4. **出力側LinearのMACsを計算する。**  
    `rank * out_features`。
 5. **2層分を合計して返す。**
-
-### 処理フロー（短縮版）
-
-```text
-rank検証
-→ in*rank
-→ rank*out
-→ 加算
-→ compressed MACs
-```
 
 ## 主なcontract / 注意事項
 

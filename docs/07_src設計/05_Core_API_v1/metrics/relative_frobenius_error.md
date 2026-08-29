@@ -32,7 +32,7 @@ relative_frobenius_error(
 
 SVD/Tucker/HOOIのweight再構成誤差比較、自作分解とTensorLy等の数値照合。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`X`と`X_hat`のshapeが一致するか確認する。**
 2. **元TensorのFrobenius normを計算する。**  
@@ -43,17 +43,6 @@ SVD/Tucker/HOOIのweight再構成誤差比較、自作分解とTensorLy等の数
 5. **差のnormを元Tensorのnormで割る。**
 6. **scalar Tensorのまま返す。**  
    関数内で`detach()`やPython float化をしないため、必要なら呼び出し側がautograd graphを利用できる。
-
-### 処理フロー（短縮版）
-
-```text
-shape一致確認
-→ ||X||_F
-→ zero確認
-→ ||X-X_hat||_F
-→ 分子 / 分母
-→ scalar Tensor
-```
 
 ## 主なcontract / 注意事項
 

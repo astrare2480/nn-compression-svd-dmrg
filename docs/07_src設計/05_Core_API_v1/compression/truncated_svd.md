@@ -34,7 +34,7 @@ Vh_r : (rank, n)
 - HOSVDでmode-n unfoldingからfactorを求めるとき。
 - HOOIで1つのfactorを更新するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力が2次元行列か確認する。**  
    SVDの最大rankを求める前に`matrix.ndim == 2`を要求する。Tensor全体を直接扱う関数ではなく、行列に対する基本処理として境界を固定する。
@@ -48,16 +48,6 @@ Vh_r : (rank, n)
    `U[:, :rank]`, `S[:rank]`, `Vh[:rank, :]`を取得する。
 6. **低rank成分をそのまま返す。**  
    この関数では再構成やNN Module化を行わず、後続APIが用途に応じてfactorを利用する。
-
-### 処理フロー（短縮版）
-
-```text
-2次元matrix
-→ rank型・範囲を検証
-→ torch.linalg.svd(full_matrices=False)
-→ U / S / Vhを上位rankまでslice
-→ U_r, S_r, Vh_r
-```
 
 ## 主なcontract / 注意事項
 

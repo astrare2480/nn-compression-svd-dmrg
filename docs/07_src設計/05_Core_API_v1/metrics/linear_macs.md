@@ -27,7 +27,7 @@ in_features * out_features
 
 baseline Linearの理論計算量を数えるとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力特徴数`in_features`を読む。**
 2. **出力特徴数`out_features`を読む。**

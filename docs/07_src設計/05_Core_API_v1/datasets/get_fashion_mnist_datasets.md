@@ -32,7 +32,7 @@ get_fashion_mnist_datasets(
 
 Fashion-MNIST MLP/CNN実験のDataset準備。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **torchvisionのdatasets/transformsを関数内でimportする。**
 2. **transform未指定ならdefault transformを作る。**  

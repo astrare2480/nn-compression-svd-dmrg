@@ -27,7 +27,7 @@ take_inference_batch(
 
 baseline/compressed modelのbenchmark条件から「入力batchの違い」を排除したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **DataLoaderのsamplerを確認する。**
 2. **`RandomSampler`なら取得を拒否する。**  
@@ -38,17 +38,6 @@ baseline/compressed modelのbenchmark条件から「入力batchの違い」を�
    batchがTensorならそのまま、tuple/listなら先頭要素をinputとして取り出す。
 6. **固定input batchを返す。**  
    baselineとcompressedの両方へ同じTensorを渡すのは呼び出し側の責務。
-
-### 処理フロー（短縮版）
-
-```text
-DataLoader
-→ sampler確認
-→ RandomSamplerなら拒否
-→ 1 batch取得
-→ Tensor / tuple / listをinput Tensorへ正規化
-→ fixed input_batch
-```
 
 ## 主なcontract / 注意事項
 

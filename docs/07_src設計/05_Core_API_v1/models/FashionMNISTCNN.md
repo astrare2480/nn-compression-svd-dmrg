@@ -25,7 +25,7 @@ FashionMNISTCNN()
 
 Fashion-MNISTのConv SVD、Linear SVD、Conv+Linear同時圧縮、MACs・latency比較。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 ### 初期化時
 
@@ -50,18 +50,6 @@ Fashion-MNISTのConv SVD、Linear SVD、Conv+Linear同時圧縮、MACs・latency
 3. **feature mapをflattenする。**
 4. **`fc1 → relu3`を通す。**
 5. **`fc2`で10クラスlogitsを作って返す。**
-
-### 処理フロー（短縮版）
-
-```text
-(N,1,28,28)
-→ Conv 1→32 → ReLU → Pool   # 14×14
-→ Conv 32→64 → ReLU → Pool  # 7×7
-→ Flatten 3136
-→ Linear 3136→128 → ReLU
-→ Linear 128→10
-→ logits
-```
 
 ## 主なcontract / 注意事項
 
