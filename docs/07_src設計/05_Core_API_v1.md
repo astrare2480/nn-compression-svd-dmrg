@@ -19,10 +19,13 @@ Signature
 引数
 戻り値
 使用場面
-ざっくりした処理
+処理の流れ（日本語）
+処理フロー（短縮版。必要な場合）
 主なcontract / 注意事項
 関連API
 ```
+
+処理説明は英語identifierだけの短い矢印列にせず、**現行srcが何をどの順番で行い、なぜその処理が必要かを日本語で追える粒度**にする。
 
 Public APIの基本境界は各sub-packageの `__all__`。private helperはCore API v1の固定対象にしない。
 

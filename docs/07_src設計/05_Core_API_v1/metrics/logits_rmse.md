@@ -5,7 +5,7 @@
 
 ## 責務
 
-baseline/compressed modelのlogits全要素のRMSEを計算する。
+baseline/compressed modelのlogits全要素についてRMSE（root mean squared error）を計算する。
 
 ## Signature
 
@@ -20,29 +20,45 @@ logits_rmse(
 
 ## 引数
 
-2モデル、loader、device。
+2モデル、評価loader、device。
 
 ## 戻り値
 
-logits差のroot mean squared error。
+全sample・全logit要素をまとめたRMSE。
 
 ## 使用場面
 
-argmax一致率より細かく、出力分布のずれを測りたいとき。
+argmaxが同じかだけでは分からない出力分布のずれを、baselineとの差として測りたいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **両modelのtraining状態を保存し、eval modeへ切り替える。**
+2. **`torch.inference_mode()`でloaderを走査する。**
+3. **各batchをdeviceへ移す。**
+4. **baseline logitsとcompressed logitsを計算する。**
+5. **要素ごとの差`baseline - compressed`を求め、二乗和を累積する。**
+6. **logitsの総要素数も累積する。**  
+   class数を固定値として仮定せず、実際の`difference.numel()`を使う。
+7. **要素数が0ならempty loaderとして`ValueError`を送出する。**
+8. **二乗誤差平均の平方根を取る。**
+9. **両modelのtraining状態を復元してRMSEを返す。**
+
+### 処理フロー（短縮版）
 
 ```text
-両modelをeval
-→ 各batchのlogits差を二乗
-→ 全要素へ合計
-→ element_countで平均
+2モデル状態保存
+→ eval / inference_mode
+→ logits差
+→ 差の二乗和 + 要素数を全batchで集計
+→ mean squared error
 → sqrt
+→ RMSE
+→ 状態復元
 ```
 
 ## 主なcontract / 注意事項
 
-empty loader拒否、両modelのtraining状態を復元。
+empty loader拒否。accuracyやagreementよりも細かくlogit値の変化を見る指標。
 
 ## 関連API
 

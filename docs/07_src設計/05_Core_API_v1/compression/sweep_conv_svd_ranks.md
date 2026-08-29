@@ -5,7 +5,7 @@
 
 ## 責務
 
-旧Notebookの`rank_list`引数名を維持し、primary API `sweep_conv2d_ranks()`へ委譲するcompatibility wrapper。
+旧Notebookの引数名`rank_list`を維持したまま、現行の`sweep_conv2d_ranks()`を呼び出すcompatibility wrapper。
 
 ## Signature
 
@@ -28,21 +28,38 @@ sweep_conv_svd_ranks(
 ) -> list[dict]
 ```
 
-## 引数 / 戻り値
+## 引数
 
-意味は`sweep_conv2d_ranks()`と同じ。`rank_list`だけhistorical名。
+意味は`sweep_conv2d_ranks()`と同じ。`rank_list`だけが旧名。
+
+## 戻り値
+
+`sweep_conv2d_ranks()`が返すrank sweep record list。
 
 ## 使用場面
 
-既存Notebookをそのまま再実行するとき。
+historical Notebookを変更せず再実行するとき。新規コードでは`sweep_conv2d_ranks()`を使用する。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-引数名を読み替えて`sweep_conv2d_ranks()`を呼ぶだけ。
+1. **旧引数名`rank_list`を受け取る。**
+2. **値を変更せず`sweep_conv2d_ranks()`の`ranks`位置へ渡す。**
+3. **その他の評価・benchmark引数もそのまま転送する。**
+4. **primary APIの戻り値をそのまま返す。**  
+   wrapper自身は分解・評価ロジックを持たない。
+
+### 処理フロー（短縮版）
+
+```text
+legacy arguments
+→ primary APIの引数へ対応付け
+→ sweep_conv2d_ranks
+→ resultをそのまま返す
+```
 
 ## 主なcontract / 注意事項
 
-新規コードでは`sweep_conv2d_ranks()`を使用する。
+Compatibility APIへ新しい機能や独自挙動を追加しない。
 
 ## 関連API
 

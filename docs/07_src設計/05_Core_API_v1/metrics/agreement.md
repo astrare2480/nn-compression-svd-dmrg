@@ -5,7 +5,7 @@
 
 ## 責務
 
-baseline/compressed modelが同じclassを予測する割合をloader全体で計算する。
+baseline/compressed modelが同じ入力に対して同じ予測classを出す割合をloader全体で計算する。
 
 ## Signature
 
@@ -28,23 +28,39 @@ agreement(
 
 ## 使用場面
 
-accuracyとは別に「baselineの判断をどれだけ保持したか」を測るとき。
+ground-truth accuracyとは別に、「圧縮後modelがbaselineの判断をどれだけ保持したか」を測るとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **両modelのroot・全submoduleのtraining状態を保存する。**
+2. **両modelを一時的に`eval()`へ切り替える。**
+3. **`torch.inference_mode()`でloaderを走査する。**  
+   gradientを作らず推論だけを行う。
+4. **各batchの入力をdeviceへ移す。**
+5. **baselineとcompressedのlogitsからそれぞれ`argmax`予測classを求める。**
+6. **同じclassになったsample数を加算する。**
+7. **sample総数も加算する。**
+8. **空loaderなら明示的に`ValueError`を送出する。**
+9. **一致数 / 総sample数を返す。**
+10. **正常終了・例外のどちらでも両modelの全module training状態を復元する。**
+
+### 処理フロー（短縮版）
 
 ```text
-両modelの状態保存
-→ eval
-→ inference_mode
-→ 各batchでargmax比較
-→ 一致数/総sample数
-→ training状態復元
+2モデルの状態保存
+→ eval / inference_mode
+→ 同じbatchを両modelへforward
+→ argmax同士を比較
+→ 一致数を集計
+→ agreement
+→ 状態復元
 ```
 
 ## 主なcontract / 注意事項
 
 - empty loaderは`ValueError`。
-- root + 全submodule training状態を復元。
+- root + 全submoduleのtraining状態を復元する。
+- 正解ラベルは一致率計算には使わない。
 
 ## 関連API
 

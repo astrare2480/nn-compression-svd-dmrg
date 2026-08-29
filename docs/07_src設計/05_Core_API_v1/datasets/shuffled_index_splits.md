@@ -5,7 +5,7 @@
 
 ## 責務
 
-`0..n-1`のindexをseed固定でshuffleし、指定長のindex listへ分ける。
+`0..n-1`のindexをseed固定でshuffleし、指定した長さごとのindex listへ切り分ける。
 
 ## Signature
 
@@ -24,21 +24,28 @@ shuffled_index_splits(
 
 ## 戻り値
 
-指定長ごとのindex list tuple。
+指定lengthごとのindex listを並べたtuple。
 
 ## 使用場面
 
-train用/評価用でtransformの異なるDatasetへ**同じindex split**を適用したいとき。
+train用と評価用でtransformが異なる別Dataset objectへ、**同じindex split**を適用したいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-専用Generator → `torch.randperm(n)` → lengthsに従って連続slice。
+1. **`lengths`の合計を計算する。**
+2. **合計が`n`を超えていないか確認する。**
+3. **各lengthが0以上か確認する。**
+4. **seed固定の専用`torch.Generator`を作る。**
+5. **`torch.randperm(n, generator=...)`で全indexをランダム順に並べる。**
+6. **`lengths`を先頭から順に読み、連続sliceで各splitを作る。**
+7. **list群をtupleで返す。**  
+   合計が`n`未満なら末尾の余ったindexは使わない。
 
 ## 主なcontract / 注意事項
 
 - `sum(lengths) <= n`。
 - 各lengthは0以上。
-- 余ったindexは使わない。
+- 同じseedならindex順を再現できる。
 
 ## 関連API
 

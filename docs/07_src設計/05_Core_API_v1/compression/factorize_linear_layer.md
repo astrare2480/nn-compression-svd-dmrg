@@ -5,7 +5,7 @@
 
 ## 責務
 
-1つのLinearをrank次元の2層LinearへSVD分解する。
+1つの`nn.Linear(in → out)`を、SVDを使って`in → rank → out`の2層Linearへ置換できる形に分解する。
 
 ## Signature
 
@@ -19,7 +19,7 @@ factorize_linear_layer(
 ## 引数
 
 - `layer`: 分解対象`nn.Linear`。
-- `rank`: 中間dimension。
+- `rank`: 2層間の中間dimension。
 
 ## 戻り値
 
@@ -32,24 +32,47 @@ Linear(in_features → rank, bias=False)
 
 ## 使用場面
 
-Linearのparameter/MACsを実際に削減するSVD圧縮。
+Linearのparameter数・理論MACsを実際に削減するSVD圧縮、圧縮後Fine-tuningの初期化。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **rankが元Linear weightで実現可能か検証する。**  
+   最大rankは`min(in_features, out_features)`。範囲外をclipせずエラーにする。
+2. **元layerのdevice/dtypeを記録する。**  
+   新しい2層を元と同じdevice・dtypeで生成するため。
+3. **学習済みweightをdetachしてtruncated SVDする。**  
+   Module再構築の初期値を作る処理なので、元Parameterへのautograd graphはここで切る。
+4. **1層目`Linear(in → rank)`を作る。**  
+   biasは持たせず、weightへ`Vh_r`を配置する。入力特徴をrank次元へ射影する役割。
+5. **2層目`Linear(rank → out)`を作る。**  
+   weightへ`U_r @ diag(S_r)`を配置する。元layerにbiasがあれば、この出力側の層だけへbiasを持たせる。
+6. **weightとbiasを`no_grad`でcopyする。**  
+   初期値転写を学習graphへ入れず、新しいParameterをleafとして保つ。
+7. **各Parameterの`requires_grad`を引き継ぐ。**  
+   元weight/biasがfrozenなら新しい対応Parameterもfrozenにする。
+8. **2層`nn.Sequential`を返す。**  
+   入力`layer`自体は変更しない。
+
+### 処理フロー（短縮版）
 
 ```text
-layer.weight.detach()
+Linear weight
+→ rank検証
+→ weight.detach()
 → truncated_svd
-→ 1層目へ Vh_r
-→ 2層目へ U_r @ diag(S_r)
-→ biasを2層目へcopy
+→ Vh_rを入力側Linearへ配置
+→ U_r diag(S_r)を出力側Linearへ配置
+→ bias / requires_grad継承
+→ 2層Sequential
 ```
 
 ## 主なcontract / 注意事項
 
 - 元layerは非破壊。
-- device/dtype/requires_grad維持。
-- 元weightとのautograd graphは初期化時に切る。
+- device/dtype/requires_gradを維持する。
+- biasは最終出力側だけへ置く。
+- 元weightとのautograd graphはModule初期化時に切る。
 
 ## 関連API
 
-`truncated_svd`, `factorize_named_linear`, `factorize_named_layers`
+`truncated_svd`, `factorize_named_linear`, `factorize_named_layers`, `compressed_linear_macs`

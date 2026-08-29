@@ -5,7 +5,7 @@
 
 ## 責務
 
-`find_knee_point()`と同じknee判定をNumPy vectorized計算で行う。
+`find_knee_point()`と同じknee判定を、NumPy配列のvectorized計算で行う。
 
 ## Signature
 
@@ -21,19 +21,26 @@ find_knee_point_numpy(
 
 ## 引数 / 戻り値
 
-意味は`find_knee_point()`と同じ。
+意味は`find_knee_point()`と同じ。戻り値は`((knee_x, knee_y), distance)`。
 
 ## 使用場面
 
-同一knee semanticsをNumPy配列でまとめて計算したいとき。
+同じknee semanticsをPython loopではなく配列演算でまとめて計算したいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-x/y列をNumPy配列化 → 点-直線距離をvectorized計算 → `argmax`でkneeを選択。
+1. **DataFrameを検証し、x/y列をfloat NumPy arrayへ変換する。**
+2. **直線パラメータを検証する。**
+3. **候補が1点ならその点・距離0を返す。**
+4. **垂直線か通常線かでvectorized距離式を選ぶ。**
+5. **全候補の距離arrayを一括計算する。**
+6. **距離arrayにNaN/infがないか確認する。**
+7. **`np.argmax()`で最大距離indexを求める。**
+8. **その座標と距離をPython floatへ変換して返す。**
 
 ## 主なcontract / 注意事項
 
-loop版と同じ意味を持つことを優先する。NaN/inf距離は拒否。
+loop版と同じ意味を維持することを優先する。実装方式が違ってもknee semanticsは変えない。
 
 ## 関連API
 

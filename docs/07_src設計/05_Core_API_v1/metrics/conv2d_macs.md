@@ -5,7 +5,7 @@
 
 ## 責務
 
-1 sampleがConv2dを通る理論MACsを計算する。
+1 sampleがConv2dを通るときの理論MACsを、出力feature map sizeとweight shapeから計算する。
 
 ## Signature
 
@@ -20,7 +20,7 @@ conv2d_macs(
 ## 引数
 
 - `conv`: Conv2d layer。
-- `out_h`, `out_w`: 出力feature mapの空間size。
+- `out_h`, `out_w`: このConvの出力feature mapの高さ・幅。
 
 ## 戻り値
 
@@ -32,14 +32,21 @@ out_h * out_w * out_ch * in_ch_per_group * kH * kW
 
 baseline Convの理論計算量を数えるとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-出力位置数 × 出力channel数 × 1出力に必要なkernel積和数を掛ける。
+1. **`out_h/out_w`を正整数として検証する。**  
+   boolやTensor scalarをサイズとして受け入れない。
+2. **Conv weight shapeを読む。**  
+   `(out_ch, in_ch_per_group, kH, kW)`を取得する。
+3. **1つの出力位置・1出力channelに必要な積和数を求める。**  
+   `in_ch_per_group * kH * kW`。
+4. **出力位置数`out_h*out_w`と出力channel数`out_ch`を掛ける。**
+5. **1 sampleあたり理論MACsを返す。**
 
 ## 主なcontract / 注意事項
 
 - `out_h/out_w`はbool/Tensor scalar以外の正整数。
-- `weight.shape[1]`はgrouped Convで既に`in_channels/groups`なので、さらにgroupsで割らない。
+- grouped Convでは`weight.shape[1]`がすでに`in_channels/groups`なので、さらに`groups`で割らない。
 
 ## 関連API
 

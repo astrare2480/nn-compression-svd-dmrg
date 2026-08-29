@@ -5,7 +5,7 @@
 
 ## 責務
 
-1 sampleをLinearへ通す理論MACsを計算する。
+1 sampleを`Linear(in_features → out_features)`へ通すときの理論MACs（積和回数）を計算する。
 
 ## Signature
 
@@ -27,13 +27,16 @@ in_features * out_features
 
 baseline Linearの理論計算量を数えるとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
 
-Linearの入力dimensionと出力dimensionを掛ける。
+1. **入力特徴数`in_features`を読む。**
+2. **出力特徴数`out_features`を読む。**
+3. **各出力要素が入力dimension分の積和を行うとみなし、2つを掛ける。**
+4. **1 sampleあたりの理論MACsとして返す。**
 
 ## 主なcontract / 注意事項
 
-bias加算やactivation等は含めない理論MACs。
+bias加算、activation、memory access等は含めない単純な理論MACs。
 
 ## 関連API
 

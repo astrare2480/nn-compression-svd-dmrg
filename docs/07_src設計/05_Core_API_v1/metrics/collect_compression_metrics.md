@@ -5,7 +5,7 @@
 
 ## 責務
 
-1つのcompressed candidateについて、validation・parameter・latency・出力差などの共通指標を1 recordへまとめる。
+1つのcompressed candidateについて、validation性能・Parameter数・latency・baselineとの出力差・optional MACsを共通dictへ集約する。
 
 ## Signature
 
@@ -39,25 +39,55 @@ parameters、validation loss/acc、accuracy drop、latency条件、agreement、l
 
 ## 使用場面
 
-rank sweepや候補比較表の共通record生成。
+rank sweepや複数圧縮候補の比較表で、列の意味と評価方法を統一したrecordを作るとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **baseline/compressed両modelのtraining状態を保存する。**
+2. **compressed modelを`evaluate()`する。**  
+   validation lossとaccuracyをloader全体から計算する。
+3. **benchmark用input batchを確保する。**  
+   呼び出し側から渡されていなければ`take_inference_batch(loader)`を使う。
+4. **compressed modelのlatencyを計測する。**  
+   `benchmark_inference(..., return_details=True)`を使い、時間だけでなくbatch sizeやinput shapeも記録する。
+5. **Parameter数と削減率を計算する。**  
+   `count_parameters()`と`parameters_reduction()`を使う。
+6. **validation accuracyからaccuracy dropを計算する。**
+7. **baselineとの予測一致率を計算する。**  
+   `agreement()`がloaderを再走査する。
+8. **baselineとのlogits RMSEを計算する。**  
+   `logits_rmse()`がloaderをさらに再走査する。
+9. **共通metricsをdictへまとめる。**
+10. **必要ならmodel本体をrecordへ追加する。**  
+    `include_model=False`が既定で、rank sweep全候補のmodel保持を避ける。
+11. **optionalなMACs情報を指定されたものだけ追加する。**
+12. **完成したrecordを返し、model状態を復元する。**
+
+### DataLoaderを複数回走査する理由
+
+validation、agreement、logits RMSEはそれぞれdataset全体を集計するため、同じloaderを独立に走査する。したがって通常のDataLoaderのような**再走査可能なiterable**を前提とする。
+
+### 処理フロー（短縮版）
 
 ```text
-evaluate(compressed)
-→ input batch確保
-→ benchmark_inference
+model状態保存
+→ evaluate(compressed)
+→ fixed input確保
+→ benchmark
 → parameter metrics
+→ accuracy drop
 → agreement
-→ logits_rmse
-→ optional MACs/modelを追加
+→ logits RMSE
+→ optional MACs / model追加
+→ record
+→ 状態復元
 ```
 
 ## 主なcontract / 注意事項
 
-- `include_model=False`が既定。多数candidateのmodelを表へ保持しない。
-- 同じloaderを複数回走査するため**re-iterable loader前提**。one-shot iteratorは未対応。
-- baseline/compressedのtraining状態を復元。
+- `include_model=False`が既定。
+- 同じloaderを複数回走査するためone-shot iteratorは未対応。
+- baseline/compressedのtraining状態を復元する。
 
 ## 関連API
 

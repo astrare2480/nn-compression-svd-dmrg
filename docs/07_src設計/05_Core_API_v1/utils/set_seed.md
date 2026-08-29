@@ -5,7 +5,7 @@
 
 ## 責務
 
-Python/NumPy/PyTorch/CUDAの主要乱数源とdeterministic設定をまとめて初期化する。
+Python / NumPy / PyTorch / CUDAの主要乱数源と、PyTorchのdeterministic設定をまとめて初期化する。
 
 ## Signature
 
@@ -19,26 +19,43 @@ set_seed(seed: int = 0) -> None
 
 ## 戻り値
 
-なし。
+なし。process-globalな乱数・backend設定を変更する。
 
 ## 使用場面
 
-実験開始時に候補比較・学習の再現性を高めるとき。
+実験開始時に学習・candidate比較の再現性を高めたいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **`CUBLAS_WORKSPACE_CONFIG`を未設定時だけ設定する。**  
+   CUDAの決定的演算を使うため、`setdefault(":4096:8")`で既存ユーザー設定は上書きしない。
+2. **Python標準`random`のseedを設定する。**
+3. **NumPyのglobal RNG seedを設定する。**
+4. **PyTorch CPU RNGを`torch.manual_seed()`で設定する。**
+5. **利用可能なCUDA device群のseedを`torch.cuda.manual_seed_all()`で設定する。**
+6. **PyTorchへdeterministic algorithmを優先するよう指定する。**  
+   `warn_only=True`なので、完全対応していない演算では警告しつつ実行を継続できる。
+7. **cuDNN benchmarkを無効化する。**  
+   入力ごとの高速algorithm探索による非決定性を避ける。
+8. **cuDNN deterministicを有効化する。**
+
+### 処理フロー（短縮版）
 
 ```text
-CUBLAS_WORKSPACE_CONFIG設定
-→ random.seed
-→ np.random.seed
-→ torch.manual_seed / cuda.manual_seed_all
+CUBLAS deterministic設定
+→ Python seed
+→ NumPy seed
+→ torch CPU seed
+→ CUDA seed
 → deterministic algorithms
-→ cudnn benchmark=False / deterministic=True
+→ cudnn benchmark=False
+→ cudnn deterministic=True
 ```
 
 ## 主なcontract / 注意事項
 
-既に作成済みDataLoader専用Generatorのstateはresetしない。
+- 既に作成済みの`torch.Generator`の内部stateはresetしない。
+- DataLoader shuffle順を候補間で厳密に管理する場合は`make_torch_generator()`を別途使う。
 
 ## 関連API
 

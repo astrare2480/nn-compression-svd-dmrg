@@ -5,7 +5,7 @@
 
 ## 責務
 
-Conv2d weightのchannel mode 0/1へpartial HOOIを適用する。
+Conv2d weightのchannel mode 0/1へpartial HOOIを適用し、Tucker-2 core・factor・誤差履歴を返す。
 
 ## Signature
 
@@ -24,22 +24,45 @@ tucker2_hooi(
 
 - `weight`: `(C_out,C_in,kH,kW)`の実数浮動小数点Tensor。
 - `rank_out`, `rank_in`: channel ranks。
-- iteration/tolerance引数はgeneric `hooi()` と同じ意味。
+- `max_iter`, `abs_tol`, `rel_tol`: generic `hooi()`と同じ反復条件。
 
 ## 戻り値
 
-`(core, factors, history)`。
+`(core, factors, history)`。`factors`のkeyは0/1、`history[0]`はHOSVD初期誤差。
 
 ## 使用場面
 
 同rankのHOSVD Tucker-2よりweight再構成誤差を反復改善したいとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **Conv weightが4階で、channel rankが基本範囲内か検証する。**
+2. **Tucker-2用rank Mappingを作る。**  
+   `{0: rank_out, 1: rank_in}`として空間modeは圧縮しない。
+3. **generic `hooi()`へweightをそのまま渡す。**  
+   **この関数では`detach()`しない。** Tensor-level decompositionとして、呼び出し側が必要ならautograd graphを保持できるようにする。
+4. **generic HOOIがHOSVD初期化・feasibility検証・sweep・収束判定を行う。**
+5. **`core, factors, history`をそのまま返す。**
+
+### Tensor-levelとModule-levelの境界
 
 ```text
-rank validation
+tucker2_hooi(weight)
+→ detachしないTensor計算
+
+build_tucker2_conv(conv)
+→ detachして新Module Parameterを作る
+```
+
+この2つを分離することで、分解アルゴリズム自体のautograd可能性と、学習済みModuleを独立Parameterへ置換する処理を混同しない。
+
+### 処理フロー（短縮版）
+
+```text
+4D weight / ranks検証
 → ranks={0: rank_out, 1: rank_in}
-→ generic hooiへ委譲
+→ generic hooiへ委譲（detachなし）
+→ core, factors, history
 ```
 
 ## 主なcontract / 注意事項

@@ -5,7 +5,7 @@
 
 ## 責務
 
-4階Conv2d weightのchannel mode 0/1だけをHOSVDし、Tucker-2 componentsを返す。
+4階Conv2d weightのchannel mode 0（出力channel）/ 1（入力channel）だけをHOSVDし、Tucker-2のcoreとfactorを返す。
 
 ## Signature
 
@@ -19,9 +19,9 @@ tucker2_decompose_conv_weight(
 
 ## 引数
 
-- `weight`: `(C_out, C_in, kH, kW)` の実数浮動小数点Tensor。
-- `rank_out`: mode 0 rank。
-- `rank_in`: mode 1 rank。
+- `weight`: `(C_out, C_in, kH, kW)`の実数浮動小数点Tensor。
+- `rank_out`: mode 0のrank。
+- `rank_in`: mode 1のrank。
 
 ## 戻り値
 
@@ -33,20 +33,35 @@ u_in  : (C_in, rank_in)
 
 ## 使用場面
 
-Moduleを作らずHOSVD Tucker-2 componentsだけ取得したいとき、HOOI結果と同形式で比較するとき。
+Moduleを作らずHOSVD Tucker-2 componentsだけ取得したいとき、HOOI分解結果と同じcomponent形式で比較するとき。
 
-## ざっくりした処理
+## 処理の流れ（日本語）
+
+1. **Conv weightが4階Tensorか確認する。**  
+   Tucker-2 Convのmode意味を`(C_out, C_in, kH, kW)`へ固定する。
+2. **channel rankを基本範囲で検証する。**  
+   `rank_out <= C_out`, `rank_in <= C_in`を要求し、bool/Tensor scalar rankを拒否する。
+3. **generic Tucker用のrank Mappingを作る。**  
+   `{0: rank_out, 1: rank_in}`とし、空間mode 2/3は圧縮対象に含めない。
+4. **`hosvd(weight, ranks)`へ分解を委譲する。**  
+   ここで実数浮動小数点dtypeとmode-unfolding上の最大rankも検証される。
+5. **generic factor辞書からchannel factorを取り出す。**  
+   `factors[0]`を`u_out`、`factors[1]`を`u_in`とする。
+6. **`core, u_out, u_in`の順で返す。**
+
+### 処理フロー（短縮版）
 
 ```text
-4D/rank validation
+4D Conv weight
+→ rank_out / rank_in検証
 → ranks={0: rank_out, 1: rank_in}
-→ hosvd(weight, ranks)
-→ core, factor[0], factor[1]
+→ hosvd
+→ core, factors[0], factors[1]
 ```
 
 ## 主なcontract / 注意事項
 
-分解rankはchannel数だけでなくmode-unfoldingの実現可能上限にも従う。
+分解rankはchannel数だけでなく、最終的にはgeneric HOSVDのmode-unfolding実現可能上限にも従う。
 
 ## 関連API
 
