@@ -27,7 +27,7 @@ src/nn_compression/
 
 である。
 
-現在はSVDだけでなく、**Tensor基本演算、Tucker / HOSVD、generic / partial HOOI、Conv2d Tucker-2までsrc化済み**。
+現在はSVDだけでなく、**Tensor基本演算、Tucker / HOSVD、generic / partial HOOI、Conv2d Tucker-2、入力validation、学習・評価状態管理までsrc化済み**。
 
 Notebookは、
 
@@ -48,12 +48,14 @@ rank候補
 ```text
 src/nn_compression/
 ├─ tensor/
-│  └─ operations.py
+│  ├─ operations.py
+│  └─ validation.py
 ├─ compression/
 │  ├─ svd.py
 │  ├─ linear_svd.py
 │  ├─ conv_svd.py
 │  ├─ tucker.py
+│  ├─ tucker_validation.py
 │  ├─ hooi.py
 │  ├─ conv_tucker.py
 │  ├─ mlp_svd.py
@@ -76,6 +78,7 @@ src/nn_compression/
 
 ```text
 Tensor基本演算
+入力contract
 圧縮・分解
 評価
 モデル
@@ -119,6 +122,22 @@ $$
 
 数式・shapeは [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]] を参照。
 
+## `validation.py`
+
+Tensor-level public APIの共通contractを持つ。
+
+```text
+Tensorは2階以上
+各dimensionは正
+modeはboolではない整数
+modeは0 <= mode < ndim
+foldのtarget shapeは2次元以上かつ正
+```
+
+`fold` はさらにunfolded行列のrow / column / numel整合まで確認し、誤ったtransposeを黙ってreshapeしない。
+
+この層は `compression` に依存しない。Tensor基本演算をTucker以外からも再利用できる依存方向を保つ。
+
 ---
 
 # 3. `compression/` — SVD
@@ -127,7 +146,7 @@ $$
 
 モデル非依存のtruncated SVD、rank validation、retained energy等を扱う。
 
-rankは数学的最大rank以下を要求し、不正rankを黙ってclipしない。
+rankは数学的最大rank以下を要求し、不正rankを黙ってclipしない。boolは整数rankとして扱わない。
 
 ## `linear_svd.py`
 
@@ -172,6 +191,9 @@ rank sweepでは `include_model=False` を基本とし、全candidate modelを�
 ```text
 hosvd
 reconstruct_tucker
+tucker_parameter_count
+parameter_ratio
+compression_factor
 ```
 
 HOSVDではfactorを各対象modeについて**元のTensorから独立に**求める。
@@ -185,6 +207,31 @@ X → mode 1 unfold → SVD → U1
 factorを求める途中でXを逐次projectしてはいけない。それは標準的な1-pass HOSVDとは別処理になる。
 
 coreはfactor転置で射影し、再構成ではfactorを逆向きに掛ける。
+
+## `tucker_validation.py`
+
+Tucker/HOOI固有のpublic contractをまとめる。
+
+```text
+ranksはMapping
+bool rankを拒否
+mode-n unfolding上の最大rank
+実数dtype限定
+abs_tol / rel_tolは有限かつ0以上
+max_iterはboolではない0以上の整数
+```
+
+rank上限は単なるmode dimensionではなく、
+
+$$
+\min\left(I_n,\prod_{m\ne n}I_m\right)
+$$
+
+というmode-n unfoldingのSVD最大rankで統一する。
+
+現行HOSVD/HOOIはfactor射影に `U.T` を用いるため**実数Tensor限定**。複素Tensorは共役転置が必要なので、silent failureを避けるため入口で `TypeError` とする。
+
+`tucker.py` と `tucker_validation.py` を分けることで、中心数式と入力contractを分離する。
 
 ---
 
@@ -219,6 +266,7 @@ ranks = {0: rank_out, 1: rank_in}
 
 ```text
 HOSVD初期化
+→ factor / rank feasibility確認
 → initial error
 → hooi_sweep
 → core再計算
@@ -228,6 +276,10 @@ HOSVD初期化
 ```
 
 を繰り返し、error historyはpandasに依存しない `list[float]` として返す。
+
+HOOIのfeasibilityはloop前に検証するため、`max_iter=0` でも不可能なrankを受理しない。
+
+zero Tensorはrelative Frobenius errorの分母が0になるため、HOOIでは明示的に拒否する。
 
 ---
 
@@ -270,6 +322,22 @@ C_in
 
 HOSVDとHOOIは分解法だけを変え、3層構築処理はcomponents builderで共有する。
 
+### Autograd境界
+
+```text
+tucker2_hooi
+→ Tensor-level decomposition
+→ 入力weightをdetachしない
+
+build_tucker2_conv
+→ Module construction / initialization
+→ 元weightをdetachして新しいleaf Parameterへcopy
+```
+
+元Convと置換後3層はParameter storageを共有しない。device / dtype / requires_gradは維持する。
+
+`tucker2_effective_weight()` はfine-tuning前後の3層を等価な4階weightへ戻してweight errorを評価するためのhelperで、評価用に各layer weightをdetachして再構成する。
+
 ---
 
 # 7. `metrics/`
@@ -301,9 +369,67 @@ Fine-tuning後accuracy
 
 は別指標として扱う。
 
+## `macs.py`
+
+圧縮MACs helperは、実際の分解で生成できないrankに対して値だけ返さない。
+
+```text
+bool rankを拒否
+1 <= rank <= 最大rank
+compressed Convはgroups=1
+out_h / out_wは正
+```
+
+を要求する。
+
+`metrics` が `compression` のvalidation helperを直接importすると依存方向によって循環importを作るため、小さな整数validationはmetrics側にも局所的に持つ。
+
+## `model_comparison.py`
+
+```text
+count_parameters
+parameters_reduction
+accuracy_drop
+agreement
+logits_rmse
+benchmark_inference
+collect_compression_metrics
+```
+
+等を持つ。
+
+`benchmark_inference()` の `warmup` は0以上、`repeats` は1以上のboolではない整数を要求する。同一比較ではsame input batchを使う。
+
+`agreement` / `logits_rmse` は `len(loader)` に依存せず、実走査後にempty loaderを検出するため `IterableDataset` に対応する。
+
+`collect_compression_metrics()` は複数指標で同じloaderを再走査するため、現状は再走査可能なloaderを要求する。
+
 ---
 
-# 8. `models/` / `training/` / `datasets/` / `selection/` / `utils/`
+# 8. `training/`
+
+## `loops.py`
+
+`train_one_epoch()` / `evaluate()` を持つ。
+
+`train_one_epoch()` は空loaderを `ZeroDivisionError` に落とさず、実走査後に明示的な `ValueError` とする。`len(loader)` を仮定しない。
+
+`evaluate()` は一時的に `model.eval()` へ切り替えるが、呼び出し前後でrootだけでなく**全submoduleの `.training` 状態を個別に保存・復元**する。
+
+これは、
+
+```text
+root model = train
+一部BatchNorm = eval
+```
+
+のようなfrozen submodule構成を `model.train(old_state)` で一括上書きしないためである。正常終了時だけでなく例外時も復元する。
+
+`metrics.model_comparison` の状態保護も同じhelperへ委譲する。
+
+---
+
+# 9. `models/` / `datasets/` / `selection/` / `utils/`
 
 SVDで作った実験基盤をTuckerでも再利用する。
 
@@ -323,7 +449,7 @@ nested moduleをstrictに置換する
 
 ---
 
-# 9. Notebookとsrcの役割分担
+# 10. Notebookとsrcの役割分担
 
 ```text
 Notebook
@@ -352,7 +478,7 @@ src
 
 ---
 
-# 10. canonical Notebook
+# 11. canonical Notebook
 
 ## SVD
 
@@ -391,39 +517,60 @@ notebooks/20_tucker/10_cifar10_cnn/
 
 ---
 
-# 11. tests
+# 12. tests
 
-SVD実装だけのreview時点では `49 passed` だった。
+SVD実装だけのreview時点では `49 passed`、Tucker/HOOI src化直後は `99 passed` だった。
 
-Tucker / HOOI src化・テスト整理後の**ローカル全pytest**では、
+その後、src全体のpublic API contract reviewを複数回行い、現行src（rv6）ではローカル全pytestで、
 
 ```text
-99 passed
+252 passed
 0 failed
 ```
 
 を確認している。
 
-これはローカル実行結果であり、GitHub CIによる独立確認ではない。
+これはリポジトリ全体のtest suiteであり、Tucker専用テスト数ではない。またGitHub CIによる独立確認ではない。
 
-主なTucker/HOOI追加確認：
+主な追加確認：
 
 ```text
-3-mode HOOI
-4階Conv weightのpartial HOOI
-HOOI errorがHOSVD初期値より悪化しない
-factor / core shape
-hooi_sweepが入力factorを破壊しない
-error history
-invalid mode / rank / factor shape
-Tucker-2 components build
-bias / spatial config
-device / dtype / requires_grad
+Tensor ndim / positive shape
+mode bool拒否 / 範囲
+Tucker ranks Mapping限定
+bool rank拒否
+mode-n unfolding最大rank
+HOOI projected rank feasibility
+max_iter=0でもfeasibility検証
+複素dtype拒否
+Tucker-2 autograd境界
+leaf Parameter / storage非共有
+empty loader / IterableDataset
+全submodule train/eval状態復元
+benchmark warmup / repeats validation
+CUDA / device contract
 ```
 
 ---
 
-# 12. 旧 `code/` の位置付け
+# 13. 現行public APIで意図的に残している制約
+
+以下はCritical/Majorではなく、後続の設計判断として残している。
+
+```text
+NumPy scalar受理方針は全APIで完全統一していない
+collect_compression_metricsは再走査可能なloaderを前提とする
+validation helperに小規模な重複がある
+複素Tensorは未対応
+```
+
+validation helperの重複は、単にまとめればよいとは限らない。`compression.hooi` が `metrics` を利用する現在の依存関係では、`metrics` から `compression` のhelperをimportすると循環importを作るためである。
+
+TT/MPSで同種のvalidationが増えた段階で、`tensor` / `compression` / `metrics` の依存方向を維持できる共通validation層を新設するか再検討する。
+
+---
+
+# 14. 旧 `code/` の位置付け
 
 ```text
 code/
@@ -437,7 +584,7 @@ src/nn_compression/
 
 ---
 
-# 13. 数式・検証との対応
+# 15. 数式・検証との対応
 
 - [[00_基礎理論/00_数式導出監査]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/02_SVD数式の導出]]
@@ -449,7 +596,7 @@ src/nn_compression/
 
 ---
 
-# 14. 次の実装
+# 16. 次の実装
 
 次は **TT / MPS**。
 
@@ -466,6 +613,17 @@ tensorization
 ```
 
 へ進む。
+
+Tucker src reviewで追加した次の原則もTT/MPSへ引き継ぐ。
+
+```text
+shape / rankを入口で検証する
+不可能なrankを黙って補正しない
+Tensor-level APIとModule constructionのautograd境界を分ける
+評価前後のmodel/submodule状態を壊さない
+empty / Iterable loaderを意識する
+理論計算量と実測latencyを分ける
+```
 
 先回りして巨大なTensor Network frameworkを作らず、学習Notebookで必要な最小単位を理解してからsrc化する方針を継続する。
 
