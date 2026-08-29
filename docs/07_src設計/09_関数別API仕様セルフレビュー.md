@@ -89,14 +89,38 @@ Signature
 
 とし、「なぜこの構造か」と「この関数をどう使うか」を同じファイルへ混ぜない。
 
-## 6. src変更
+## 6. 今回の再編コミットの変更範囲
 
-今回の**関数別ファイル化そのものではsrcを変更していない**。
+`853ca719` → `7c0d4eb1` の差分を確認し、変更対象は `docs/07_src設計/` 配下のMarkdownのみだった。
+
+したがって、**今回の関数別ファイル化そのものではsrc/tests/Notebook/resultsを変更していない**。
 
 PR内に既に存在するCore API v1 freeze前のvalidation修正は別のself reviewで追加したものであり、本再編はdocumentation構造の変更のみ。
 
-## 7. 結論
+## 7. 代表ファイル再照合
+
+次を現行srcと再照合した。
+
+- `hooi.md`: signature、`history[0]`、`max_iter=0`、zero tensor、HOSVD初期化
+- `factorize_conv2d_layer.md`: 2層構造、groups=1、spatial config、bias配置
+- `benchmark_inference.md`: same input batch、warmup/repeats、CUDA同期、state復元
+- `make_fashion_mnist_loaders.md`: trainのみshuffle、train-eval分離
+- `set_named_module.md`: strictな既存path置換
+
+いずれも現行実装とのMajorな不一致は見つからなかった。
+
+## 8. 結論
 
 関数別API仕様への再編により、利用者は関数名から直接、引数・戻り値・使用場面・処理概要・contractを確認できる状態になった。
 
-今後Public APIを追加する場合は、`__all__`・contract test・対応する関数別mdを同時に更新する。
+今後Public APIを追加する場合は、
+
+```text
+src実装
+→ __all__
+→ contract test
+→ 対応する関数別md
+→ 必要なら上位設計書
+```
+
+を同時に更新する。
