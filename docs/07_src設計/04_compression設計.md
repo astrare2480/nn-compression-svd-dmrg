@@ -34,13 +34,7 @@ Tucker
 truncated_svd(matrix, rank)
 ```
 
-2次元行列
-
-$$
-W\in\mathbb{R}^{m\times n}
-$$
-
-に対し、
+2次元行列 $W\in\mathbb{R}^{m\times n}$ に対し、
 
 $$
 W\approx U_r\Sigma_rV_r^{\mathsf T}
@@ -48,15 +42,11 @@ $$
 
 を返す。
 
-PyTorchの返り値に合わせて、
-
 ```text
 U_r  : (m, r)
 S_r  : (r,)
 Vh_r : (r, n)
 ```
-
-とする。
 
 rankは、
 
@@ -66,16 +56,7 @@ $$
 
 を要求し、範囲外を黙ってclampしない。
 
-### scalar contract
-
-rankでは、
-
-- Python `bool` を拒否
-- Tensor scalarを拒否
-- integer protocolに従うscalarを受理
-- NumPy integer scalarは受理
-
-とする。
+rank scalarはPython `bool` とTensor scalarを拒否し、`operator.index()` に従う整数scalarを受理する。NumPy integer scalarは受理する。
 
 ---
 
@@ -87,9 +68,7 @@ retained_energy(layer, rank)
 ```
 
 $$
-E(r)
-=
-\frac{\sum_{i=1}^{r}\sigma_i^2}{\sum_i\sigma_i^2}
+E(r)=\frac{\sum_{i=1}^{r}\sigma_i^2}{\sum_i\sigma_i^2}
 $$
 
 を返す。
@@ -98,7 +77,7 @@ $$
 
 これはweight Frobenius normの保持率であり、task accuracyを保証する指標ではない。
 
-`retained_energy(layer, rank)` は `layer.weight.detach()` を2次元化して評価するだけで、学習graphへ参加しない。
+`retained_energy(layer, rank)` は `layer.weight.detach()` を評価用に用いる。
 
 ---
 
@@ -137,8 +116,6 @@ Linear(D_in → r, bias=False)
 
 へ変換する。
 
-重み配置：
-
 ```text
 first.weight  = Vh_r
 second.weight = U_r @ diag(S_r)
@@ -150,13 +127,11 @@ biasは最終出力側だけへ置く。
 
 - input layerを変更しない
 - 新しい `nn.Sequential` を返す
-- device維持
-- dtype維持
-- weight `requires_grad` 維持
-- bias `requires_grad` 維持
-- weight copyは `torch.no_grad()` 内で行う
+- device / dtype維持
+- weight / biasの `requires_grad` 維持
+- weight copyは `torch.no_grad()` 内
 
-分解時は学習済み `layer.weight.detach()` を用いる。ここは「新しいModuleの初期値を作る」境界であり、元Parameterまで逆伝播する用途ではない。
+分解時は学習済み `layer.weight.detach()` を用いる。新しいModuleの初期値を作る境界であり、元Parameterまで逆伝播する用途ではない。
 
 ---
 
@@ -170,9 +145,7 @@ baseline Parameter
 compressed Parameter
 ```
 
-を保証する。
-
-nested pathも `get_submodule / set_submodule(strict=True)` 系のutilityで扱う。
+nested pathもnamed module utilityで扱う。
 
 ---
 
@@ -192,13 +165,7 @@ $$
 
 へreshapeする。
 
-この行列にSVDを適用する。
-
----
-
 ## `factorize_conv2d_layer`
-
-元Conv：
 
 ```text
 Conv(C_in → C_out, kH×kW)
@@ -213,46 +180,23 @@ Conv(C_in → r, kH×kW)
 
 へ置換する。
 
-### semantic mapping
-
-1層目：
-
-- 元 `kernel_size`
-- 元 `stride`
-- 元 `padding`
-- 元 `dilation`
-- 元 `padding_mode`
-- biasなし
-
-2層目：
-
-- 1x1
-- stride 1
-- padding 0
-- biasは元Convと同じ有無
-
-### 対応範囲
+1層目は元 `kernel_size / stride / padding / dilation / padding_mode` を継承し、biasなし。2層目は1x1、stride 1、padding 0で元biasを保持する。
 
 現在は `groups=1` の通常 `nn.Conv2d` のみ正式対応する。
 
-grouped convolutionを数学的に別扱いせずflattenすると意味が変わるため、明示的にrejectする。
+rank上限は、flatten後の行列shapeから
+
+$$
+r\le\min(C_{out},C_{in}K_hK_w)
+$$
+
+とする。
 
 ---
 
 # 5. model-level SVD
 
-## `factorize_named_layers`
-
-```python
-factorize_named_layers(
-    model,
-    *,
-    conv_ranks={...},
-    linear_ranks={...},
-)
-```
-
-複数層を一度に置換する。
+`factorize_named_layers()` は複数named layerを一度に置換する。
 
 重要なのは、各層の分解元を**圧縮途中のmodelではなく元baseline modelから取る**こと。
 
@@ -263,17 +207,9 @@ baseline
 └─ fc1   → factorize
 ```
 
-とし、前の置換結果を次のSVD入力に使わない。
+前の置換結果を次のSVD入力に使わない。
 
----
-
-## MLP convenience API
-
-`make_one_layer_svd_model` / `make_two_layer_svd_model` は現行MLPの `fc1 / fc2 / fc3` 構造に依存するexperiment-support API。
-
-generic compression APIではないため、TT/MPSから新しいモデル構造へ流用する前提にはしない。
-
-`r1 / r2` はhistorical Notebook互換のみ。
+`make_one_layer_svd_model` / `make_two_layer_svd_model` は現行MLPの `fc1 / fc2 / fc3` 構造向けexperiment-support APIで、`r1 / r2` はhistorical Notebook互換。
 
 ---
 
@@ -285,13 +221,7 @@ generic compression APIではないため、TT/MPSから新しいモデル構造
 hosvd(X, ranks)
 ```
 
-`ranks` は、
-
-```python
-{mode: rank}
-```
-
-のMapping。
+`X` は2階以上の実数Tensor、`ranks` は `{mode: rank}` のMapping。
 
 全modeを指定すればtruncated HOSVD、一部だけならpartial HOSVDになる。
 
@@ -306,10 +236,6 @@ X → unfold(mode 1) → SVD → U1
 ```
 
 factor計算中に、先にprojectしたcoreを次modeのSVD入力へ使わない。
-
-これは標準HOSVDと別アルゴリズムになるため、Core API v1では固定する。
-
-### core
 
 factorを求めた後、
 
@@ -331,17 +257,13 @@ $$
 mode $n$ のunfoldingは、
 
 $$
-I_n
-\times
-\prod_{m\neq n}I_m
+I_n\times\prod_{m\neq n}I_m
 $$
 
 なので最大rankは、
 
 $$
-\boxed{
-\min\left(I_n,\prod_{m\neq n}I_m\right)
-}
+\boxed{\min\left(I_n,\prod_{m\neq n}I_m\right)}
 $$
 
 とする。
@@ -352,60 +274,44 @@ HOSVD・parameter count・ratio・compression factorでこの同じ数学的上�
 
 ---
 
-## empty ranks
+## empty ranks / reconstruction
 
-HOSVD / parameter count系では、
-
-```python
-ranks = {}
-```
-
-をidentity指定として許す。
+HOSVD / parameter count系では `ranks={}` をidentity指定として許す。
 
 ```text
 core = X
 factors = {}
 ```
 
-に相当する。
+`reconstruct_tucker(core,{})` もidentityとしてcoreを返すが、Tucker系のshape contractに合わせて `core.ndim >= 2` を要求する。
 
-HOOIでは反復更新するmodeが無いため空ranksを許さない。
+HOOIでは反復更新modeが無いため空ranksを許さない。
 
 ---
 
 # 7. Tucker parameter metrics
 
-## `tucker_parameter_count`
-
-保存要素数：
+` tucker_parameter_count` は、
 
 $$
-N
-=
-|G|
-+
-\sum_{n\in\text{compressed modes}}I_nR_n
+N=|G|+\sum_{n\in\text{compressed modes}}I_nR_n
 $$
 
-partial Tuckerでは未圧縮modeをcoreに元dimensionのまま残す。
+を返す。
 
-## `parameter_ratio`
+`parameter_ratio`：
 
 $$
 \frac{N_{Tucker}}{N_{original}}
 $$
 
-小さいほど圧縮。
-
-## `compression_factor`
+`compression_factor`：
 
 $$
 \frac{N_{original}}{N_{Tucker}}
 $$
 
-大きいほど圧縮。
-
-この3つはweight表現の要素数であり、モデル全体parametersやMACsとは別指標。
+これらはweight表現の要素数であり、モデル全体parametersやMACsとは別指標。
 
 ---
 
@@ -432,35 +338,21 @@ HOSVD
 
 ## 1 sweep
 
-`hooi_sweep()` では各target modeについて、target以外のfactorでXをprojectする。
+`hooi_sweep()` では各target modeについて、target以外の最新factorでXをprojectする。
 
-```text
-target = mode 0
-→ mode 1,2,...をproject
-→ unfold(mode 0)
-→ SVD
-→ U0更新
-```
+sweep内では更新済みfactorを後続modeで使う。更新順は `ranks` Mappingの挿入順。
 
-sweep内では既に更新済みfactorを後続modeで使う。
-
-更新順は `ranks` Mappingの挿入順。
-
-Tucker-2では通常、
-
-```python
-{0: rank_out, 1: rank_in}
-```
-
-なので mode 0 → mode 1。
+Tucker-2では通常 `{0: rank_out, 1: rank_in}` なので mode 0 → mode 1。
 
 ---
 
-## factor validation
+## validation
 
 HOOIでは、
 
 ```text
+X.ndim >= 2
+Xは実数dtype
 factor keys == rank keys
 U_n.shape == (X.shape[n], rank[n])
 U_n.dtype == X.dtype
@@ -469,9 +361,9 @@ U_n.device == X.device
 
 を要求する。
 
-また、各mode更新前にprojected unfoldingで可能な最大rankを計算し、指定rankが実現可能か確認する。
+各mode更新前にprojected unfoldingで可能な最大rankを計算し、指定rankが実現可能か反復前に確認する。この確認は `max_iter=0` でも行う。
 
-この確認は `max_iter` に依存せず、`max_iter=0` でも行う。
+`core_from_factors()` も単独Public APIとして `X.ndim >= 2` と実数dtypeを要求する。ただし、factor key集合とranksの一致を確認するAPIではなく、渡された各factorを順に `mode_dot` するutilityである。
 
 ---
 
@@ -482,24 +374,9 @@ abs(error - prev_error)
 <= abs_tol + rel_tol * abs(prev_error)
 ```
 
-を使う。
+`abs_tol / rel_tol` は有限・0以上・bool拒否。
 
-`abs_tol / rel_tol` は、
-
-```text
-有限値
->= 0
-bool拒否
-```
-
-`max_iter` は、
-
-```text
-bool以外の整数
->= 0
-```
-
-とする。
+`max_iter` はbool以外の整数・0以上。
 
 `max_iter=0` ではHOSVD初期値だけを返し、historyは初期誤差1要素になる。
 
@@ -507,17 +384,9 @@ bool以外の整数
 
 # 9. 実数dtype contract
 
-現行HOSVD/HOOIのfactor射影は
+現行HOSVD/HOOIのfactor射影は `U.T` を使う。
 
-```python
-U.T
-```
-
-を使う。
-
-実数では正しいが、複素数なら共役転置 `U.mH` が必要になる。
-
-`torch.linalg.svd` 自体がcomplexを処理できるためsilent failureを防ぐ目的で、**HOSVD/HOOI分解入口では複素TensorをTypeErrorで拒否する**。
+複素Tensorでは `U.mH` が必要になるため、`torch.linalg.svd` がcomplexを受理しても、HOSVD/HOOI分解入口では複素TensorをTypeErrorで拒否する。
 
 対象：
 
@@ -527,17 +396,15 @@ U.T
 - `core_from_factors`
 - HOSVD/HOOIを内部利用するTucker-2 decomposition APIs
 
-### 注意
-
 `reconstruct_tucker()` はfactorを掛け戻すutilityであり、独自のreal-dtype guardは持たない。
 
-また、`build_tucker2_conv_from_components()` は既に与えられたcomponentsからModuleを作るため、分解入口と同じcomplex guardを直接持っていない。
+`build_tucker2_conv_from_components()` も既に与えられたcomponentsからModuleを作るため、分解入口と同じcomplex guardを直接持たない。
 
-したがってCore API v1での表現は、
+したがって、Core API v1では
 
 > **Tucker/HOOIの分解アルゴリズムは実数Tensor限定**
 
-とし、「`tucker2_*` という名前の全関数が一律complex拒否」とは定義しない。
+と定義し、「`tucker2_*` 全関数が一律complex拒否」とは定義しない。
 
 ---
 
@@ -552,12 +419,8 @@ $$
 mode 0 / 1だけを圧縮する。
 
 $$
-W
-\approx
-G\times_0U_{out}\times_1U_{in}
+W\approx G\times_0U_{out}\times_1U_{in}
 $$
-
-shape：
 
 ```text
 U_out : (C_out, R_out)
@@ -580,8 +443,6 @@ output projection
 Conv2d(R_out -> C_out, 1x1, bias=original)
 ```
 
-重み：
-
 ```text
 input.weight  = U_in.T[:, :, None, None]
 core.weight   = core
@@ -592,18 +453,39 @@ output.weight = U_out[:, :, None, None]
 
 ## rank contract
 
-Tucker-2 channel rankは、
+component shapeとしては、
 
 ```text
 1 <= rank_out <= C_out
 1 <= rank_in  <= C_in
 ```
 
-とする。
+を要求する。
 
-Conv weightのmode 0 / 1では空間modeの積が存在するため、通常これが各channel modeのunfolding上限と整合する。
+ただし**分解API**ではgeneric HOSVD/HOOIのmode-unfolding上限も適用する。
 
-boolは拒否する。
+4階weight `(C_out,C_in,kH,kW)` なら、
+
+$$
+R_{out}\le\min(C_{out}, C_{in}K_hK_w)
+$$
+
+$$
+R_{in}\le\min(C_{in}, C_{out}K_hK_w)
+$$
+
+である。
+
+対象：
+
+- `tucker2_decompose_conv_weight`
+- `tucker2_hooi`
+- `tucker2_hooi_sweep`
+- 内部で分解を行う `build_tucker2_conv`
+
+一方 `build_tucker2_conv_from_components` は既に計算されたcomponentsからModuleを構築するAPIなので、channel shape整合を確認し、分解時のunfolding feasibilityを再計算しない。
+
+bool rankは拒否する。
 
 ---
 
@@ -611,11 +493,7 @@ boolは拒否する。
 
 - `groups=1`
 - transposed convolution未対応
-- core layerが元 `kernel_size`
-- core layerが元 `stride`
-- core layerが元 `padding`
-- core layerが元 `dilation`
-- core layerが元 `padding_mode`
+- core layerが元 `kernel_size / stride / padding / dilation / padding_mode`
 - input/output projectionは1x1、stride1、padding0、dilation1
 - biasはoutput projectionのみ
 
@@ -625,35 +503,19 @@ boolは拒否する。
 
 ## Tensor-level decomposition
 
-```python
-tucker2_hooi(weight, ...)
-```
+`tucker2_hooi(weight, ...)` は入力 `weight` をdetachしない。
 
-では入力 `weight` をdetachしない。
-
-これは低レベルTensor APIとして、分解計算自体のgraphを利用側が必要なら保持できるようにするため。
+低レベルTensor APIとして、分解計算自体のgraphを利用側が必要なら保持できるようにするため。
 
 ## Module build
 
-```python
-build_tucker2_conv(conv, ...)
-```
-
-では、
-
-```python
-conv.weight.detach()
-```
-
-を分解へ渡す。
+`build_tucker2_conv(conv, ...)` は `conv.weight.detach()` を分解へ渡す。
 
 学習済みParameterから新しい3層Parameterの**初期値を作る処理**であり、元Convへ逆伝播する必要はない。
 
 componentsのcopyは `torch.no_grad()` 内で行う。
 
-新しく構築されたParameterはleafであり、その後のFine-tuningで通常どおりgradientを持つ。
-
-元weightとstorageを共有しない。
+新しく構築されたParameterはleafで、その後のFine-tuningで通常どおりgradientを持つ。元weightとstorageを共有しない。
 
 ---
 
@@ -670,21 +532,9 @@ output projection
 → effective weight
 ```
 
-ここでは各layer weightを `detach()` してから再構成する。
+各layer weightを `detach()` してから再構成する。用途は評価であり、effective weightを通したgradient計算を目的にしない。
 
-用途は評価であり、effective weightを通したgradient計算を目的にしない。
-
-Sequential構造は厳密に、
-
-```text
-3層
-全てConv2d
-1x1 → core → 1x1
-channel接続整合
-projectionのstride/padding/dilation/groups/bias contract
-```
-
-を検証する。
+Sequential構造は、3層・全てConv2d・1x1→core→1x1・channel接続・projectionのstride/padding/dilation/groups/biasを検証する。
 
 ---
 
@@ -701,23 +551,13 @@ rank候補
 → numeric record
 ```
 
-全candidate modelを保持しない。
-
-Fine-tuningする候補はrankから再構築する。
-
-この設計により、
-
-- GPU/CPU memory保持量
-- pandas object column
-- CSV非serializable
-
-を避ける。
+全candidate modelを保持しない。Fine-tuningする候補はrankから再構築する。
 
 ---
 
 # 14. compatibility names
 
-以下はhistorical Notebook互換のため残す。
+historical Notebook互換：
 
 ```text
 SVD
@@ -745,14 +585,6 @@ training loops
 seed/path utilities
 ```
 
-一方、TT rank / bond dimensionのcontractはTucker rankと意味が異なるので、新しいvalidation/APIとして追加する。
+TT rank / bond dimensionのcontractはTucker rankと意味が異なるので、新しいvalidation/APIとして追加する。
 
-例：
-
-```text
-compression/tt.py
-or
-compression/tensor_train.py
-```
-
-に新規処理を追加し、既存 `hosvd / hooi` のsignatureを広げてTTまで処理させない。
+既存 `hosvd / hooi` のsignatureを広げてTTまで処理させない。
