@@ -65,6 +65,7 @@ Tensor mode演算
 → TensorLy照合
 → HOSVD/HOOI同条件Fine-tuning
 → src共通化・public API contract review
+→ Core API v1設計書
 ```
 
 まで確認した。
@@ -82,7 +83,7 @@ SVD/Tuckerの式だけでなく、
 
 も実験を通して整理している。
 
-SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]] を参照。
+SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、現行srcの設計は [[07_src設計/README]] を参照。
 
 ---
 
@@ -147,8 +148,9 @@ flowchart TD
     H --> I["model-wide rank allocation"]
     I --> J["Tucker / HOSVD"]
     J --> J2["HOOI"]
-    J2 --> K["TT / MPS"]
-    K --> L["DMRG"]
+    J2 --> K["Core API v1"]
+    K --> L["TT / MPS"]
+    L --> M["DMRG"]
 ```
 
 ---
@@ -493,24 +495,31 @@ src/nn_compression/
 Tucker/HOOIではさらに、
 
 - `ranks` はMapping
-- bool rank / modeを拒否
+- bool/Tensor scalar rankを拒否
 - rank上限はmode-n unfoldingの数学的最大rank
 - HOOIのprojected rank feasibilityを反復前に検証
-- 現行HOSVD/HOOI/Tucker-2は実数Tensor限定
+- 現行HOSVD/HOOI/Tucker-2分解APIは**実数浮動小数点Tensor限定**
 - Tensor-level `tucker2_hooi()` は入力weightをdetachせず、Module構築時にautograd境界を置く
 
 をcontractとして固定している。
 
-現行rv6のローカル全pytestでは、
+contract review baseline `49836bc` のローカル全pytestでは、
 
 ```text
 252 passed
 0 failed
 ```
 
-を確認している。これはリポジトリ全体のtest suiteであり、GitHub CIによる独立確認を意味しない。
+を確認済み。Core API v1 self reviewで追加したvalidation/test差分は、GitHub CIが無いため最終freeze前にローカルpytest確認を行う。
 
-Tucker/HOOIの実装詳細は [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]、実装寄りの索引は [[README_実装編]] を参照。
+設計・API仕様：
+
+- [[07_src設計/README]]
+- [[07_src設計/01_アーキテクチャ設計]]
+- [[07_src設計/05_Core_API_v1]]
+- [[07_src設計/06_テスト設計]]
+
+Tucker/HOOIの実装詳細は [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]、実装寄り索引は [[README_実装編]] を参照。
 
 ---
 
@@ -616,6 +625,7 @@ taskにとって最適なlow-rank weight
 5. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
 6. [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]
 7. [[06_Tucker基礎実装検証/README]]
+8. [[07_src設計/README]]
 
 CIFAR-10のコードを理解しながらSVD編を読む場合は、途中に、
 
