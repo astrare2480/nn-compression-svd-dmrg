@@ -10,59 +10,62 @@ aliases:
 
 ## 目的
 
-このディレクトリは、`src/nn_compression/` の**現在の実装責務とPublic API contractを固定する設計書**である。
+このディレクトリは、`src/nn_compression/` の**アーキテクチャ・モジュール責務・主要処理フロー・共通設計方針・Public API contract**をまとめた設計書である。
 
-SVD → Tucker / HOSVD / HOOI までの学習・実験・src共通化・contract reviewが一段落した時点を **Core API v1** として区切り、以後のTT/MPS・DMRG実装で既存APIを不用意に壊さないために作成した。
+SVD → Tucker / HOSVD / HOOIまでの実装とcontract reviewが一段落した時点を **Core API v1** として区切り、以後のTT/MPS・DMRG追加で既存APIを不用意に壊さないために作成した。
 
-設計書作成時のsource baselineは `main` の `49836bc`（src codex rv6）。このbaselineではローカル回帰テスト `252 passed / 0 failed` を確認済み。
-
-設計書作成後のself reviewで、freeze前に残っていた小さなcontract gapだけを追加修正した。
+設計書は次の2層に分ける。
 
 ```text
-- Conv MACs の out_h / out_w を正整数contractへ統一
-- reconstruct_tucker / core_from_factors の ndim>=2 contractを統一
-- 上記境界のcontract testを追加
+設計書
+→ なぜこの構造か
+→ 各moduleの責務は何か
+→ 処理がどう流れるか
+→ 何を共通ルールにするか
+
+API仕様
+→ 各関数の責務
+→ 引数
+→ 戻り値
+→ 使用場面
+→ contract
 ```
 
-HOSVD/HOOI/Tucker-2の中心数式は変更していない。
-
-self review後の追加src/test差分については、GitHub CIが設定されていないため、Core API v1の最終確定前にローカルpytestのgreen確認を必要とする。
+関数ごとの詳細を設計本文へ散らさず、`05_Core_API_v1.md` をPublic API仕様の正本とする。
 
 ---
 
 ## Core API v1の意味
 
-Core API v1で固定するのは、**内部実装そのものではなくPublic APIの外部契約**である。
+固定するのは内部実装そのものではなく、**Public APIの外部contract**である。
 
-原則として維持するもの：
+原則維持するもの：
 
 - 公開関数・公開クラス名
-- 引数名、位置引数 / keyword-only の区別、既定値
-- 入力shape / rank / mode等の意味
-- 戻り値の構造
-- 明示的なvalidationと主要な例外条件
-- device / dtype / `requires_grad` の扱い
-- baseline modelを破壊・共有しない契約
+- 引数名、位置引数/keyword-only、既定値
+- 引数の意味
+- 戻り値構造
+- shape/rank/mode contract
+- device/dtype/`requires_grad`
+- baseline非破壊性
 - autograd境界
-- train/eval状態の保存・復元契約
-- empty input / empty loaderの扱い
+- train/eval状態復元
+- empty input等の主要例外条件
 
-変更してよいもの：
+変更可能：
 
-- `_` から始まるprivate helper
-- Public API contractを変えない内部refactor
-- validation helperの配置・共通化
-- アルゴリズムの数値結果を変えない高速化
-- コメント・docstring・型注釈の改善
-- テストの追加
-
-TT/MPS・DMRG追加では、既存Public APIへのbreaking changeより**新しいAPIの追加**を優先する。
+- private helper
+- Public contractを変えない内部refactor
+- validation helperの配置
+- 高速化
+- 型注釈・コメント・docstring
+- テスト追加
 
 ---
 
-## Public APIの判定基準
+## Public APIの判定
 
-この設計書では、各サブパッケージの `__init__.py` にある `__all__` をPublic APIの基本境界とする。
+各sub-packageの `__all__` をPublic APIの基本境界とする。
 
 ```text
 nn_compression.tensor.__all__
@@ -75,28 +78,25 @@ nn_compression.models.__all__
 nn_compression.utils.__all__
 ```
 
-`nn_compression` 直下の `__init__.py` は現在サブパッケージAPIを再exportしていないため、利用側は原則として
+利用側は責務単位のimportを基本とする。
 
 ```python
-from nn_compression.compression import ...
-from nn_compression.metrics import ...
+from nn_compression.compression import hooi
+from nn_compression.metrics import relative_frobenius_error
 ```
-
-のように責務単位でimportする。
-
-`__all__` に含まれない関数は、名前が `_` で始まらなくても内部実装またはサブモジュール内補助APIとして扱い、Core API v1の固定対象にはしない。
 
 ---
 
 ## 読む順番
 
-1. [[07_src設計/01_全体構成と設計方針]]
-2. [[07_src設計/02_Core_API_v1]]
-3. [[07_src設計/03_tensor設計]]
-4. [[07_src設計/04_compression設計]]
-5. [[07_src設計/05_training_metrics設計]]
-6. [[07_src設計/06_実験支援API設計]]
+1. [[07_src設計/01_アーキテクチャ設計]]
+2. [[07_src設計/02_モジュール設計]]
+3. [[07_src設計/03_主要処理フロー]]
+4. [[07_src設計/04_共通設計方針]]
+5. [[07_src設計/05_Core_API_v1]]
+6. [[07_src設計/06_テスト設計]]
 7. [[07_src設計/07_既知の制約と拡張方針]]
+8. [[07_src設計/08_Core_API_v1セルフレビュー]]
 
 ---
 
@@ -105,74 +105,89 @@ from nn_compression.metrics import ...
 ```text
 docs/07_src設計/
 ├─ README.md
-├─ 01_全体構成と設計方針.md
-├─ 02_Core_API_v1.md
-├─ 03_tensor設計.md
-├─ 04_compression設計.md
-├─ 05_training_metrics設計.md
-├─ 06_実験支援API設計.md
-└─ 07_既知の制約と拡張方針.md
+├─ 01_アーキテクチャ設計.md
+├─ 02_モジュール設計.md
+├─ 03_主要処理フロー.md
+├─ 04_共通設計方針.md
+├─ 05_Core_API_v1.md
+├─ 06_テスト設計.md
+├─ 07_既知の制約と拡張方針.md
+└─ 08_Core_API_v1セルフレビュー.md
 ```
 
-### 01_全体構成と設計方針
+### `01_アーキテクチャ設計`
 
-`src/nn_compression/` のパッケージ構成、責務、依存方向、Notebookとの役割分担を定義する。
+src全体の構造、Notebookとの境界、レイヤ構成、拡張方針を定義する。
 
-### 02_Core_API_v1
+### `02_モジュール設計`
 
-Public APIの凍結リスト。既存関数・クラスのprimary API、互換API、固定範囲を一覧化する。
+`tensor / compression / training / metrics / selection / datasets / models / utils` の責務、入力、出力、依存方向を定義する。
 
-### 03_tensor設計
+### `03_主要処理フロー`
 
-`unfold / fold / mode_dot` とtensor validationのshape / mode contractを扱う。
+SVD、HOSVD、HOOI、Tucker-2、Fine-tuning、評価の処理シーケンスを示す。
 
-### 04_compression設計
+### `04_共通設計方針`
 
-SVD、Linear / Conv2d分解、HOSVD、HOOI、Tucker-2 Conv、rank sweepの設計を扱う。
+非破壊性、device/dtype、autograd、validation、state復元、DataLoader、compatibility等の横断ルールを定義する。
 
-### 05_training_metrics設計
+### `05_Core_API_v1`
 
-学習・評価、状態復元、モデル比較、MACs、benchmark、empty loader等を扱う。
+Public API仕様書。各関数について、
 
-### 06_実験支援API設計
+```text
+責務
+引数
+戻り値
+どういうときに使うか
+主要contract
+```
 
-models / datasets / selection / utilsを扱う。実験結果の再現性とNotebookとの接続もここに置く。
+を記載する。
 
-### 07_既知の制約と拡張方針
+### `06_テスト設計`
 
-現時点で意図的に残している制約と、TT/MPS・DMRGを既存APIを壊さず追加する方針を定義する。
+数学テスト、contract test、状態・autograd・互換性テストの役割を定義する。
+
+### `07_既知の制約と拡張方針`
+
+現時点で意図的に残す制約とTT/MPS・DMRGの追加方針を記録する。
+
+### `08_Core_API_v1セルフレビュー`
+
+freeze前のセルフレビューで確認した項目・修正内容・残課題を記録する。
 
 ---
 
-## 設計書と既存ノートの役割分担
+## 既存ノートとの役割分担
 
 ```text
 00_基礎理論
 → 数学・PyTorch・実験設計を理解する
 
 05_SVD基礎実装検証 / 06_Tucker基礎実装検証
-→ 実装時に何を確認・修正したかを残す
+→ 実装・実験時に何を確認・修正したかを残す
 
 07_src設計
-→ 現在のsrcが何を保証するかを固定する
+→ 現在のsrcをどう設計し、何を保証するかを定義する
 
 10/20/30...
-→ 各実験の条件・結果を残す
+→ 個別実験の条件・結果を残す
 ```
 
-設計書へ実験結果の表を重複して持ち込まず、srcの責務とcontractに集中する。
+設計書へ実験結果の数値を重複して持ち込まず、srcの構造とcontractへ集中する。
 
 ---
 
 ## 変更ルール
 
-Core API v1を変更したくなった場合は、まず次を確認する。
+Core API v1の変更が必要になった場合は、次の順で検討する。
 
 ```text
 1. private helperの変更だけで実現できないか
-2. 新規API追加で実現できないか
-3. 既存signature / return / exception contractを維持できないか
-4. contract testを壊すbreaking changeか
+2. 新しいPublic API追加で実現できないか
+3. 既存signature/return/exception contractを維持できないか
+4. breaking changeならCore API v2として扱うべきか
 ```
 
-breaking changeが本当に必要なら、Notebook都合でその場変更せず、Core API v2相当の変更として設計書・テスト・利用Notebookを同時に更新する。
+TT/MPS・DMRG追加では既存APIを書き換えるより、新しい責務を新APIとして追加する。
