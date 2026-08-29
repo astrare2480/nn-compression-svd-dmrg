@@ -18,15 +18,18 @@ parameters_reduction(
 
 ## 引数
 
-baseline modelとcompressed model。
+- `baseline_model`: 圧縮前の比較基準model。総Parameter要素数を削減率の分母として使う。
+- `compressed_model`: 圧縮後の比較対象model。総Parameter要素数をbaselineと比較する。
 
 ## 戻り値
+
+baselineに対してParameter要素数がどれだけ減ったかを表す削減率`float`。
 
 ```text
 1 - compressed_parameters / baseline_parameters
 ```
 
-0.9なら90%削減、0なら削減なし。負値ならcompressed側のParameter数が増えている。
+`0.9`なら90%削減、`0`なら削減なし、負値ならcompressed側のParameter数が増えている。
 
 ## 使用場面
 

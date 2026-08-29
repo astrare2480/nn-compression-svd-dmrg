@@ -20,11 +20,18 @@ estimate_mlp_macs(
 
 ## 引数
 
-現行MLP、fc1/fc2 rank、表示有無。
+- `model`: 現行`fc1 / fc2 / fc3`を持つMLP。baseline各Linearのshapeを読み取る対象。
+- `fc1_rank`: `fc1`をSVD 2層化するときの中間rank。
+- `fc2_rank`: `fc2`をSVD 2層化するときの中間rank。
+- `verbose`: `True`ならbaseline/compressed MACsと削減率を表示する。
 
 ## 戻り値
 
 `(baseline_macs, compressed_macs, compute_reduction_rate)`。
+
+- `baseline_macs`: 未圧縮`fc1 + fc2 + fc3`の理論MAC総数。
+- `compressed_macs`: `fc1/fc2`だけを指定rankで2層化し、`fc3`は未圧縮のままにした理論MAC総数。
+- `compute_reduction_rate`: baselineに対する理論MAC削減率。
 
 ## 使用場面
 

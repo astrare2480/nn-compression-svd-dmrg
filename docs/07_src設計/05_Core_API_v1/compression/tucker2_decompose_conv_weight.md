@@ -19,17 +19,21 @@ tucker2_decompose_conv_weight(
 
 ## 引数
 
-- `weight`: `(C_out, C_in, kH, kW)`の実数浮動小数点Tensor。
-- `rank_out`: mode 0のrank。
-- `rank_in`: mode 1のrank。
+- `weight`: Tucker-2分解するConv2d weight。shapeは`(C_out, C_in, kH, kW)`で、channel mode 0/1だけを圧縮しkernel mode 2/3は維持する。
+- `rank_out`: 出力channel mode（mode 0）に残すrank。`C_out`から`R_out`へ縮約するfactor sizeを決める。
+- `rank_in`: 入力channel mode（mode 1）に残すrank。`C_in`から`R_in`へ縮約するfactor sizeを決める。
 
 ## 戻り値
 
+HOSVD Tucker-2の3 componentを`(core, u_out, u_in)`の順で返す。
+
 ```text
-core  : (rank_out, rank_in, kH, kW)
-u_out : (C_out, rank_out)
-u_in  : (C_in, rank_in)
+core  : (rank_out, rank_in, kH, kW)  # channel方向を縮約した中央core
+u_out : (C_out, rank_out)             # 出力channel方向factor
+u_in  : (C_in, rank_in)               # 入力channel方向factor
 ```
+
+この3つは`build_tucker2_conv_from_components()`へそのまま渡せる共通component形式。
 
 ## 使用場面
 

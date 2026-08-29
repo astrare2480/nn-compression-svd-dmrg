@@ -15,13 +15,19 @@ get_endpoints(df, column, x, y)
 
 ## 引数
 
-DataFrame、sort列、座標として読むx/y列名。
+- `df`: 端点を選ぶ候補DataFrame。
+- `column`: candidateの並び順を決める昇順sort列名。sort後の先頭・末尾を端点とする。
+- `x`: 端点のx座標として読む列名。
+- `y`: 端点のy座標として読む列名。
 
 ## 戻り値
 
-```text
-((left_x, left_y), (right_x, right_y))
-```
+`((left_x, left_y), (right_x, right_y))`。
+
+- 左側tuple: `column`昇順sort後の先頭candidateのx/y座標。
+- 右側tuple: sort後の末尾candidateのx/y座標。
+
+各座標はPython `float`へ変換される。
 
 ## 使用場面
 

@@ -15,11 +15,11 @@ MNISTMLP()
 
 ## 引数
 
-なし。
+なし。architectureは`784 → 512 → 256 → 10`の固定baselineとして定義する。
 
 ## 戻り値
 
-`nn.Module` instance。
+28×28画像をflattenして10クラスlogitsへ変換する`nn.Module` instance。主要named layerは`fc1 / fc2 / fc3`で、Linear SVD APIがこれらのpathを安定した圧縮対象として参照する。
 
 ## 使用場面
 
@@ -47,6 +47,21 @@ MNIST / Fashion-MNIST MLP baseline、Linear SVD、rank sweep、圧縮後Fine-tun
 4. **`fc3`へ通して10クラスlogitsを作る。**
 5. **softmaxはかけずlogitsを返す。**  
    CrossEntropyLoss等がlogitsを直接受け取る前提。
+
+### 構造図
+
+```mermaid
+flowchart LR
+    X["画像入力<br/>(N,1,28,28)"] --> F["Flatten<br/>784"]
+    F --> FC1["fc1<br/>784 → 512"]
+    FC1 --> R1["ReLU"]
+    R1 --> FC2["fc2<br/>512 → 256"]
+    FC2 --> R2["ReLU"]
+    R2 --> FC3["fc3<br/>256 → 10"]
+    FC3 --> Y["class logits<br/>(N,10)"]
+```
+
+この図は制御フローではなく、**baseline MLPのlayer構造とfeature dimensionの変化**を示す。
 
 ## 主なcontract / 注意事項
 

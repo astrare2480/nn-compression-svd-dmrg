@@ -25,11 +25,18 @@ benchmark_inference_print(
 
 ## 引数
 
-2モデル、batch取得元、device、表示有無、benchmark条件。
+- `baseline_model`: 圧縮前のlatency比較基準model。
+- `compressed_model`: 圧縮後のlatency計測対象model。
+- `data_loader`: `input_batch`未指定時に共通benchmark batchを1回取得するためのloader。
+- `device`: 両modelのforward時間を測定するdevice。
+- `verbose`: `True`なら入力shape・batch size・warmup/repeats・両modelの時間を表示する。
+- `warmup`: 本計測前に各modelで実行するwarmup forward回数。
+- `repeats`: 各modelの平均推論時間を求めるための本計測forward回数。
+- `input_batch`: 両modelへ共通利用する固定入力Tensor。指定すれば`data_loader`から新しいbatchを取得しない。
 
 ## 戻り値
 
-`(baseline_time_s, compressed_time_s)`。
+`(baseline_time_s, compressed_time_s)`の2要素tuple。どちらも**1 batchあたりの平均forward時間を秒単位**で表し、同じ入力・warmup・repeats条件で比較できる。
 
 ## 使用場面
 

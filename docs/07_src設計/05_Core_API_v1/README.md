@@ -13,10 +13,22 @@ Signature
 戻り値
 使用場面
 処理概要
-フローチャート / 構造図（必要な場合のみ）
+フローチャート / シーケンス図 / 構造図（必要な場合のみ）
 主なcontract / 注意事項
 関連API
 ```
+
+## 引数・戻り値の記述ルール
+
+- identifier・型・shapeはコードと対応させるが、**型やshapeだけで終わらせず、その値が何を意味し、処理のどこで使われるかを日本語で説明する**。
+- 複数引数を「model、loader、device」のように一文でまとめず、役割が異なる場合は原則として引数ごとに説明する。
+- rankは「整数」とだけ書かず、どのdimension / channel / modeを何次元へ縮約する値かを書く。
+- Tensor componentはshapeに加え、core / factor / weightなど**何を表し、どの演算・Moduleへ対応するか**を書く。
+- callback・flag・tolerance・seedは、値そのものより**何の挙動を制御するか**を書く。
+- 戻り値がtuple / dictの場合は、各要素・主要keyの意味を個別に説明する。
+- scalar指標は式だけで終わらせず、値が大きい/小さい/正/負のとき何を意味するかを必要に応じて書く。
+- class constructorの戻り値は単に`nn.Module instance`とせず、どの入力を何へ変換するbaseline modelか、安定して参照するnamed layerは何かを書く。
+- 引数が無いAPIは`なし`と明記し、固定architectureやdefault semanticsがある場合はその意味を補足する。
 
 ## 処理説明の記述ルール
 
@@ -30,29 +42,66 @@ Signature
 
 ## Mermaid図を入れる基準
 
-図は**必要なAPIだけ**に追加する。以下のいずれかに当てはまり、文章だけより処理構造が理解しやすくなる場合を対象とする。
+図は**必要なAPIだけ**に追加する。図を入れる目的を先に決め、同じ情報を別形式で重複させない。
 
-1. 反復処理がある。
-2. 条件分岐が処理結果や状態遷移に影響する。
-3. 複数の下位APIをまたいで状態や中間表現が変化する。
-4. 1つのModuleを複数Moduleへ変換するなど、構造変換を視覚化する価値がある。
+### フローチャート
 
-逆に、単純な数式計算、1回の委譲だけのwrapper、短い一本道utilityにはMermaid図を付けない。
+**処理の制御**を理解するために使う。
 
-現在、図を付ける代表APIは次のとおり。
+- 反復処理がある。
+- 条件分岐・異常終了・収束判定が重要である。
+- 複数段階のbuild処理など、処理順そのものを視覚化する価値がある。
+
+単純な一本道utilityを、番号付き`処理概要`と同じ内容の箱へ置き換えるだけなら追加しない。
+
+### シーケンス図
+
+**API / object間の呼び出しと責務分担**を理解するために使う。
+
+- wrapperが複数の下位APIへ順に委譲する。
+- baseline / candidate / builderなど複数object間でデータの受け渡しがある。
+- 「誰が分解し、誰が評価し、誰が置換するか」が設計上重要である。
+
+### 構造図 / Component配置図
+
+**Tensor / Parameter / Moduleの構造や配置**を理解するために使う。
+
+- 1つのModuleを複数Moduleへ変換する。
+- core / factor / biasなどが構築後のどの層へ入るかが重要である。
+- baseline model architectureやfeature dimensionの変化を視覚化する価値がある。
+
+### 複数図を同じファイルへ入れる場合
+
+複数図は、それぞれが別の問いに答える場合だけ併記する。
 
 ```text
-factorize_conv2d_layer
-factorize_named_layers
-sweep_layer_ranks
-hosvd
-hooi_sweep
-hooi
-build_tucker2_conv_from_components
-fit_with_early_stopping
-benchmark_inference
-collect_compression_metrics
+フローチャート   → どの順番・分岐で処理するか
+シーケンス図     → 誰が誰を呼び、何を受け渡すか
+構造図           → 何がどこに配置され、構造がどう変わるか
 ```
+
+原則1図、必要なら2図、3図は役割が明確に分かれる場合だけとする。
+
+現在、図を付ける代表API / classは次のとおり。
+
+| API / class | 図 | 主な目的 |
+|---|---|---|
+| `factorize_conv2d_layer` | フローチャート | SVD成分から2層Convを作る流れ |
+| `factorize_named_layers` | フローチャート + シーケンス図 + コンポーネント図 | 制御・責務分担・model置換構造 |
+| `sweep_layer_ranks` | フローチャート + シーケンス図 | rank反復とcallback/metrics委譲 |
+| `hosvd` | フローチャート | modeごとのfactor計算 |
+| `hooi_sweep` | フローチャート | factor更新順 |
+| `hooi` | フローチャート | 反復・収束判定 |
+| `build_tucker2_conv` | シーケンス図 | Tensor分解とModule builderの責務分離 |
+| `build_tucker2_conv_from_components` | フローチャート + Component配置図 | build順とcomponent配置 |
+| `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
+| `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
+| `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
+| `MNISTMLP` | 構造図 | layerとfeature dimension |
+| `FashionMNISTCNN` | 構造図 | Conv/Pool/Linear構造 |
+| `CIFAR10CNN` | 構造図 | Conv/GAP/Linear構造 |
+
+逆に、単純な数式計算、1回の委譲だけのwrapper、短い一本道utilityにはMermaid図を付けない。
 
 ### Stability
 
@@ -186,6 +235,8 @@ src実装
 → __all__
 → contract test
 → 対応する関数別md
+→ 引数 / 戻り値の意味を日本語で確認
+→ 図が本当に必要か・図種が適切か判断
 → 必要なら設計本文
 ```
 

@@ -22,15 +22,15 @@ CIFAR10CNN(
 
 ## 引数
 
-- `in_channels`: 入力channel数。
-- `conv_channels`: 3段のConv出力channel数。
-- `hidden_dim`: `fc1`の出力dimension。
-- `num_classes`: 分類クラス数。
-- `dropout`: Dropout確率。
+- `in_channels`: 入力画像のchannel数。既定`3`はRGB CIFAR-10を表す。
+- `conv_channels`: `conv1 / conv2 / conv3`それぞれの出力channel数を順番に指定する3要素tuple。
+- `hidden_dim`: Global Average Pooling後のfeatureを受ける`fc1`の出力dimension。
+- `num_classes`: 最終`fc2`が出力するclass logits数。既定`10`はCIFAR-10。
+- `dropout`: `fc1`後に適用するDropout確率。train/evalでPyTorch標準の挙動が切り替わる。
 
 ## 戻り値
 
-`nn.Module` instance。
+3段Conv + Global Average Pooling + 2段Linearで入力画像を`num_classes` logitsへ変換する`nn.Module` instance。主要named layer`conv1 / conv2 / conv3 / fc1 / fc2`をSVD/Tucker圧縮APIから安定して参照できる。
 
 ## 使用場面
 
@@ -62,6 +62,26 @@ CIFAR-10 baseline、複数Conv SVD、model-wide rank allocation、Conv2 Tucker-2
 7. **Dropoutを適用する。**  
    train/eval modeによってPyTorch標準の挙動が切り替わる。
 8. **`fc2`でclass logitsを作って返す。**
+
+### 構造図
+
+```mermaid
+flowchart LR
+    X["入力<br/>in_channels"] --> C1["conv1<br/>→ C1"]
+    C1 --> P1["ReLU + MaxPool"]
+    P1 --> C2["conv2<br/>C1 → C2"]
+    C2 --> P2["ReLU + MaxPool"]
+    P2 --> C3["conv3<br/>C2 → C3"]
+    C3 --> P3["ReLU + MaxPool"]
+    P3 --> GAP["AdaptiveAvgPool2d(1)<br/>C3×1×1"]
+    GAP --> F["Flatten<br/>C3"]
+    F --> FC1["fc1<br/>C3 → hidden_dim"]
+    FC1 --> D["ReLU + Dropout"]
+    D --> FC2["fc2<br/>hidden_dim → num_classes"]
+    FC2 --> Y["class logits"]
+```
+
+`C1 / C2 / C3`は`conv_channels`の3要素。この図は**可変channel設定を保ったbaseline構造とnamed compression対象の位置**を示す。
 
 ## 主なcontract / 注意事項
 

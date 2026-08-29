@@ -20,11 +20,13 @@ split_fashion_mnist_dataset(
 
 ## 引数
 
-Dataset、各Subsetの長さ、split専用seed。
+- `dataset`: 分割元となるDataset。通常はFashion-MNISTのfull train split。
+- `split_lengths`: 返したい各Subsetのsample数を順番に並べたtuple。各値がどの用途かは呼び出し側の並びで決まる。
+- `seed`: `random_split()`専用Generatorへ設定するseed。学習DataLoaderのshuffle RNGとは分離してsplit indexを再現するために使う。
 
 ## 戻り値
 
-`torch.utils.data.random_split()`が返すSubset群。
+`split_lengths`と同じ順序で並ぶ`torch.utils.data.Subset`群。各Subsetは元`dataset`を共有しつつ、それぞれ割り当てられたindexだけを参照する。
 
 ## 使用場面
 

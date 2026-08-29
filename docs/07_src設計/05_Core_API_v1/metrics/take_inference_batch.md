@@ -17,11 +17,11 @@ take_inference_batch(
 
 ## 引数
 
-`data_loader`: input batch取得元。
+- `data_loader`: benchmarkに固定利用する1 batchの取得元。学習用shuffle Generatorを誤って消費しないため、`RandomSampler`を使うloaderは拒否する。
 
 ## 戻り値
 
-入力Tensor。batchが`(inputs, labels)`などtuple/listなら先頭要素を返す。
+modelのforwardへ渡す入力Tensor 1 batch。loaderのbatch自体がTensorならそのTensorを返し、`(inputs, labels)`などのtuple/listなら先頭の`inputs`だけを返す。
 
 ## 使用場面
 

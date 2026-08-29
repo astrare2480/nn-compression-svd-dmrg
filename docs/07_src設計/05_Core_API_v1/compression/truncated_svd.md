@@ -15,18 +15,20 @@ truncated_svd(matrix: torch.Tensor, rank: int)
 
 ## 引数
 
-- `matrix`: 分解対象の2次元Tensor `(m, n)`。
-- `rank`: 残す特異値・特異ベクトルの数。`1 <= rank <= min(m, n)`。
+- `matrix`: 低rank分解したい2次元Tensor`(m, n)`。行・列の意味は呼び出し側が決め、ここでは一般の行列として扱う。
+- `rank`: 保持する特異値と左右特異ベクトルの本数。近似行列の最大rankを決め、`1 <= rank <= min(m, n)`を要求する。
 
 ## 戻り値
 
+上位`rank`成分だけを残した3つのTensor。
+
 ```text
-U_r  : (m, rank)
-S_r  : (rank,)
-Vh_r : (rank, n)
+U_r  : (m, rank)    # 保持した左特異ベクトル
+S_r  : (rank,)      # 対応する特異値
+Vh_r : (rank, n)    # 保持した右特異ベクトルの転置
 ```
 
-近似は `matrix ≈ U_r @ diag(S_r) @ Vh_r`。
+これらを`U_r @ diag(S_r) @ Vh_r`と掛け戻すことで、元`matrix`のrank-`rank`近似を構成できる。
 
 ## 使用場面
 

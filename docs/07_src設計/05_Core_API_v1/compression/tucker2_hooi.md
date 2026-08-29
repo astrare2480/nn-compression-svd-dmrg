@@ -22,13 +22,20 @@ tucker2_hooi(
 
 ## 引数
 
-- `weight`: `(C_out,C_in,kH,kW)`の実数浮動小数点Tensor。
-- `rank_out`, `rank_in`: channel ranks。
-- `max_iter`, `abs_tol`, `rel_tol`: generic `hooi()`と同じ反復条件。
+- `weight`: partial HOOIを適用するConv2d weight。shapeは`(C_out, C_in, kH, kW)`で、channel mode 0/1だけを更新対象にする実数浮動小数点Tensor。
+- `rank_out`: 出力channel modeに残すrank`R_out`。
+- `rank_in`: 入力channel modeに残すrank`R_in`。
+- `max_iter`: HOSVD初期値の後に実行するHOOI sweepの最大回数。`0`ならsweepせず初期HOSVD結果を返す。
+- `abs_tol`: 前回誤差との差に対する絶対収束tolerance。
+- `rel_tol`: 前回誤差に対する相対収束tolerance。
 
 ## 戻り値
 
-`(core, factors, history)`。`factors`のkeyは0/1、`history[0]`はHOSVD初期誤差。
+`(core, factors, history)`の3要素。
+
+- `core`: 最終factor集合に対応するTucker-2 core。
+- `factors`: `{0: U_out, 1: U_in}`形式の最終channel factor辞書。
+- `history`: 各段階の相対Frobenius誤差。`history[0]`はHOSVD初期誤差で、その後に各HOOI sweep後の誤差が並ぶ。
 
 ## 使用場面
 

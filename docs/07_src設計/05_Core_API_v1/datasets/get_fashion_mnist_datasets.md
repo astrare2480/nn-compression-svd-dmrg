@@ -20,13 +20,18 @@ get_fashion_mnist_datasets(
 
 ## 引数
 
-- `data_dir`: Dataset保存先。
-- `transform`: torchvision transform。省略時は`ToTensor()`。
-- `download`: 未取得データをdownloadするか。
+- `data_dir`: Fashion-MNISTファイルを保存・読み込みするroot directory。
+- `transform`: 各画像を取り出すときに適用するtorchvision transform。`None`なら`ToTensor()`を使い、画像をTensorへ変換する。
+- `download`: `data_dir`にDatasetが無い場合にtorchvisionからdownloadしてよいかを指定するフラグ。
 
 ## 戻り値
 
-`(full_train_dataset, test_dataset)`。
+`(full_train_dataset, test_dataset)`の2要素tuple。
+
+- `full_train_dataset`: torchvisionのFashion-MNIST train split全体。ここではまだtrain/validationへ分割しない。
+- `test_dataset`: 最終評価用のFashion-MNIST test split。
+
+両方に同じ`transform`方針が設定される。
 
 ## 使用場面
 

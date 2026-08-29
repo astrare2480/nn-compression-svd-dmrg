@@ -19,9 +19,17 @@ find_knee_point_numpy(
 )
 ```
 
-## 引数 / 戻り値
+## 引数
 
-意味は`find_knee_point()`と同じ。戻り値は`((knee_x, knee_y), distance)`。
+- `df`: knee候補をrowとして持つDataFrame。x/y列をNumPy arrayへ変換して一括計算する。
+- `slope`: `line_equation()`で作った基準直線の傾き。垂直線では`math.inf`。
+- `intercept`: 通常線ではy切片、垂直線では一定x座標。
+- `x`: candidateのx座標として使う列名。
+- `y`: candidateのy座標として使う列名。
+
+## 戻り値
+
+`((knee_x, knee_y), distance)`。意味はloop版`find_knee_point()`と同じで、最大距離candidateの座標と基準直線までの距離をPython floatで返す。
 
 ## 使用場面
 

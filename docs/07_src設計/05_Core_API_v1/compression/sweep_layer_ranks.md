@@ -31,18 +31,24 @@ sweep_layer_ranks(
 
 ## 引数
 
-- `model`: baseline model。
-- `layer_name`: sweep対象のnamed layer。
-- `ranks`: 評価するrank列。
-- `loader`, `criterion`, `device`: candidate評価条件。
-- `factorize`: `(original_layer, rank) -> replacement_module` callback。
-- `baseline_acc`, `baseline_time_s`: 比較基準。
-- `macs_fn`: optionalな理論MACs計算callback。
-- `warmup`, `repeats`, `input_batch`: latency benchmark条件。
+- `model`: 各candidateの複製元になるbaseline model。関数内では変更せず、すべてのrank候補を同じbaselineから作る。
+- `layer_name`: rank sweep対象submoduleのnamed path。例: `"conv2"`, `"fc1"`。
+- `ranks`: 順番に評価するrank候補のiterable。各rankについて独立したcandidate modelを作る。
+- `loader`: candidateのvalidation性能、agreement、logits RMSEなどを評価する再走査可能loader。
+- `criterion`: candidateのvalidation loss計算に使うloss関数。
+- `device`: candidate評価とlatency benchmarkを実行するdevice。
+- `factorize`: `(original_layer, rank) -> replacement_module` のcallback。rankごとの分解方式をsweep本体から切り離すために使う。
+- `baseline_acc`: 圧縮前modelのaccuracy。各candidateのaccuracy dropを計算する基準値。
+- `baseline_time_s`: 圧縮前modelの推論時間。candidateのlatency比較の基準値。
+- `macs_fn`: optionalな理論MACs計算callback。指定時だけcandidateのMACs関連項目をrecordへ追加する。
+- `warmup`: latency計測前に実行するwarmup forward回数。
+- `repeats`: latency平均を取る計測forward回数。
+- `verbose`: 下位評価APIの表示を有効にするかを制御するフラグ。
+- `input_batch`: 全candidateで共通利用するbenchmark入力。`None`なら下位metrics収集側でloaderから取得する。
 
 ## 戻り値
 
-rankごとのmetrics dictを並べた`list[dict]`。
+rank候補ごとの比較結果を順番に格納した`list[dict]`。各recordには共通compression metricsに加えて少なくとも`layer`、`rank`、`retained_energy`が入り、`macs_fn`指定時はMACs関連項目も加わる。candidate model本体は既定では保持しない。
 
 ## 使用場面
 
@@ -85,6 +91,39 @@ flowchart TD
     J --> B
     B -- No --> K["list[dict] を返す"]
 ```
+
+この図は、**rankごとの反復とoptional MACsの条件分岐**を中心に、candidateが毎回baselineから作られる制御フローを示す。
+
+### シーケンス図
+
+```mermaid
+sequenceDiagram
+    participant Caller as 呼び出し元
+    participant Sweep as sweep_layer_ranks
+    participant Factorize as factorize callback
+    participant Candidate as candidate model
+    participant Metrics as collect_compression_metrics
+
+    Caller->>Sweep: baseline model, ranks, 評価条件
+    Sweep->>Sweep: original_layer をbaselineから固定
+
+    loop ranks の各候補
+        Sweep->>Candidate: deepcopy(baseline)
+        Sweep->>Factorize: original_layer, rank
+        Factorize-->>Sweep: replacement_module
+        Sweep->>Candidate: named layerを置換
+        opt macs_fn が指定されている
+            Sweep->>Sweep: candidate MACsを計算
+        end
+        Sweep->>Metrics: baseline / candidate / 評価条件
+        Metrics-->>Sweep: metrics record
+        Sweep->>Sweep: layer / rank / retained_energyを追加
+    end
+
+    Sweep-->>Caller: list[dict]
+```
+
+この図は、**rank sweep本体・分解callback・candidate model・共通metrics収集の責務分担**を示す。ループや分岐そのものはフローチャート側で確認する。
 
 ## 主なcontract / 注意事項
 

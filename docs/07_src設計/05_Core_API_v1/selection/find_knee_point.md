@@ -21,13 +21,20 @@ find_knee_point(
 
 ## 引数
 
-候補DataFrame、`line_equation()`の直線表現、x/y列名。
+- `df`: knee候補をrowとして持つDataFrame。通常はPareto frontierを渡す。
+- `slope`: `line_equation()`で作った基準直線の傾き。垂直線の場合は`math.inf`。
+- `intercept`: 通常線ではy切片、`slope == inf`の垂直線では一定x座標を表す。
+- `x`: 各候補のx座標として読むDataFrame列名。
+- `y`: 各候補のy座標として読むDataFrame列名。
 
 ## 戻り値
 
-```text
-((knee_x, knee_y), distance)
-```
+`((knee_x, knee_y), distance)`のtuple。
+
+- `(knee_x, knee_y)`: 基準直線から最も離れたcandidateの座標。
+- `distance`: そのcandidateから基準直線までの垂直距離。
+
+候補が1点だけならその点と距離`0.0`を返す。
 
 ## 使用場面
 
