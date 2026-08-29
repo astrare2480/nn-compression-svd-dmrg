@@ -145,7 +145,7 @@ $$
 で
 
 $$
-C_{\mathrm{in}}ightarrow R_{\mathrm{in}}
+C_{\mathrm{in}}\rightarrow R_{\mathrm{in}}
 $$
 
 へ圧縮する。
@@ -193,7 +193,7 @@ $$
 なので、
 
 $$
-R_{\mathrm{in}}ightarrow R_{\mathrm{out}}
+R_{\mathrm{in}}\rightarrow R_{\mathrm{out}}
 $$
 
 の $K_h\times K_w$ Convとしてそのまま使える。
@@ -246,7 +246,7 @@ $$
 である。
 
 $$
-R_{\mathrm{out}}ightarrow C_{\mathrm{out}}
+R_{\mathrm{out}}\rightarrow C_{\mathrm{out}}
 $$
 
 なので最後の1x1 Conv weightは
@@ -643,11 +643,13 @@ R_in / R_outが小さくなる
 
 - `groups=1` の通常Conv2dのみ対応
 - 中央core Convが元の `stride / padding / dilation / padding_mode` を継承
-- 前後1x1 Convはstride 1 / padding 0
+- 前後1x1 Convはstride 1 / padding 0 / dilation 1
 - device / dtypeを維持
 - 元weight / biasの `requires_grad` を維持
 - 元biasは最後の1x1へコピー
-- 元Conv自体を破壊しない
+- 元Conv自体を破壊せず、置換後Parameterとstorageを共有しない
+- `rank_out / rank_in` はboolを拒否し、`1 <= rank_out <= C_out`, `1 <= rank_in <= C_in`
+- 現行HOSVD/HOOI経路は実数dtype限定で、複素Tensorは明示的に拒否
 
 重みコピーは学習演算ではなく初期化なので、
 
@@ -660,13 +662,23 @@ with torch.no_grad():
 
 `no_grad()` はコピー操作の履歴を記録しないだけで、コピー後のParameterを学習不能にするものではない。
 
-分解対象weightは通常
+### autograd境界はAPI層で分ける
 
-```python
-weight = conv.weight.detach()
+すべてのTucker分解で入力weightを一律 `detach()` するわけではない。
+
+```text
+tucker2_hooi(weight, ...)
+→ Tensor-level decomposition
+→ 入力weightをdetachしない
+
+build_tucker2_conv(conv, ...)
+→ Module構築・初期化
+→ conv.weightをdetachして分解し、新しいleaf Parameterへcopy
 ```
 
-として既存モデルのautograd graphから切り離して扱う。
+この分離により、低レベルTensor APIでは必要以上にautograd graphを切らず、Module置換時には元モデルと新しいParameterを独立させる。
+
+`tucker2_effective_weight()` は評価用helperなので、3層のweightをdetachして等価な4階weightを再構成する。
 
 ---
 
