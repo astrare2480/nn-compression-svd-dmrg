@@ -29,7 +29,7 @@ core_from_factors(
 
 HOOI sweepでfactorを更新した後、そのfactor集合に対応するcoreを求め直すとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`X`が2階以上か確認する。**
 2. **HOSVD/HOOIと同じdtype contractを確認する。**  
@@ -38,16 +38,6 @@ HOOI sweepでfactorを更新した後、そのfactor集合に対応するcoreを
 4. **各`(mode, U)`についてfactor転置を掛ける。**  
    `core = mode_dot(core, U.T, mode)`として、そのmodeをfactorのrank dimensionまで縮める。
 5. **すべてのfactorを適用したcoreを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-X
-→ ndim / dtype検証
-→ core = X
-→ 各factorについて U.T をmode_dot
-→ Tucker core
-```
 
 ## 主なcontract / 注意事項
 

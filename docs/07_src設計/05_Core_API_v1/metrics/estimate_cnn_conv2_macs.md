@@ -32,7 +32,7 @@ model、rank、対象layer名、出力空間size。`out_hw=None`ならhistorical
 
 Fashion-MNIST conv2、または任意named Conv 1層の理論MACs比較。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`out_hw`省略時はhistorical default `(14,14)`を採用する。**
 2. **`get_named_module(model, layer_name)`で対象Convを取得する。**

@@ -27,7 +27,7 @@ DataFrame、sort列、座標として読むx/y列名。
 
 Pareto frontierの両端を結ぶ直線を作り、knee距離を測るとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **DataFrameとx/y列を共通helperで検証する。**  
    空、NaN、infを拒否する。

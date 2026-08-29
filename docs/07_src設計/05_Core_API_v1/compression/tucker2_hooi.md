@@ -34,7 +34,7 @@ tucker2_hooi(
 
 同rankのHOSVD Tucker-2よりweight再構成誤差を反復改善したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **Conv weightが4階で、channel rankが基本範囲内か検証する。**
 2. **Tucker-2用rank Mappingを作る。**  
@@ -55,15 +55,6 @@ build_tucker2_conv(conv)
 ```
 
 この2つを分離することで、分解アルゴリズム自体のautograd可能性と、学習済みModuleを独立Parameterへ置換する処理を混同しない。
-
-### 処理フロー（短縮版）
-
-```text
-4D weight / ranks検証
-→ ranks={0: rank_out, 1: rank_in}
-→ generic hooiへ委譲（detachなし）
-→ core, factors, history
-```
 
 ## 主なcontract / 注意事項
 

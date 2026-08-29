@@ -27,7 +27,7 @@ Flatten後のfeature数。default architecture・28×28入力では3136。
 
 Linear `in_features`を決める前のshape確認、CNN各段で空間サイズ・channel数がどう変わるかをNotebookで追うとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力`x`が省略されているか確認する。**  
    `None`ならダミー入力`(1,1,28,28)`のzero TensorをCPU上に作る。
@@ -39,19 +39,6 @@ Linear `in_features`を決める前のshape確認、CNN各段で空間サイズ�
 7. **`flatten`を通し、flatten後shapeを表示する。**
 8. **`x.shape[1]`をFlatten後feature数として取得する。**
 9. **feature数も表示し、整数として返す。**
-
-### 処理フロー（短縮版）
-
-```text
-x（省略時はCPU dummy）
-→ input shape表示
-→ conv1 shape表示
-→ pool1 shape表示
-→ conv2 shape表示
-→ pool2 shape表示
-→ flatten shape表示
-→ flatten_dimを返す
-```
 
 ## 主なcontract / 注意事項
 

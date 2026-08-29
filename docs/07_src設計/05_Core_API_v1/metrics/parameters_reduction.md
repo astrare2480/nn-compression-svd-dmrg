@@ -32,23 +32,13 @@ baseline modelとcompressed model。
 
 model-levelの圧縮効果をparameter数で比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baselineへ`count_parameters()`を適用する。**
 2. **compressed modelにも同じ関数を適用する。**
 3. **compressed / baselineの比率を計算する。**
 4. **1からその比率を引いて削減率へ変換する。**
 5. **floatを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-baseline params
-+ compressed params
-→ compressed / baseline
-→ 1 - ratio
-→ reduction
-```
 
 ## 主なcontract / 注意事項
 

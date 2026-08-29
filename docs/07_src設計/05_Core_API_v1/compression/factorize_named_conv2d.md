@@ -31,7 +31,7 @@ factorize_named_conv2d(
 
 1つのConvだけを圧縮してrank sweepやFine-tuningを行うとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baseline modelを`deepcopy`する。**  
    圧縮modelとbaselineのParameter共有を避ける。
@@ -44,17 +44,6 @@ factorize_named_conv2d(
 5. **copy側modelの同じpathを新Moduleへ置換する。**  
    元model側の層は変更しない。
 6. **独立したcompressed modelを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-baseline model
-→ deepcopy
-→ named Conv取得 / 型確認
-→ factorize_conv2d_layer
-→ copy側pathを置換
-→ compressed model
-```
 
 ## 主なcontract / 注意事項
 

@@ -34,7 +34,7 @@ make_two_layer_svd_model(
 
 MNIST/Fashion-MNIST MLPで実際にparameter/MACsを減らし、Fine-tuningするSVD実験。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **rank引数をprimary名へ解決する。**  
    primary/legacyの二重指定を拒否し、`fc1`・`fc2`両方のrankを確定する。
@@ -46,17 +46,6 @@ MNIST/Fashion-MNIST MLPで実際にparameter/MACsを減らし、Fine-tuningす�
 5. **元modelの`fc2`も同じように2層化してcopyへ差し替える。**
 6. **`fc3`など圧縮対象外の層はdeepcopyされたまま保持する。**
 7. **圧縮model copyを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-rank alias解決
-→ model deepcopy
-→ fc1をfactorize_linear_layer
-→ fc2をfactorize_linear_layer
-→ fc3等はcopyのまま
-→ compressed MLP
-```
 
 ## 主なcontract / 注意事項
 

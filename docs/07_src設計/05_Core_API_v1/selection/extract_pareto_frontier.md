@@ -29,7 +29,7 @@ extract_pareto_frontier(
 
 rank sweep結果から「両目的で他候補より明らかに劣る点」を除外するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **保持するrow index用listを作る。**
 2. **DataFrameを1行ずつ走査する。**
@@ -40,17 +40,6 @@ rank sweep結果から「両目的で他候補より明らかに劣る点」を�
    元DataFrame自体は変更しない。
 6. **`x_column`の昇順へsortする。**
 7. **indexを0から振り直して返す。**
-
-### 処理フロー（短縮版）
-
-```text
-全candidate
-→ 各rowをPareto判定
-→ 非支配rowだけ抽出
-→ x_columnでsort
-→ reset_index
-→ Pareto DataFrame
-```
 
 ## 主なcontract / 注意事項
 

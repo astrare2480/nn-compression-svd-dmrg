@@ -33,7 +33,7 @@ sum(S[:rank] ** 2) / sum(S ** 2)
 
 rank候補がweightのFrobenius norm上の情報量をどの程度保持するか確認するとき。task accuracyとは別のweight近似指標として使う。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **行列の最大rankを求める。**  
    `matrix`が2次元であることを確認し、`min(matrix.shape)`を最大rankとする。
@@ -47,17 +47,6 @@ rank候補がweightのFrobenius norm上の情報量をどの程度保持する�
    energyが0なら、どのrankでも失われるenergyがないという実装上の定義で`1.0`を返す。
 6. **上位rankのenergy比率を計算する。**  
    `sum(S[:rank]**2) / sum(S**2)`をPython floatとして返す。
-
-### 処理フロー（短縮版）
-
-```text
-matrix
-→ 2D / rank検証
-→ svdvals
-→ 全特異値の二乗和
-→ 上位rankの二乗和
-→ 比率を返す
-```
 
 ## 主なcontract / 注意事項
 

@@ -29,7 +29,7 @@ get_named_module(
 
 層種別に依存しないnamed compression、MACs集計、層置換前の対象取得。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **呼び出し側からmodelとdot pathを受け取る。**
 2. **PyTorch標準の`model.get_submodule(name)`へ委譲する。**

@@ -32,7 +32,7 @@ out_h * out_w * out_ch * in_ch_per_group * kH * kW
 
 baseline Convの理論計算量を数えるとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`out_h/out_w`を正整数として検証する。**  
    boolやTensor scalarをサイズとして受け入れない。

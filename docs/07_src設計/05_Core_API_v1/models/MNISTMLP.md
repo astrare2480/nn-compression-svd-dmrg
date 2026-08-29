@@ -25,7 +25,7 @@ MNISTMLP()
 
 MNIST / Fashion-MNIST MLP baseline、Linear SVD、rank sweep、圧縮後Fine-tuning。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 ### 初期化時
 
@@ -47,19 +47,6 @@ MNIST / Fashion-MNIST MLP baseline、Linear SVD、rank sweep、圧縮後Fine-tun
 4. **`fc3`へ通して10クラスlogitsを作る。**
 5. **softmaxはかけずlogitsを返す。**  
    CrossEntropyLoss等がlogitsを直接受け取る前提。
-
-### 処理フロー（短縮版）
-
-```text
-画像batch
-→ flatten 784
-→ fc1: 784→512
-→ ReLU
-→ fc2: 512→256
-→ ReLU
-→ fc3: 256→10
-→ logits
-```
 
 ## 主なcontract / 注意事項
 

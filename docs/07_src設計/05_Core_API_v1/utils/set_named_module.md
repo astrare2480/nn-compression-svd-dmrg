@@ -31,7 +31,7 @@ set_named_module(
 
 `deepcopy`済み圧縮model内の特定layerをfactorized Moduleへ差し替えるとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **`get_named_module(model, name)`を先に呼ぶ。**  
    置換先pathが本当に既存submoduleを指しているか確認する。
@@ -41,15 +41,6 @@ set_named_module(
 4. **既存位置のsubmoduleを新Moduleへ置換する。**  
    `model`はin-placeで変化する。
 5. **戻り値は返さない。**
-
-### 処理フロー（短縮版）
-
-```text
-model / path / new module
-→ path存在確認
-→ set_submodule(strict=True)
-→ model内の既存moduleをin-place置換
-```
 
 ## 主なcontract / 注意事項
 

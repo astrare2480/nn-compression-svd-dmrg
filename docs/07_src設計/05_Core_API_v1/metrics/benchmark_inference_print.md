@@ -35,7 +35,7 @@ benchmark_inference_print(
 
 Notebook上で圧縮前後latencyを同条件で簡単に比較したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **両modelのtraining状態を保存する。**
 2. **共通input batchを1つ決める。**  
@@ -46,18 +46,6 @@ Notebook上で圧縮前後latencyを同条件で簡単に比較したいとき�
 5. **`verbose=True`ならbatch size・shape・warmup/repeats・両時間を表示する。**
 6. **秒単位の2つの平均時間をtupleで返す。**
 7. **処理前の両modelのtraining状態を復元する。**
-
-### 処理フロー（短縮版）
-
-```text
-2モデル状態保存
-→ 共通input_batchを1回確保
-→ baseline benchmark
-→ compressed benchmark
-→ optional print
-→ (baseline_time, compressed_time)
-→ 状態復元
-```
 
 ## 主なcontract / 注意事項
 

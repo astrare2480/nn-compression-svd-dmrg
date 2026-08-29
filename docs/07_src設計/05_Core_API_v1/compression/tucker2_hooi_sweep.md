@@ -32,7 +32,7 @@ tucker2_hooi_sweep(
 
 Tucker-2 HOOIの更新過程を1 sweep単位で確認したいとき、学習Notebookでgeneric HOOIとの対応を追うとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **weight shapeとchannel rankをTucker-2規約で検証する。**
 2. **generic HOOI用rank Mappingを作る。**  
@@ -41,16 +41,6 @@ Tucker-2 HOOIの更新過程を1 sweep単位で確認したいとき、学習Not
 4. **generic HOOIがmode 0 → mode 1の順でfactorを更新する。**  
    mode 1更新時には同sweepで更新済みの`U_out`を使う。
 5. **更新後factor dictをそのまま返す。**
-
-### 処理フロー（短縮版）
-
-```text
-weight / Tucker-2 ranks
-→ 4D / rank検証
-→ ranks={0: rank_out, 1: rank_in}
-→ generic hooi_sweep
-→ updated factors
-```
 
 ## 主なcontract / 注意事項
 

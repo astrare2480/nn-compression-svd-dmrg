@@ -34,7 +34,7 @@ shapeが次の2次元Tensor。
 - HOOIで更新対象modeのSVDを行う前処理。
 - `mode_dot()`でTensorと行列のmode-n積を計算するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **入力Tensorのshapeを検証する。**  
    `X`が2階以上であること、0を含むdimensionがないことを確認する。Tensor分解の途中で不正shapeを黙って通さないための入口チェック。
@@ -46,16 +46,6 @@ shapeが次の2次元Tensor。
    `flatten(start_dim=1)` でaxis 1以降を1次元へまとめ、2次元行列へ変換する。
 5. **mode-n unfolding行列を返す。**  
    行数は対象modeのdimension、列数は残りdimensionの積になる。
-
-### 処理フロー（短縮版）
-
-```text
-X
-→ shape / modeを検証
-→ modeを先頭へ movedim
-→ 残りのaxisをflatten
-→ mode-n unfolding行列
-```
 
 ## 主なcontract / 注意事項
 

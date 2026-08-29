@@ -30,7 +30,7 @@ estimate_mlp_macs(
 
 MNIST/Fashion-MNIST MLPの既存SVD実験。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baselineの3つのLinear MACsを計算する。**  
    `fc1 + fc2 + fc3`を`linear_macs()`で合計する。

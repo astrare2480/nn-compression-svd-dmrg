@@ -39,7 +39,7 @@ estimate_cnn_macs(
 
 複数Conv/Linearを同時圧縮した場合のmodel-level理論計算量を比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **Conv出力空間指定を決める。**  
    未指定ならFashion-MNIST互換の`conv1:28x28`, `conv2:14x14`を使う。
@@ -52,16 +52,6 @@ estimate_cnn_macs(
 5. **全対象層のbaseline/compressed MACsを合計する。**
 6. **`1 - compressed/baseline`で削減率を求める。**
 7. **必要なら表示し、3要素tupleを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-引数をnamed rank辞書へ正規化
-→ 各Conv: baseline + 圧縮有無でcompressed式を選択
-→ 各Linear: baseline + 圧縮有無でcompressed式を選択
-→ 全層合計
-→ reduction
-```
 
 ## 主なcontract / 注意事項
 

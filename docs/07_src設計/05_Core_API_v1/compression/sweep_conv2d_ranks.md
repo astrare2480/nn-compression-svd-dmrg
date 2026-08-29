@@ -40,7 +40,7 @@ rank候補ごとのmetrics record list。
 
 Conv SVDのrank sweepをNotebookから簡潔に実行するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **Conv SVD用のMACs callbackを内部で定義する。**  
    元Convとrankを受け取り、`estimate_conv2d_macs()`でcompressed MACsと削減率を返す形にする。
@@ -50,15 +50,6 @@ Conv SVDのrank sweepをNotebookから簡潔に実行するとき。
 4. **対象Convの`out_hw`をMACs計算へ渡す。**  
    理論計算量が実際のfeature map sizeと対応するようにする。
 5. **generic sweepが返したrecord listをそのまま返す。**
-
-### 処理フロー（短縮版）
-
-```text
-Conv用macs_fnを用意
-→ factorize= factorize_conv2d_layer
-→ sweep_layer_ranksへ委譲
-→ Conv rank sweep records
-```
 
 ## 主なcontract / 注意事項
 

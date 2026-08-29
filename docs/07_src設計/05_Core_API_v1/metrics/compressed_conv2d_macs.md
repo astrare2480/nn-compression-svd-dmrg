@@ -34,7 +34,7 @@ out_h*out_w*out_ch*rank
 
 Conv SVD candidateの理論計算量比較。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **元Convが`groups=1`か確認する。**  
    圧縮実装自体が通常Convだけを正式対応としているため、MACsだけgrouped Convの仮想値を返さない。
@@ -45,15 +45,6 @@ Conv SVD candidateの理論計算量比較。
 5. **2層目の1x1 Conv MACsを計算する。**  
    `rank → C_out`なので`out_h*out_w*out_ch*rank`。
 6. **2層分を加算して返す。**
-
-### 処理フロー（短縮版）
-
-```text
-Conv semantic / rank / out_hw検証
-→ spatial Conv MACs
-→ 1x1 Conv MACs
-→ 加算
-```
 
 ## 主なcontract / 注意事項
 

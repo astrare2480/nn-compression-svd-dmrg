@@ -30,7 +30,7 @@ Tucker-2 3層Conv `nn.Sequential`。
 
 HOSVDでConv layerを直接Tucker-2へ置換し、直後評価やFine-tuningを行いたいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **元Convが対応範囲か確認する。**  
    grouped / transposed Convを拒否する。
@@ -49,16 +49,6 @@ HOSVDでConv layerを直接Tucker-2へ置換し、直後評価やFine-tuningを�
 → detachして数値を分解
 → 新しい3層Parameterへcopy
 → 新ParameterはleafとしてFine-tuning
-```
-
-### 処理フロー（短縮版）
-
-```text
-Conv semantic検証
-→ conv.weight.detach()
-→ Tucker-2 HOSVD
-→ components builder
-→ 3層Tucker-2 Conv
 ```
 
 ## 主なcontract / 注意事項

@@ -25,7 +25,7 @@ non_shuffling_loader(loader: DataLoader) -> DataLoader
 
 train metricを再評価したいが、学習用shuffle Generatorを余分に進めたくないとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **元loaderからDatasetと基本設定を読み取る。**  
    `dataset`, `batch_size`, `num_workers`, `collate_fn`, `pin_memory`, `timeout`など、評価用loaderでも維持したい設定を取得する。
@@ -37,16 +37,6 @@ train metricを再評価したいが、学習用shuffle Generatorを余分に進
    `num_workers > 0`なら`worker_init_fn`, `multiprocessing_context`, `prefetch_factor`, `persistent_workers`を引き継ぐ。
 5. **新しいDataLoaderを構築して返す。**  
    元loader自体は変更せず、評価専用の別インスタンスを返す。
-
-### 処理フロー（短縮版）
-
-```text
-元DataLoader
-→ Dataset / batch / worker設定を取得
-→ shuffle=False, drop_last=Falseへ固定
-→ worker設定を必要に応じて継承
-→ 評価用DataLoaderを新規作成
-```
 
 ## 主なcontract / 注意事項
 

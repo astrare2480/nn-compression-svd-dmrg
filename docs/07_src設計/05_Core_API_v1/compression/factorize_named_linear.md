@@ -31,7 +31,7 @@ factorize_named_linear(
 
 Notebookや実験コードから特定の1層だけを圧縮し、baselineと比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **baseline model全体を`deepcopy`する。**  
    圧縮後modelをFine-tuningしても元modelのParameterへ影響しないよう、最初に独立copyを作る。
@@ -45,18 +45,6 @@ Notebookや実験コードから特定の1層だけを圧縮し、baselineと比
    `set_named_module()`で既存submoduleをfactorized Moduleへ差し替える。
 6. **圧縮model copyを返す。**  
    baseline modelは一切変更しない。
-
-### 処理フロー（短縮版）
-
-```text
-baseline model
-→ deepcopy
-→ 元modelからnamed Linear取得
-→ 型確認
-→ factorize_linear_layer
-→ copy側の同pathを置換
-→ compressed model
-```
 
 ## 主なcontract / 注意事項
 

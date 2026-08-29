@@ -27,7 +27,7 @@ make_torch_generator(
 
 split乱数とtraining shuffle乱数を分離したいとき、candidate間でmini-batch順を再現したいとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **新しい`torch.Generator()`を生成する。**  
    global PyTorch RNGとは別の独立したstateを持つ。
@@ -35,14 +35,6 @@ split乱数とtraining shuffle乱数を分離したいとき、candidate間でmi
 3. **seed設定済みGeneratorを返す。**
 4. **以後、そのGeneratorを使う処理が乱数を生成するたびに内部stateが進む。**  
    関数が毎回自動resetするわけではない。
-
-### 処理フロー（短縮版）
-
-```text
-new torch.Generator
-→ manual_seed(seed)
-→ independent RNG generator
-```
 
 ## 主なcontract / 注意事項
 

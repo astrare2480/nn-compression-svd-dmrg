@@ -33,7 +33,7 @@ evaluate(
 
 validation/test評価、rank candidate評価、Early Stopping判定、Fine-tuning前後の比較。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **modelと全submoduleのtraining状態を保存する。**  
    rootだけではなく各submoduleの`.training`を個別に記録する。例えば「rootはtrainだがBatchNormだけeval」のような混在状態を壊さないため。
@@ -51,19 +51,6 @@ validation/test評価、rank candidate評価、Early Stopping判定、Fine-tunin
    集計値をsample総数で割って結果を作る。
 8. **処理前のtraining状態を必ず復元する。**  
    正常終了でも途中で例外が起きても、`finally`相当の処理で各moduleの`.training`を個別に元へ戻す。
-
-### 処理フロー（短縮版）
-
-```text
-root + 全submoduleの状態保存
-→ model.eval()
-→ no_grad
-→ loader全体をforward
-→ loss / accuracy集計
-→ empty確認
-→ 結果作成
-→ 全module状態を個別復元
-```
 
 ## 主なcontract / 注意事項
 

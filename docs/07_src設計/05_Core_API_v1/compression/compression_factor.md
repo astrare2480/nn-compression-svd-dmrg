@@ -30,21 +30,12 @@ original_element_count / tucker_parameter_count(shape, ranks)
 
 「元Tensorに対して何倍小さい表現か」という倍率でrank候補を比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **shapeとranksを検証する。**
 2. **元Tensorの総要素数をshapeの積で求める。**
 3. **`tucker_parameter_count()`でcore + factorsの要素数を求める。**
 4. **元要素数をTucker要素数で割り、圧縮倍率を返す。**
-
-### 処理フロー（短縮版）
-
-```text
-shape / ranks検証
-→ original element count
-→ Tucker element count
-→ original / Tucker
-```
 
 ## 主なcontract / 注意事項
 

@@ -29,7 +29,7 @@ factorを掛け戻した再構成Tensor。
 
 HOSVD/HOOIのrelative error評価、factor/coreの数値照合、Tucker-2 effective weightの再構成。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **coreが2階以上か確認する。**  
    Tucker系Public APIの最低階数を単独利用時にも維持する。
@@ -39,17 +39,6 @@ HOSVD/HOOIのrelative error評価、factor/coreの数値照合、Tucker-2 effect
 4. **各factorを`mode_dot(original, U, mode)`で掛け戻す。**  
    coreのrank dimensionを元Tensor側のdimensionへ戻す。
 5. **すべてのfactorを掛けたTensorを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-core
-→ ndim確認
-→ mode 0 factorをmode_dot
-→ mode 1 factorをmode_dot
-→ ...指定factorだけ繰り返す
-→ reconstructed Tensor
-```
 
 ## 主なcontract / 注意事項
 

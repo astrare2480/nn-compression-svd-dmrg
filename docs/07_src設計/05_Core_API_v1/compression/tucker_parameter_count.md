@@ -33,7 +33,7 @@ core要素数 + Σ(I_mode * rank_mode)
 
 Tucker rank候補の理論parameter量・保存量を比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **shapeとranksを共通Tucker contractで検証する。**
 2. **coreの要素数を1から計算する。**  
@@ -41,16 +41,6 @@ Tucker rank候補の理論parameter量・保存量を比較するとき。
 3. **factorの要素数を加算する。**  
    圧縮対象modeごとにfactor shape `(I_mode, rank_mode)`の要素数`I_mode * rank_mode`を足す。
 4. **core要素数と全factor要素数を合計して返す。**
-
-### 処理フロー（短縮版）
-
-```text
-shape / ranks検証
-→ core shapeの各dimensionを決定
-→ core要素数を積算
-→ 圧縮modeごとのfactor要素数を加算
-→ total
-```
 
 ## 主なcontract / 注意事項
 

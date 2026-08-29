@@ -27,7 +27,7 @@ tucker2_effective_weight(
 
 圧縮直後・Fine-tuning後のTucker-2 Moduleを元Conv weight空間へ戻し、relative Frobenius errorを測るとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **SequentialがTucker-2の3層構造か検証する。**  
    3層すべてがConv2dであること、入力/出力projectionが1x1・stride1・padding0・groups1であること、bias位置やchannel接続が整合することを確認する。
@@ -41,18 +41,6 @@ tucker2_effective_weight(
    1x1 dimensionを外し、`(C_out, R_out)`とする。
 6. **`reconstruct_tucker(core, {0: U_out, 1: U_in})`で元空間へ戻す。**
 7. **4階effective weightを返す。**
-
-### 処理フロー（短縮版）
-
-```text
-3層Sequential
-→ 構造contract検証
-→ input weightからU_in復元
-→ core weight取得
-→ output weightからU_out取得
-→ reconstruct_tucker
-→ effective 4D weight
-```
 
 ## 主なcontract / 注意事項
 

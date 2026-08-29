@@ -27,7 +27,7 @@ line_equation(p0, p1)
 
 Pareto frontierの端点を結ぶ基準直線を作り、knee candidateとの距離を測るとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **2点のx/yをfloatへ変換する。**
 2. **4つの座標が有限値か確認する。**

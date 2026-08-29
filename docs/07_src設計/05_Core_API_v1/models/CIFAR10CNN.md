@@ -36,7 +36,7 @@ CIFAR10CNN(
 
 CIFAR-10 baseline、複数Conv SVD、model-wide rank allocation、Conv2 Tucker-2/HOOI比較。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 ### 初期化時
 
@@ -62,19 +62,6 @@ CIFAR-10 baseline、複数Conv SVD、model-wide rank allocation、Conv2 Tucker-2
 7. **Dropoutを適用する。**  
    train/eval modeによってPyTorch標準の挙動が切り替わる。
 8. **`fc2`でclass logitsを作って返す。**
-
-### 処理フロー（短縮版）
-
-```text
-image
-→ [Conv → ReLU → Pool] ×3
-→ AdaptiveAvgPool 1×1
-→ Flatten
-→ fc1 → ReLU
-→ Dropout
-→ fc2
-→ logits
-```
 
 ## 主なcontract / 注意事項
 

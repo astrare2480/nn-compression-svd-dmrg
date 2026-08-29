@@ -35,7 +35,7 @@ u_in  : (C_in, rank_in)
 
 Moduleを作らずHOSVD Tucker-2 componentsだけ取得したいとき、HOOI分解結果と同じcomponent形式で比較するとき。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **Conv weightが4階Tensorか確認する。**  
    Tucker-2 Convのmode意味を`(C_out, C_in, kH, kW)`へ固定する。
@@ -48,16 +48,6 @@ Moduleを作らずHOSVD Tucker-2 componentsだけ取得したいとき、HOOI分
 5. **generic factor辞書からchannel factorを取り出す。**  
    `factors[0]`を`u_out`、`factors[1]`を`u_in`とする。
 6. **`core, u_out, u_in`の順で返す。**
-
-### 処理フロー（短縮版）
-
-```text
-4D Conv weight
-→ rank_out / rank_in検証
-→ ranks={0: rank_out, 1: rank_in}
-→ hosvd
-→ core, factors[0], factors[1]
-```
 
 ## 主なcontract / 注意事項
 

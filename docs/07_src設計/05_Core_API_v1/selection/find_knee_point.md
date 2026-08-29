@@ -33,7 +33,7 @@ find_knee_point(
 
 Pareto frontierから圧縮量と性能の折衷点となる代表candidateを選ぶ補助指標。
 
-## 処理の流れ（日本語）
+## 処理概要
 
 1. **DataFrameとx/yを検証・数値化する。**
 2. **直線パラメータが有効か確認する。**  
@@ -45,16 +45,6 @@ Pareto frontierから圧縮量と性能の折衷点となる代表candidateを�
    通常線と垂直線で距離式を切り替える。
 6. **現在の最大距離より大きければknee候補を更新する。**
 7. **全候補走査後、最大距離点と距離を返す。**
-
-### 処理フロー（短縮版）
-
-```text
-candidate frame検証
-→ line検証
-→ 各pointのline distance
-→ 最大値を逐次更新
-→ knee point + distance
-```
 
 ## 主なcontract / 注意事項
 
