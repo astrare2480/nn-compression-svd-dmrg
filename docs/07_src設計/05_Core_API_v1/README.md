@@ -42,40 +42,59 @@ Signature
 
 ## Mermaid図を入れる基準
 
-図は**必要なAPIだけ**に追加する。図を入れる目的を先に決め、同じ情報を別形式で重複させない。
+図は**必要なAPIだけ**に追加する。まず「この図が文章だけでは得にくい何を追加で示すのか」を1文で説明できることを必須とする。
+
+図がなくても番号付き`処理概要`を上から読めば同じことが分かるだけなら、図は追加しない。
 
 ### フローチャート
 
-**処理の制御**を理解するために使う。
+**処理の制御構造**を理解するために使う。
 
-- 反復処理がある。
-- 条件分岐・異常終了・収束判定が重要である。
-- 複数段階のbuild処理など、処理順そのものを視覚化する価値がある。
+原則として、次の少なくとも1つが必要。
 
-単純な一本道utilityを、番号付き`処理概要`と同じ内容の箱へ置き換えるだけなら追加しない。
+- 反復処理があり、どこへ戻るかが重要である。
+- 条件分岐により後続処理が変わる。
+- 異常終了・早期終了がある。
+- 収束判定・停止条件がある。
+
+単に、
+
+```text
+検証
+→ 生成
+→ copy
+→ return
+```
+
+のような**一本道の処理順を箱へ置き換えるだけの図は作らない**。処理段階が多いこと自体はフローチャート追加理由にしない。
 
 ### シーケンス図
 
 **API / object間の呼び出しと責務分担**を理解するために使う。
 
-- wrapperが複数の下位APIへ順に委譲する。
+- wrapper / orchestratorが複数の下位APIへ委譲する。
 - baseline / candidate / builderなど複数object間でデータの受け渡しがある。
 - 「誰が分解し、誰が評価し、誰が置換するか」が設計上重要である。
 
-### 構造図 / Component配置図
+単に1つの下位APIを1回呼んで返すだけのwrapperには付けない。
 
-**Tensor / Parameter / Moduleの構造や配置**を理解するために使う。
+### 構造図 / Component配置図 / データフロー図
+
+**Tensor / Parameter / Moduleの構造・配置・変換関係**を理解するために使う。
 
 - 1つのModuleを複数Moduleへ変換する。
 - core / factor / biasなどが構築後のどの層へ入るかが重要である。
+- SVD/Tucker componentがどのParameterへ対応するかを見せる価値がある。
 - baseline model architectureやfeature dimensionの変化を視覚化する価値がある。
+
+Mermaidの記法として`flowchart`を使っていても、示している内容が配置・依存・変換関係なら、文書上は「フローチャート」ではなく構造図／データフロー図として分類する。
 
 ### 複数図を同じファイルへ入れる場合
 
 複数図は、それぞれが別の問いに答える場合だけ併記する。
 
 ```text
-フローチャート   → どの順番・分岐で処理するか
+フローチャート   → どこで分岐・反復・終了するか
 シーケンス図     → 誰が誰を呼び、何を受け渡すか
 構造図           → 何がどこに配置され、構造がどう変わるか
 ```
@@ -86,22 +105,22 @@ Signature
 
 | API / class | 図 | 主な目的 |
 |---|---|---|
-| `factorize_conv2d_layer` | フローチャート | SVD成分から2層Convを作る流れ |
+| `factorize_conv2d_layer` | 分解・配置図 | SVD成分と2層Conv weightの対応 |
 | `factorize_named_layers` | フローチャート + シーケンス図 + コンポーネント図 | 制御・責務分担・model置換構造 |
 | `sweep_layer_ranks` | フローチャート + シーケンス図 | rank反復とcallback/metrics委譲 |
-| `hosvd` | フローチャート | modeごとのfactor計算 |
-| `hooi_sweep` | フローチャート | factor更新順 |
-| `hooi` | フローチャート | 反復・収束判定 |
+| `hosvd` | フローチャート | mode反復と元Xからのfactor計算 |
+| `hooi_sweep` | フローチャート | target mode反復とfactor更新順 |
+| `hooi` | フローチャート | HOOI反復・収束判定 |
 | `build_tucker2_conv` | シーケンス図 | Tensor分解とModule builderの責務分離 |
-| `build_tucker2_conv_from_components` | フローチャート + Component配置図 | build順とcomponent配置 |
+| `build_tucker2_conv_from_components` | Component配置図 | component / 元Conv属性の配置先 |
 | `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
-| `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
+| `benchmark_inference` | フローチャート | input/CUDA/return形式の分岐 |
 | `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
 | `MNISTMLP` | 構造図 | layerとfeature dimension |
 | `FashionMNISTCNN` | 構造図 | Conv/Pool/Linear構造 |
 | `CIFAR10CNN` | 構造図 | Conv/GAP/Linear構造 |
 
-逆に、単純な数式計算、1回の委譲だけのwrapper、短い一本道utilityにはMermaid図を付けない。
+逆に、単純な数式計算、1回の委譲だけのwrapper、一本道のbuilder / utilityにはMermaid図を付けない。
 
 ### Stability
 
@@ -236,7 +255,8 @@ src実装
 → contract test
 → 対応する関数別md
 → 引数 / 戻り値の意味を日本語で確認
-→ 図が本当に必要か・図種が適切か判断
+→ 図が文章に無い情報を追加するか確認
+→ 図種が制御 / 責務分担 / 構造のどれか確認
 → 必要なら設計本文
 ```
 
