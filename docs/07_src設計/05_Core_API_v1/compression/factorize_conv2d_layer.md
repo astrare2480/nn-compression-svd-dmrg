@@ -55,22 +55,22 @@ Conv2dのSVD低rank圧縮、圧縮後Fine-tuningの初期化。
 10. **2層`nn.Sequential`を返す。**  
     元Conv自体は変更しない。
 
-### フローチャート
+### 分解・配置図
 
 ```mermaid
-flowchart TD
-    A["元 Conv2d"] --> B["groups / transposed / rank を検証"]
-    B --> C["weight.detach()"]
-    C --> D["(C_out, C_in*kH*kW) に行列化"]
-    D --> E["truncated SVD"]
-    E --> F["Vh_r を空間 Conv に配置"]
-    E --> G["U_r diag(S_r) を 1x1 Conv に配置"]
-    H["元 bias"] --> G
-    F --> I["Conv2d: C_in → rank"]
-    G --> J["Conv2d: rank → C_out"]
-    I --> J
-    J --> K["2層 nn.Sequential"]
+flowchart LR
+    W["元 Conv weight<br/>(C_out, C_in, kH, kW)"] --> M["行列化<br/>(C_out, C_in*kH*kW)"]
+    M --> SVD["truncated SVD"]
+    SVD --> V["Vh_r"]
+    SVD --> US["U_r diag(S_r)"]
+    V --> A["空間 Conv weight<br/>C_in → rank"]
+    US --> B["1x1 Conv weight<br/>rank → C_out"]
+    Bias["元 bias"] --> B
+    A --> SEQ["2層 nn.Sequential"]
+    B --> SEQ
 ```
+
+これは制御フローを示すフローチャートではなく、**元weightをSVDした各成分が、構築後の2層Convのどこへ配置されるか**を示すデータフロー／構造図として扱う。
 
 ## 主なcontract / 注意事項
 
