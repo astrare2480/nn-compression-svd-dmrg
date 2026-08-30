@@ -62,21 +62,7 @@ HOSVD/HOOIなど分解方法を問わず、同じTucker-2 Module表現へ変換�
    新Parameterは独立したleaf ParameterとしてFine-tuning可能。
 10. **3層を`nn.Sequential`として返す。**
 
-### フローチャート
-
-```mermaid
-flowchart TD
-    A["入力: conv / core / u_out / u_in"] --> B["conv が groups=1 の通常 Conv2d か検証"]
-    B --> C["component の ndim / shape / dtype / device を検証"]
-    C --> D["3つの Conv2d を新規作成"]
-    D --> E["U_in^T → 入力 1x1 Conv"]
-    E --> F["core → 中央 Conv"]
-    F --> G["U_out → 出力 1x1 Conv"]
-    G --> H["bias / requires_grad を継承"]
-    H --> I["nn.Sequential として返す"]
-```
-
-この図は、**component検証からModule生成・Parameter配置・返却までの組み立て順**を示す。配置先そのものは下のComponent配置図で分けて確認する。
+一本道の組み立て順は上の`処理概要`で十分に追えるため、フローチャートは置かない。このAPIで図示する価値が高いのは、処理順ではなく**各component・元Conv属性の配置先**である。
 
 ### Component配置図
 
