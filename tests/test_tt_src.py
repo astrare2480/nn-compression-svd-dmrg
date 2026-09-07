@@ -8,6 +8,9 @@
 
 from __future__ import annotations
 
+import itertools
+import math
+
 import pytest
 import torch
 
@@ -18,7 +21,10 @@ from nn_compression.compression import (
     tt_svd_exact,
     tt_unfold,
 )
-from nn_compression.compression.tt_validation import validate_tt_cut_index
+from nn_compression.compression.tt_validation import (
+    validate_tt_cores,
+    validate_tt_cut_index,
+)
 from nn_compression.metrics import relative_frobenius_error
 
 SHAPE_4D = (2, 3, 2, 2)  # notebook 01 と同じ 4 階テンソル
@@ -84,6 +90,105 @@ def test_tt_unfold_rejects_cut_out_of_range():
         tt_unfold(X, X.ndim)
 
 
+def test_tt_unfold_element_order_matches_row_major_layout():
+    """shapeだけでなく、要素順（reshapeの並べ替え規約）の回帰も検出する。
+
+    先頭 k 軸を row 側、残りを column 側へ C-order（row-major）でまとめた
+    行列を ``tt_unfold`` を使わずに素朴な多重ループで独立に構築し、
+    ``tt_unfold(X, k)`` の出力と要素単位で一致することを確認する。
+    """
+    shape = (2, 3, 4)
+    X = torch.arange(math.prod(shape), dtype=torch.float64).reshape(shape)
+
+    for k in range(1, len(shape)):
+        left_shape = shape[:k]
+        right_shape = shape[k:]
+        left_dim = math.prod(left_shape)
+        right_dim = math.prod(right_shape)
+        expected = torch.empty(left_dim, right_dim, dtype=X.dtype)
+
+        for left_idx in itertools.product(*(range(s) for s in left_shape)):
+            row = 0
+            for size, i in zip(left_shape, left_idx):
+                row = row * size + i
+            for right_idx in itertools.product(*(range(s) for s in right_shape)):
+                col = 0
+                for size, j in zip(right_shape, right_idx):
+                    col = col * size + j
+                expected[row, col] = X[left_idx + right_idx]
+
+        actual = tt_unfold(X, k)
+        assert torch.equal(actual, expected)
+
+
+# ---------------------------------------------------------------------------
+# tt_svd_exact / tt_svd: dtype validation
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+def test_tt_svd_exact_accepts_real_floating_dtypes(dtype):
+    X = torch.randn(2, 3, 4, dtype=dtype)
+    cores = tt_svd_exact(X)  # 例外が出なければOK
+    assert cores[0].dtype == dtype
+
+
+@pytest.mark.parametrize(
+    "dtype",
+    [torch.int64, torch.int32, torch.bool, torch.complex64],
+)
+def test_tt_svd_exact_rejects_non_real_floating_dtypes(dtype):
+    X = torch.zeros(2, 3, 4, dtype=dtype)
+    with pytest.raises(TypeError):
+        tt_svd_exact(X)
+
+
+@pytest.mark.parametrize(
+    "dtype",
+    [torch.int64, torch.bool, torch.complex64],
+)
+def test_tt_svd_rejects_non_real_floating_dtypes(dtype):
+    X = torch.zeros(2, 3, 4, dtype=dtype)
+    with pytest.raises(TypeError):
+        tt_svd(X, max_rank=2)
+
+
+# ---------------------------------------------------------------------------
+# 零テンソル（数値rank 0）の特殊ケース
+# ---------------------------------------------------------------------------
+
+
+def test_tt_svd_exact_handles_zero_tensor():
+    X = torch.zeros(2, 3, 4, dtype=torch.float64)
+    cores = tt_svd_exact(X)  # 例外にならないこと
+
+    # 数値rankが0でも、bond dimensionは最低1を使う
+    bond_ranks = [core.shape[-1] for core in cores[:-1]]
+    assert bond_ranks == [1] * (X.ndim - 1)
+
+    X_hat = tt_reconstruct(cores)
+    assert X_hat.shape == X.shape
+    assert torch.allclose(X_hat, torch.zeros_like(X))
+    # X が零テンソルのときは relative_frobenius_error の分母が0になるため
+    # （0除算のためValueErrorとして拒否される契約）、絶対誤差で確認する。
+    absolute_error = torch.linalg.vector_norm(X - X_hat).item()
+    assert absolute_error == pytest.approx(0.0, abs=1e-10)
+
+
+@pytest.mark.parametrize("max_rank", [1, 2, 4])
+def test_tt_svd_handles_zero_tensor(max_rank):
+    X = torch.zeros(2, 3, 4, dtype=torch.float64)
+    cores = tt_svd(X, max_rank)  # 例外にならないこと
+
+    bond_ranks = [core.shape[-1] for core in cores[:-1]]
+    # 数値rankが0なので、max_rankに関わらずbond dimensionは1で頭打ちになる
+    assert bond_ranks == [1] * (X.ndim - 1)
+
+    X_hat = tt_reconstruct(cores)
+    assert X_hat.shape == X.shape
+    assert torch.allclose(X_hat, torch.zeros_like(X))
+
+
 # ---------------------------------------------------------------------------
 # tt_svd_exact
 # ---------------------------------------------------------------------------
@@ -108,6 +213,7 @@ def test_tt_svd_exact_bond_rank_matches_cut_unfolding_rank():
 
 
 def test_tt_svd_exact_reconstructs_within_float64_tolerance():
+    old_dtype = torch.get_default_dtype()
     torch.set_default_dtype(torch.float64)
     try:
         X = _tensor(seed=1)
@@ -117,7 +223,7 @@ def test_tt_svd_exact_reconstructs_within_float64_tolerance():
         assert X_hat.shape == X.shape
         assert relative_frobenius_error(X, X_hat).item() < 1e-10
     finally:
-        torch.set_default_dtype(torch.float32)
+        torch.set_default_dtype(old_dtype)
 
 
 # ---------------------------------------------------------------------------
@@ -129,6 +235,88 @@ def test_tt_reconstruct_restores_original_shape():
     X = _tensor(seed=0, shape=SHAPE_3D)
     cores = tt_svd_exact(X)
     assert tt_reconstruct(cores).shape == X.shape
+
+
+# ---------------------------------------------------------------------------
+# validate_tt_cores（tt_reconstruct / tt_num_parameters が使う structure validation）
+# ---------------------------------------------------------------------------
+
+
+def _valid_cores(dtype: torch.dtype = torch.float64) -> list[torch.Tensor]:
+    """(1, 2, 2) -> (2, 3, 4) -> (4, 4, 1) という有効な3-core TT。"""
+    return [
+        torch.randn(1, 2, 2, dtype=dtype),
+        torch.randn(2, 3, 4, dtype=dtype),
+        torch.randn(4, 4, 1, dtype=dtype),
+    ]
+
+
+def test_validate_tt_cores_accepts_valid_core_list():
+    validate_tt_cores(_valid_cores())  # 例外が出なければOK
+
+
+def test_validate_tt_cores_rejects_empty_list():
+    with pytest.raises(ValueError):
+        validate_tt_cores([])
+
+
+def test_validate_tt_cores_rejects_non_3d_core():
+    cores = _valid_cores()
+    cores[1] = cores[1].reshape(2, 3 * 4)  # 2階へ潰す
+    with pytest.raises(ValueError):
+        validate_tt_cores(cores)
+
+
+def test_validate_tt_cores_rejects_adjacent_bond_mismatch():
+    cores = _valid_cores()
+    cores[1] = torch.randn(3, 3, 4, dtype=cores[1].dtype)  # left bondを2→3にずらす
+    with pytest.raises(ValueError):
+        validate_tt_cores(cores)
+
+
+def test_validate_tt_cores_rejects_left_boundary_bond_not_one():
+    cores = _valid_cores()
+    cores[0] = torch.randn(2, 2, 2, dtype=cores[0].dtype)
+    with pytest.raises(ValueError):
+        validate_tt_cores(cores)
+
+
+def test_validate_tt_cores_rejects_right_boundary_bond_not_one():
+    cores = _valid_cores()
+    cores[-1] = torch.randn(4, 4, 2, dtype=cores[-1].dtype)
+    with pytest.raises(ValueError):
+        validate_tt_cores(cores)
+
+
+def test_validate_tt_cores_rejects_dtype_mismatch():
+    cores = _valid_cores(dtype=torch.float64)
+    cores[1] = cores[1].to(torch.float32)
+    with pytest.raises(TypeError):
+        validate_tt_cores(cores)
+
+
+def test_validate_tt_cores_rejects_non_tensor_element():
+    cores = _valid_cores()
+    cores[1] = cores[1].tolist()
+    with pytest.raises(TypeError):
+        validate_tt_cores(cores)
+
+
+def test_tt_reconstruct_rejects_empty_core_list():
+    with pytest.raises(ValueError):
+        tt_reconstruct([])
+
+
+def test_tt_reconstruct_rejects_invalid_core_list():
+    cores = _valid_cores()
+    cores[1] = torch.randn(3, 3, 4, dtype=cores[1].dtype)
+    with pytest.raises(ValueError):
+        tt_reconstruct(cores)
+
+
+def test_tt_num_parameters_rejects_empty_core_list():
+    with pytest.raises(ValueError):
+        tt_num_parameters([])
 
 
 # ---------------------------------------------------------------------------

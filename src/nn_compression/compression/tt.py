@@ -22,7 +22,8 @@ import torch
 
 from ..tensor.validation import validate_tensor_shape
 from .svd import coerce_integer_scalar, truncated_svd
-from .tt_validation import validate_tt_cut_index
+from .tt_validation import validate_tt_cores, validate_tt_cut_index
+from .tucker_validation import validate_real_dtype
 
 
 def tt_unfold(X: torch.Tensor, k: int) -> torch.Tensor:
@@ -57,8 +58,14 @@ def _tt_svd_sweep(
     notebook 01/02 のアルゴリズムのまま変更しない。``tt_unfold`` では
     代用しない（``tt_unfold`` は元テンソルの cut unfolding rank を
     検証するための独立した関数）。
+
+    零テンソルなど、ある段階の数値rankが0になる入力でも例外にしない。
+    TTのbond dimensionは正の整数として扱うため、その段階のみ最低
+    ``1`` を bond dimension として使う（``effective_rank`` 参照）。
+    通常（数値rank >= 1）の場合はこれまでと挙動が変わらない。
     """
     validate_tensor_shape(X)
+    validate_real_dtype(X, name="X")
 
     shape = X.shape
     d = X.ndim
@@ -75,7 +82,11 @@ def _tt_svd_sweep(
         mat = remainder.reshape(r_left * n_mode, -1)
 
         numerical_rank = int(torch.linalg.matrix_rank(mat).item())
-        r = numerical_rank if max_rank is None else min(max_rank, numerical_rank)
+        # bond dimension は正の整数として扱うため、数値rankが0の段階
+        # （例: 零テンソル）のみ最低rank 1を使う。数値rank >= 1 の通常
+        # ケースでは effective_rank == numerical_rank で挙動は変わらない。
+        effective_rank = max(1, numerical_rank)
+        r = effective_rank if max_rank is None else min(max_rank, effective_rank)
         U, S, Vh = truncated_svd(mat, r)
         cores.append(U.reshape(r_left, n_mode, r))
 
@@ -92,6 +103,16 @@ def tt_svd_exact(X: torch.Tensor) -> list[torch.Tensor]:
     """任意の d 階テンソルを、数値 rank を保ったまま TT core 列へ分解する。
 
     打ち切りなし: 各段階の数値rankをそのままbond dimensionとして残す。
+    ここでの「rank」は数学的な symbolic rank ではなく、
+    ``torch.linalg.matrix_rank`` の default tolerance に基づく数値rank
+    であることに注意する。
+
+    Note:
+        零テンソル（またはある段階の数値rankが0になる入力）では、
+        cut unfolding rank（0）と bond dimension（最低1）は一致しない。
+        TTのbond dimensionは正の整数として扱うため、数値rank 0の段階では
+        最低rank 1を使う。この場合
+        ``cut unfolding rank == bond dimension`` は成立しない。
     """
     return _tt_svd_sweep(X, max_rank=None)
 
@@ -112,6 +133,8 @@ def tt_svd(X: torch.Tensor, max_rank: int) -> list[torch.Tensor]:
 
 def tt_reconstruct(cores: list[torch.Tensor]) -> torch.Tensor:
     """TT core 列を左から bond 縮約し、dense テンソルを再構成する。"""
+    validate_tt_cores(cores)
+
     result = cores[0]
     for core in cores[1:]:
         # 左 core の右 bond（最終軸）と右 core の左 bond（先頭軸）を縮約
@@ -121,4 +144,5 @@ def tt_reconstruct(cores: list[torch.Tensor]) -> torch.Tensor:
 
 def tt_num_parameters(cores: list[torch.Tensor]) -> int:
     """TT core列の総要素数 ``P_TT = Σ_k r_{k-1} n_k r_k`` を返す。"""
+    validate_tt_cores(cores)
     return sum(core.numel() for core in cores)
