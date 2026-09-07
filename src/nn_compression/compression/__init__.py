@@ -29,6 +29,7 @@ from .rank_sweep import (
     sweep_layer_ranks,
 )
 from .svd import SVD, retained_energy, retained_energy_from_matrix, truncated_svd
+from .tt import tt_num_parameters, tt_reconstruct, tt_svd, tt_svd_exact, tt_unfold
 from .tucker import (
     compression_factor,
     hosvd,
@@ -68,6 +69,11 @@ __all__ = [
     "tucker2_hooi",
     "tucker2_hooi_sweep",
     "tucker2_effective_weight",
+    "tt_unfold",
+    "tt_svd_exact",
+    "tt_svd",
+    "tt_reconstruct",
+    "tt_num_parameters",
     # 旧名
     "SVD",
     "RebuildSVD",

@@ -1,0 +1,124 @@
+"""Tensor Train (TT) SVD の共通処理。
+
+参照元:
+    notebooks/30_tt_mps/00_fundamentals/00_tt_svd_3way_basics.ipynb
+    notebooks/30_tt_mps/00_fundamentals/01_tt_rank_unfolding.ipynb
+    notebooks/30_tt_mps/00_fundamentals/02_truncation_error_tradeoff.ipynb
+
+mode-n unfolding（``nn_compression.tensor.operations.unfold``）とは違い、
+TT の cut unfolding は先頭 ``k`` 軸をまとめて残りと切り分ける。この違いを
+混同しないよう、TT 専用の unfolding は ``tt_unfold`` としてここに独立させる。
+
+``tt_svd_exact`` と ``tt_svd(max_rank)`` は exact / truncation の違いを
+コード上でも明示するために別関数のままにするが、逐次SVDループ本体
+（``_tt_svd_sweep``）は共有し、reshape ロジック自体は変更しない。
+"""
+
+from __future__ import annotations
+
+import math
+
+import torch
+
+from ..tensor.validation import validate_tensor_shape
+from .svd import coerce_integer_scalar, truncated_svd
+from .tt_validation import validate_tt_cut_index
+
+
+def tt_unfold(X: torch.Tensor, k: int) -> torch.Tensor:
+    """TT の cut ``1:k | k+1:d`` に対応する2次元unfoldingを返す。
+
+    X: unfoldingするテンソル（``ndim >= 2``）
+    k: cut位置。``1 <= k < X.ndim`` を満たす必要がある。
+
+    戻り値の shape は ``(n_1 ... n_k,  n_{k+1} ... n_d)``。
+    """
+    validate_tensor_shape(X)
+    validate_tt_cut_index(k, X.ndim)
+
+    shape = X.shape
+    left_dim = math.prod(shape[:k])
+    right_dim = math.prod(shape[k:])
+
+    return X.reshape(left_dim, right_dim)
+
+
+def _tt_svd_sweep(
+    X: torch.Tensor,
+    max_rank: int | None = None,
+) -> list[torch.Tensor]:
+    """``tt_svd_exact`` / ``tt_svd`` が共有する逐次SVDループ本体。
+
+    ``max_rank=None`` なら打ち切りなし（各段階の数値rankをそのまま使う）。
+    ``max_rank`` に整数を渡すと、各段階で
+    ``min(max_rank, その段階の数値rank)`` を bond dimension として使う。
+
+    reshape ``mat = remainder.reshape(r_left * n_mode, -1)`` は
+    notebook 01/02 のアルゴリズムのまま変更しない。``tt_unfold`` では
+    代用しない（``tt_unfold`` は元テンソルの cut unfolding rank を
+    検証するための独立した関数）。
+    """
+    validate_tensor_shape(X)
+
+    shape = X.shape
+    d = X.ndim
+    cores: list[torch.Tensor] = []
+
+    # remainder: 未分解の残り。shape は (r_left, n_mode, n_{mode+1}, ..., n_d)
+    remainder = X
+    r_left = 1  # 左端の bond dimension（最初は 1）
+
+    # d 階テンソルなら SVD は d-1 回。各 core は G^(k) ∈ R^{r_{k-1} × n_k × r_k}
+    for mode in range(d - 1):
+        n_mode = shape[mode]
+        # 切断 (r_left·n_mode) | (残り) に対応する 2 次元行列
+        mat = remainder.reshape(r_left * n_mode, -1)
+
+        numerical_rank = int(torch.linalg.matrix_rank(mat).item())
+        r = numerical_rank if max_rank is None else min(max_rank, numerical_rank)
+        U, S, Vh = truncated_svd(mat, r)
+        cores.append(U.reshape(r_left, n_mode, r))
+
+        # Σ V^T を次の remainder へ。物理モード n_{mode+1}, ..., n_d を復元
+        remainder = (torch.diag(S) @ Vh).reshape(r, *shape[mode + 1 :])
+        r_left = r
+
+    # 最後の core。右端 bond は TT 形式どおり 1
+    cores.append(remainder.reshape(r_left, shape[-1], 1))
+    return cores
+
+
+def tt_svd_exact(X: torch.Tensor) -> list[torch.Tensor]:
+    """任意の d 階テンソルを、数値 rank を保ったまま TT core 列へ分解する。
+
+    打ち切りなし: 各段階の数値rankをそのままbond dimensionとして残す。
+    """
+    return _tt_svd_sweep(X, max_rank=None)
+
+
+def tt_svd(X: torch.Tensor, max_rank: int) -> list[torch.Tensor]:
+    """rank上限 ``max_rank`` 付きの近似TT-SVD。
+
+    各段階で ``min(max_rank, その段階の数値rank)`` をbond dimensionとする。
+    ``max_rank`` は 1 以上の整数である必要があり、0 や負数を有効な
+    rank へ丸め込むことはしない。
+    """
+    max_rank = coerce_integer_scalar(max_rank, name="max_rank")
+    if max_rank < 1:
+        raise ValueError(f"max_rank は 1 以上である必要があります: {max_rank}")
+
+    return _tt_svd_sweep(X, max_rank=max_rank)
+
+
+def tt_reconstruct(cores: list[torch.Tensor]) -> torch.Tensor:
+    """TT core 列を左から bond 縮約し、dense テンソルを再構成する。"""
+    result = cores[0]
+    for core in cores[1:]:
+        # 左 core の右 bond（最終軸）と右 core の左 bond（先頭軸）を縮約
+        result = torch.tensordot(result, core, dims=([-1], [0]))
+    return result.squeeze(0).squeeze(-1)
+
+
+def tt_num_parameters(cores: list[torch.Tensor]) -> int:
+    """TT core列の総要素数 ``P_TT = Σ_k r_{k-1} n_k r_k`` を返す。"""
+    return sum(core.numel() for core in cores)
