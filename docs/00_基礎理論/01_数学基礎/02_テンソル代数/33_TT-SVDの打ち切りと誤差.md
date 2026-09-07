@@ -17,60 +17,70 @@ tags:
 
 ## サマリー
 
-厳密TT-SVDでは各段階の非ゼロ特異値を全て残す。圧縮TT-SVDでは、厳密rank $r_k$ より小さい
+厳密TT-SVDでは、各段階で必要な数値rankを残して元テンソルを表す。圧縮TT-SVDでは、厳密rank $r_k$ より小さい
 
 $$
 \widetilde r_k<r_k
 $$
 
-を選び、小さいが非ゼロの特異値を捨てる。
+を選び、小さいが非ゼロの特異値を意図的に捨てる。
+
+したがって、まず次を区別する。
 
 $$
 \boxed{
-\text{厳密rankの先の特異値は元から0}
+\text{厳密rank }r_k\text{ の先の特異値は元から0}
 }
 $$
-
-に対し、
 
 $$
 \boxed{
-\text{圧縮rankの先は非ゼロ成分を人為的に0とみなす}
+\text{圧縮rank }\widetilde r_k\text{ の先では、非ゼロ成分も人為的に捨てる}
 }
 $$
 
-という違いがある。
-
-第 $k$ 段階で捨てた特異値の二乗和を
+第 $k$ TT-SVD段階で実際に捨てた局所SVD残差の大きさを $\delta_k$ とすると、
 
 $$
-\varepsilon_k^2
+\delta_k^2
 =
-\sum_{\alpha=\widetilde r_k+1}^{\rho_k}
-\left(\sigma_\alpha^{(k)}\right)^2
+\sum_{\alpha>\widetilde r_k}
+\left(\sigma_\alpha^{(k)}\right)^2.
 $$
 
-とすると、資料では標準的な左から右へのTT-SVDを入れ子の直交射影として整理し、実際の局所残差 $\varepsilon_k$ を用いた場合
+資料の最終整理では、TT-SVDの誤差についてまず安全に覚える式を
 
 $$
-\|X-\widehat X\|_F^2
-=
-\sum_{k=1}^{d-1}\varepsilon_k^2
-$$
-
-と読む。各段階について上界しか与えない場合は
-
-$$
-\|X-\widehat X\|_F^2
+\boxed{
+\|X-\widehat X\|_F
 \le
+\sqrt{
 \sum_{k=1}^{d-1}\varepsilon_k^2
+}
+}
 $$
 
-となる。
+とする。ここで $\varepsilon_k$ は各段階に許した局所誤差上限で、
+
+$$
+\delta_k\le\varepsilon_k
+$$
+
+を満たすようrankを選ぶ。
+
+一方、標準TT-SVDを入れ子の直交射影として整理し、$\delta_k$ を「実際にその段階で捨てた局所残差」として元テンソル空間へ持ち上げる理想的な整理では、
+
+$$
+\|X-\widehat X\|_F^2
+=
+\sum_k\delta_k^2
+$$
+
+と書ける形がある。この等号と、実務上の誤差予算による不等号を混同しないことが重要である。
 
 ---
 
-## 1. 厳密rankと圧縮rankを分ける
+## 1. 厳密rank $r_k$ と圧縮rank $\widetilde r_k$
 
 第 $k$ cutのunfoldingを
 
@@ -78,7 +88,7 @@ $$
 X^{\langle k\rangle}
 $$
 
-とし、特異値を
+とし、その特異値を大きい順に
 
 $$
 \sigma_1^{(k)}
@@ -102,7 +112,9 @@ r_k
 }
 $$
 
-であり、理論上
+である。
+
+数学的な厳密rankなら、
 
 $$
 \sigma_1^{(k)},\ldots,\sigma_{r_k}^{(k)}>0,
@@ -118,15 +130,17 @@ $$
 0.
 $$
 
-一方、圧縮のために選ぶbond dimensionを
+つまり「$r_k$ より後が0」というのは、**厳密rankの定義そのもの**である。
+
+圧縮では別に
 
 $$
 \widetilde r_k\le r_k
 $$
 
-とする。
+を選ぶ。
 
-$\widetilde r_k<r_k$ なら、捨てる
+$\widetilde r_k<r_k$ のとき、捨てる
 
 $$
 \sigma_{\widetilde r_k+1}^{(k)},
@@ -136,9 +150,57 @@ $$
 
 は一般には0ではない。
 
+```text
+厳密rank r_k
+→ 非ゼロ特異値はここまで
+→ r_k より先は元から0
+
+圧縮rank r̃_k
+→ 上位 r̃_k 個だけ残す
+→ r̃_k+1 ... r_k は小さいが非ゼロ
+→ 近似側ではそれらを0として扱う
+```
+
 ---
 
-## 2. 1回のtruncated SVD
+## 2. 「打ち切ると0にする」の意味
+
+元の行列では
+
+$$
+\sigma_{\widetilde r_k+1}^{(k)}>0
+$$
+
+であっても、rank-$\widetilde r_k$ 近似では、それ以降の特異値を保持しない。
+
+したがって近似側では
+
+$$
+\widehat\sigma_{\widetilde r_k+1}^{(k)}
+=
+\widehat\sigma_{\widetilde r_k+2}^{(k)}
+=
+\cdots
+=
+0.
+$$
+
+そのため
+
+$$
+\operatorname{rank}
+\left(
+\widehat X^{\langle k\rangle}
+\right)
+=
+\widetilde r_k
+$$
+
+となる。
+
+---
+
+## 3. 1回のtruncated SVDの誤差
 
 行列
 
@@ -156,7 +218,7 @@ $$
 
 とする。
 
-捨てた成分は
+捨てた部分は
 
 $$
 A-A_r
@@ -165,7 +227,9 @@ A-A_r
 \sigma_j u_jv_j^T
 $$
 
-である。特異ベクトル対がFrobenius内積で直交するため、
+である。
+
+SVDの特異ベクトル対はFrobenius内積で直交するので、
 
 $$
 \begin{aligned}
@@ -185,7 +249,7 @@ $$
 \end{aligned}
 $$
 
-したがって
+したがって、
 
 $$
 \boxed{
@@ -199,9 +263,78 @@ $$
 
 ---
 
-## 3. TT-SVDの各段階での打ち切り
+## 4. 具体例
 
-第 $k$ TT-SVD段階でSVDする行列を
+あるcutで特異値が
+
+$$
+(10,3,0.4,0.02,0,0,\ldots)
+$$
+
+だったとする。
+
+非ゼロ特異値は4個なので、
+
+$$
+r_k=4.
+$$
+
+### 厳密表現
+
+$$
+\widetilde r_k=r_k=4
+$$
+
+なら
+
+$$
+X^{\langle k\rangle}
+=
+\sum_{\alpha=1}^4
+\sigma_\alpha
+u_\alpha v_\alpha^T
+$$
+
+で誤差0である。
+
+### rank 2へ圧縮
+
+$$
+\widetilde r_k=2
+$$
+
+なら、$10,3$ を残し、$0.4,0.02$ を捨てる。
+
+$$
+\widehat X^{\langle k\rangle}
+=
+10u_1v_1^T
++
+3u_2v_2^T.
+$$
+
+局所誤差の二乗は
+
+$$
+\begin{aligned}
+\delta_k^2
+&=0.4^2+0.02^2\\
+&=0.1604,
+\end{aligned}
+$$
+
+したがって
+
+$$
+\delta_k
+\approx0.4005.
+$$
+
+---
+
+## 5. TT-SVDでは各段階で打ち切る
+
+第 $k$ 段階でSVDする行列を
 
 $$
 M_k
@@ -211,156 +344,146 @@ $$
 
 とする。
 
-ここで注意するのは、$k\ge2$ では $M_k$ は一般に元テンソル $X$ の $k$ 番目cut unfoldingそのものではなく、**それ以前の打ち切り後に残ったremainderを行列化したもの**であることである。
-
-上位 $\widetilde r_k$ 個だけ残し、
+上位 $\widetilde r_k$ 本だけ残すなら、
 
 $$
+M_k
+\approx
 M_{k,\widetilde r_k}
 =
 U_{k,\widetilde r_k}
 \Sigma_{k,\widetilde r_k}
-V_{k,\widetilde r_k}^T
+V_{k,\widetilde r_k}^T.
 $$
 
-とする。
-
-局所打ち切り誤差を
+実際に捨てた局所残差の大きさを
 
 $$
 \boxed{
-\varepsilon_k^2
-=
-\sum_{\alpha>\widetilde r_k}
+\delta_k^2
+:=
+\sum_{\alpha=\widetilde r_k+1}^{\rho_k}
 \left(\sigma_\alpha^{(k)}\right)^2
 }
 $$
 
-と定義する。
+とする。
+
+ここで
+
+$$
+\rho_k
+=
+\operatorname{rank}(M_k).
+$$
+
+重要なのは、$k\ge2$ では $M_k$ が通常、元テンソル $X$ のcut unfoldingそのものではないことである。
+
+前段階までに残ったremainderを
+
+$$
+(r_{k-1}n_k)
+\times
+(n_{k+1}\cdots n_d)
+$$
+
+へreshapeしたものが $M_k$ である。
 
 ---
 
-## 4. rankと保存量のtrade-off
+## 6. rankを小さくすると何が小さくなるか
 
-小さいrankにすると、各コア
-
-$$
-G^{(k)}\in\mathbb R^{\widetilde r_{k-1}\times n_k\times\widetilde r_k}
-$$
-
-の要素数が減る。
-
-TT全体の保存量は
+TT coreは
 
 $$
+G^{(k)}
+\in
+\mathbb R^{\widetilde r_{k-1}\times n_k\times\widetilde r_k}
+$$
+
+なので、総保存量は
+
+$$
+\boxed{
 P_{\mathrm{TT}}
 =
 \sum_{k=1}^d
-\widetilde r_{k-1}n_k\widetilde r_k.
+\widetilde r_{k-1}n_k\widetilde r_k
+}
 $$
 
-したがって一般に
+である。
+
+元のdenseテンソルは
+
+$$
+P_{\mathrm{dense}}
+=
+\prod_{k=1}^dn_k.
+$$
+
+したがって、
 
 ```text
-大きい bond rank
-→ 表現力が高い
-→ 誤差が小さい
-→ 保存量・計算量が増える
-
-小さい bond rank
-→ 圧縮率が高い
-→ 誤差が大きくなる
+rankを下げる
+→ coreが小さくなる
+→ 保存量・計算量が下がる
+→ 捨てる特異方向が増える
+→ 近似誤差が増える
 ```
 
 というtrade-offになる。
 
-圧縮率を
+parameter ratioを
 
 $$
-\text{parameter ratio}
-=
 \frac{P_{\mathrm{TT}}}{P_{\mathrm{dense}}}
 $$
 
-と定義するなら、1未満で圧縮、1を超えるとTT表現の方が大きい。
+と定義すれば、1未満で圧縮、1を超えるとTT表現の方が大きい。
 
 ---
 
-## 5. 具体例：厳密rankと圧縮rank
+## 7. 3サイトでの全体誤差の見取り図
 
-あるcutの特異値が
+3サイトなら打ち切り箇所は2個である。
 
-$$
-(10,3,0.4,0.02,0,0,\ldots)
-$$
+```text
+X
+│
+├─ 第1SVDで保持
+│    └─ 第1局所残差 δ1
+│
+└─ 残ったremainder
+     │
+     ├─ 第2SVDで保持 → X_hat
+     └─ 第2局所残差 δ2
+```
 
-だとする。
-
-非ゼロ特異値は4個なので
-
-$$
-r_k=4.
-$$
-
-厳密表現では4個を全て残す。
-
-$$
-X^{\langle k\rangle}
-=
-\sum_{\alpha=1}^{4}
-\sigma_\alpha u_\alpha v_\alpha^T.
-$$
-
-一方、
+単純な三角不等式だけなら
 
 $$
-\widetilde r_k=2
+\|X-\widehat X\|_F
+\le
+\delta_1+\delta_2
 $$
 
-と圧縮すれば、$0.4$ と $0.02$ を捨てる。
+程度しか言えない。
 
-$$
-\widehat X^{\langle k\rangle}
-=
-10u_1v_1^T+3u_2v_2^T.
-$$
-
-誤差は
-
-$$
-\begin{aligned}
-\left\|X^{\langle k\rangle}-\widehat X^{\langle k\rangle}\right\|_F^2
-&=0.4^2+0.02^2\\
-&=0.1604,
-\end{aligned}
-$$
-
-したがって
-
-$$
-\left\|X^{\langle k\rangle}-\widehat X^{\langle k\rangle}\right\|_F
-\approx0.4005.
-$$
+しかし標準TT-SVDでは、SVDによって得られる左interfaceの等長性を使い、局所SVD誤差をより強く全体誤差へ運ぶ。
 
 ---
 
-## 6. TT全体の誤差：準備
+## 8. Frobenius normとreshape
 
-ここから資料で扱った途中式を順に残す。
-
-実数テンソル
-
-$$
-X\in\mathbb R^{n_1\times\cdots\times n_d}
-$$
-
-を考え、Frobenius内積を
+テンソルのFrobenius内積を
 
 $$
 \langle A,B\rangle_F
 =
 \sum_{i_1,\ldots,i_d}
-A_{i_1,\ldots,i_d}B_{i_1,\ldots,i_d}
+A_{i_1,\ldots,i_d}
+B_{i_1,\ldots,i_d}
 $$
 
 とする。
@@ -371,7 +494,7 @@ $$
 \langle A,A\rangle_F.
 $$
 
-unfoldingは要素の並べ替えなので
+unfolding / reshapeは要素を別shapeで読み直すだけなので、
 
 $$
 \boxed{
@@ -383,6 +506,12 @@ $$
 
 である。
 
+したがって局所SVDの行列誤差を、対応するテンソル誤差として同じFrobenius normで扱える。
+
+---
+
+## 9. 左特異空間への射影
+
 第 $k$ 段階で残す左特異ベクトルを
 
 $$
@@ -391,19 +520,23 @@ Q_k
 U_k(:,1:\widetilde r_k)
 $$
 
-とすると
+とする。
+
+列直交性より
 
 $$
-Q_k^TQ_k=I_{\widetilde r_k}.
+Q_k^TQ_k
+=
+I_{\widetilde r_k}.
 $$
 
-対応する直交射影は
+対応する射影は
 
 $$
-P_k:=Q_kQ_k^T
+P_k
+:=
+Q_kQ_k^T.
 $$
-
-で、
 
 $$
 P_k^T=P_k,
@@ -411,20 +544,24 @@ P_k^T=P_k,
 P_k^2=P_k.
 $$
 
-局所残差を
+局所残差は
 
 $$
-\boxed{
-\varepsilon_k
-:=
-\|(I-P_k)M_k\|_F
-}
+(I-P_k)M_k
 $$
 
-と定義すると、SVDから
+であり、
 
 $$
-\varepsilon_k^2
+\delta_k
+=
+\|(I-P_k)M_k\|_F.
+$$
+
+SVDの性質から
+
+$$
+\delta_k^2
 =
 \sum_{\alpha>\widetilde r_k}
 \left(\sigma_\alpha^{(k)}\right)^2.
@@ -432,207 +569,86 @@ $$
 
 ---
 
-## 7. 左interfaceと直交射影
+## 10. 左interfaceとは何か
 
-第 $k$ 段階までに作った左側TTコアをまとめて、左interface行列
+ここで「左直交」を、**別々のcore同士が直交すること**と混同しない。
+
+第 $k$ coreまでを左から縮約したinterfaceを
+
+$$
+L_k(i_1,\ldots,i_k;\alpha_k)
+=
+\sum_{\alpha_1,\ldots,\alpha_{k-1}}
+G^{(1)}_{1,i_1,\alpha_1}
+\cdots
+G^{(k)}_{\alpha_{k-1},i_k,\alpha_k}
+$$
+
+とする。
+
+行列としては
 
 $$
 L_k
 \in
-\mathbb R^{(n_1\cdots n_k)\times\widetilde r_k}
+\mathbb R^{(n_1\cdots n_k)\times r_k}.
 $$
 
-とする。
-
-標準的な左から右へのTT-SVDでは
-
-$$
-L_k^TL_k=I_{\widetilde r_k}
-$$
-
-である。
-
-その列空間への射影を
-
-$$
-\Pi_k
-:=
-L_kL_k^T
-$$
-
-とする。
-
-テンソル全体上では右側に何もしないので、
-
-$$
-\mathcal P_k
-=
-\Pi_k\otimes I_{n_{k+1}\cdots n_d}
-$$
-
-と読む。
-
-資料ではTT-SVDを、左から右へ進むにつれて残存部分空間が入れ子になる直交射影として整理している。
-
-$$
-\operatorname{Ran}(\mathcal P_{k+1})
-\subseteq
-\operatorname{Ran}(\mathcal P_k),
-$$
-
-したがって
-
-$$
-\mathcal P_{k+1}\mathcal P_k
-=
-\mathcal P_{k+1},
-$$
-
-$$
-\mathcal P_k\mathcal P_{k+1}
-=
-\mathcal P_{k+1}.
-$$
-
----
-
-## 8. 段階ごとの誤差テンソル
-
-第 $k$ 段階までの近似を
-
-$$
-X_k
-:=
-\mathcal P_kX
-$$
-
-とし、
-
-$$
-X_0:=X.
-$$
-
-最終近似は
-
-$$
-\widehat X=X_{d-1}.
-$$
-
-第 $k$ 段階で新しく捨てた成分を
+標準的な左から右へのTT-SVDでは、保持した左特異ベクトルから作るため、
 
 $$
 \boxed{
-E_k
-:=
-X_{k-1}-X_k
+L_k^TL_k=I_{r_k}
 }
 $$
 
-とする。
+という列直交性を持つ。
 
-入れ子関係から
-
-$$
-\begin{aligned}
-E_k
-&=
-\mathcal P_{k-1}X-
-\mathcal P_kX\\
-&=
-\mathcal P_{k-1}X-
-\mathcal P_k\mathcal P_{k-1}X\\
-&=
-(I-\mathcal P_k)\mathcal P_{k-1}X.
-\end{aligned}
-$$
-
-つまり $E_k$ は、「前段階まで残っていた成分のうち、第 $k$ 段階で直交補空間へ捨てられた成分」である。
-
-望遠鏡和で
+したがって直交している対象は
 
 $$
-\begin{aligned}
-X-\widehat X
-&=
-X_0-X_{d-1}\\
-&=(X_0-X_1)+(X_1-X_2)+\cdots+(X_{d-2}-X_{d-1})\\
-&=
-\sum_{k=1}^{d-1}E_k.
-\end{aligned}
+L_k(:,1),\ldots,L_k(:,r_k)
 $$
 
----
-
-## 9. 各段階誤差の直交性
-
-$k<\ell$ とする。
-
-後段階の残存成分は第 $k$ 段階で残した空間の中にある。一方、$E_k$ はその直交補空間にある。
-
-$$
-E_k
-\in
-\operatorname{Ran}(I-\mathcal P_k),
-$$
-
-$$
-E_\ell
-\in
-\operatorname{Ran}(\mathcal P_k).
-$$
-
-直交射影に対し
-
-$$
-\operatorname{Ran}(\mathcal P_k)
-\perp
-\operatorname{Ran}(I-\mathcal P_k)
-$$
-
-なので、
+という「左ブロック全体が作る基底」である。
 
 $$
 \boxed{
-\langle E_k,E_\ell\rangle_F=0
-\qquad(k\ne\ell)
+\text{左直交TT}
+\ne
+\text{異なるcore同士が互いに直交する、という意味}
 }
 $$
 
-と整理できる。
+そもそも
+
+$$
+G^{(1)}\in\mathbb R^{1\times n_1\times r_1},
+$$
+
+$$
+G^{(2)}\in\mathbb R^{r_1\times n_2\times r_2}
+$$
+
+のようにshape・添字空間が異なるため、通常は
+
+$$
+\langle G^{(1)},G^{(2)}\rangle
+$$
+
+自体を定義しない。
 
 ---
 
-## 10. Pythagorasで全体誤差を足す
+## 11. 左interfaceは局所誤差のnormを変えない
+
+一般に
 
 $$
-X-\widehat X
-=
-\sum_{k=1}^{d-1}E_k
+Q^TQ=I
 $$
 
-かつ $E_k$ が互いに直交するとして、
-
-$$
-\begin{aligned}
-\|X-\widehat X\|_F^2
-&=
-\left\|
-\sum_{k=1}^{d-1}E_k
-\right\|_F^2\\
-&=
-\left\langle
-\sum_kE_k,
-\sum_\ell E_\ell
-\right\rangle_F\\
-&=
-\sum_k\sum_\ell
-\langle E_k,E_\ell\rangle_F\\
-&=
-\sum_{k=1}^{d-1}\|E_k\|_F^2.
-\end{aligned}
-$$
-
-次に、前段の左interfaceは列直交なので、任意の $Z$ に対して
+なら、任意の $Z$ に対して
 
 $$
 \begin{aligned}
@@ -648,113 +664,405 @@ $$
 \end{aligned}
 $$
 
-したがって、局所SVD残差を元のテンソル空間へ戻してもnormは変わらず、
-
-$$
-\|E_k\|_F
-=
-\|(I-P_k)M_k\|_F
-=
-\varepsilon_k.
-$$
-
-資料で採用した整理では、実際に捨てた特異値から $\varepsilon_k$ を定義する場合
-
-$$
-\boxed{
-\|X-\widehat X\|_F^2
-=
-\sum_{k=1}^{d-1}\varepsilon_k^2
-}
-$$
-
-となる。
-
-一方、各段階で
-
-$$
-\|E_k\|_F\le\delta_k
-$$
-
-という上界だけを設定したなら
-
-$$
-\boxed{
-\|X-\widehat X\|_F^2
-\le
-\sum_{k=1}^{d-1}\delta_k^2
-}
-$$
-
 したがって
+
+$$
+\boxed{
+Q^TQ=I
+\quad\Longrightarrow\quad
+\|QZ\|_F=\|Z\|_F
+}
+$$
+
+である。
+
+TT-SVDでは、途中remainderの座標系で生じた局所残差を、前段の左interfaceを通して元テンソル空間へ戻しても、Frobenius normを増幅しない。この等長性が誤差評価の核になる。
+
+---
+
+## 12. 入れ子の直交射影としての整理
+
+資料では、TT-SVDの誤差構造を理解するために、左から右への保持部分を入れ子の直交射影として整理した。
+
+第 $k$ 段階までの左interfaceの列空間への射影を
+
+$$
+\Pi_k
+:=
+L_kL_k^T
+$$
+
+とする。
+
+右側には何もしないので、テンソル全体上では概念的に
+
+$$
+\mathcal P_k
+=
+\Pi_k
+\otimes
+I_{n_{k+1}\cdots n_d}
+$$
+
+と読む。
+
+標準的な左から右への構成では、後段の保持空間は前段の保持空間の内部にあるという見取り図を使う。
+
+$$
+\operatorname{Ran}(\mathcal P_{k+1})
+\subseteq
+\operatorname{Ran}(\mathcal P_k).
+$$
+
+そのため
+
+$$
+\mathcal P_{k+1}\mathcal P_k
+=
+\mathcal P_{k+1}
+$$
+
+という入れ子関係を使って誤差を整理する。
+
+---
+
+## 13. 段階ごとの誤差テンソル
+
+第 $k$ 段階までの近似を
+
+$$
+X_k:=\mathcal P_kX,
+$$
+
+$$
+X_0:=X
+$$
+
+とする。
+
+最終近似を
+
+$$
+\widehat X=X_{d-1}
+$$
+
+とする。
+
+第 $k$ 段階で新しく失う成分を
+
+$$
+\boxed{
+E_k
+:=
+X_{k-1}-X_k
+}
+$$
+
+と定義する。
+
+入れ子関係を使うと、
+
+$$
+\begin{aligned}
+E_k
+&=
+\mathcal P_{k-1}X-
+\mathcal P_kX\\
+&=
+\mathcal P_{k-1}X-
+\mathcal P_k\mathcal P_{k-1}X\\
+&=
+(I-\mathcal P_k)
+\mathcal P_{k-1}X.
+\end{aligned}
+$$
+
+つまり $E_k$ は、
+
+$$
+\boxed{
+\text{第 }k-1\text{ 段階まで残っていた成分のうち、}
+\text{第 }k\text{ 段階で捨てた直交補空間成分}
+}
+$$
+
+である。
+
+望遠鏡和により、
+
+$$
+\begin{aligned}
+X-\widehat X
+&=X_0-X_{d-1}\\
+&=(X_0-X_1)+(X_1-X_2)+\cdots+(X_{d-2}-X_{d-1})\\
+&=
+\sum_{k=1}^{d-1}E_k.
+\end{aligned}
+$$
+
+---
+
+## 14. $E_k\perp E_\ell$ をどう読むか
+
+資料では一度、
+
+$$
+E_1\perp E_2
+$$
+
+を直感的に述べた後、より慎重に整理し直した。
+
+重要なのは、
+
+```text
+第1段階で捨てた空間
+        ⟂
+第1段階で残った空間の内部で後段が扱う空間
+```
+
+という入れ子の直交射影構造である。
+
+第2段階以降のremainderは、第1段階で残した側の**座標系**で表されている。後段の局所残差を元テンソル空間へ戻すときには、左interfaceによる等長埋め込みが入る。
+
+したがって、最初に覚える安全な主張は
+
+$$
+\boxed{
+\text{各段階の局所SVD残差のnormは、左直交interfaceを通しても変わらない}
+}
+$$
+
+である。
+
+「左直交core」からただちに
+
+```text
+core 1 ⟂ core 2
+```
+
+と読むのは誤りである。
+
+入れ子の直交射影として誤差テンソル $E_k$ を元空間上で丁寧に定義した整理では、異なる段階の $E_k$ が直交する形を使ってPythagorasを適用できる。
+
+---
+
+## 15. 実際の局所残差と誤差予算を分ける
+
+記号を分けると混乱しにくい。
+
+### 実際に捨てた局所誤差
+
+$$
+\boxed{
+\delta_k
+=
+\text{第 }k\text{ 段階で実際に捨てた局所SVD残差のnorm}
+}
+$$
+
+$$
+\delta_k^2
+=
+\sum_{\alpha>\widetilde r_k}
+\left(\sigma_\alpha^{(k)}\right)^2.
+$$
+
+### 許容する上限
+
+$$
+\boxed{
+\varepsilon_k
+=
+\text{第 }k\text{ 段階に許す局所誤差の予算}
+}
+$$
+
+rankを
+
+$$
+\delta_k\le\varepsilon_k
+$$
+
+となるように選ぶ。
+
+この区別をすると、
+
+$$
+\|X-\widehat X\|_F^2
+=
+\sum_k\delta_k^2
+\le
+\sum_k\varepsilon_k^2
+$$
+
+という関係を読みやすい。
+
+したがって、
 
 $$
 \boxed{
 \|X-\widehat X\|_F
 \le
-\sqrt{\delta_1^2+\cdots+\delta_{d-1}^2}
+\sqrt{
+\sum_{k=1}^{d-1}\varepsilon_k^2
+}
 }
 $$
 
-となる。
+が実務で使いやすい形になる。
 
 ---
 
-## 11. 直感：なぜ単純和ではなく二乗和か
+## 16. 全体誤差を $\varepsilon$ 以下にしたい場合
 
-普通なら
+目標を
 
 $$
-\|E_1+E_2\|
+\|X-\widehat X\|_F
 \le
-\|E_1\|+\|E_2\|
+\varepsilon
 $$
 
-としか言えない。
+とする。
 
-しかし資料ではTT-SVDの各段階を直交射影として整理しているため、各段階で新たに捨てる方向が互いに直交する。
-
-$$
-E_1\perp E_2\perp\cdots
-$$
-
-直交する長さ3と4のベクトルの合計長が
+最も単純な予算配分は、$d-1$ 個のcutへ同じ二乗誤差予算を配ることである。
 
 $$
-3+4=7
+\boxed{
+\varepsilon_k
+=
+\frac{\varepsilon}{\sqrt{d-1}}
+}
 $$
 
-ではなく
+とすれば、
 
 $$
-\sqrt{3^2+4^2}=5
+\begin{aligned}
+\sum_{k=1}^{d-1}\varepsilon_k^2
+&=
+(d-1)
+\left(
+\frac{\varepsilon}{\sqrt{d-1}}
+\right)^2\\
+&=
+\varepsilon^2.
+\end{aligned}
 $$
 
-になるのと同じ直感で、TT-SVDの誤差も二乗和で読む。
+したがって
+
+$$
+\|X-\widehat X\|_F
+\le
+\varepsilon.
+$$
+
+第 $k$ 段階では、
+
+$$
+\sum_{\alpha>\widetilde r_k}
+\left(\sigma_\alpha^{(k)}\right)^2
+\le
+\frac{\varepsilon^2}{d-1}
+$$
+
+を満たすように $\widetilde r_k$ を選ぶ、という考え方になる。
 
 ---
 
-## 12. 数値計算では「0」の判定に注意
+## 17. 各局所SVDで最良でもTT全体で最良とは限らない
 
-数学上のrankは非ゼロ特異値の本数である。しかし浮動小数点計算では理論上0の特異値が非常に小さい非ゼロ値として現れる。
+ここはTuckerとの比較でも重要である。
 
-したがって実装では数値rankを使う。
+各段階のtruncated SVDは、その段階の行列 $M_k$ に対してはrank-$\widetilde r_k$ の最良近似を与える。
 
-このプロジェクトでは
+しかし、逐次的に左から一度だけ進むTT-SVD全体が、指定TT-rank
 
-```python
-torch.linalg.matrix_rank(mat)
+$$
+(\widetilde r_1,\ldots,\widetilde r_{d-1})
+$$
+
+を持つ全てのTTテンソルの中で、必ず大域的な最小誤差解になるとは限らない。
+
+一般には
+
+$$
+\widehat X_{\mathrm{TT\text{-}SVD}}
+\ne
+\underset{
+\operatorname{TT\text{-}rank}(Y)
+\le
+(\widetilde r_1,\ldots,\widetilde r_{d-1})
+}{\arg\min}
+\|X-Y\|_F.
+$$
+
+資料では最適TT近似誤差を
+
+$$
+E_{\mathrm{best}}
+:=
+\min_{
+\operatorname{TT\text{-}rank}(Y)
+\le
+(\widetilde r_1,\ldots,\widetilde r_{d-1})
+}
+\|X-Y\|_F
+$$
+
+と置き、TT-SVDには
+
+$$
+\boxed{
+\|X-\widehat X_{\mathrm{TT\text{-}SVD}}\|_F
+\le
+\sqrt{d-1}\,E_{\mathrm{best}}
+}
+$$
+
+というquasi-optimalityの位置づけがある、と整理した。
+
+つまり、
+
+$$
+\boxed{
+\text{各局所SVDでは最適だが、逐次TT-SVD全体を大域的最適化と同一視しない}
+}
+$$
+
+という注意である。
+
+---
+
+## 18. 「各cutで最良」と「後から全coreを最適化」は別
+
+TT-SVDは左から右へ1回進む構成法である。
+
+```text
+現在のremainder
+→ 最良rank-r_k SVD
+→ 左coreを確定
+→ remainderを次へ
 ```
 
-のdefault toleranceを使用するため、threshold付近では行列shapeなどによって数値rank判定が変わり得る。
+一度確定した左coreを、後段階の情報を使って再最適化しない。
 
-この点は [[27_TT_MPS基礎のPyTorch実装]] に分離する。
+そのため、全coreを同時・交互に調整する変分最適化とは目的が異なる。
+
+この差が、後に学ぶALS / one-site / two-site DMRGへつながる。ただしそれらは今回のdocs範囲外であり、ここでは「TT-SVDは逐次構成法で、大域的最適化そのものではない」とだけ固定する。
 
 ---
 
-## 13. truncation後のrank不変性で比較する対象
+## 19. truncation後の第2cut rankで比較すべきもの
 
-第1 SVDをrank $\widetilde r_1$ へ打ち切ると、その時点で表現対象は元の $X$ から近似
+第1 SVDを
+
+$$
+\widehat r_1<r_1
+$$
+
+へ打ち切ると、表現対象は元の $X$ から近似
 
 $$
 \widehat X
@@ -762,7 +1070,7 @@ $$
 
 へ変わる。
 
-その後
+打ち切った $\widehat U$ と $\widehat B$ に対して
 
 $$
 \widehat X^{\langle2\rangle}
@@ -771,17 +1079,21 @@ $$
 \widehat B_{\mathrm{cut2}}
 $$
 
-が成立するので、
+が成立する。
+
+$\widehat U$ の列も直交しているため、
 
 $$
+\boxed{
 \operatorname{rank}
 \left(\widehat X^{\langle2\rangle}\right)
 =
 \operatorname{rank}
 \left(\widehat B_{\mathrm{cut2}}\right)
+}
 $$
 
-は保たれる。
+である。
 
 しかし一般には
 
@@ -793,15 +1105,107 @@ $$
 \left(X^{\langle2\rangle}\right)
 $$
 
-である。これはtruncationで元の情報を意図的に落としたためである。
+となり得る。
+
+したがってtruncation後のrank不変性実験では、
+
+```text
+X_hat cut rank
+vs
+B_hat cut rank
+```
+
+を比較し、別に
+
+```text
+original X cut rank
+vs
+X_hat cut rank
+```
+
+でtruncationによるrank変化を確認する。
 
 ---
 
-## 14. この章で固定する理解
+## 20. numerical rankの注意
+
+理論上0の特異値でも、浮動小数点計算では
+
+$$
+10^{-15},
+\quad
+10^{-14}
+$$
+
+のような小さい非ゼロ値として出ることがある。
+
+したがって実装では「数値的に0と見なす閾値」が必要になる。
+
+このプロジェクトの `tt_svd_exact` は
+
+```python
+torch.linalg.matrix_rank(mat)
+```
+
+のdefault toleranceに基づくnumerical rankを使う。
+
+そのため、ここでのexactは
+
+$$
+\boxed{
+\text{数学的symbolic rankではなく、採用したnumerical rankを打ち切らず保持する}
+}
+$$
+
+という意味である。
+
+---
+
+## 21. Notebook 02で見たtrade-off
+
+基礎Notebookでは
+
+```python
+max_ranks = [1, 2, 4, 8]
+```
+
+をsweepし、rank上限を増やしたとき
+
+- bond rankが増える
+- TT parameter数が増える
+- parameter ratioが増える
+- relative reconstruction errorが下がる
+
+ことを確認した。
+
+小さいランダムTensorではTT parameter数がdenseより大きくなることもあり、
+
+$$
+\text{parameter ratio}>1
+$$
+
+なら「TTにしたが圧縮にはなっていない」ことも重要な観察である。
+
+---
+
+## 22. この章で固定する理解
 
 - 厳密rank $r_k$ の先の特異値は元から0。
-- 圧縮rank $\widetilde r_k<r_k$ では、非ゼロだが小さい特異値を捨てる。
-- 1回のtruncated SVD誤差は捨てた特異値の二乗和。
-- TTでは各段階の局所誤差を、左直交構造を使って全体誤差へ結び付ける。
-- rankを小さくすると保存量は減るが近似誤差は増える。
-- truncation後にrank不変性を議論するときは、元の $X$ ではなく表現対象の $\widehat X$ と remainderを比較する。
+- 圧縮rank $\widetilde r_k<r_k$ では、小さいが非ゼロの特異値を意図的に捨てる。
+- 1回のtruncated SVDの局所誤差は、捨てた特異値の二乗和で測れる。
+- TT-SVDの誤差評価で重要なのは「別々のcore同士が直交」ではなく、左interfaceが列直交で等長写像になること。
+- $\delta_k$ を実際の局所残差、$\varepsilon_k$ を許容上限として分けると、等号と不等号を混同しにくい。
+- 実務では
+
+$$
+\|X-\widehat X\|_F
+\le
+\sqrt{\sum_k\varepsilon_k^2}
+$$
+
+を安全な全体誤差上界として使う。
+- 全体誤差 $\varepsilon$ を等分するなら、各cutに $\varepsilon/\sqrt{d-1}$ を配る考え方がある。
+- 各局所SVDはその場では最良でも、TT-SVD全体を指定TT-rankでの大域的最良近似と同一視しない。
+- truncation後のrank不変性は、元の $X$ ではなく近似 $\widehat X$ と $\widehat B$ の間で確認する。
+
+次の [[34_基底変換とTT-rank不変性]] では、前段の列直交基底変換がなぜrankを保存するかを $U\otimes I$ から厳密に導く。
