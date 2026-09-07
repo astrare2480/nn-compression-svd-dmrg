@@ -6,9 +6,11 @@ TT の内部 cut は ``1 <= k < d`` であり、汎用の mode index
 ``tensor/validation.py`` に混ぜず ``compression/tucker_validation.py`` に
 分離しているのと同じ理由で、TT 専用の contract もここに置く。
 
-dtype の contract（実数浮動小数点のみを正式対応とする）は Tucker/HOOI と
-同じ意味なので、専用 helper を増やさず ``tucker_validation.validate_real_dtype``
-をそのまま再利用する（``tt.py`` から直接 import する）。
+dtype の contract は Tucker/HOOI とは異なり、TT-SVD 内部の
+``torch.linalg.matrix_rank`` / ``torch.linalg.svd`` が CPU 環境で
+``float16`` / ``bfloat16`` を扱えない可能性があるため、
+``validate_tt_dtype`` で ``float32`` / ``float64`` のみを正式対応とする。
+``tucker_validation.validate_real_dtype`` 自体は変更しない。
 
 参照元:
     notebooks/30_tt_mps/00_fundamentals/01_tt_rank_unfolding.ipynb
@@ -17,6 +19,32 @@ dtype の contract（実数浮動小数点のみを正式対応とする）は T
 from __future__ import annotations
 
 import torch
+
+_TT_SUPPORTED_DTYPES = (torch.float32, torch.float64)
+
+
+def validate_tt_dtype(tensor: torch.Tensor, *, name: str = "X") -> None:
+    """TT-SVD が正式対応する dtype であることを確認する。
+
+    正式対応は ``torch.float32`` と ``torch.float64`` のみ。
+    ``float16`` / ``bfloat16``、整数、bool、複素 dtype は public API
+    入口で ``TypeError`` として拒否する。
+    """
+    if tensor.is_complex():
+        raise TypeError(
+            f"{name} は実数 dtype である必要があります（複素数は未対応）: "
+            f"dtype={tensor.dtype}"
+        )
+    if not tensor.is_floating_point():
+        raise TypeError(
+            f"{name} は実数浮動小数点 dtype である必要があります: "
+            f"dtype={tensor.dtype}"
+        )
+    if tensor.dtype not in _TT_SUPPORTED_DTYPES:
+        raise TypeError(
+            f"{name} の dtype は torch.float32 または torch.float64 "
+            f"である必要があります: dtype={tensor.dtype}"
+        )
 
 
 def validate_tt_cut_index(mode: int, ndim: int, *, name: str = "mode") -> None:

@@ -127,17 +127,32 @@ def test_tt_unfold_element_order_matches_row_major_layout():
 
 
 @pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
-def test_tt_svd_exact_accepts_real_floating_dtypes(dtype):
+def test_tt_svd_exact_accepts_supported_dtypes(dtype):
     X = torch.randn(2, 3, 4, dtype=dtype)
     cores = tt_svd_exact(X)  # 例外が出なければOK
     assert cores[0].dtype == dtype
 
 
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+def test_tt_svd_accepts_supported_dtypes(dtype):
+    X = torch.randn(2, 3, 4, dtype=dtype)
+    cores = tt_svd(X, max_rank=2)  # 例外が出なければOK
+    assert cores[0].dtype == dtype
+
+
 @pytest.mark.parametrize(
     "dtype",
-    [torch.int64, torch.int32, torch.bool, torch.complex64],
+    [
+        torch.float16,
+        torch.bfloat16,
+        torch.int32,
+        torch.int64,
+        torch.bool,
+        torch.complex64,
+        torch.complex128,
+    ],
 )
-def test_tt_svd_exact_rejects_non_real_floating_dtypes(dtype):
+def test_tt_svd_exact_rejects_unsupported_dtypes(dtype):
     X = torch.zeros(2, 3, 4, dtype=dtype)
     with pytest.raises(TypeError):
         tt_svd_exact(X)
@@ -145,9 +160,17 @@ def test_tt_svd_exact_rejects_non_real_floating_dtypes(dtype):
 
 @pytest.mark.parametrize(
     "dtype",
-    [torch.int64, torch.bool, torch.complex64],
+    [
+        torch.float16,
+        torch.bfloat16,
+        torch.int32,
+        torch.int64,
+        torch.bool,
+        torch.complex64,
+        torch.complex128,
+    ],
 )
-def test_tt_svd_rejects_non_real_floating_dtypes(dtype):
+def test_tt_svd_rejects_unsupported_dtypes(dtype):
     X = torch.zeros(2, 3, 4, dtype=dtype)
     with pytest.raises(TypeError):
         tt_svd(X, max_rank=2)

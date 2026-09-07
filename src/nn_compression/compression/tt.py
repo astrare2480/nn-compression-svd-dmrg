@@ -22,8 +22,7 @@ import torch
 
 from ..tensor.validation import validate_tensor_shape
 from .svd import coerce_integer_scalar, truncated_svd
-from .tt_validation import validate_tt_cores, validate_tt_cut_index
-from .tucker_validation import validate_real_dtype
+from .tt_validation import validate_tt_cores, validate_tt_cut_index, validate_tt_dtype
 
 
 def tt_unfold(X: torch.Tensor, k: int) -> torch.Tensor:
@@ -65,7 +64,7 @@ def _tt_svd_sweep(
     通常（数値rank >= 1）の場合はこれまでと挙動が変わらない。
     """
     validate_tensor_shape(X)
-    validate_real_dtype(X, name="X")
+    validate_tt_dtype(X, name="X")
 
     shape = X.shape
     d = X.ndim
