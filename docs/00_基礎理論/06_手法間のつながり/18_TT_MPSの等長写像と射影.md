@@ -5,7 +5,7 @@ aliases:
   - U転置UとUU転置
   - MPSの等長写像
   - TTの射影
- tags:
+tags:
   - TT
   - MPS
   - isometry
