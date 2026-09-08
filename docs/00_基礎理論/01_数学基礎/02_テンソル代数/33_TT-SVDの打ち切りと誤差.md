@@ -261,6 +261,86 @@ $$
 
 である。
 
+### 対角行列で打ち切り誤差を全要素確認
+
+ある段階の特異値行列を
+
+$$
+\Sigma
+=
+\operatorname{diag}(5,2,0.5)
+=
+\begin{pmatrix}
+5&0&0\\
+0&2&0\\
+0&0&0.5
+\end{pmatrix}
+$$
+
+とする。非ゼロ特異値は3個なので、このcutの厳密rankは
+
+$$
+r_k=3
+$$
+
+である。圧縮rankを
+
+$$
+\widetilde r_k=2
+$$
+
+とすると、第3特異値を捨てた近似は
+
+$$
+\widetilde\Sigma
+=
+\operatorname{diag}(5,2,0)
+=
+\begin{pmatrix}
+5&0&0\\
+0&2&0\\
+0&0&0
+\end{pmatrix}
+$$
+
+となる。差とFrobenius normを全要素から計算すると、
+
+$$
+\Sigma-\widetilde\Sigma
+=
+\begin{pmatrix}
+0&0&0\\
+0&0&0\\
+0&0&0.5
+\end{pmatrix},
+$$
+
+$$
+\begin{aligned}
+\left\|
+\Sigma-\widetilde\Sigma
+\right\|_F
+&=
+\sqrt{
+0^2+0^2+\cdots+0.5^2
+}\\
+&=
+0.5.
+\end{aligned}
+$$
+
+したがって、この段階で $r_k=3$ から $\widetilde r_k=2$ へ圧縮した局所誤差は $\delta_k=0.5$ である。TT-SVD全体では、この $\delta_k$ が各段階の局所誤差の一つになり、後述する
+
+$$
+\left\|
+X-\widehat X
+\right\|_F^2
+=
+\sum_k\delta_k^2
+$$
+
+という直交分解、または局所誤差予算 $\varepsilon_k$ を使う全体誤差上界へ接続する。
+
 ---
 
 ## 4. 具体例

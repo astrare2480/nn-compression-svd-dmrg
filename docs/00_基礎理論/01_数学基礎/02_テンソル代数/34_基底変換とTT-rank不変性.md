@@ -306,6 +306,139 @@ $$
 
 となる。
 
+### $2\times2$ の行列を使った全要素計算
+
+一つの例として
+
+$$
+n_1=r_1=n_2=n_3=2
+$$
+
+とし、
+
+$$
+U
+=
+\begin{pmatrix}
+a&b\\
+c&d
+\end{pmatrix},
+\qquad
+I_{n_2}
+=
+I_2
+=
+\begin{pmatrix}
+1&0\\
+0&1
+\end{pmatrix}
+$$
+
+を使う。Kronecker積では、$U$ の各要素を対応する $I_2$ のblockへ掛けるので、
+
+$$
+\begin{aligned}
+L_2
+&=
+U\otimes I_2\\
+&=
+\begin{pmatrix}
+aI_2&bI_2\\
+cI_2&dI_2
+\end{pmatrix}\\
+&=
+\begin{pmatrix}
+a&0&b&0\\
+0&a&0&b\\
+c&0&d&0\\
+0&c&0&d
+\end{pmatrix}.
+\end{aligned}
+$$
+
+行・列の複合添字は、それぞれ
+
+$$
+\begin{aligned}
+(i_1,i_2)
+&=
+(1,1),(1,2),(2,1),(2,2),\\
+(\alpha_1,i_2)
+&=
+(1,1),(1,2),(2,1),(2,2)
+\end{aligned}
+$$
+
+の順とする。remainderの第2cutを
+
+$$
+B_{\mathrm{cut2}}
+=
+\begin{pmatrix}
+p&q\\
+r&s\\
+t&u\\
+v&w
+\end{pmatrix}
+$$
+
+と置く。各行は上から $(\alpha_1,i_2)=(1,1),(1,2),(2,1),(2,2)$、各列は $i_3=1,2$ に対応する。
+
+このとき、
+
+$$
+\begin{aligned}
+X_{\mathrm{cut2}}
+&=
+L_2B_{\mathrm{cut2}}\\
+&=
+\begin{pmatrix}
+a&0&b&0\\
+0&a&0&b\\
+c&0&d&0\\
+0&c&0&d
+\end{pmatrix}
+\begin{pmatrix}
+p&q\\
+r&s\\
+t&u\\
+v&w
+\end{pmatrix}\\
+&=
+\begin{pmatrix}
+a p+b t&a q+b u\\
+a r+b v&a s+b w\\
+c p+d t&c q+d u\\
+c r+d v&c s+d w
+\end{pmatrix}.
+\end{aligned}
+$$
+
+積の各行と $X_{\mathrm{cut2}}$ の複合添字の対応は
+
+$$
+\begin{array}{c|c}
+\text{行位置}&(i_1,i_2)\\
+\hline
+1&(1,1)\\
+2&(1,2)\\
+3&(2,1)\\
+4&(2,2)
+\end{array}
+$$
+
+である。例えば第2行では $i_2=2$ の成分 $r,s,v,w$ だけが選ばれ、第4行でも同じ $i_2=2$ の成分へ $c,d$ が作用する。これは一般式
+
+$$
+X_{i_1i_2i_3}
+=
+\sum_{\alpha_1}
+U_{i_1,\alpha_1}
+B_{\alpha_1,i_2,i_3}
+$$
+
+を全要素へ展開したものになっている。$U$ がSVDから得た列直交行列なら、この具体例でも $L_2^TL_2=I_4$ となり、後述するrank保存へつながる。
+
 ---
 
 ## 6. shapeの完全確認
@@ -586,7 +719,7 @@ $$
 
 数学的なrank議論では、置換行列自体も可逆なのでrankを変えない。
 
-PyTorchの実際の要素順・`torch.kron`との対応は [[27_TT_MPS基礎のPyTorch実装]] で扱う。
+PyTorchの実際の要素順・`torch.kron`との対応は [[29_TT_cutとPyTorchのreshape_Kronecker順序]] で扱う。
 
 ---
 

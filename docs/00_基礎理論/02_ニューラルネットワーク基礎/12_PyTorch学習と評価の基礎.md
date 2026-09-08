@@ -107,6 +107,66 @@ optimizer.step
 
 を行う。
 
+### `backward()`と`optimizer.step()`を数式へ対応させる
+
+重みをまとめて$W$、損失を$L(W)$とする。$W$を$\Delta W$だけ動かしたとき、1次のTaylor展開は
+
+$$
+L(W+\Delta W)
+\approx
+L(W)
++
+\left\langle
+\nabla L(W),
+\Delta W
+\right\rangle_F
+$$
+
+である。勾配の反対方向へ
+
+$$
+\Delta W
+:=
+-\eta\nabla L(W),
+\qquad
+\eta>0
+$$
+
+と動かすと、
+
+$$
+\begin{aligned}
+L(W+\Delta W)
+&\approx
+L(W)
+-
+\eta
+\left\langle
+\nabla L(W),
+\nabla L(W)
+\right\rangle_F\\
+&=
+L(W)
+-
+\eta
+\lVert\nabla L(W)\rVert_F^2\\
+&\le
+L(W).
+\end{aligned}
+$$
+
+学習率が局所近似に対して十分小さければ、負号によって損失が下がる方向へ進むことが分かる。PyTorchでは、
+
+```text
+forward
+→ lossを計算して計算グラフを作る
+→ zero_gradで前回のgradを消す
+→ backwardで∂L/∂Wを各Parameter.gradへ計算する
+→ optimizer.stepでgradを使ってParameterを更新する
+```
+
+と対応する。`backward()`は勾配を計算する処理であり、実際に重みを変更するのは`optimizer.step()`である。
+
 1 epochは「学習データを1回すべて見た」という単位であり、学習完了の意味ではない。
 複数epochでは、更新後の重みで同じデータを再び学習し、誤差を段階的に減らす。
 
@@ -194,6 +254,45 @@ if best_validation_loss - MIN_DELTA > validation_loss:
 
 - `PATIENCE`：何回改善なしを許すか
 - `MIN_DELTA`：改善とみなす最小差
+
+上のコードは絶対改善量
+
+$$
+\Delta_{\mathrm{abs}}
+:=
+L_{\mathrm{best}}-L_t
+$$
+
+について
+
+$$
+\Delta_{\mathrm{abs}}>\delta_{\mathrm{abs}}
+$$
+
+を改善条件にする。lossのscaleが実験間でほぼ同じなら、この条件は読みやすい。
+
+lossのscale自体が大きく変わる比較では、相対改善率
+
+$$
+\Delta_{\mathrm{rel}}
+:=
+\frac{
+L_{\mathrm{best}}-L_t
+}{
+\max\left(
+|L_{\mathrm{best}}|,
+\epsilon
+\right)
+}
+$$
+
+を使い、
+
+$$
+\Delta_{\mathrm{rel}}>\delta_{\mathrm{rel}}
+$$
+
+と判定する方法もある。学習のEarly Stoppingはbest lossからの改善を判定する。一方、HOOIの収束判定は連続するiteration間の誤差変化を判定するため、同じ「停止条件」でも比較対象が異なる。
 
 Early Stoppingは最後のepochを採用する仕組みではない。
 **validation lossが最良だった時点の重みを保存し、最後に復元する。**

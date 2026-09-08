@@ -226,6 +226,79 @@ $$
 
 したがってこれは「4階テンソルにする」操作ではない。`reshape(U, 1, n_1, r_1)` の3個の数字は3本の軸のサイズを指定しており、結果は3階テンソルである。
 
+### 小さい実行列で全要素を確認
+
+$n_1=r_1=2$ とし、第1 SVDで得た列直交行列を
+
+$$
+U^{(1)}
+=
+\begin{pmatrix}
+\dfrac{3}{5}&-\dfrac{4}{5}\\
+\dfrac{4}{5}&\dfrac{3}{5}
+\end{pmatrix}
+$$
+
+とする。PyTorchのrow-major順で全要素を並べると
+
+$$
+\left(
+\dfrac{3}{5},
+-\dfrac{4}{5},
+\dfrac{4}{5},
+\dfrac{3}{5}
+\right)
+$$
+
+である。これを
+
+$$
+G^{(1)}
+=
+\operatorname{reshape}
+\left(U^{(1)},1,2,2\right)
+$$
+
+とすると、shapeは $(2,2)$ から $(1,2,2)$ へ変わるが、唯一の左境界sliceは
+
+$$
+G^{(1)}_{1,:,:}
+=
+\begin{pmatrix}
+\dfrac{3}{5}&-\dfrac{4}{5}\\
+\dfrac{4}{5}&\dfrac{3}{5}
+\end{pmatrix}
+$$
+
+のままである。各要素の対応を全て書けば
+
+$$
+\begin{aligned}
+G^{(1)}_{1,1,1}
+&=
+U^{(1)}_{1,1}
+=
+\dfrac{3}{5},\\
+G^{(1)}_{1,1,2}
+&=
+U^{(1)}_{1,2}
+=
+-\dfrac{4}{5},\\
+G^{(1)}_{1,2,1}
+&=
+U^{(1)}_{2,1}
+=
+\dfrac{4}{5},\\
+G^{(1)}_{1,2,2}
+&=
+U^{(1)}_{2,2}
+=
+\dfrac{3}{5}.
+\end{aligned}
+$$
+
+したがって、格納される4個の値とその順序は変化せず、先頭にサイズ1の境界軸が追加されるだけである。
+
 ---
 
 ## 4. 3サイトのTTをSVDから作る見取り図
@@ -472,6 +545,65 @@ $$
 $$
 
 である。
+
+### 小さい係数行列でSchmidt対応を確認
+
+$s_1,\mu\in\{0,1\}$ とし、正規化された状態の係数行列を
+
+$$
+\Psi^{\langle1\rangle}
+=
+\dfrac{1}{\sqrt{5}}
+\begin{pmatrix}
+2&0\\
+0&1
+\end{pmatrix}
+$$
+
+とする。この行列のSVDは
+
+$$
+\Psi^{\langle1\rangle}
+=
+\underbrace{
+\begin{pmatrix}
+1&0\\
+0&1
+\end{pmatrix}
+}_{U}
+\underbrace{
+\begin{pmatrix}
+\dfrac{2}{\sqrt{5}}&0\\
+0&\dfrac{1}{\sqrt{5}}
+\end{pmatrix}
+}_{\Sigma}
+\underbrace{
+\begin{pmatrix}
+1&0\\
+0&1
+\end{pmatrix}
+}_{V^T}
+$$
+
+である。係数を状態展開へ戻すと
+
+$$
+\begin{aligned}
+|\Psi\rangle
+&=
+\sum_{s_1,\mu}
+\Psi^{\langle1\rangle}_{s_1,\mu}
+|s_1\rangle\otimes|\mu\rangle\\
+&=
+\dfrac{2}{\sqrt{5}}
+|0\rangle\otimes|0\rangle
++
+\dfrac{1}{\sqrt{5}}
+|1\rangle\otimes|1\rangle.
+\end{aligned}
+$$
+
+したがって、左・右特異ベクトルはそれぞれ左右のSchmidtベクトル、特異値 $2/\sqrt{5}$ と $1/\sqrt{5}$ はSchmidt係数であり、Schmidt rankは係数行列のrankと同じ2である。
 
 ---
 

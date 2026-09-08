@@ -92,6 +92,47 @@ $$
 
 の特徴ベクトルにする。
 
+## $2\times2$ 特徴マップを全要素で平均する
+
+1 sampleの1 channelが
+
+$$
+X
+:=
+\begin{pmatrix}
+1&2\\
+3&4
+\end{pmatrix}
+$$
+
+だったとする。この場合、$H=W=2$なので、
+
+$$
+\begin{aligned}
+\operatorname{GAP}(X)
+&=
+\frac{1}{2\cdot2}
+\sum_{h=1}^{2}
+\sum_{w=1}^{2}
+X_{h,w}\\
+&=
+\frac{1}{4}
+\left(
+X_{1,1}+X_{1,2}+X_{2,1}+X_{2,2}
+\right)\\
+&=
+\frac{1}{4}
+\left(
+1+2+3+4
+\right)\\
+&=
+\frac{10}{4}\\
+&=2.5.
+\end{aligned}
+$$
+
+複数channelの場合も、channel間を混ぜず、この計算を各$(n,c)$の特徴マップへ独立に行う。
+
 ---
 
 # 2. Flattenとの違い
@@ -272,6 +313,64 @@ SVD圧縮前後の評価では、必ず `model.eval()` を使う。
 rank candidateのFine-tuningではDropoutの乱数もcandidate比較へ影響し得るため、seed条件を揃える。
 
 この点は [[00_基礎理論/04_実験設計/19_再現性と乱数管理]] とつながる。
+
+## inverted Dropoutの途中式
+
+Dropout率を$p$とし、要素$i$を残すmaskを
+
+$$
+m_i
+\sim
+\operatorname{Bernoulli}(1-p)
+$$
+
+とする。学習時のPyTorch Dropoutは、概念的に
+
+$$
+y_i
+:=
+\frac{m_i}{1-p}x_i
+$$
+
+を計算する。
+
+$$
+m_i=0
+\quad\Longrightarrow\quad
+y_i=0,
+$$
+
+$$
+m_i=1
+\quad\Longrightarrow\quad
+y_i=\frac{x_i}{1-p}.
+$$
+
+残した要素を$1/(1-p)$倍する理由は、期待値を学習前後で保存するためである。$\mathbb E[m_i]=1-p$なので、
+
+$$
+\begin{aligned}
+\mathbb E[y_i]
+&=
+\mathbb E\left[
+\frac{m_i}{1-p}x_i
+\right]\\
+&=
+\frac{x_i}{1-p}
+\mathbb E[m_i]\\
+&=
+\frac{x_i}{1-p}(1-p)\\
+&=x_i.
+\end{aligned}
+$$
+
+例えば$p=0.5$なら、残った要素は
+
+$$
+\frac{1}{1-0.5}=2
+$$
+
+倍される。`model.eval()`ではmaskを使わず$y_i=x_i$となるため、評価時に追加の倍率補正は不要である。
 
 ---
 

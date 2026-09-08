@@ -19,6 +19,8 @@ tags:
 
 元資料はPerplexityとの長い対話ログで、同じ疑問を角度を変えて何度も確認している。監査では**会話順をそのまま複製せず、最終的に確定した理解へ論点単位で統合する**。
 
+ここでいうcoverageは、理論論点・結論・必要な導出やindex対応がdocsに反映されているかを指す。Perplexity資料にある具体行列や全要素表示を同じ細かさで再掲しているかは**説明粒度**として別に扱い、その簡略化だけをcoverage gapとは判定しない。
+
 監査時点の元資料は、
 
 ```text
@@ -41,7 +43,8 @@ docs/00_基礎理論/01_数学基礎/02_テンソル代数/
 ├── 31_TT-rankとunfolding.md
 ├── 32_TT-SVD.md
 ├── 33_TT-SVDの打ち切りと誤差.md
-└── 34_基底変換とTT-rank不変性.md
+├── 34_基底変換とTT-rank不変性.md
+└── 35_TT_MPSの等長写像と射影.md
 ```
 
 ### PyTorch / Python
@@ -49,7 +52,8 @@ docs/00_基礎理論/01_数学基礎/02_テンソル代数/
 ```text
 docs/00_基礎理論/05_PyTorch実装/
 ├── 27_TT_MPS基礎のPyTorch実装.md
-└── 28_TT_MPS実装で使うPyTorch_Python操作メモ.md
+├── 28_TT_MPS実装で使うPyTorch_Python操作メモ.md
+└── 29_TT_cutとPyTorchのreshape_Kronecker順序.md
 ```
 
 ### 手法間・物理・ロードマップ
@@ -61,7 +65,12 @@ docs/00_基礎理論/06_手法間のつながり/
 └── 17_TT_MPS学習ロードマップ.md
 ```
 
-合計10ファイルへ整理した。
+合計12ファイルへ整理した。
+
+### 追加した監査対象
+
+- 35: $U^TU=I$ と $UU^T=P$、等長写像と直交射影、TT-SVD / MPSでの意味
+- 29: TT cutとTucker mode unfoldingの区別、PyTorchのreshape順、$U\otimes I$ と置換行列の対応
 
 ---
 
@@ -75,8 +84,8 @@ docs/00_基礎理論/06_手法間のつながり/
 | 11,698〜14,585 | exact/truncated rank、特異値、局所誤差、全体誤差、直交性の訂正 | 33 | reflected / corrected-final |
 | 14,642〜17,376 | 学習順、Fashion-MNISTの位置づけ、gauge以降、DMRGまでのロードマップ | 17 | reflected / future roadmap |
 | 17,377〜21,624 | 基礎Notebook設計、`numel`、shape、SVD rank、$U$のshape、物理解釈 | 27, 28, 16 | reflected |
-| 21,625〜26,412 | `tensordot`、再構成、list、`squeeze`、`tt_unfold`、TT-SVD骨格、`torch.eye`、$U^TU$ | 27, 28, 16 | reflected |
-| 26,413〜30,907 | 第2cut、`torch.kron`、stride/contiguous、行順/permutation、rank invariance、Notebook 03レビュー | 34, 27, 28 | reflected / corrected-final |
+| 21,625〜26,412 | `tensordot`、再構成、list、`squeeze`、`tt_unfold`、TT-SVD骨格、`torch.eye`、$U^TU$ | 27, 28, 16, 35 | reflected |
+| 26,413〜30,907 | 第2cut、`torch.kron`、stride/contiguous、行順/permutation、rank invariance、Notebook 03レビュー | 34, 27, 28, 29 | reflected / corrected-final |
 
 ---
 
@@ -577,6 +586,8 @@ GitHub code searchで、新規docs群に `\[` および `<br />` の残存がな
 - rank invariance
 - Tucker比較
 - 物理解釈
+- 等長写像 / 直交射影
+- TT cut / mode unfolding / reshape / Kronecker積のindex順
 - PyTorch / Python実装知識
 - Notebook / src contract
 - 最終ロードマップ
@@ -600,6 +611,8 @@ Perplexity脚注URL列、chat運用文、後に訂正された誤説明・仮コ
 ## 結論
 
 `TT_MPS基礎理論.md` の**現在までに学習した実質的な理論・実装内容と、今後へ確定した学習方針はdocs化済み**である。
+
+この判定は理論論点のcoverageに関するものであり、具体行列や全要素表示がPerplexity資料と同じ説明粒度であることまでは意味しない。
 
 元資料の会話上の重複を除き、後の訂正を優先した最終理解として、数学・物理・PyTorch・手法比較・ロードマップへ分離した。
 

@@ -153,6 +153,114 @@ $$
 
 である。
 
+### 小さい3階テンソルの第1cutと第2cut
+
+PyTorchと対応させるため、この例だけ添字を0始まりとする。$X\in\mathbb R^{2\times2\times2}$ の全要素を
+
+$$
+X_{0,:,:}
+=
+\begin{pmatrix}
+1&2\\
+3&4
+\end{pmatrix},
+\qquad
+X_{1,:,:}
+=
+\begin{pmatrix}
+5&6\\
+7&8
+\end{pmatrix}
+$$
+
+とする。
+
+第1cut $i_1\mid(i_2,i_3)$ では、列の複合添字を
+
+$$
+(i_2,i_3)
+=
+(0,0),(0,1),(1,0),(1,1)
+$$
+
+の順に並べるので、
+
+$$
+X^{\langle1\rangle}
+=
+\begin{pmatrix}
+1&2&3&4\\
+5&6&7&8
+\end{pmatrix}.
+$$
+
+第2cut $(i_1,i_2)\mid i_3$ では、行の複合添字を
+
+$$
+(i_1,i_2)
+=
+(0,0),(0,1),(1,0),(1,1)
+$$
+
+の順に並べるので、
+
+$$
+X^{\langle2\rangle}
+=
+\begin{pmatrix}
+1&2\\
+3&4\\
+5&6\\
+7&8
+\end{pmatrix}.
+$$
+
+0始まりの実際の行位置は
+
+$$
+\operatorname{row}
+=
+i_1n_2+i_2
+=
+2i_1+i_2
+$$
+
+であり、全対応は
+
+$$
+\begin{array}{c|c}
+(i_1,i_2)&\operatorname{row}\\
+\hline
+(0,0)&0\\
+(0,1)&1\\
+(1,0)&2\\
+(1,1)&3
+\end{array}
+$$
+
+となる。
+
+一方、Tuckerのmode-2 unfolding $i_2\mid(i_1,i_3)$ は、行を $i_2$、列を
+
+$$
+(i_1,i_3)
+=
+(0,0),(0,1),(1,0),(1,1)
+$$
+
+とするため、
+
+$$
+X^{\mathrm{mode}\text{-}2}
+=
+\begin{pmatrix}
+1&2&5&6\\
+3&4&7&8
+\end{pmatrix}.
+$$
+
+したがって、TTの第2cut $X^{\langle2\rangle}$ とTuckerのmode-2 unfoldingは、同じ8要素を使っていても行列のshapeと添字の左右分割が異なる。PyTorchでの `reshape` / `permute` との対応は [[29_TT_cutとPyTorchのreshape_Kronecker順序]] で確認する。
+
 ---
 
 ## 3. 一般のcut unfolding
@@ -247,7 +355,7 @@ $$
 
 を表す。
 
-複合添字を1個の整数へflattenする具体的規則は実装のメモリ順に依存する。数学上重要なのは、**元の複数添字と行列の行・列の対応を一貫して固定すること**である。PyTorchの具体的なreshape順は [[27_TT_MPS基礎のPyTorch実装]] で扱う。
+複合添字を1個の整数へflattenする具体的規則は実装のメモリ順に依存する。数学上重要なのは、**元の複数添字と行列の行・列の対応を一貫して固定すること**である。PyTorchの具体的なreshape順は [[29_TT_cutとPyTorchのreshape_Kronecker順序]] で扱う。
 
 ---
 
@@ -414,6 +522,83 @@ $$
 のような小さい値として現れる場合がある。そのため実装では閾値に基づく numerical rank を使う。
 
 このプロジェクトの `tt_svd_exact` も数学的symbolic rankではなく、`torch.linalg.matrix_rank` のdefault toleranceに基づく数値rankを使う。したがって「exact」は**その数値rankを打ち切らず残す**という意味である。実装contractの詳細は [[27_TT_MPS基礎のPyTorch実装]] を参照する。
+
+### 最大可能rankと実際のrankは同じとは限らない
+
+行列のshapeが$m\times n$なら、
+
+$$
+\operatorname{rank}(A)
+\le
+\min(m,n)
+$$
+
+である。しかし右辺は最大可能rankであり、実際のrankが常にそこまで達するという意味ではない。例えば、
+
+$$
+X_1
+:=
+\begin{pmatrix}
+1&2&3\\
+2&4&6
+\end{pmatrix}
+$$
+
+では、第2行が第1行の2倍である。
+
+$$
+\begin{pmatrix}
+2&4&6
+\end{pmatrix}
+=
+2
+\begin{pmatrix}
+1&2&3
+\end{pmatrix}.
+$$
+
+独立な行は1本しかないため、
+
+$$
+\operatorname{rank}(X_1)=1.
+$$
+
+一方、shapeから決まる上限は
+
+$$
+\min(X_1.\mathrm{shape})
+=
+\min(2,3)
+=
+2
+$$
+
+なので、
+
+$$
+\boxed{
+\operatorname{rank}(X_1)
+=1
+<
+2
+=
+\min(X_1.\mathrm{shape})
+}
+$$
+
+となる。TT-SVDでも、
+
+```python
+min(X1.shape)
+```
+
+はSVDで取り得る成分数の上限であり、exact TT-rankではない。実際に必要なrankは
+
+```python
+torch.linalg.matrix_rank(X1).item()
+```
+
+で評価する。
 
 ---
 

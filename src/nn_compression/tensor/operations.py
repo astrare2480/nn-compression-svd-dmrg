@@ -109,6 +109,30 @@ def mode_dot(
 
     ``unfold`` して左から掛け、``fold`` で戻すため、この 3 関数の
     mode 規約は必ず一致させる。
+
+    Note:
+        内部は ``matrix @ unfold(X, mode)`` なので、mode 軸の添字 α に対して
+
+        ``Y[..., β] = sum_α matrix[β, α] * X[..., α]``
+
+        となる。スカラー同士の掛け算順（``a*b`` vs ``b*a``）ではなく、
+        **matrix の第1添字が出力 bond β、第2添字が縮約 bond α** という
+        添字の付け方が contract を決める。一般には ``matrix[α, β]`` と
+        ``matrix[β, α]`` は別の数なので、数式の添字順と ``mode_dot`` の
+        向きは自動では一致しない。
+
+        TT gauge（``notebooks/30_tt_mps/00_fundamentals/04_gauge_freedom_qr.ipynb``）
+        の第1コアは
+
+        ``G̃_1(..., β) = sum_α G_1(..., α) M(α, β)``
+
+        なので ``mode_dot(G1, M, mode=2)`` では M の添字が逆になる。
+        同じ式に合わせるなら ``mode_dot(G1, M.T, mode=2)`` または
+        ``torch.tensordot(G1, M, dims=([2], [0]))`` を使う。
+
+        第2コア ``G̃_2(β, ...) = sum_γ M^{-1}(β, γ) G_2(γ, ...)`` は
+        最初から matrix の第1添字が出力 bond なので
+        ``mode_dot(G2, M_inv, mode=0)`` がそのまま一致する。
     """
     validate_tensor_shape(X)
     validate_mode_index(mode, X.ndim)
@@ -124,7 +148,7 @@ def mode_dot(
             f"X.shape[{mode}]={X.shape[mode]} は一致する必要があります。"
         )
 
-    # matrixを左から掛ける
+    # matrix を左から掛ける → sum_α matrix[β, α] * X[..., α]（添字順に注意、docstring 参照）
     result_unfold = torch.matmul(matrix, unfold(X, mode))
 
     # 出力shapeを作る
