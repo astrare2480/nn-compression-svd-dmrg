@@ -94,6 +94,8 @@ Signature
 | `hooi` | フローチャート | 反復・収束判定 |
 | `build_tucker2_conv` | シーケンス図 | Tensor分解とModule builderの責務分離 |
 | `build_tucker2_conv_from_components` | フローチャート + Component配置図 | build順とcomponent配置 |
+| `tt_svd_exact` | フローチャート | sequential TT-SVDと零rank特殊処理 |
+| `tt_svd` | フローチャート | max_rank検証とrank制限付きsequential sweep |
 | `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
 | `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
 | `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
@@ -152,6 +154,14 @@ Signature
 - [[07_src設計/05_Core_API_v1/compression/sweep_layer_ranks]]
 - [[07_src設計/05_Core_API_v1/compression/sweep_conv2d_ranks]]
 - [[07_src設計/05_Core_API_v1/compression/sweep_conv_svd_ranks]]
+
+## compression — TT / MPS
+
+- [[07_src設計/05_Core_API_v1/compression/tt_unfold]]
+- [[07_src設計/05_Core_API_v1/compression/tt_svd_exact]]
+- [[07_src設計/05_Core_API_v1/compression/tt_svd]]
+- [[07_src設計/05_Core_API_v1/compression/tt_reconstruct]]
+- [[07_src設計/05_Core_API_v1/compression/tt_num_parameters]]
 
 ## training
 
