@@ -39,7 +39,8 @@ docs/00_基礎理論/01_数学基礎/02_テンソル代数/
 ├── 31_TT-rankとunfolding.md
 ├── 32_TT-SVD.md
 ├── 33_TT-SVDの打ち切りと誤差.md
-└── 34_基底変換とTT-rank不変性.md
+├── 34_基底変換とTT-rank不変性.md
+└── 35_TT_MPSの等長写像と射影.md
 ```
 
 ### PyTorch / Python
@@ -57,8 +58,7 @@ docs/00_基礎理論/05_PyTorch実装/
 docs/00_基礎理論/06_手法間のつながり/
 ├── 15_TuckerとTTの比較.md
 ├── 16_TT_MPSの物理解釈_縮約密度行列と局所写像.md
-├── 17_TT_MPS学習ロードマップ.md
-└── 18_TT_MPSの等長写像と射影.md
+└── 17_TT_MPS学習ロードマップ.md
 ```
 
 初回監査:
@@ -139,7 +139,7 @@ $$
 **対応:**
 
 ```text
-18_TT_MPSの等長写像と射影.md
+35_TT_MPSの等長写像と射影.md
 ```
 
 を追加し、途中式・TT-SVDでの意味・量子/MPS側の随伴表記まで反映した。
@@ -943,7 +943,7 @@ rank invariance
 補完:
 
 ```text
-18_TT_MPSの等長写像と射影.md
+35_TT_MPSの等長写像と射影.md
 29_TT_cutとPyTorchのreshape_Kronecker順序.md
 ```
 
