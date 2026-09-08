@@ -95,7 +95,7 @@ Signature
 | `build_tucker2_conv` | シーケンス図 | Tensor分解とModule builderの責務分離 |
 | `build_tucker2_conv_from_components` | フローチャート + Component配置図 | build順とcomponent配置 |
 | `tt_svd_exact` | フローチャート | sequential TT-SVDと零rank特殊処理 |
-| `tt_svd` | フローチャート | max_rank検証とrank制限付きsequential sweep |
+| `tt_svd` | フローチャート + シーケンス図 | max_rankによる制御とwrapper/helper/SVDの責務分担 |
 | `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
 | `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
 | `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
