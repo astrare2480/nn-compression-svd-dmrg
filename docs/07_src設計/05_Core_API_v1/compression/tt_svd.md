@@ -13,11 +13,24 @@ r_k
 =
 \min\left(
 \texttt{max\_rank},
-\operatorname{rank}_{\mathrm{num}}(M_k)
+\max\left(1,\operatorname{rank}_{\mathrm{num}}(M_k)\right)
 \right)
 $$
 
 を用いてTensorを近似TT core列へ分解する。
+
+通常のnumerical rankが1以上の段階では、これは
+
+$$
+r_k
+=
+\min\left(
+\texttt{max\_rank},
+\operatorname{rank}_{\mathrm{num}}(M_k)
+\right)
+$$
+
+と同じである。rank 0だけは、TT bond dimensionを正の整数として保つため1へ持ち上げる。
 
 `max_rank`を小さくするとTT storageを抑えられる一方、小さいが非ゼロの特異方向を捨てるため再構成誤差が生じ得る。
 
@@ -49,7 +62,7 @@ G^{(k)}
 r_0=r_d=1
 $$
 
-で、通常ケースでは各内部rankは
+で、各内部rankは
 
 $$
 r_k
@@ -59,7 +72,7 @@ $$
 
 を満たす。
 
-`max_rank`が全段階のeffective rank以上なら、bond rank・再構成Tensor・再構成誤差は`tt_svd_exact`と整合する。
+`max_rank`が各逐次SVD段階で必要となるeffective rank以上なら、同じ逐次sweepを使う`tt_svd_exact`とbond rank・再構成Tensor・再構成誤差が整合する。
 
 ## 使用場面
 
@@ -115,6 +128,48 @@ flowchart TD
     K --> E
     E -- No --> L["最終coreを追加して返す"]
 ```
+
+フローチャートは、`max_rank`によるrank制限と逐次remainder更新の**制御順序**を見るための図である。
+
+### シーケンス図
+
+```mermaid
+sequenceDiagram
+    participant Caller
+    participant Public as tt_svd
+    participant Coerce as coerce_integer_scalar
+    participant Sweep as _tt_svd_sweep
+    participant Shape as validate_tensor_shape
+    participant DType as validate_tt_dtype
+    participant SVD as truncated_svd
+
+    Caller->>Public: tt_svd(X, max_rank)
+    Public->>Coerce: max_rankを整数scalarへ正規化
+    Coerce-->>Public: rank_int
+    alt rank_int < 1
+        Public-->>Caller: ValueError
+    else rank_int >= 1
+        Public->>Sweep: _tt_svd_sweep(X, max_rank=rank_int)
+        Sweep->>Shape: Xの階数・shape検証
+        Sweep->>DType: Xのdtype検証
+        loop 各 mode
+            Sweep->>Sweep: remainderをreshape / numerical_rank計算
+            Sweep->>SVD: truncated_svd(mat, r)
+            SVD-->>Sweep: U, S, Vh
+            Sweep->>Sweep: Uをcore化 / ΣV^Tをremainderへ
+        end
+        Sweep-->>Public: cores
+        Public-->>Caller: cores
+    end
+```
+
+この図では、**誰がどのvalidationを担当するか**を分離して見る。
+
+- `tt_svd`: `max_rank`の型・正値contractを担当する。
+- `_tt_svd_sweep`: Tensor shape/dtypeと逐次TT-SVDを担当する。
+- `truncated_svd`: 各段階の2次元SVDと指定rank成分の抽出を担当する。
+
+これはフローチャートの「どの順番・分岐で処理するか」とは別の情報なので、2図を併記する。
 
 ## 主なcontract / 注意事項
 
