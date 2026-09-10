@@ -239,6 +239,32 @@ axis 1以降を全部flattenする
 
 手動で64filterをloopして集める必要はない。
 
+### 手動loopと`torch.stack`の対応
+
+`flatten(start_dim=1)` が各出力filterを同じ行順で積むことは、連番Tensorで確認できる。
+
+```python
+import torch
+
+# Conv weightと同じ4階Tensorを、値の追跡ができる連番で作る。
+weight = torch.arange(64 * 32 * 3 * 3).reshape(64, 32, 3, 3)
+
+# 各出力filterを1行へflattenし、第0軸へ順番に積む。
+rows = []
+for out_channel in range(weight.shape[0]):
+    row = weight[out_channel].flatten()
+    rows.append(row)
+
+weight_matrix_loop = torch.stack(rows, dim=0)
+weight_matrix_direct = weight.flatten(start_dim=1)
+
+# 値・行順・shapeが1行で行列化した結果と一致する。
+assert torch.equal(weight_matrix_loop, weight_matrix_direct)
+assert weight_matrix_direct.shape == (64, 288)
+```
+
+`torch.stack(rows, dim=0)` は各1次元Tensorを新しい第0軸へ積むため、`weight[out_channel]` がそのまま第 `out_channel` 行になる。
+
 ---
 
 ## 4. `shape` とTensorを混同しない

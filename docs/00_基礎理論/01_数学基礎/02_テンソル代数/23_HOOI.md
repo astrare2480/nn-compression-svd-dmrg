@@ -756,6 +756,177 @@ $$
 
 となる。
 
+### 小さいTensorでHOSVD初期値から1 sweepを最後まで追う
+
+更新の効果が要素で見えるように、shape $(2,2,2)$、圧縮modeを0と1、指定rankを $(1,1)$ とする。Tensorを
+
+$$
+X_{:,:,0}
+=
+\begin{pmatrix}
+0&10\\
+9&0
+\end{pmatrix},
+\qquad
+X_{:,:,1}
+=
+\begin{pmatrix}
+8&0\\
+0&0
+\end{pmatrix}
+$$
+
+と置く。
+
+HOSVD初期化ではmodeごとに元の $X$ を独立にunfoldする。mode 0の2行の二乗normは
+
+$$
+10^2+8^2=164,
+\qquad
+9^2=81
+$$
+
+であり、mode 1の2行、すなわち元Tensorの第2添字に関する二乗normは
+
+$$
+9^2+8^2=145,
+\qquad
+10^2=100
+$$
+
+である。各unfoldingの行は互いに直交するため、rank 1のHOSVD初期値は
+
+$$
+U_0^{(0)}
+=
+\begin{pmatrix}
+1\\
+0
+\end{pmatrix},
+\qquad
+U_1^{(0)}
+=
+\begin{pmatrix}
+1\\
+0
+\end{pmatrix}.
+$$
+
+このときcoreは、両modeで第0成分を選ぶので
+
+$$
+G^{(0)}_{0,0,:}
+=
+\begin{pmatrix}
+X_{0,0,0}&X_{0,0,1}
+\end{pmatrix}
+=
+\begin{pmatrix}
+0&8
+\end{pmatrix}.
+$$
+
+再構成に残るのは $\hat X^{(0)}_{0,0,1}=8$ だけである。したがって
+
+$$
+\begin{aligned}
+\lVert X-\hat X^{(0)}\rVert_F
+&=
+\sqrt{10^2+9^2}\\
+&=
+\sqrt{181}\\
+&\approx13.4536,
+\end{aligned}
+$$
+
+また $\lVert X\rVert_F=\sqrt{10^2+9^2+8^2}=\sqrt{245}$ より、relative errorは
+
+$$
+e_0
+=
+\frac{\sqrt{181}}{\sqrt{245}}
+\approx0.8595
+$$
+
+である。
+
+次にHOOIの1 sweepをGauss-Seidel順で実行する。まずmode 0を更新するため、mode 1を $U_1^{(0)}=(1,0)^{\mathsf T}$ へ射影する。この射影後Tensorをmode 0でunfoldすると
+
+$$
+Z_{0,(0)}
+=
+\begin{pmatrix}
+0&8\\
+9&0
+\end{pmatrix}.
+$$
+
+2行の二乗normは $8^2=64$ と $9^2=81$ なので、上位左特異ベクトルは
+
+$$
+U_0^{(1)}
+=
+\begin{pmatrix}
+0\\
+1
+\end{pmatrix}.
+$$
+
+続いてmode 1を更新するときは、このsweep内ですでに更新した $U_0^{(1)}$ を使う。mode 0を $(0,1)^{\mathsf T}$ へ射影した後のmode 1 unfoldingは
+
+$$
+Z_{1,(1)}
+=
+\begin{pmatrix}
+9&0\\
+0&0
+\end{pmatrix},
+$$
+
+したがって
+
+$$
+U_1^{(1)}
+=
+\begin{pmatrix}
+1\\
+0
+\end{pmatrix}.
+$$
+
+1 sweep後のcoreは
+
+$$
+G^{(1)}_{0,0,:}
+=
+\begin{pmatrix}
+X_{1,0,0}&X_{1,0,1}
+\end{pmatrix}
+=
+\begin{pmatrix}
+9&0
+\end{pmatrix}.
+$$
+
+再構成に残るのは $\hat X^{(1)}_{1,0,0}=9$ だけなので、
+
+$$
+\begin{aligned}
+\lVert X-\hat X^{(1)}\rVert_F
+&=
+\sqrt{10^2+8^2}\\
+&=
+\sqrt{164}\\
+&\approx12.8062,\\
+e_1
+&=
+\frac{\sqrt{164}}{\sqrt{245}}
+\approx0.8182.
+\end{aligned}
+$$
+
+この1 sweepでは $e_1<e_0$ となる。HOSVDは各modeを元Tensorから独立に初期化する一方、HOOIは他modeの最新factorへ射影してから更新する、という違いが具体的な要素選択として現れている。
+
 ---
 
 ## 9. 収束判定
@@ -830,23 +1001,7 @@ $$
 
 である。
 
-今回のCIFAR-10 `conv2` では、balanced rank $(32,16)$ で
-
-```text
-HOSVD error = 0.449042
-HOOI error  = 0.442504
-```
-
-となり、同rankでweight近似は改善した。
-
-ただし圧縮直後validation accuracyは
-
-```text
-HOSVD = 0.6280
-HOOI  = 0.6202
-```
-
-で、weight誤差改善がaccuracy改善には直結しなかった。
+実験では、同rankでHOOIがweight近似誤差を改善しても、圧縮直後のvalidation accuracyが同じ順序で改善するとは限らない。ここでは一般的な解釈だけを扱い、CIFAR-10 `conv2` の具体値は [[06_Tucker基礎実装検証/03_HOOIとTensorLy照合]] を正本とする。
 
 ---
 

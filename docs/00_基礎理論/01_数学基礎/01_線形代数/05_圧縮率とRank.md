@@ -2907,7 +2907,7 @@ $$
 例えば、あるrankを5回評価したvalidation lossが
 
 $$
-0.40,quad0.42,quad0.38,quad0.41,quad0.39
+0.40,\qquad0.42,\qquad0.38,\qquad0.41,\qquad0.39
 $$
 
 だったとする。平均は
@@ -2923,7 +2923,7 @@ $$
 平均からの偏差は
 
 $$
-0,quad0.02,quad-0.02,quad0.01,quad-0.01
+0,\qquad0.02,\qquad-0.02,\qquad0.01,\qquad-0.01
 $$
 
 なので、偏差平方和は
@@ -3009,120 +3009,26 @@ fine-tuning後の各候補について再び、
 
 ## 51. 圧縮指標を計算するPython関数
 
-```python
-from __future__ import annotations
+この節までに導出した式は、実装では `compression_stats` にまとめられる。関数は
 
-from dataclasses import dataclass
-import math
-
-
-@dataclass(frozen=True)
-class CompressionStats:
-    in_features: int
-    out_features: int
-    rank: int
-    original_weight_parameters: int
-    low_rank_weight_parameters: int
-    parameter_keep_ratio: float
-    parameter_reduction_ratio: float
-    compression_factor: float
-    break_even_rank: float
-    maximum_compressing_rank: int
-
-
-def compression_stats(
-    in_features: int,
-    out_features: int,
-    rank: int,
-) -> CompressionStats:
-    if in_features <= 0:
-        raise ValueError(
-            "in_features must be positive."
-        )
-
-    if out_features <= 0:
-        raise ValueError(
-            "out_features must be positive."
-        )
-
-    maximum_rank = min(
-        in_features,
-        out_features,
-    )
-
-    if not 1 <= rank <= maximum_rank:
-        raise ValueError(
-            "rank must satisfy "
-            f"1 <= rank <= {maximum_rank}."
-        )
-
-    original = (
-        in_features
-        * out_features
-    )
-
-    low_rank = (
-        rank
-        * (
-            in_features
-            +
-            out_features
-        )
-    )
-
-    keep_ratio = (
-        low_rank
-        / original
-    )
-
-    reduction_ratio = (
-        1.0
-        -
-        keep_ratio
-    )
-
-    compression_factor = (
-        original
-        / low_rank
-    )
-
-    break_even = (
-        original
-        /
-        (
-            in_features
-            +
-            out_features
-        )
-    )
-
-    maximum_compressing_rank = (
-        math.ceil(
-            break_even
-        )
-        -
-        1
-    )
-
-    return CompressionStats(
-        in_features=in_features,
-        out_features=out_features,
-        rank=rank,
-        original_weight_parameters=original,
-        low_rank_weight_parameters=low_rank,
-        parameter_keep_ratio=keep_ratio,
-        parameter_reduction_ratio=reduction_ratio,
-        compression_factor=compression_factor,
-        break_even_rank=break_even,
-        maximum_compressing_rank=maximum_compressing_rank,
-    )
+```text
+in_features, out_features, rank
+→ 元の重みパラメータ数
+→ 低ランク重みパラメータ数
+→ 保持率・削減率・圧縮倍率
+→ 損益分岐rank・圧縮可能な最大整数rank
 ```
+
+を一度に計算する。
+
+完成した `CompressionStats` と `compression_stats` の実装は [[00_基礎理論/05_PyTorch実装/07_PyTorch実装#6. `compression_stats`]] を正本とする。ここでは、各出力が本ノートのどの式に対応するかを確認する。
 
 ---
 
 ## 52. 使用例
 
 ```python
+# 実装の正本は07_PyTorch実装を参照する。
 stats = compression_stats(
     in_features=784,
     out_features=512,

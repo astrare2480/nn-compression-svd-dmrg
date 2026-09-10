@@ -133,6 +133,47 @@ $$
 
 複数channelの場合も、channel間を混ぜず、この計算を各$(n,c)$の特徴マップへ独立に行う。
 
+## PyTorchでは`AdaptiveAvgPool2d(1)`を使う
+
+PyTorchでは、入力の$H,W$に依存せず出力を$1\times1$にする `nn.AdaptiveAvgPool2d(1)` でGAPを表せる。
+
+```python
+import torch
+from torch import nn
+
+# shape: (N, C, H, W) = (1, 1, 2, 2)
+x = torch.tensor([
+    [
+        [
+            [1.0, 2.0],
+            [3.0, 4.0],
+        ],
+    ],
+])
+
+gap = nn.AdaptiveAvgPool2d(output_size=1)
+pooled = gap(x)
+
+print(pooled.shape)  # torch.Size([1, 1, 1, 1])
+print(pooled)        # tensor([[[[2.5000]]]])
+
+# batch軸を残し、C個のchannel値を1次元の特徴へ並べる。
+features = torch.flatten(pooled, start_dim=1)
+print(features.shape)  # torch.Size([1, 1])
+```
+
+一般のshape対応は
+
+$$
+(N,C,H,W)
+\xrightarrow{\mathrm{AdaptiveAvgPool2d}(1)}
+(N,C,1,1)
+\xrightarrow{\mathrm{flatten}(\mathrm{start\_dim}=1)}
+(N,C)
+$$
+
+である。`Adaptive`は入力空間サイズから必要なpooling領域を決めるという意味であり、学習parameterを持つという意味ではない。
+
 ---
 
 # 2. Flattenとの違い
@@ -371,6 +412,47 @@ $$
 $$
 
 倍される。`model.eval()`ではmaskを使わず$y_i=x_i$となるため、評価時に追加の倍率補正は不要である。
+
+## `Dropout`と`Dropout2d`の落とす単位
+
+`nn.Dropout`はTensorの要素ごとにmaskを適用する。一方、CNN特徴マップに使う `nn.Dropout2d` は、各sampleのchannelを単位として選び、そのchannelの$H\times W$全体を0にする。
+
+```python
+import torch
+from torch import nn
+
+torch.manual_seed(0)
+
+# 1 sample、2 channel、各channelが2 x 2の特徴マップ。
+x = torch.ones(1, 2, 2, 2)
+
+dropout2d = nn.Dropout2d(p=0.5)
+dropout2d.train()
+y = dropout2d(x)
+
+print(y.shape)  # torch.Size([1, 2, 2, 2])
+
+# 各channelは全位置が0か、全位置が同じ倍率で残る。
+for channel in range(y.shape[1]):
+    channel_map = y[0, channel]
+    assert (
+        torch.all(channel_map == 0)
+        or torch.all(channel_map != 0)
+    )
+```
+
+例えば1個のchannelが選ばれた場合、maskの概念形は
+
+$$
+M_{0,c,:,:}
+=
+\begin{pmatrix}
+0&0\\
+0&0
+\end{pmatrix}
+$$
+
+となる。通常の `nn.Dropout` なら、同じ$2\times2$内でも位置ごとに0かどうかが分かれ得る。どちらも `eval()` では恒等写像になる。
 
 ---
 

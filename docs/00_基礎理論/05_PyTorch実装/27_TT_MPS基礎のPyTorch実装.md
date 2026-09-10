@@ -54,6 +54,11 @@ tt_num_parameters(cores)
 
 である。
 
+関連する実装ノートは役割を分けて読む。
+
+- [[00_基礎理論/05_PyTorch実装/28_TT_MPS実装で使うPyTorch_Python操作メモ]]：Tensor操作とPython記法
+- [[00_基礎理論/05_PyTorch実装/29_TT_cutとPyTorchのreshape_Kronecker順序]]：TT cut、reshape、Kronecker積の添字順
+
 ---
 
 ## 1. 学習Notebookとsrcの役割
@@ -1049,4 +1054,4 @@ tt_num_parameters
 → validなcore列の総numel
 ```
 
-この章はPyTorch上の実装contractを固定する。数学的な導出は [[30_TT_MPSの定義]] 〜 [[34_基底変換とTT-rank不変性]] に分離する。
+この章はPyTorch上の実装contractを固定する。数学的な導出は [[30_TT_MPSの定義]] 〜 [[35_TT_MPSの等長写像と射影]] に分離し、reshape・Kronecker積の実装上の順序は [[00_基礎理論/05_PyTorch実装/29_TT_cutとPyTorchのreshape_Kronecker順序]] で確認する。

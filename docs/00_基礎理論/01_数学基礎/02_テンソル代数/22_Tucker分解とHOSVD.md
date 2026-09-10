@@ -330,6 +330,151 @@ $$
 
 となる。
 
+### 小さい3階Tensorでfactor・core・再構成を全要素確認する
+
+各modeの次元が2である3階Tensorを、2枚のsliceで
+
+$$
+X_{:,:,0}
+=
+\begin{pmatrix}
+3&0\\
+0&0
+\end{pmatrix},
+\qquad
+X_{:,:,1}
+=
+\begin{pmatrix}
+0&0\\
+0&1
+\end{pmatrix}
+$$
+
+とする。すなわち、非零要素は
+
+$$
+X_{0,0,0}=3,
+\qquad
+X_{1,1,1}=1
+$$
+
+だけである。各mode unfoldingで、列側の複合添字を辞書順に並べると
+
+$$
+X_{(0)}
+=
+\begin{pmatrix}
+3&0&0&0\\
+0&0&0&1
+\end{pmatrix},
+\quad
+X_{(1)}
+=
+\begin{pmatrix}
+3&0&0&0\\
+0&0&0&1
+\end{pmatrix},
+\quad
+X_{(2)}
+=
+\begin{pmatrix}
+3&0&0&0\\
+0&0&0&1
+\end{pmatrix}.
+$$
+
+この例では3つのunfoldingが同じ数値行列になるが、それぞれ異なるmodeを行indexにしている。どのmodeでも
+
+$$
+X_{(n)}X_{(n)}^{\mathsf T}
+=
+\begin{pmatrix}
+9&0\\
+0&1
+\end{pmatrix}
+$$
+
+なので、特異値は $3,1$、左特異ベクトルは標準基底である。指定Tucker rankを $(1,1,1)$ とすると、HOSVDは各modeを**元のTensorから独立に**計算して
+
+$$
+U^{(0)}
+=
+U^{(1)}
+=
+U^{(2)}
+=
+\begin{pmatrix}
+1\\
+0
+\end{pmatrix}
+$$
+
+を得る。coreは1要素だけになり、
+
+$$
+\begin{aligned}
+G_{0,0,0}
+&=
+\sum_{i_0=0}^{1}
+\sum_{i_1=0}^{1}
+\sum_{i_2=0}^{1}
+U^{(0)}_{i_0,0}
+U^{(1)}_{i_1,0}
+U^{(2)}_{i_2,0}
+X_{i_0,i_1,i_2}\\
+&=
+1\cdot1\cdot1\cdot X_{0,0,0}\\
+&=3.
+\end{aligned}
+$$
+
+したがって再構成は
+
+$$
+\hat X_{:,:,0}
+=
+\begin{pmatrix}
+3&0\\
+0&0
+\end{pmatrix},
+\qquad
+\hat X_{:,:,1}
+=
+\begin{pmatrix}
+0&0\\
+0&0
+\end{pmatrix}.
+$$
+
+残差も全要素で書けば
+
+$$
+(X-\hat X)_{:,:,0}
+=
+\begin{pmatrix}
+0&0\\
+0&0
+\end{pmatrix},
+\qquad
+(X-\hat X)_{:,:,1}
+=
+\begin{pmatrix}
+0&0\\
+0&1
+\end{pmatrix},
+$$
+
+よって
+
+$$
+\lVert X-\hat X\rVert_F
+=
+\sqrt{0^2+1^2}
+=1
+$$
+
+となる。この例では、一般式の「各mode unfoldingからfactorを作る」「全factorを得た後にcoreへ射影する」「coreから元のshapeへ戻す」という3段階を、全要素で追跡できる。
+
 ---
 
 ## 5. Partial HOSVD / Tucker-2

@@ -1718,54 +1718,21 @@ $$
 
 ---
 
-## 18. 実験値を式で確認する
+## 18. 実験値で確認する論点
 
-balanced rank $(32,16)$ では
-
-$$
-e_{HOSVD}=0.449042
-$$
+同じrankのHOSVDとHOOIを比較するときは、まず重み近似誤差の差
 
 $$
-e_{HOOI}=0.442504.
+\Delta e=e_{\mathrm{HOSVD}}-e_{\mathrm{HOOI}}
 $$
 
-絶対改善量は
+と相対改善
 
 $$
-\begin{aligned}
-\Delta e
-&=e_{HOSVD}-e_{HOOI}\\
-&=0.449042-0.442504\\
-&=0.006538.
-\end{aligned}
+\frac{\Delta e}{e_{\mathrm{HOSVD}}}
 $$
 
-HOSVD error基準の相対改善は
-
-$$
-\begin{aligned}
-\frac{\Delta e}{e_{HOSVD}}
-&=
-\frac{0.006538}{0.449042}\\
-&\approx0.01456\\
-&\approx1.46\%.
-\end{aligned}
-$$
-
-一方、圧縮直後validation accuracyは
-
-$$
-\begin{aligned}
-0.6280-0.6202
-&=0.0078\\
-&=0.78\text{ percentage point}
-\end{aligned}
-$$
-
-だけHOSVDの方が高かった。
-
-したがって、このrunでは
+を分けて確認する。そのうえで、weight errorの大小とvalidation accuracyの大小を別の指標として比較する。
 
 $$
 \boxed{
@@ -1775,47 +1742,13 @@ $$
 }
 $$
 
-を確認した。
+具体的なrunの値と途中計算は [[06_Tucker基礎実装検証/03_HOOIとTensorLy照合]] を正本とする。
 
 ---
 
 ## 19. fine-tuning前後
 
-同条件比較ではtest accuracyが
-
-$$
-\begin{aligned}
-0.7555-0.7508
-&=0.0047\\
-&=0.47\text{ percentage point}
-\end{aligned}
-$$
-
-だけHOOI初期化側で高かった。
-
-ただしseed 0の1runだけなので統計的優位性とはしない。
-
-weight errorはHOSVDで
-
-$$
-\begin{aligned}
-0.483660-0.449042
-&=0.034618,
-\end{aligned}
-$$
-
-HOOIで
-
-$$
-\begin{aligned}
-0.481255-0.442504
-&=0.038751
-\end{aligned}
-$$
-
-増えた。
-
-それでもaccuracyは回復した。
+fine-tuning前後では、weight errorとtask accuracyをそれぞれ比較する。fine-tuning後にweight errorが増えてもtask accuracyが回復する場合がある。
 
 これはfine-tuningが
 
@@ -1824,6 +1757,8 @@ $$
 $$
 
 を解いているのではなく、分類task lossを勾配法で最適化していることと整合する。
+
+具体的なrunの値、差分の途中計算、単一seedの解釈上の注意は [[06_Tucker基礎実装検証/04_HOSVD_HOOI_FineTuning比較]] を正本とする。
 
 ---
 

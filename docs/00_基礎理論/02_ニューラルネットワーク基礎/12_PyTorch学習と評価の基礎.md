@@ -61,6 +61,98 @@ train_loader = DataLoader(
 )
 ```
 
+### `num_workers`・`pin_memory`・`persistent_workers`
+
+DataLoaderの並列数とCPUからGPUへの転送条件まで含めると、例えば次のように書ける。
+
+```python
+from torch.utils.data import DataLoader
+
+NUM_WORKERS = 0
+use_cuda = device.type == "cuda"
+
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=64,
+    shuffle=True,
+    num_workers=NUM_WORKERS,
+    pin_memory=use_cuda,
+    persistent_workers=(NUM_WORKERS > 0),
+)
+```
+
+- `num_workers=0`：main processがDataset取得・transform・batch化を行う
+- `num_workers>0`：worker processがデータ準備を並列化する
+- `pin_memory=True`：CPU側batchをpage-locked memoryへ置き、CUDA転送を効率化しやすくする
+- `persistent_workers=True`：epoch終了後もworkerを維持する。`num_workers=0`では指定できない
+
+`pin_memory=True`と対応させる場合、学習ループ側は
+
+```python
+images = images.to(device, non_blocking=use_cuda)
+labels = labels.to(device, non_blocking=use_cuda)
+```
+
+と書ける。ただし非同期転送の効果はhardware・処理順・batch sizeにも依存する。`num_workers`も大きいほど必ず速いわけではない。Windows / Jupyterで最初に動作確認するときは `num_workers=0` から始め、必要ならスクリプト実行で2、4などを実測する。
+
+### `drop_last`とdefault collate
+
+データ数$N$がbatch size $B$で割り切れない場合、`drop_last`は最後の端数batchを使うか捨てるかを決める。例えば$N=100$、$B=32$なら、
+
+```text
+drop_last=False
+→ 32, 32, 32, 4
+→ 100 sampleすべてを使う
+
+drop_last=True
+→ 32, 32, 32
+→ 最後の4 sampleを使わない
+```
+
+となる。学習時に極端に小さい最終batchを避けたい場合は `True` が候補になる。一方、validation / testでは全sampleを評価するため、通常は `False` とする。`drop_last=True` を使ったときは、1 epochで実際に学習へ使ったsample数も区別する。
+
+Datasetが1 sampleごとに
+
+```text
+(image, label)
+```
+
+を返すと、DataLoaderのdefault collateは複数sampleを自動的にまとめる。例えば各画像が `(3, 32, 32)` なら、
+
+```text
+32個のimage
+→ images.shape = (32, 3, 32, 32)
+
+32個のscalar label
+→ labels.shape = (32,)
+```
+
+となる。`default_collate`の動作は、小さい入力なら次のように直接確認できる。
+
+```python
+import torch
+from torch.utils.data import default_collate
+
+# Datasetが返す32 sample分の(image, label)を用意する。
+samples = [
+    (
+        torch.full((3, 32, 32), float(index)),
+        index,
+    )
+    for index in range(32)
+]
+
+images, labels = default_collate(samples)
+
+# 同じshapeの画像には新しいbatch軸が追加される。
+assert images.shape == (32, 3, 32, 32)
+assert labels.shape == (32,)
+assert torch.equal(images[5], samples[5][0])
+assert labels[5].item() == samples[5][1]
+```
+
+画像Tensorをまとめる部分は、概念的には `torch.stack([image0, image1, ...], dim=0)` に対応する。可変長系列や画像shapeがsampleごとに異なる場合は、そのまま `torch.stack` できないため、paddingなどを行う独自の `collate_fn` が必要になる。
+
 ---
 
 ## 2. `ToTensor()` と `Compose`
@@ -78,6 +170,80 @@ transform = transforms.Compose([
 `ToTensor()` だけの場合でも、後でNormalizeやaugmentationを追加しやすい。
 
 `ToTensor()` による0〜1化と、平均0・分散1などへ変換する標準化は別である。
+
+### Dataset classとtransformを対応させる
+
+Dataset classは `torchvision.datasets`、画像変換は `torchvision.transforms` から読み込む。
+
+```python
+from torchvision import datasets, transforms
+
+to_tensor = transforms.Compose([
+    transforms.ToTensor(),
+])
+
+fashion_train = datasets.FashionMNIST(
+    root="data",
+    train=True,
+    transform=to_tensor,
+    download=True,
+)
+```
+
+Dataset classが変わっても、`transform`を渡し、各indexから基本的に `(image, label)` を受け取る構造は共通である。CIFAR-10固有の画像shape、データ分割、augmentation、ダウンロードと整合性確認は [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]] で扱う。
+
+### `Normalize`の計算と値の選び方
+
+`transforms.Normalize(mean, std)`は、channel $c$ ごとに
+
+$$
+x'_{c,h,w}
+=
+\frac{
+x_{c,h,w}-\mu_c
+}{
+\sigma_c
+}
+$$
+
+を適用する。1 channel画像で
+
+```python
+mean = (0.5,)
+std = (0.5,)
+```
+
+なら、各channelで
+
+$$
+x'
+=
+\frac{x-0.5}{0.5}
+=
+2x-1
+$$
+
+となり、`ToTensor()` 後の代表値は
+
+```text
+x = 0.0  → x' = -1.0
+x = 0.5  → x' =  0.0
+x = 1.0  → x' =  1.0
+```
+
+へ移る。これは$[0,1]$を$[-1,1]$へ移す分かりやすい固定変換であり、訓練集合の実測平均を厳密に0、標準偏差を1へする指定ではない。複数channelではchannelごとに $\mu_c,\sigma_c$ を指定する。統計量は算出方法や前処理に依存するため、採用値を実験条件として記録し、train / validation / testで同じ値を使う。
+
+### 入力の`Normalize`とモデル内の`BatchNorm2d`は別
+
+`transforms.Normalize`はDataset側で、固定したmean・stdを使って入力画素を変換する。一方、`nn.BatchNorm2d`はモデル内部の特徴量へ作用し、学習時のbatch統計と評価時のrunning statisticsを使い分ける。両者は置き換え関係ではない。
+
+```text
+transforms.Normalize
+→ モデルへ入る前の入力前処理
+
+nn.BatchNorm2d
+→ モデル内部の学習可能な層
+```
 
 ---
 
@@ -450,6 +616,129 @@ optimizerは継承しない
 
 同じParameterを保ったまま構造を変えない学習フェーズなら、optimizerを再利用できる場合もある。ただしlearning rateやoptimizer stateを新しいphaseとしてリセットしたい場合は作り直す。
 
+### 新しいfine-tuningと中断した学習の再開は別
+
+rank候補を独立に比較するfine-tuningでは、候補ごとに新しいoptimizerとEarly Stopping状態を作る。一方、同じ学習を中断地点から継続する場合は、モデルのweightだけでなくoptimizerの内部状態も復元する。
+
+```text
+新しいrank候補のfine-tuning
+→ 同じbaselineからモデルを構築
+→ 新しいoptimizerを作る
+→ Early Stopping状態も初期化
+
+中断した同一学習の再開
+→ model stateを復元
+→ optimizer stateを復元
+→ epoch位置を復元
+```
+
+再開用checkpointは、例えば次のように保存する。
+
+```python
+# 同じ学習を中断地点から再開するための状態をまとめて保存する。
+torch.save(
+    {
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "validation_loss": validation_loss,
+    },
+    checkpoint_path,
+)
+```
+
+読み込み時は、同じモデル構造とoptimizerを作ってから状態を戻す。
+
+```python
+checkpoint = torch.load(
+    checkpoint_path,
+    map_location=device,
+    weights_only=True,
+)
+
+model.load_state_dict(checkpoint["model_state_dict"])
+
+# 保存時と同じ種類のoptimizerを作成してから内部状態を復元する。
+optimizer = torch.optim.Adam(
+    model.parameters(),
+    lr=1e-3,
+)
+optimizer.load_state_dict(
+    checkpoint["optimizer_state_dict"]
+)
+
+start_epoch = int(checkpoint["epoch"]) + 1
+```
+
+learning-rate schedulerやAMPの `GradScaler` を使っていた場合は、それらのstateも保存・復元する。厳密な再開が必要なら、Python・NumPy・PyTorchおよびDataLoader Generatorの乱数状態もcheckpoint対象になる。最良モデルを評価・推論へ使うだけならmodel stateの復元でよく、「同じ学習履歴を継続する場合」と区別する。
+
+### transfer learningのfreeze / unfreeze
+
+transfer learningでは、事前学習済みbackboneを一時的に固定し、新しい分類headだけを先に学習することがある。例えば `model.features` をbackbone、`model.classifier` を分類headとすると、
+
+```python
+# backboneでは勾配を計算せず、分類headだけを学習対象にする。
+for parameter in model.features.parameters():
+    parameter.requires_grad = False
+
+optimizer = torch.optim.AdamW(
+    model.classifier.parameters(),
+    lr=1e-3,
+)
+```
+
+と書ける。`requires_grad=False`にしたParameterでは、通常のbackwardで勾配を計算しない。
+
+分類headの学習後にbackboneの最後のblockも調整するなら、そのblockをunfreezeする。
+
+```python
+# backboneの最後のblockを再び学習可能にする。
+for parameter in model.features[-1].parameters():
+    parameter.requires_grad = True
+
+# 新しい学習phaseとしてoptimizerを作り直し、
+# 分類headとbackboneで異なるlearning rateを設定する。
+optimizer = torch.optim.AdamW(
+    [
+        {
+            "params": model.classifier.parameters(),
+            "lr": 1e-3,
+        },
+        {
+            "params": model.features[-1].parameters(),
+            "lr": 1e-4,
+        },
+    ],
+)
+```
+
+最初のoptimizerへ分類headしか渡していなかった場合、`requires_grad=True`へ戻すだけではunfreezeしたParameterはoptimizerへ登録されない。作り直さない場合は、
+
+```python
+# 既存optimizerへ、unfreezeしたParameterを新しいgroupとして追加する。
+optimizer.add_param_group(
+    {
+        "params": model.features[-1].parameters(),
+        "lr": 1e-4,
+    }
+)
+```
+
+と追加できる。一方、最初から `model.parameters()` 全体をoptimizerへ渡していた場合は、Parameter object自体は登録済みなので、`requires_grad=True`へ戻すと更新対象になり得る。ただし学習phaseごとにlearning rateやAdamWの内部状態を分離したいなら、optimizerを作り直す方が意図を明確にできる。
+
+SVD / Tucker圧縮との違いは、Parameter objectが同じかどうかである。
+
+```text
+freeze / unfreeze
+→ 同じParameter objectのrequires_gradを切り替える
+
+SVD / Tuckerによる層置換
+→ 新しい層と新しいParameter objectを作る
+→ 原則として置換後にoptimizerを作り直す
+```
+
+したがって、transfer learningのoptimizer再設定と圧縮後のoptimizer再作成は、見た目は似ていても理由が異なる。
+
 ---
 
 ## 13. `random_split` とseed
@@ -603,7 +892,12 @@ GPUへの転送やkernel起動のoverheadの方が大きくなりうる。
 
 ## 18. 関連ノート
 
+- [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
+- [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
 - [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
 - [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
+- [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
+- [[00_基礎理論/02_ニューラルネットワーク基礎/20_Global Average PoolingとCIFAR10モデル設計]]
+- [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]]
 - [[20_FashionMNIST/01_Fashion-MNIST実験]]

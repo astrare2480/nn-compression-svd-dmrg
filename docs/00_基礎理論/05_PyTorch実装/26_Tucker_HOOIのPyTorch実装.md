@@ -304,6 +304,67 @@ $$
 
 を再構成し、元の1つのConv weightと比較できるようにする。
 
+### 元モデルを保存したまま置換前後を確認する
+
+圧縮前後を公平に比較するには、元モデルを直接書き換えず、deepcopyしたモデルの対象層だけを置換する。次の例では、同じ固定batchについてoutput shapeとlogits差を確認し、同時に3層が表す有効weightも元Conv weightと比較する。
+
+```python
+import copy
+
+import torch
+
+from nn_compression.compression import (
+    build_tucker2_conv,
+    tucker2_effective_weight,
+)
+
+# modelは学習済みモデル、input_batchは同じ入力で比較する固定batchとする。
+device = next(model.parameters()).device
+input_batch = input_batch.to(device)
+
+# 元モデルが変化していないことを後で確認できるように、値を独立に保存する。
+source_weight = model.conv2.weight.detach().clone()
+
+baseline_model = copy.deepcopy(model).to(device).eval()
+compressed_model = copy.deepcopy(model).to(device)
+
+# deepcopy側だけをTucker-2の3層へ置換する。
+compressed_model.conv2 = build_tucker2_conv(
+    compressed_model.conv2,
+    rank_out=rank_out,
+    rank_in=rank_in,
+).to(device)
+compressed_model.eval()
+
+with torch.no_grad():
+    baseline_logits = baseline_model(input_batch)
+    compressed_logits = compressed_model(input_batch)
+
+# モデルの入出力interfaceは変えない。
+assert baseline_logits.shape == compressed_logits.shape
+
+# 元モデルは置換されず、元weightも変化していない。
+assert isinstance(model.conv2, torch.nn.Conv2d)
+assert torch.equal(model.conv2.weight.detach(), source_weight)
+
+# 3層を1つの有効weightへ戻し、同じshapeで差を測る。
+effective_weight = tucker2_effective_weight(compressed_model.conv2)
+assert effective_weight.shape == source_weight.shape
+
+weight_relative_error = (
+    torch.linalg.vector_norm(source_weight - effective_weight)
+    / torch.linalg.vector_norm(source_weight)
+)
+logits_rmse = torch.sqrt(
+    torch.mean((baseline_logits - compressed_logits) ** 2)
+)
+
+print("weight relative error:", float(weight_relative_error))
+print("logits RMSE:", float(logits_rmse))
+```
+
+`effective_weight` の一致は層の再構成に関する確認であり、`logits_rmse` は実データを通したモデル出力の確認である。この2つを分けることで、weight近似誤差とtask上の影響を混同しない。
+
 ---
 
 ## 5. Autograd境界：`detach()` と `no_grad()`
@@ -424,9 +485,105 @@ src
 
 はsrc化後、重複HOOI処理をsrc呼び出しへ置換した。
 
+## 9. TensorLy `partial_tucker` との対応
+
+自作HOOIの検算では、同じweight、圧縮mode、rank、SVD初期化をTensorLyへ渡す。現行環境のTensorLy 0.9.0では、Conv weightのmode 0 / 1だけを圧縮する呼び出しは次の形になる。
+
+```python
+import torch
+import tensorly as tl
+from tensorly.decomposition import partial_tucker, tucker
+from tensorly.tenalg import mode_dot, multi_mode_dot
+from tensorly.tucker_tensor import tucker_to_tensor
+
+# TensorLy内部でもPyTorch Tensorを使う。
+tl.set_backend("pytorch")
+
+# unfold / foldは自作APIとのshape・値の照合に使える。
+mode0_matrix = tl.unfold(weight, mode=0)
+weight_roundtrip = tl.fold(
+    mode0_matrix,
+    mode=0,
+    shape=weight.shape,
+)
+assert torch.equal(weight_roundtrip, weight)
+
+modes = [0, 1]
+(core_tl, factors_tl), reported_errors = partial_tucker(
+    weight,
+    rank=[rank_out, rank_in],
+    modes=modes,
+    init="svd",
+    n_iter_max=20,
+    tol=1e-6,
+)
+
+# factors_tl[0]とfactors_tl[1]が、指定したmode 0と1に対応する。
+factors_tl_by_mode = dict(zip(modes, factors_tl))
+
+# 1 modeだけを射影するmode productも個別に確認できる。
+projected_mode0 = mode_dot(
+    weight,
+    factors_tl_by_mode[0].T,
+    mode=0,
+)
+assert projected_mode0.shape[0] == rank_out
+
+# partial Tuckerでは、圧縮したmodeだけfactorを掛け戻す。
+weight_hat_tl = multi_mode_dot(
+    core_tl,
+    factors_tl,
+    modes=modes,
+)
+
+relative_error_tl = (
+    tl.norm(weight - weight_hat_tl, 2)
+    / tl.norm(weight, 2)
+)
+```
+
+全4 modeをfactorへ分解する通常のTucker分解なら、`tucker()`と`tucker_to_tensor()`を組み合わせる。
+
+```python
+# 空間mode 2, 3は完全rankのままにした例。
+full_ranks = [
+    rank_out,
+    rank_in,
+    weight.shape[2],
+    weight.shape[3],
+]
+
+core_full, factors_full = tucker(
+    weight,
+    rank=full_ranks,
+    init="svd",
+)
+weight_hat_full = tucker_to_tensor(
+    (core_full, factors_full)
+)
+
+assert weight_hat_full.shape == weight.shape
+```
+
+`tucker_to_tensor()`は、全modeに対応するfactorを持つ完全なTucker表現を受け取る。`partial_tucker()`の返すfactorは指定mode分だけなので、その再構成には `multi_mode_dot(core, factors, modes=modes)` を使う方がmode対応を明示できる。
+
+対応関係は
+
+| 自作実装 | TensorLy | 比較対象 |
+|---|---|---|
+| `{0: rank_out, 1: rank_in}` | `modes=[0, 1]`, `rank=[rank_out, rank_in]` | 圧縮modeとrank |
+| HOSVD初期化 | `init="svd"` | 初期部分空間 |
+| `core` | `core_tl` | core shape |
+| `factors[0]`, `factors[1]` | `factors_tl[0]`, `factors_tl[1]` | factor shape |
+| 自作再構成 | `multi_mode_dot(...)` | 外部で再計算した誤差 |
+| 全mode Tucker再構成 | `tucker_to_tensor(...)` | 元shapeへの再構成 |
+| `unfold` / `fold` / `mode_dot` | `tl.unfold` / `tl.fold` / `mode_dot` | Tensor演算のshapeと値 |
+
+となる。factor自体には符号や同じ部分空間内の回転の自由度があるため、要素の完全一致を合否条件にしない。最終的なshape、再構成weight、同じ式で外部再計算したrelative Frobenius errorを比較する。
+
 ---
 
-## 9. 回帰テスト
+## 10. 回帰テスト
 
 Tucker/HOOI src化直後はローカル `99 passed` だったが、その後src全体のcontract reviewを複数回行った。
 

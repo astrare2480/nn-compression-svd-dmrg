@@ -159,6 +159,15 @@ $$
 
 これはCIFAR-10の実測mean/stdで厳密に標準化する方式ではなく、**0.5を使った単純な中心化・スケーリング**である。
 
+訓練集合のchannel別統計を使う一例は、
+
+```python
+mean = (0.4914, 0.4822, 0.4465)
+std = (0.2470, 0.2435, 0.2616)
+```
+
+である。統計量は算出方法や前処理に依存するため、0.5固定と実測統計のどちらを採用したかを実験条件として記録する。
+
 重要なのは、学習時と評価時で同じNormalizeを使うこと。
 
 ```text
@@ -643,7 +652,7 @@ data_dir/
 
 ## 自動downloadが極端に遅い場合
 
-Notebookからの自動取得が長時間進まない場合は、コードを待ち続けるより、ブラウザ等でPython版アーカイブを手動取得して配置する方法もある。
+Notebookからの自動取得が長時間進まない場合は、コードを待ち続けるより、ブラウザ等でPython版アーカイブを手動取得して配置する方法もある。信頼できるmirrorから取得した場合も、ファイル内容が公式版と同一かをhashで確認する。
 
 取得した `cifar-10-python.tar.gz` が正しいか確認するMD5は、Perplexityで確認した値では、
 
@@ -656,12 +665,23 @@ c58f30108f718f92721af3b95e74349a
 Windows PowerShellなら、
 
 ```powershell
-Get-FileHash "$HOME\Downloads\cifar-10-python.tar.gz" -Algorithm MD5
+# Downloadsに保存したCIFAR-10 Python版archiveを検査する。
+$archive = Join-Path `
+    $env:USERPROFILE `
+    'Downloads\cifar-10-python.tar.gz'
+$expectedMd5 = 'c58f30108f718f92721af3b95e74349a'
+$actualMd5 = (
+    Get-FileHash -LiteralPath $archive -Algorithm MD5
+).Hash.ToLowerInvariant()
+
+if ($actualMd5 -ne $expectedMd5) {
+    throw "MD5 mismatch: $actualMd5"
+}
+
+Write-Output "MD5 verified: $actualMd5"
 ```
 
-で確認できる。
-
-MD5が一致したら展開し、`data_dir/cifar-10-batches-py/` になるよう配置して、以後 `download=False` で読む。
+MD5が一致したら展開し、`data_dir/cifar-10-batches-py/` になるよう配置して、以後 `download=False` で読む。hash不一致は不完全なダウンロードや別内容の可能性を示すため、そのarchiveは展開せず再取得する。mirrorの速度は環境依存なので、教材では特定mirrorを固定せず公式hashを判断基準にする。
 
 > [!note]
 > この節はSVD理論ではなく、実際のCIFAR-10データ準備で詰まった際の再現用トラブルシュート。実験結果そのものには含めない。

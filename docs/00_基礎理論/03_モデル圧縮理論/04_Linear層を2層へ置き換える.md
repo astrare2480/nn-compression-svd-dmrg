@@ -3166,11 +3166,13 @@ model.load_state_dict(
 
 ## 48. 圧縮モデルを定義する専用クラス
 
+数式との対応だけを抜き出すと、圧縮層の構造は次のようになる。
+
 ```python
 from torch import nn
 
 
-class LowRankLinear(nn.Module):
+class ConceptualLowRankLinear(nn.Module):
     def __init__(
         self,
         in_features: int,
@@ -3180,24 +3182,14 @@ class LowRankLinear(nn.Module):
     ) -> None:
         super().__init__()
 
-        if not 1 <= rank <= min(
-            in_features,
-            out_features,
-        ):
-            raise ValueError(
-                "rank is out of range."
-            )
-
-        self.in_features = in_features
-        self.out_features = out_features
-        self.rank = rank
-
+        # A = V_r^Tに対応する前段。biasは置かない。
         self.first = nn.Linear(
             in_features,
             rank,
             bias=False,
         )
 
+        # B = U_r Sigma_rに対応する後段。元のbiasはここへ置く。
         self.second = nn.Linear(
             rank,
             out_features,
@@ -3210,113 +3202,21 @@ class LowRankLinear(nn.Module):
         )
 ```
 
-このクラスへSVD重みを設定するメソッドを追加できる。
+これは $x\mapsto B(Ax)+b$ という構造を確認するための最小例である。rank検証、device・dtype継承、SVD重みの設定を含む完成実装は [[00_基礎理論/05_PyTorch実装/07_PyTorch実装#10. `LowRankLinear`]] を正本とする。
 
 ---
 
 ## 49. `LowRankLinear` を学習済み層から作る
 
-```python
-from __future__ import annotations
+学習済み `nn.Linear` から作る処理では、すでに導出した
 
-import torch
-from torch import nn
+$$
+A=V_r^{\mathsf T},
+\qquad
+B=U_r\Sigma_r
+$$
 
-
-class LowRankLinear(nn.Module):
-    def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        rank: int,
-        bias: bool = True,
-        device=None,
-        dtype=None,
-    ) -> None:
-        super().__init__()
-
-        maximum_rank = min(
-            in_features,
-            out_features,
-        )
-
-        if not 1 <= rank <= maximum_rank:
-            raise ValueError(
-                "rank must satisfy "
-                f"1 <= rank <= {maximum_rank}."
-            )
-
-        self.in_features = in_features
-        self.out_features = out_features
-        self.rank = rank
-
-        self.first = nn.Linear(
-            in_features,
-            rank,
-            bias=False,
-            device=device,
-            dtype=dtype,
-        )
-
-        self.second = nn.Linear(
-            rank,
-            out_features,
-            bias=bias,
-            device=device,
-            dtype=dtype,
-        )
-
-    def forward(
-        self,
-        x: torch.Tensor,
-    ) -> torch.Tensor:
-        return self.second(
-            self.first(x)
-        )
-
-    @classmethod
-    def from_linear(
-        cls,
-        layer: nn.Linear,
-        rank: int,
-    ) -> "LowRankLinear":
-        weight = layer.weight.detach()
-
-        module = cls(
-            in_features=layer.in_features,
-            out_features=layer.out_features,
-            rank=rank,
-            bias=layer.bias is not None,
-            device=weight.device,
-            dtype=weight.dtype,
-        )
-
-        U, S, Vh = torch.linalg.svd(
-            weight,
-            full_matrices=False,
-        )
-
-        U_r = U[:, :rank]
-        S_r = S[:rank]
-        Vh_r = Vh[:rank, :]
-
-        with torch.no_grad():
-            module.first.weight.copy_(
-                Vh_r
-            )
-
-            module.second.weight.copy_(
-                U_r
-                * S_r.unsqueeze(0)
-            )
-
-            if layer.bias is not None:
-                module.second.bias.copy_(
-                    layer.bias.detach()
-                )
-
-        return module
-```
+を `first.weight` と `second.weight` へ設定し、元のbiasを `second.bias` へコピーする。完成した `from_linear` の定義は [[00_基礎理論/05_PyTorch実装/07_PyTorch実装#11. 学習済みLinearから作る]]、置換手順の詳細は [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]] を参照する。
 
 使用例：
 
@@ -3930,132 +3830,53 @@ flowchart TD
 
 ## 69. 出力誤差の評価関数
 
+圧縮前後の層出力は、同じ入力 $x$ に対して
+
+$$
+y_{\mathrm{original}}
+=
+W x+b,
+\qquad
+y_{\mathrm{compressed}}
+=
+B A x+b
+$$
+
+を計算して比較する。
+
 ```python
-from __future__ import annotations
+with torch.inference_mode():
+    y_original = original(x)
+    y_compressed = compressed(x)
 
-from dataclasses import dataclass
-
-import torch
-from torch import nn
-
-
-@dataclass(frozen=True)
-class OutputError:
-    mse: float
-    rmse: float
-    maximum_absolute_error: float
-    mean_absolute_error: float
-
-
-def compare_layer_outputs(
-    original: nn.Module,
-    compressed: nn.Module,
-    x: torch.Tensor,
-) -> OutputError:
-    original.eval()
-    compressed.eval()
-
-    with torch.no_grad():
-        y_original = original(x)
-        y_compressed = compressed(x)
-
-    difference = (
-        y_original
-        -
-        y_compressed
-    )
-
-    mse = torch.mean(
-        difference.square()
-    )
-
-    rmse = torch.sqrt(mse)
-
-    maximum_absolute_error = (
-        difference
-        .abs()
-        .max()
-    )
-
-    mean_absolute_error = (
-        difference
-        .abs()
-        .mean()
-    )
-
-    return OutputError(
-        mse=float(mse.item()),
-        rmse=float(rmse.item()),
-        maximum_absolute_error=float(
-            maximum_absolute_error.item()
-        ),
-        mean_absolute_error=float(
-            mean_absolute_error.item()
-        ),
-    )
+output_metrics = compare_tensors(
+    reference=y_original,
+    approximation=y_compressed,
+)
 ```
+
+MSE、RMSE、最大絶対誤差、MAEの定義は [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]、`compare_tensors` の完成実装は [[00_基礎理論/05_PyTorch実装/07_PyTorch実装#15. rankを下げた出力誤差]] を正本とする。
 
 ---
 
 ## 70. 重み誤差の評価関数
 
+前段と後段の積から再構成した重みを、元の重みと比較する。
+
 ```python
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-import torch
-from torch import nn
-
-
-@dataclass(frozen=True)
-class WeightError:
-    frobenius_error: float
-    relative_frobenius_error: float
-
-
-def compare_weights(
-    original: nn.Linear,
-    compressed: LowRankLinear,
-) -> WeightError:
-    with torch.no_grad():
-        reconstructed = (
-            compressed.second.weight
-            @ compressed.first.weight
-        )
-
-        difference = (
-            original.weight
-            -
-            reconstructed
-        )
-
-        error = torch.linalg.matrix_norm(
-            difference,
-            ord="fro",
-        )
-
-        original_norm = (
-            torch.linalg.matrix_norm(
-                original.weight,
-                ord="fro",
-            )
-        )
-
-        relative_error = (
-            error
-            / original_norm
-        )
-
-    return WeightError(
-        frobenius_error=float(
-            error.item()
-        ),
-        relative_frobenius_error=float(
-            relative_error.item()
-        ),
+with torch.inference_mode():
+    reconstructed_weight = (
+        compressed.second.weight
+        @ compressed.first.weight
     )
+
+weight_metrics = compare_weight_matrices(
+    original=original.weight,
+    approximation=reconstructed_weight,
+)
 ```
+
+Frobenius誤差の定義は [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]、`compare_weight_matrices` の完成実装は [[00_基礎理論/05_PyTorch実装/07_PyTorch実装#16. 重み誤差]] を正本とする。
 
 ---
 
@@ -4079,17 +3900,21 @@ for rank in ranks:
         )
     )
 
-    output_error = (
-        compare_layer_outputs(
-            original=original,
-            compressed=compressed,
-            x=x,
+    with torch.inference_mode():
+        y_original = original(x)
+        y_compressed = compressed(x)
+        reconstructed_weight = (
+            compressed.second.weight
+            @ compressed.first.weight
         )
-    )
 
-    weight_error = compare_weights(
-        original=original,
-        compressed=compressed,
+    output_metrics = compare_tensors(
+        reference=y_original,
+        approximation=y_compressed,
+    )
+    weight_metrics = compare_weight_matrices(
+        original=original.weight,
+        approximation=reconstructed_weight,
     )
 
     parameter_count = sum(
@@ -4100,8 +3925,8 @@ for rank in ranks:
     print(
         rank,
         parameter_count,
-        weight_error.relative_frobenius_error,
-        output_error.rmse,
+        weight_metrics.relative_frobenius_error,
+        output_metrics.rmse,
     )
 ```
 

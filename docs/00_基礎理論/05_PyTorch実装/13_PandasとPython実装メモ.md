@@ -608,24 +608,15 @@ W_mat = tensor.flatten(start_dim=1)
 
 操作である。
 
-たとえば、
+一般に、
 
 ```text
-(64, 32, 3, 3)
+(N, d1, d2, ...)
 →
-(64, 288)
+(N, d1×d2×...)
 ```
 
-となる。
-
-概念的には、
-
-```python
-for i in range(tensor.shape[0]):
-    row = tensor[i].flatten()
-```
-
-として64行を作るのと対応するが、実際にはloopして集める必要はない。
+となる。概念的には、各 `tensor[i]` をflattenして `torch.stack(rows, dim=0)` で積む操作と同じだが、実際にはloopして集める必要はない。Conv2d weightについて値・行順・shapeを確認する具体例は [[00_基礎理論/03_モデル圧縮理論/16_Conv2d重みの行列化とSVD]] で扱う。
 
 また、
 
@@ -670,6 +661,138 @@ rank sweepの結果表
 
 ---
 
+## 23. PyTorchモデルを読むためのクラス記法
+
+### `self` の意味
+
+```python
+# 現在のモデル自身にfc1という子Moduleを登録する。
+self.fc1 = nn.Linear(784, 512)
+```
+
+`self` は、現在操作しているモデルのインスタンス自身を表す。
+
+```text
+self.fc1
+=
+このモデルが持っているfc1
+```
+
+`self.fc1` として登録した層は `forward()` から利用できるだけでなく、`nn.Module` の子Moduleとして認識される。そのため、次の処理にも含まれる。
+
+```python
+model.parameters()
+model.state_dict()
+model.to(device)
+model.train()
+model.eval()
+```
+
+### `__init__()` の意味
+
+```python
+def __init__(self):
+    # インスタンス作成時の初期化をここへ書く。
+    ...
+```
+
+`__init__()` は、インスタンスを作るときに実行される初期化メソッドである。モデルではLinear層、活性化関数、Dropout、BatchNormなどの子Moduleを主に定義する。
+
+### `super().__init__()` の意味
+
+```python
+class MNISTMLP(nn.Module):
+    def __init__(self):
+        # 親クラスnn.Moduleの初期化を実行する。
+        super().__init__()
+```
+
+`super().__init__()` は、親クラスである `nn.Module` の初期化を呼ぶ。これにより、PyTorchが子ModuleやParameterを正しく登録できる。
+
+### `model(images)` と `forward(images)`
+
+```python
+# nn.Moduleの呼出し機構を経由してforwardを実行する。
+outputs = model(images)
+```
+
+概念上は `model.forward(images)` に近いが、通常は `model(images)` を使う。hookなどを含む `nn.Module` の呼出し機構が正しく働くためである。
+
+---
+
+## 24. 未使用値を受ける `_`
+
+`_` はPythonの特別な破棄構文ではなく普通の変数名である。ただし、値を受け取る必要はあるが、その後使わない場合に `_` と書く慣習がある。値は実際には代入されるが、未使用という意図を示すため通常は参照しない。
+
+### 複数の戻り値の一部を使わない
+
+```python
+# DataLoaderが返すラベルは、この処理では使わない。
+images, _ = next(iter(data_loader))
+```
+
+### ループ番号を使わない
+
+```python
+# warm-up回数だけ繰り返し、ループ番号は使わない。
+for _ in range(warmup):
+    model(images)
+```
+
+### 戻り値を使わない
+
+```python
+# forwardは実行するが、出力値自体は使わない。
+_ = model(images)
+```
+
+### 一部の戻り値だけを使う
+
+```python
+# 3つの戻り値のうち、先頭だけを使わない。
+_, compressed_macs, compute_reduction = MACs(
+    model,
+    fc1_rank,
+    fc2_rank,
+    verbose=False,
+)
+```
+
+単独の `_` と、Pythonの特殊メソッド名に含まれる二重アンダースコアは別の意味である。
+
+```text
+_          → 慣習的な未使用変数名
+__init__   → Pythonの特殊メソッド名
+```
+
+---
+
+## 25. `torch.round()` と表示桁数
+
+```python
+import torch
+
+x = torch.tensor([1.234, 1.235, 1.236])
+rounded = torch.round(x, decimals=2)
+```
+
+`torch.round()` は、ちょうど中間の値で偶数側へ丸める方式を採用する。
+
+```text
+2.5 → 2
+3.5 → 4
+```
+
+常に5を切り上げる意味での四捨五入とは異なる。実験結果を表示するだけなら、計算に使うTensorを丸めず、f-stringで表示桁数だけを指定する。
+
+```python
+# 計算値を変えず、表示だけを整える。
+print(f"{accuracy * 100:.2f}%")
+print(f"{latency_ms:.3f} ms/batch")
+```
+
+---
+
 ## 関連ノート
 
 - [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
@@ -677,5 +800,6 @@ rank sweepの結果表
 - [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
 - [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
 - [[00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎]]
+- [[00_基礎理論/03_モデル圧縮理論/16_Conv2d重みの行列化とSVD]]
 - [[20_FashionMNIST/02_Fashion-MNISTのRank選択]]
 - [[20_FashionMNIST/03_Fashion-MNISTのFine-tuning]]
