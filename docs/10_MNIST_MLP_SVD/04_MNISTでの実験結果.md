@@ -22,13 +22,23 @@ MNIST分類用MLPの `fc1` / `fc2` をSVDで低rank2層へ置換し、rankとacc
 現在の正式結果は、
 
 ```text
-notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
-results/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/
+notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb
+results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/
 ```
 
 を基準とする。
 
+run ID: `rerun_20260912T074153Z`（2026-09-12）。現在の数値は独立した新runを出典とし、旧runの欠落値の復元ではない。途中表は本文で丸めているが、元CSVの値は変更していない。
+
+出典：[実行済みNotebook](../../notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb)、[Test比較](../../results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/test_comparison.csv)、[学習・FTの要約](../../results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/fit_summary.csv)、[最終benchmark](../../results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/final_model_benchmark.csv)、[manifest](../../results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/run_manifest.json)。
+
 旧Notebookは学習・試行錯誤のhistorical recordとして残す。
+
+2026-09-12の初回監査で、保存済みSVDモデルだけでは同じrunのbaseline重みを復元できないことを確認した。次回実行からbaseline checkpointと学習履歴を保存する処理をcorrected Notebookへ追加したが、初回監査では再学習していなかった。既存成果物のhash・未保存重みの制約は [複製元runのartifact_provenance.json](../../results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/artifact_provenance.json) に記録した。保存出力の整合性と現行コードのRun All成功は別の判定である。
+
+### 承認後の独立した再実行（2026-09-12）
+
+別名Notebook `02_rank_accuracy_tradeoff_corrected_rerun.ipynb` を全セル実行し、同一runのbaseline/最終重み・全16候補の丸め前の指標・baseline全5 epochの履歴・測定条件を新規ディレクトリへ保存した。保存重みを読み直したtest評価も一致した。従来runのNotebook・CSV・重みは保存したまま、本ページの正式な出典を新runへ切り替えた。最終rankとTest値は従来correctedと一致する。新しい記録は [完全保存runの一覧と検証](../../results/10_svd/rerun_20260912T074153Z/README.md) に分けた。過去runの欠落値が復元されたという意味ではない。
 
 ---
 
@@ -133,16 +143,22 @@ fc2 = 128
 | Parameter reduction | 50.07% |
 | MACs | 266,752 |
 | MAC reduction | 50.14% |
-| Baseline latency | 0.1195 ms/batch |
-| Compressed latency | 0.1771 ms/batch |
+| Baseline latency（rank sweep・単回） | 0.251118 ms/batch |
+| Compressed latency（rank sweep・単回） | 0.208188 ms/batch |
 
 このrankは「最も小さいrank」ではなく、今回のvalidation選択規則で採用された構成である。
+
+![MNIST MLPの16通りのrankとvalidation性能](assets/02_rank_accuracy_tradeoff_corrected_rerun/rank_accuracy_tradeoff_validation.png)
+
+掲載画像はdocs内表示用の複製で、[出典runの元画像](../../results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/) とバイト同一。旧runの画像は上書きしていない。
+
+図：上記rerunのSVD直後・FTなしのrank sweep。左はfc1 rankを行、fc2 rankを列とするRank-Selection Validation accuracy、右はモデル全体のparametersと同validation loss。[元データ](../../results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/rank_sweep_validation.csv) の16構成を表示しており、最終Test accuracyや推論時間の図ではない。
 
 ---
 
 # 3. 最終Test
 
-Testはrank選択後に1回だけ評価した。
+Testはrank選択には使用せず、最終選択後にbaselineと選択済み1構成を評価した。保存checkpointからの再評価でも同じ値を確認した。
 
 | Model | fc1 rank | fc2 rank | Test loss | Test accuracy |
 |---|---:|---:|---:|---:|
@@ -244,14 +260,16 @@ Baseline   ≈ 535,040 MACs
 Compressed = 266,752 MACs
 ```
 
-一方、corrected rank sweepでの実測latencyは、
+最終選択後の同一runのbaseline / selected SVDを3 trialで計測し、各trialの平均時間の中央値を採用した。実測latencyは、
 
 ```text
-Baseline   ≈ 0.1195 ms/batch
-Compressed ≈ 0.1771 ms/batch
+Baseline   ≈ 0.119641 ms/batch
+Compressed ≈ 0.195747 ms/batch
 ```
 
-で、短縮しなかった。
+で、短縮しなかった。`eval()` / `no_grad()`、CUDA同期あり、host→device転送を除外した。
+
+rank sweepの単回値 `0.251118 → 0.208188 ms/batch` は探索時の補助値であり、最終3 trial計測とは測定段階・反復集計が異なる。両者を混ぜず、速度の最終記載は `final_model_benchmark.csv` を出典とする。
 
 小規模MLPを2層へ分割すると、行列積そのもののMACs以外の固定オーバーヘッドが相対的に効く可能性がある。
 
@@ -276,7 +294,8 @@ Compressed ≈ 0.1771 ms/batch
 現在の優先順位：
 
 ```text
-corrected
+corrected rerun（今回の正式出典）
+→ 複製元corrected（従来run）
 → using_src
 → original / before_src
 ```

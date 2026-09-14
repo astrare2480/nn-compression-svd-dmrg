@@ -134,6 +134,26 @@ $$
 
 ## 2. コアの3本の添字
 
+physical indexとbond indexは同じ「番号」でも役割が違う。
+元Tensorの一要素を求めるとき、physical index $i_1,\ldots,i_d$ は求めたい位置として固定する。
+bond indexはコア間の全経路を足し合わせるための番号なので、最後の出力には残らない。
+各physical位置に小さい行列を選び、その行列を鎖として掛けた結果が一つのスカラーになる。
+
+例えば3サイトの一要素では
+
+$$
+g_{\alpha_1}:=G^{(1)}_{1,i_1,\alpha_1},
+\qquad
+H_{\alpha_1,\alpha_2}:=G^{(2)}_{\alpha_1,i_2,\alpha_2},
+\qquad
+q_{\alpha_2}:=G^{(3)}_{\alpha_2,i_3,1}
+$$
+
+と固定すれば、$X_{i_1,i_2,i_3}=g^{\mathsf T}Hq$ である。
+$g,H,q$ は別々のサイトの元データを切り出したものではなく、テンソル全体を表現するために決めた係数である。
+従って「Tensorを三つの部分配列に切って保管した」とは読まない。
+また、任意のTTコアが最初から正規直交しているわけではない。TTという鎖の構造と、SVD・QRで選ぶ正準形の条件は別である。
+
 一般の第 $k$ コア
 
 $$
@@ -301,6 +321,47 @@ $$
 
 ---
 
+### 元資料の $2\times3$ 配列例：reshapeの説明とSVDの制約を分ける
+
+元資料 `TT_MPS基礎理論.md` の1532〜1597行・2782〜2836行付近には、2行3列の値を境界軸付きコアへ移す説明がある。
+その要素配置を省かず示す。ただし、ここでは任意の係数配列 $H$ と呼ぶ。
+
+$$
+H=\begin{pmatrix}
+u_{1,1}&u_{1,2}&u_{1,3}\\
+u_{2,1}&u_{2,2}&u_{2,3}
+\end{pmatrix},\qquad
+C=\operatorname{reshape}(H,1,2,3).
+$$
+
+$$
+\begin{aligned}
+C_{1,1,1}&=u_{1,1},&C_{1,1,2}&=u_{1,2},&C_{1,1,3}&=u_{1,3},\\
+C_{1,2,1}&=u_{2,1},&C_{1,2,2}&=u_{2,2},&C_{1,2,3}&=u_{2,3}.
+\end{aligned}
+$$
+
+行優先の値の列は、変更前後とも
+
+$$
+(u_{1,1},u_{1,2},u_{1,3},u_{2,1},u_{2,2},u_{2,3})
+$$
+
+であり、要素数も $2\cdot3=1\cdot2\cdot3=6$ のままである。
+追加されるのは常に1を取る境界添字だけで、値の計算・並べ替え・近似は行わない。
+
+一方、元資料はこの2行3列の配列を「SVDで得た $U^{(1)}$」と呼んでいるが、3本の正規直交列を2次元に置くことはできない。
+
+$$
+\operatorname{rank}(H^{\mathsf T}H)
+\le\operatorname{rank}(H)\le2<3=\operatorname{rank}(I_3).
+$$
+
+従って $H^{\mathsf T}H=I_3$ は不可能であり、サイト1のrank-sized左特異ベクトル行列なら $r_1\le n_1=2$ が必要である。
+上の例は**一般配列のreshapeとしては有効だが、列直交SVDコアの例ではない**。
+任意のTT表現なら冗長なbondを持つ非直交コアとして $1\times2\times3$ を使うこと自体はできる。
+直前の $2\times2$ 実行列例は、このSVDの制約も満たす例である。元資料の配列を別の例で置き換えず、要素配置と数学的な制約を区別して残す。
+
 ## 4. 3サイトのTTをSVDから作る見取り図
 
 3サイトの係数テンソルを
@@ -389,6 +450,40 @@ $$
 
 ---
 
+
+### 元資料の左特異ベクトルの全成分と物理状態
+
+添付 `TT_MPS基礎理論.md` の20643–20822行では、
+「1本の左特異ベクトルの成分数」と「残すベクトルの本数」を分けて説明している。
+第1cutのreduced SVDなら $q=\min(n_1,n_2n_3)$ で
+
+$$
+U=(u_1\ u_2\ \cdots\ u_q),\qquad
+u_\alpha=U(:,\alpha)=
+\begin{pmatrix}U_{1,\alpha}\\U_{2,\alpha}\\\vdots\\U_{n_1,\alpha}\end{pmatrix}
+\in\mathbb R^{n_1}.
+$$
+
+1列の長さは $n_1$ であり、右側の $n_2n_3$ ではない。
+元資料の $n_1=2$ の例では
+
+$$
+u_1=\begin{pmatrix}U_{1,1}\\U_{2,1}\end{pmatrix},\qquad
+u_2=\begin{pmatrix}U_{1,2}\\U_{2,2}\end{pmatrix},
+$$
+
+$$
+|L_1\rangle=U_{1,1}|1\rangle+U_{2,1}|2\rangle,\qquad
+|L_2\rangle=U_{1,2}|1\rangle+U_{2,2}|2\rangle.
+$$
+
+各状態は2個の物理基底の線形結合である。
+非ゼロ特異値に対応して必要な状態の本数は $r_1=\operatorname{rank}(X^{\langle1\rangle})\le q$、
+打ち切りで保持する本数はさらに $\widetilde r_1\le r_1$ となる。
+列を減らしても、残した各列の成分数 $n_1$ は変わらない。
+元資料で「固有ベクトル」と呼んだ左特異ベクトルは、
+正確には $X^{\langle1\rangle}(X^{\langle1\rangle})^T$ の固有ベクトルでもある。
+一般の長方形 $X^{\langle1\rangle}$ 自体の固有ベクトルではない。
 ## 5. 行列SVDからSchmidt分解へ
 
 TTとMPSをつなぐ最初の重要点は、係数行列のSVDを状態ベクトルとして読み直すとSchmidt分解になることである。
@@ -509,6 +604,55 @@ $$
 =
 \delta_{\beta_1\alpha_1}.
 $$
+
+ここでは直交性も、係数を代入して確認しておく。物理基底の直交性を使うと、
+
+$$
+\begin{aligned}
+\langle L_{\beta_1}|L_{\alpha_1}\rangle
+&=\sum_{t_1,s_1}
+U^*_{t_1,\beta_1}U_{s_1,\alpha_1}
+\langle t_1|s_1\rangle\\
+&=\sum_{t_1,s_1}
+U^*_{t_1,\beta_1}U_{s_1,\alpha_1}\delta_{t_1,s_1}\\
+&=\sum_{s_1}U^*_{s_1,\beta_1}U_{s_1,\alpha_1}\\
+&=(U^\dagger U)_{\beta_1,\alpha_1}\\
+&=\delta_{\beta_1,\alpha_1},
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\langle R_{\beta_1}|R_{\alpha_1}\rangle
+&=\sum_{\nu,\mu}
+V_{\nu,\beta_1}V^*_{\mu,\alpha_1}
+\langle\nu|\mu\rangle\\
+&=\sum_\mu V_{\mu,\beta_1}V^*_{\mu,\alpha_1}\\
+&=(V^\dagger V)_{\alpha_1,\beta_1}\\
+&=\delta_{\alpha_1,\beta_1}.
+\end{aligned}
+$$
+
+右ketの係数が $V^*$ なので、braではさらに共役されて $V$ になる。右Schmidt状態の係数を、複素数の場合にも無条件で $V$ と置かない。
+
+また、状態の規格化は
+
+$$
+\begin{aligned}
+\langle\Psi|\Psi\rangle
+&=\sum_{\alpha_1,\beta_1}
+\lambda_{\beta_1}\lambda_{\alpha_1}
+\langle L_{\beta_1}|L_{\alpha_1}\rangle
+\langle R_{\beta_1}|R_{\alpha_1}\rangle\\
+&=\sum_{\alpha_1,\beta_1}
+\lambda_{\beta_1}\lambda_{\alpha_1}
+\delta_{\beta_1,\alpha_1}\delta_{\beta_1,\alpha_1}\\
+&=\sum_{\alpha_1}\lambda_{\alpha_1}^2
+=\|\Psi^{\langle1\rangle}\|_F^2
+\end{aligned}
+$$
+
+である。規格化された量子状態なら最後の値は1であり、一般の数値テンソルなら1とは限らない。
 
 したがって対応は
 

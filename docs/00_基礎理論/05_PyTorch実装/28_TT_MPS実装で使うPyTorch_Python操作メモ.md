@@ -653,6 +653,23 @@ I_r = torch.eye(r, dtype=U.dtype, device=U.device)
 
 を使う。
 
+### 元資料のeyeの出力を全要素で確認する
+
+添付 `TT_MPS基礎理論.md` の25603–25673行の出力は
+
+$$
+\operatorname{eye}(3)=
+\begin{pmatrix}1&0&0\\0&1&0\\0&0&1\end{pmatrix},\qquad
+\operatorname{eye}(2,4)=
+\begin{pmatrix}1&0&0&0\\0&1&0&0\end{pmatrix}.
+$$
+
+後者は単位行列 $I_4$ ではなく、2行4列の主対角部分へ1を置いた行列である。
+全要素は整数値でも、Tensorのdtypeは呼び出しで指定した型になる。
+元資料の `dtype=torch.int64` は整数型の例、
+`dtype=torch.float64` は倍精度の例である。
+計算相手 `X` へ合わせるときは、既存のコードどおりdtypeとdeviceの両方を渡す。
+
 ---
 
 ## 19. `torch.eye` と `torch.diag` は別
@@ -684,6 +701,22 @@ torch.eye(r)
 ```
 
 は対角成分が全部1の単位行列であり、特異値行列ではない。
+
+### 元資料の特異値5・2・1を、diagの全成分へ対応させる
+
+同じ添付の25689–25714行では、`S = torch.tensor([5.0, 2.0, 1.0])` を使う。
+
+$$
+\Sigma=\operatorname{diag}(5,2,1)
+=\begin{pmatrix}5&0&0\\0&2&0\\0&0&1\end{pmatrix},\qquad
+I_3=\begin{pmatrix}1&0&0\\0&1&0\\0&0&1\end{pmatrix}.
+$$
+
+`torch.diag(S) @ Vh` の第1行は `Vh` の第1行の5倍、第2行は2倍、
+第3行は1倍である。`torch.eye(3) @ Vh` なら全行を元のまま残し、
+特異値の係数を掛けたremainderにはならない。
+`S[:, None] * Vh` が同じremainderを作る理由も、各行へ `S` の対応成分を掛けるためである。
+これは対角化APIの元例であり、[[33_TT-SVDの打ち切りと誤差]] のrank 2打ち切り例と数値を混同しない。
 
 ---
 
@@ -732,6 +765,53 @@ SVDのUは必ずnon-contiguous
 ```
 
 とは限らない。
+
+### 元資料の0〜5を、転置とcontiguousのメモリ位置まで追う
+
+同じ添付の28118–28328行は、値が変わらないことと格納順が変わることを
+小さい実際の配列で区別している。その6要素を表示すると
+
+$$
+A=\begin{pmatrix}0&1&2\\3&4&5\end{pmatrix},\qquad
+B=A^T=\begin{pmatrix}0&3\\1&4\\2&5\end{pmatrix},\qquad
+C=\operatorname{contiguous}(B)
+=\begin{pmatrix}0&3\\1&4\\2&5\end{pmatrix}.
+$$
+
+元の `A` はメモリ上で `0, 1, 2, 3, 4, 5` の順に並び、
+0始まりの位置は `A[i,j]` に対して $3i+j$ である。
+`B[i,j]=A[j,i]` は同じstorageの位置 $i+3j$ を読む。
+第0行の `B[0,0], B[0,1]` は位置0と3、
+第1行は位置1と4、第2行は位置2と5から読むので、各行の2要素は隣接しない。
+ここでtransposeは値を `0, 3, 1, 4, 2, 5` へ物理的に格納し直してはいない。
+
+`C` はこのnon-contiguousな `B` を連続layoutへコピーするので、
+位置は $2i+j$、実際の格納順は `0, 3, 1, 4, 2, 5` になる。
+`B` と `C` のshapeと各添字の値は同じである。
+
+```python
+import torch
+
+# 元資料と同じ6個の値を用い、すべて2階Tensorとして比較する。
+A = torch.tensor([[0, 1, 2], [3, 4, 5]])
+B = A.T
+C = B.contiguous()
+
+assert A.stride() == (3, 1)
+assert B.stride() == (1, 3) and not B.is_contiguous()
+assert C.stride() == (2, 1) and C.is_contiguous()
+assert torch.equal(B, C)
+assert A.untyped_storage().data_ptr() == B.untyped_storage().data_ptr()
+assert B.untyped_storage().data_ptr() != C.untyped_storage().data_ptr()
+assert C.view(-1).tolist() == [0, 3, 1, 4, 2, 5]
+```
+
+この例の `B.view(-1)` はstrideを保った1次元viewとして表せず失敗する。
+`B.reshape(-1)` は必要ならコピーし、同じ論理順 `[0, 3, 1, 4, 2, 5]` を作れる。
+一方、すでに連続なTensorへの `contiguous()` は通常追加コピーをしない。
+「別の角度から見る」という元資料の比喩は、添字からstorageの位置への読み方を変えることを指す。
+このメモリlayoutの話と、[[29_TT_cutとPyTorchのreshape_Kronecker順序]] の
+physical/bondの複合添字を入れ替える話は、別の確認として扱う。
 
 ---
 
@@ -920,3 +1000,101 @@ core_ranks = [core.shape[2] for core in cores[:-1]]
 へ短縮する。
 
 このプロジェクトでは、Notebookは「なぜそのaxisを取るのか」を確認する場所、srcは再利用性・validation・重複排除を優先する場所、と役割を分ける。
+
+---
+
+## 27. QRの追補：入力の行・列と新しい基底
+
+以下は左右QRの添付資料に対応する操作メモである。既存のTT-SVD public APIへ新しいQR APIが追加されたという意味ではない。
+
+`Q, R_qr = torch.linalg.qr(A, mode="reduced")` で、入力が `(m,n)` なら `q=min(m,n)`、`Q.shape==(m,q)`、`R_qr.shape==(q,n)` となる。本追補の `R_qr` は理論docs [[36_TT_MPSのGauge自由度と左QR直交化]] の三角因子 $T$ に対応する。
+
+$$
+A(a,b)=\sum_{\gamma=1}^{q}Q(a,\gamma)R_{\mathrm{qr}}(\gamma,b).
+$$
+
+行 $a$ は `Q`、列 $b$ は `R_qr` に残り、$\gamma$ は新しい基底である。QR後の列を元のボンド添字と同一視しない。また、`mode="reduced"` だけでnumerical rankを選ぶわけではない。rank欠損入力の数値挙動・微分には注意が必要である。
+
+左ではコアを `(r_left*n_mode, r_right)` に、右では `(r_left, n_mode*r_right)` に行列化してから**その転置**をQRする。元のボンドサイズが維持できる次元条件と、横長のときの更新後shapeは理論章を参照する。出力を常に古いrankのままreshapeしてはいけない。
+
+## 28. `unsqueeze` は転置の代わりではない
+
+`unsqueeze(dim)` は指定位置へsize 1の軸を追加し、要素の値を変えない。行列の行・列を交換する `.T` とは別の操作である。
+
+配列操作だけを示す小行列を
+
+$$
+B=\begin{pmatrix}1&2\\3&4\\5&6\end{pmatrix},\qquad
+B^T=\begin{pmatrix}1&3&5\\2&4&6\end{pmatrix}
+$$
+
+とすると、`B.T.unsqueeze(-1)` の唯一の最終軸sliceは $B^T$ で、shapeは `(2,3,1)`。`B.unsqueeze(-1)` のsliceは $B$ のままで `(3,2,1)` となる。
+
+```python
+import torch
+
+# 軸交換と境界軸の追加を、要素番号で区別する。
+B = torch.tensor([[1., 2.], [3., 4.], [5., 6.]], dtype=torch.float64)
+B_with_boundary = B.T.unsqueeze(-1)
+assert B_with_boundary.shape == (2, 3, 1)
+assert B_with_boundary[1, 2, 0].item() == B[2, 1].item() == 6.0
+assert torch.equal(B_with_boundary.squeeze(-1), B.T)
+assert B.unsqueeze(-1).shape == (3, 2, 1)
+```
+
+第1コアでは `Q1.unsqueeze(0)` で `(1,n1,q1)`、右端コアでは `Q3.T.unsqueeze(-1)` で `(q2,n3,1)` とする。`n3==q2` なら転置忘れでもshapeが同じになるため、shapeだけでなく縮約後の値を検証する。
+
+`.T` はここでは**2階行列**にだけ使う。3階コアの軸交換には `transpose(dim0,dim1)` または `permute(...)` を明示する。複素行列の共役転置は `.mH` であり、実数の `.T` と区別する。`squeeze()` の引数を省くと、境界以外のsize 1 physical/bond axisも消し得る。
+
+## 29. 三角因子の吸収：`tensordot` の残る軸
+
+第1QRの吸収は `torch.tensordot(R1_qr, G2, dims=([1], [0]))`。入力を `(beta1,alpha1)` と `(alpha1,i2,alpha2)` と読めば、消えるのは `alpha1`、出力順は `(beta1,i2,alpha2)` になる。
+
+右端QRの吸収は `torch.tensordot(G2, R3_qr.T, dims=([2], [0]))`。入力は `(alpha1,i2,alpha2)` と `(alpha2,beta2)` なので、出力順は `(alpha1,i2,beta2)` になる。
+
+`tensordot` の結果は、最初の入力の非縮約軸、次の入力の非縮約軸の順で並ぶ。単に二つの入力を逆にすると、同じshapeや添字順になるとは限らない。
+
+```python
+import torch
+
+# 右吸収の古いbondはG2のaxis 2。新しいbondは出力のaxis 2へ残る。
+G2 = torch.arange(12, dtype=torch.float64).reshape(2, 3, 2)
+R3_qr = torch.tensor([[1., 2.], [0., 1.]], dtype=G2.dtype)
+updated = torch.tensordot(G2, R3_qr.T, dims=([2], [0]))
+same = torch.einsum("aib,bc->aic", G2, R3_qr.T)
+assert updated.shape == (2, 3, 2)
+assert torch.equal(updated, same)
+# 元sliceの行[0,1]とR3_qr.Tの積は[2,1]。
+assert torch.equal(updated[0, 0], torch.tensor([2., 1.], dtype=G2.dtype))
+```
+
+理論上の全要素計算と全テンソル不変性は [[38_TT_MPSの右QR直交化と右ブロック]] に置く。
+
+## 30. 左右ブロックの配列・行列・Gramを区別する
+
+`torch.einsum("aib,bjc->ijc", G1_left, G2_left)` では、内部bond `b` とsize 1の左境界 `a` を消し、`(i1,i2,alpha2)` が残る。次に `reshape(n1*n2,r2)` で $(i_1,i_2)$ を行にする。実数の左Gramは `L2_block.T @ L2_block` である。
+
+3階TTの右ブロックは `R2_block = G3_right.squeeze(-1)`。shapeは `(r2,n3)`、右Gramは `R2_block @ R2_block.T` である。すでに右QRした第3コアから境界を外すだけなので、ここで三角因子を再吸収しない。
+
+`R2_block` と `R2_qr` は別の対象である。また、以前の `L2 = torch.kron(U, I_n2)` は2コア左ブロックではなく、`(n1*n2,r1*n2)` の基底拡張行列である。命名を `L2_expand` / `L2_block` のように分けると取り違えを防げる。詳しくは [[37_TT_MPSの左ブロックと直交性の導出]] を参照する。
+
+## 31. 直交性・局所不変性・全体不変性を別々に測る
+
+Gramと単位行列の差は、`torch.linalg.matrix_norm(gram-I, ord="fro").item()` で数値化する。`I` はGramの大きさで作り、dtype/deviceをそろえる。
+
+$$
+e_{\mathrm{orth}}=\|\mathrm{Gram}-I\|_F,\qquad
+e_{\mathrm{local}}=\|C_{\mathrm{before}}-C_{\mathrm{after}}\|_F,\qquad
+e_{\mathrm{whole}}=\|X_{\mathrm{before}}-X_{\mathrm{after}}\|_F.
+$$
+
+全体相対誤差は $X_{\mathrm{before}}\ne0$ のとき $e_{\mathrm{whole}}/\|X_{\mathrm{before}}\|_F$ とし、零テンソルでは絶対誤差を見る。float64の小例では丸め誤差程度の一致を期待するが、特定の $10^{-16}$ を全環境の保証値にはしない。入力のscaleに応じた絶対・相対許容値を使う。
+
+QRの列符号は非一意なので、手計算と `Q,R_qr` の符号が違っても誤りとは限らない。Gramと因子の積、吸収後の再構成を検証する。
+
+## 参考資料：QR追補
+
+- [PyTorch：torch.linalg.qr](https://docs.pytorch.org/docs/stable/generated/torch.linalg.qr.html)
+- [PyTorch：torch.tensordot](https://docs.pytorch.org/docs/stable/generated/torch.tensordot.html)
+- [PyTorch：torch.unsqueeze](https://docs.pytorch.org/docs/stable/generated/torch.unsqueeze.html)
+- [PyTorch：torch.squeeze](https://docs.pytorch.org/docs/stable/generated/torch.squeeze.html)

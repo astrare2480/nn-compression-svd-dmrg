@@ -13,6 +13,8 @@ tags:
 
 # Fashion-MNIST 学習履歴とFine-tuning履歴
 
+本ノートの表は旧runのhistorical recordとして保持する。現行corrected rerunの全epochは [baseline履歴](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/baseline_history.csv)、[全FT候補履歴](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/all_fine_tuning_history.csv)、[best epoch要約](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fit_summary.csv) を参照。Early Stopping用validationと最終候補選択用validationは別である。
+
 ## 1. 00 — 50 epoch固定学習
 
 条件：

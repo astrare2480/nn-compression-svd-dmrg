@@ -261,6 +261,31 @@ $$
 
 である。
 
+この途中式では、異なるrank-1成分の交差項を落としている。その根拠を成分和で書くと、
+
+$$
+\begin{aligned}
+\langle u_jv_j^T,u_\ell v_\ell^T\rangle_F
+&=\sum_{a,b}(u_j)_a(v_j)_b(u_\ell)_a(v_\ell)_b\\
+&=\left(\sum_a(u_j)_a(u_\ell)_a\right)
+\left(\sum_b(v_j)_b(v_\ell)_b\right)\\
+&=\delta_{j,\ell}\delta_{j,\ell}
+=\delta_{j,\ell},
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+\|A-A_r\|_F^2
+&=\sum_{j=r+1}^{\rho}\sum_{\ell=r+1}^{\rho}
+\sigma_j\sigma_\ell
+\langle u_jv_j^T,u_\ell v_\ell^T\rangle_F\\
+&=\sum_{j=r+1}^{\rho}\sum_{\ell=r+1}^{\rho}
+\sigma_j\sigma_\ell\delta_{j,\ell}\\
+&=\sum_{j=r+1}^{\rho}\sigma_j^2.
+\end{aligned}
+$$
+
 ### 対角行列で打ち切り誤差を全要素確認
 
 ある段階の特異値行列を
@@ -414,6 +439,11 @@ $$
 
 ## 5. TT-SVDでは各段階で打ち切る
 
+各段階で捨てるのは、その時点のremainderに対する特異方向である。
+第1段階で捨てた成分を、第2段階で再び分解して捨てているわけではない。
+そのため、第2段階以降の局所誤差は、既に保持した情報の中で新しく失う量を測る。
+元Tensorの全cutを別々にSVDし、それぞれのtailをそのまま足す計算とは区別する。
+
 第 $k$ 段階でSVDする行列を
 
 $$
@@ -525,6 +555,12 @@ $$
 ---
 
 ## 7. 3サイトでの全体誤差の見取り図
+
+局所誤差 $\delta_1,\delta_2$ はそれぞれスカラーだが、実際に失われるものは元Tensorと同じshapeへ展開できる二つの誤差Tensorである。
+全体誤差を評価するには、その誤差Tensor同士の向きも重要になる。
+一般には同じ向きに重なる可能性があるので三角不等式を使う。
+標準TT-SVDでは、ある段階で捨てた方向と後段まで保持された方向が直交するため、後述の交差項が消える。
+そこで二乗normの和から平方根を取る評価へ進めるのであって、単に「二つの数だから二乗和にする」わけではない。
 
 3サイトなら打ち切り箇所は2個である。
 
@@ -804,6 +840,46 @@ $$
 
 という入れ子関係を使って誤差を整理する。
 
+### 入れ子関係を左interfaceの構成式から導く
+
+第 $k+1$ コアを左行列化した列直交行列を $Q_{k+1}$ とすると、
+
+$$
+L_{k+1}=(L_k\otimes I_{n_{k+1}})Q_{k+1},
+\qquad
+(L_k^TL_k)\otimes I_{n_{k+1}}=I
+$$
+
+である。第 $k$ 保持空間への射影を左側だけに作用させると、
+
+$$
+\begin{aligned}
+(\Pi_k\otimes I_{n_{k+1}})L_{k+1}
+&=(L_kL_k^T\otimes I_{n_{k+1}})
+(L_k\otimes I_{n_{k+1}})Q_{k+1}\\
+&=(L_kL_k^TL_k\otimes I_{n_{k+1}})Q_{k+1}\\
+&=(L_k\otimes I_{n_{k+1}})Q_{k+1}\\
+&=L_{k+1}.
+\end{aligned}
+$$
+
+右側の未処理の物理軸へ恒等写像を追加すれば、
+
+$$
+\mathcal P_k\mathcal P_{k+1}=\mathcal P_{k+1}.
+$$
+
+転置を取り、各射影の対称性を使うと、
+
+$$
+\mathcal P_{k+1}\mathcal P_k
+=(\mathcal P_k\mathcal P_{k+1})^T
+=\mathcal P_{k+1}^T
+=\mathcal P_{k+1}.
+$$
+
+したがって、両順序の積が同じ後段の射影になり、後段が前段の内部にあることを構成式から確認できる。
+
 ---
 
 ## 13. 段階ごとの誤差テンソル
@@ -923,6 +999,90 @@ core 1 ⟂ core 2
 と読むのは誤りである。
 
 入れ子の直交射影として誤差テンソル $E_k$ を元空間上で丁寧に定義した整理では、異なる段階の $E_k$ が直交する形を使ってPythagorasを適用できる。
+
+### 異なる段階の内積を0まで計算する
+
+ここではテンソル全要素を辞書順に並べたベクトルに射影を作用させるものとし、$\mathcal P_0=I$ とする。まず
+
+$$
+\begin{aligned}
+\mathcal P_kE_k
+&=\mathcal P_k(\mathcal P_{k-1}X-\mathcal P_kX)\\
+&=\mathcal P_kX-\mathcal P_kX\\
+&=0.
+\end{aligned}
+$$
+
+一方、$k<\ell$ なら入れ子関係により
+
+$$
+\begin{aligned}
+\mathcal P_kE_\ell
+&=\mathcal P_k(\mathcal P_{\ell-1}X-\mathcal P_\ell X)\\
+&=\mathcal P_{\ell-1}X-\mathcal P_\ell X\\
+&=E_\ell.
+\end{aligned}
+$$
+
+射影の対称性を使えば、
+
+$$
+\begin{aligned}
+\langle E_k,E_\ell\rangle_F
+&=\langle E_k,\mathcal P_kE_\ell\rangle_F\\
+&=\langle\mathcal P_k^TE_k,E_\ell\rangle_F\\
+&=\langle\mathcal P_kE_k,E_\ell\rangle_F\\
+&=\langle0,E_\ell\rangle_F\\
+&=0.
+\end{aligned}
+$$
+
+これで、単なる直感ではなく、元の同一テンソル空間に戻した残差が直交することを示した。
+
+さらに、第 $k$ 局所SVDの実際の残差を
+
+$$
+D_k:=M_k-Q_kQ_k^TM_k,
+\qquad
+F_k:=L_{k-1}\otimes I_{n_k},
+\qquad
+L_0=(1)
+$$
+
+と置く。この節では $Q_k$ は残す列だけを持ち、左interfaceの列数も保持bond次元である。元空間への埋め込みは
+
+$$
+E_k^{\langle k\rangle}=F_kD_k,
+\qquad
+F_k^TF_k=I
+$$
+
+なので、
+
+$$
+\begin{aligned}
+\|E_k\|_F^2
+&=\|E_k^{\langle k\rangle}\|_F^2\\
+&=\|F_kD_k\|_F^2\\
+&=\operatorname{tr}(D_k^TF_k^TF_kD_k)\\
+&=\operatorname{tr}(D_k^TD_k)\\
+&=\delta_k^2.
+\end{aligned}
+$$
+
+したがって、望遠鏡和の二乗を交差項まで展開すると、
+
+$$
+\begin{aligned}
+\|X-\widehat X\|_F^2
+&=\left\|\sum_{k=1}^{d-1}E_k\right\|_F^2\\
+&=\sum_{k=1}^{d-1}\|E_k\|_F^2
++2\sum_{k<\ell}\langle E_k,E_\ell\rangle_F\\
+&=\sum_{k=1}^{d-1}\delta_k^2.
+\end{aligned}
+$$
+
+この等式の前提は、各段階がexactなtruncated SVDであり、残差を左直交interfaceで元空間へ戻している標準的な左から右へのTT-SVDである。浮動小数点の直交性・SVD・縮約誤差まで厳密にこの等式へ含めるわけではない。
 
 ---
 
@@ -1102,6 +1262,64 @@ $$
 $$
 
 というquasi-optimalityの位置づけがある、と整理した。
+
+### 準最適性の上界がどこから来るか
+
+上界も結果だけでなく、局所問題への写像から追う。指定TT-rank上限を満たす任意のテンソル $Y$ について、
+
+$$
+\operatorname{rank}(Y^{\langle k\rangle})\le\widetilde r_k,
+\qquad
+M_k=F_k^TX^{\langle k\rangle},
+\qquad
+F_k=L_{k-1}\otimes I_{n_k}
+$$
+
+である。局所問題の比較候補を
+
+$$
+C_k:=F_k^TY^{\langle k\rangle}
+$$
+
+と置けば、
+
+$$
+\operatorname{rank}(C_k)
+\le\operatorname{rank}(Y^{\langle k\rangle})
+\le\widetilde r_k.
+$$
+
+局所truncated SVDの最適性と、$F_k^T$ がnormを増やさないことから、
+
+$$
+\begin{aligned}
+\delta_k
+&=\min_{\operatorname{rank}(C)\le\widetilde r_k}\|M_k-C\|_F\\
+&\le\|M_k-C_k\|_F\\
+&=\|F_k^T(X^{\langle k\rangle}-Y^{\langle k\rangle})\|_F\\
+&\le\|X^{\langle k\rangle}-Y^{\langle k\rangle}\|_F\\
+&=\|X-Y\|_F.
+\end{aligned}
+$$
+
+最後の不等式は、$F_kF_k^T$ が直交射影なので
+
+$$
+\|F_k^TZ\|_F^2
+=\operatorname{tr}(Z^TF_kF_k^TZ)
+\le\operatorname{tr}(Z^TZ)
+=\|Z\|_F^2
+$$
+
+から従う。全段階で足し合わせると、
+
+$$
+\|X-\widehat X_{\mathrm{TT\text{-}SVD}}\|_F^2
+=\sum_{k=1}^{d-1}\delta_k^2
+\le(d-1)\|X-Y\|_F^2.
+$$
+
+右辺を許される $Y$ の中で最小化し、平方根を取れば、既出の $\sqrt{d-1}$ の上界を得る。これは「全体最適である」という証明ではなく、「全体最適誤差の何倍以内か」という証明である。
 
 つまり、
 

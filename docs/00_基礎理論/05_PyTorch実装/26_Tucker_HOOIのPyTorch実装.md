@@ -156,6 +156,25 @@ hooi
 
 ### `hooi_sweep`
 
+下のloopで対象modeのfactorは射影に使わない。これから選び直す基底で先に情報を落とすと、候補を調べる局所問題そのものが変わってしまうためである。
+毎回projectedを元の $X$ から作り、他modeについてはそのsweepで更新済みのfactorを使う。
+前の対象modeで作ったprojectedをそのまま次へ渡すloopとは区別する。
+
+元shapeが $(I_0,\ldots,I_{N-1})$、更新集合が $\mathcal M$ なら、対象mode $n$ のprojected unfoldingは
+
+$$
+I_n\times
+\left(
+\prod_{\substack{m\in\mathcal M\\m\ne n}}R_m
+\prod_{m\notin\mathcal M}I_m
+\right)
+$$
+
+になる。対象行数は $I_n$ のままだが、他modeの列数は既に $R_m$ へ変わっている。
+例えばshape $(5,4,3)$、target ranks $(2,1,1)$ では、元mode 0 unfoldingは $5\times12$ だが、他modeへの射影後は $5\times1$ である。
+後者のreduced SVDで得られる左特異ベクトルは1列なので、2列のfactorを要求する現行contractは満たせない。
+「元unfoldingではrankが許される」と「全局所更新でもfactorを作れる」は違う、というfeasibility条件を数える例である。
+
 `ranks` のkeyを更新対象modeとして扱う。
 
 ```python
@@ -365,6 +384,60 @@ print("logits RMSE:", float(logits_rmse))
 
 `effective_weight` の一致は層の再構成に関する確認であり、`logits_rmse` は実データを通したモデル出力の確認である。この2つを分けることで、weight近似誤差とtask上の影響を混同しない。
 
+### 元資料のdummy入力と、forward確認で分かる範囲
+
+添付 `CNN CIFAR-10→Tuckerを考える (1).md` の1991–2236行では、
+`copy.deepcopy(model)`、`conv2` の差し替え、dummy入力、forwardを一行ずつ説明している。
+直前のコードのモデルを使う場合、元資料と同じ入力のサイズは
+
+$$
+\operatorname{shape}(\mathrm{dummy})=(N,C,H,W)=(4,3,32,32)
+$$
+
+である。4は独立な画像入力を4枚束ねたbatch、3は各画像のRGB channel、
+二つの32は高さと幅である。第1軸だけを選ぶ `dummy[0]` は
+shape `(3, 32, 32)` の1枚分になる。
+元資料の `dummy[^18_0]` は引用マーカーが添字へ混入した表記なので、
+コードの添字を `[0]` として読み直す。
+
+```python
+# 前の節で作ったコピー側を使い、元モデルやDataLoaderは変更しない。
+parameter = next(compressed_model.parameters())
+dummy = torch.randn(
+    4, 3, 32, 32,
+    device=parameter.device,
+    dtype=parameter.dtype,
+)
+assert dummy[0].shape == (3, 32, 32)
+
+# evalはDropout / BatchNormの動作を変え、no_gradは微分履歴を止める。
+compressed_model.eval()
+with torch.no_grad():
+    dummy_logits = compressed_model(dummy)
+
+# CIFAR-10の10クラス用モデルを前提としたinterfaceの確認である。
+assert dummy_logits.shape == (4, 10)
+```
+
+`torch.randn` は平均0・分散1の正規分布から値を作る。
+これは実際のCIFAR-10画像ではなく、入力のshapeを再現したテスト入力である。
+batchを1枚へ変えるなら先頭の4を1へ、32枚なら32へ変える。
+`copy.deepcopy(model)` はモデル自体を複製し、コピー側の `conv2` を置換しても
+元の `model.conv2` は置換しない。ただし、特殊なTensor属性などを持つModuleでは、
+deepcopyできるかを個別に確認する必要がある。
+
+このforwardが成功すれば、少なくとも、その入力について前後層のchannelの接続、
+空間shapeの接続、入力とparameterのdevice / dtypeの整合を確認できる。
+成功だけで元の `stride / padding / dilation` が完全に同じと証明したことにはならない。
+それらの設定は元Convと置換したspatial Convを直接比較する。
+
+同じdummyをbaselineにも渡してlogits差を測ることはできるが、
+ランダム入力での差は実データ上のloss / accuracyの代わりにはならない。
+元資料がモデル全体のlogits差を「元のconv2の出力近似」と説明した箇所は、
+測定対象を分けて読む。後続層も通したlogits差と、Conv2単体のactivation差は別の量である。
+`no_grad()` は評価modeへ変更しないため、DropoutやBatchNormを評価動作にする
+`eval()` と併用する。
+
 ---
 
 ## 5. Autograd境界：`detach()` と `no_grad()`
@@ -408,6 +481,32 @@ optimizer.step()
 で更新できる。
 
 置換後の3層Parameterはleafであり、元ConvのParameter storageを共有しない。
+
+### 元資料のleaf・in-placeエラーを、初期化と微分可能な計算に分ける
+
+同じ添付の799–1052行で繰り返し説明した理由は、
+「学習対象のParameterをコピーで書き換える操作」と「その後のfine-tuning」を分けることにある。
+`nn.Parameter(..., requires_grad=True)` は通常leafであり、
+`weight.copy_(...)` は値をその場で書き換えるin-place操作である。
+勾配追跡が有効なまま、そのleafへコピーすると、通常は
+
+```text
+RuntimeError:
+a leaf Variable that requires grad is being used in an in-place operation
+```
+
+になる。初期化なので、直前の `with torch.no_grad(): parameter.copy_(...)` を使う。
+コピー元を `detach()` するだけでは、コピー先のleafを勾配追跡中に書き換える問題は解消しない。
+また、`no_grad()` はコピー以前に既に作ったHOSVDのgraphを遡って消す機能ではない。
+初期化用の分解を元Convから切り離す責務は、上で説明したModule構築側の `detach()` にある。
+
+コピー後は新しい3層のparameterを学習の開始点として扱う。
+`requires_grad=True` を維持したparameterには、その後のforwardとbackwardで勾配を計算できる。
+`parameter.data.copy_(...)` でautogradの管理を迂回してエラーだけを避ける方法は使わない。
+一方、SVD/HOSVDを含む変換自体を微分したい別の目的では、
+新しいleaf Parameterへの初期値コピーと同じ構成にせず、Tensor-levelの計算として
+graphを保持するかを設計する。
+元資料の「履歴をコピーしない」は、本章ではこの初期化の境界を指す。
 
 ### effective weight評価
 

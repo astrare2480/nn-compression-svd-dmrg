@@ -1,0 +1,7 @@
+trial,model,parameters,time_ms,batch_size,input_shape,warmup,repeats,checkpoint,checkpoint_sha256
+1,Baseline,128842,0.5770559000011417,256,"(256, 3, 32, 32)",20,2000,models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/cifar10_cnn_baseline.pt,0b9dce2ff5d4d464ad55acd0ef705c08f34bd3d42c33e4feacac1b5352e2e21d
+1,Final (compressed + FT),81405,0.5552146000009088,256,"(256, 3, 32, 32)",20,2000,models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/conv1-9_conv2-32_conv3-48_final.pt,24f5256833fbdf4f5017150a0411b28e683e2a2b21a76cdead5788cf472d3eef
+2,Final (compressed + FT),81405,0.5512906000003568,256,"(256, 3, 32, 32)",20,2000,models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/conv1-9_conv2-32_conv3-48_final.pt,24f5256833fbdf4f5017150a0411b28e683e2a2b21a76cdead5788cf472d3eef
+2,Baseline,128842,0.5733908500005782,256,"(256, 3, 32, 32)",20,2000,models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/cifar10_cnn_baseline.pt,0b9dce2ff5d4d464ad55acd0ef705c08f34bd3d42c33e4feacac1b5352e2e21d
+3,Baseline,128842,0.574813000001086,256,"(256, 3, 32, 32)",20,2000,models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/cifar10_cnn_baseline.pt,0b9dce2ff5d4d464ad55acd0ef705c08f34bd3d42c33e4feacac1b5352e2e21d
+3,Final (compressed + FT),81405,0.5512858499987487,256,"(256, 3, 32, 32)",20,2000,models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/conv1-9_conv2-32_conv3-48_final.pt,24f5256833fbdf4f5017150a0411b28e683e2a2b21a76cdead5788cf472d3eef

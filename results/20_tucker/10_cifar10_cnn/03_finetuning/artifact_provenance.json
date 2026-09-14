@@ -1,0 +1,36 @@
+{
+  "audit_date": "2026-09-12",
+  "notebook": "notebooks/20_tucker/10_cifar10_cnn/03_finetuning.ipynb",
+  "notebook_before_fix_sha256": "8e448e1a584d0c7575f9f4f1702c0f958cc4b8a3d5324ada25772dcda6c65088",
+  "artifact_status": "preserved historical saved records; not a fresh Run All of current source",
+  "preserved_artifacts": [
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/03_finetuning/aggressive_history.csv",
+      "sha256": "1b1bcbbe5fa234892b58ca9d85ecc770a3196bf2c6bf101e3393752798792cfa"
+    },
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/03_finetuning/balanced_history.csv",
+      "sha256": "4394c34e83dbc7fa7e9a094ecf3f9518f0949a79404facf30406da6bce4f4615"
+    },
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/03_finetuning/conservative_history.csv",
+      "sha256": "51c4e46c1d07a7642e2da396d0b9a69b3524581eae8520eb6e9f67f99ecae949"
+    },
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/03_finetuning/finetuning_comparison.csv",
+      "sha256": "1b946e124dbc3cb33d2e2a3aa0c54622c072e750ce31b8df94a162bef6fc7a70"
+    },
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/03_finetuning/finetuning_learning_curves.png",
+      "sha256": "31243a604ef1f58f8ecc14b7b3a4504f6deeef2ecb567a642e7dca93b15e6f96"
+    }
+  ],
+  "training_rerun": false,
+  "column_definitions": {
+    "finetuning_comparison.csv:weight_relative_error": "pre-finetuning approximation error copied from selected rank setting for both before and after rows; NOT measured post-FT error"
+  },
+  "validation_definitions": {
+    "history_csv": "early-stopping validation",
+    "finetuning_comparison.csv": "rank-selection validation"
+  }
+}

@@ -56,7 +56,8 @@ Notebook上で圧縮前後latencyを同条件で簡単に比較したいとき�
 
 ## 主なcontract / 注意事項
 
-入力差をlatency差へ混ぜないため、両modelへ同一Tensorを渡す。
+- 入力差をlatency差へ混ぜないため、両modelへ同一Tensorを渡す。
+- 両model自体は移動しない。[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従い、呼び出し前に同じdeviceへ配置する。
 
 ## 関連API
 

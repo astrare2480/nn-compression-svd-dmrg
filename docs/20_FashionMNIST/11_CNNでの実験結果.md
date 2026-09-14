@@ -30,20 +30,20 @@ Conv + Linear同時圧縮
 
 重要なのは、**3実験を1つの同一runとして混ぜないこと**。
 
-Linear-onlyの02/03は、それ自体のbaselineとの比較として有効である。
-
-Conv-only / Conv+Linearは、benchmark条件などを修正したcorrected 04/05を正式結果とする。
+現在の正式値は2026-09-12の3つの独立rerunを出典とする。元02/03とcorrected 04/05の記録は残す。各runで学習・保存したbaselineとの比較として読む。
 
 ```text
 Linear-only
-→ 03_cnn_linear_svd_finetuning のrun内で比較
+→ 03_cnn_linear_svd_finetuning_rerun のrun内で比較
 
 Conv-only
-→ 04_cnn_conv_svd_corrected のrun内で比較
+→ 04_cnn_conv_svd_corrected_rerun のrun内で比較
 
 Conv+Linear
-→ 05_cnn_conv_linear_svd_corrected のrun内で比較
+→ 05_cnn_conv_linear_svd_corrected_rerun のrun内で比較
 ```
+
+各runのNotebook・CSV・重み・manifestは [完全保存runの出典一覧](../../results/10_svd/rerun_20260912T074153Z/README.md) を参照。本文は保存CSVの表示用丸め値。
 
 各実験のabsolute accuracyを横並びにして「どれが最も高性能」と比較するより、**各run内のbaselineとの差と圧縮量**を見る。
 
@@ -103,28 +103,28 @@ fc1 = Linear(3136 → 128)
 採用rank：
 
 ```text
-fc1 rank = 24
+fc1 rank = 28
 ```
 
 この実験では、03のrun内で、
 
 ```text
-Parameters: 421,642 → 98,570
-Parameter reduction: 76.62%
+Parameters: 421,642 → 111,626
+Parameter reduction: 73.53%
 
-Test acc: 91.75% → 91.87%
+Test acc: 91.28% → 91.49%
 ```
 
 となった。
 
-差は `+0.12pt` と小さいため、accuracy改善ではなく**大幅parameter削減後も精度を維持した**と解釈する。
+差は `+0.21pt` と小さいため、accuracy改善ではなく**大幅parameter削減後も精度を維持した**と解釈する。
 
 Linear-onlyのbenchmarkはbaseline / compressedで同じwarmup / repeatsを使っており、旧04/05で見つかったbenchmark不整合の対象ではない。
 
 詳細は [[20_FashionMNIST/08_CNNのLinear SVD]] を参照。
 
 > [!important]
-> Linear-only runのbaseline Test acc `91.75%` と、corrected 04/05のbaseline `91.28%` は別runの値。1つの共通baselineとして混ぜない。
+> 新3 runのbaseline Test accは `91.28%` で一致するが、各run自身のbaselineを学習・保存して比較している。旧Linear baseline `91.75%` を新runへ混ぜない。
 
 ---
 
@@ -174,7 +174,7 @@ single seedなので改善とは断定しない。
 
 ### Latency
 
-corrected benchmark：
+最終FT後の3 trial平均時間の中央値（FT前sweepとは別）：
 
 ```text
 batch size = 256
@@ -182,8 +182,8 @@ same input_batch
 warmup = 20
 repeats = 2000
 
-Baseline   ≈ 0.367 ms/batch
-Compressed ≈ 0.370 ms/batch
+Baseline   ≈ 0.344271 ms/batch
+Final FT   ≈ 0.353625 ms/batch
 ```
 
 理論MACsは減るが、wall-clock latencyは短くならなかった。
@@ -192,7 +192,7 @@ Compressed ≈ 0.370 ms/batch
 
 # 4. Conv + Linear corrected
 
-単独実験で採用したrankを固定して同時に適用した。
+従来の単独実験で採用したrankを固定して同時に適用した。今回のLinear-only最終fc1=28へ変更せず、Combinedは元の固定fc1=24を維持した。
 
 ```text
 conv2 rank = 28
@@ -302,11 +302,11 @@ MACs
 -47.25%
 ```
 
-一方、同条件latencyは、
+一方、最終FT後の同条件latency（3 trial平均時間の中央値）は、
 
 ```text
-Baseline   ≈ 0.378 ms/batch
-Compressed ≈ 0.399 ms/batch
+Baseline   ≈ 0.346444 ms/batch
+Final FT   ≈ 0.383861 ms/batch
 ```
 
 で改善しなかった。
@@ -345,7 +345,7 @@ baseline / compressedで同じinput batchを使用
 warmup / repeatsを統一
 train指標評価でshuffle Generatorを進めない
 current src APIを使用
-corrected専用resultsへ保存
+corrected rerun専用resultsへ保存
 ```
 
 を徹底した。
@@ -366,7 +366,7 @@ SVDの数式を変更したのではなく、**比較条件と再現性を正し
 今回の実験はsingle seed。
 
 ```text
-Linear-only  +0.12pt
+Linear-only  +0.21pt
 Conv-only    +0.47pt
 Combined     +0.05pt
 ```

@@ -55,7 +55,7 @@ Fine-tuning
 
 ```text
 notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb
-results/30_cifar10/02_svd_global_compression_using_src_corrected/
+results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/
 ```
 
 を基準とする。
@@ -286,7 +286,7 @@ CIFAR-10ではConvのrank allocationを主題にしたかったため、GAPでcl
 | Test loss | 0.755618 |
 | Parameters | **128,842** |
 | MACs | **10,357,248** |
-| Latency | **約0.531 ms/batch** |
+| Latency（保存checkpoint再計測、2026-09-12） | **約0.575 ms/batch** |
 
 ## Final compressed + Fine-tuning
 
@@ -303,7 +303,7 @@ CIFAR-10ではConvのrank allocationを主題にしたかったため、GAPでcl
 | Parameter reduction | **36.82%** |
 | MACs | **5,625,344** |
 | MAC reduction | **45.69%** |
-| Latency | **約0.537 ms/batch** |
+| Latency（保存checkpoint再計測、2026-09-12） | **約0.551 ms/batch** |
 
 Test accuracy差は、
 
@@ -382,6 +382,22 @@ classification accuracyが必ず高い
 
 ので、重み近似指標とtask性能を分けて見る。
 
+以下は正式出典のcorrected Notebookで保存されたFT前の図であり、2026-09-12の新学習runやlatency再計測の図ではない。いずれも他層をbaselineのまま保ち、左にモデル全体のparametersとRank-Selection Validation loss、右に各frontier内の0〜1正規化を表示する。
+
+![CIFAR-10 CNNのconv1単独SVDのPareto frontier](assets/02_svd_global_compression_using_src_corrected/parameters_vs_validation_loss_normalize_conv1.png)
+
+掲載画像はdocs内表示用の複製で、[出典runの元画像](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/) とバイト同一。旧runの画像は上書きしていない。
+
+図：conv1単独圧縮のFT前Pareto frontier。[元データ](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/pareto_frontier_conv1.csv)。
+
+![CIFAR-10 CNNのconv2単独SVDのPareto frontier](assets/02_svd_global_compression_using_src_corrected/parameters_vs_validation_loss_normalize_conv2.png)
+
+図：conv2単独圧縮のFT前Pareto frontier。[元データ](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/pareto_frontier_conv2.csv)。
+
+![CIFAR-10 CNNのconv3単独SVDのPareto frontier](assets/02_svd_global_compression_using_src_corrected/parameters_vs_validation_loss_normalize_conv3.png)
+
+図：conv3単独圧縮のFT前Pareto frontier。[元データ](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/pareto_frontier_conv3.csv)。各層の図は軸の範囲が異なるため、正規化後の座標だけを層間の性能差として比較しない。
+
 ---
 
 # 8. knee近傍だけをmodel-wide探索
@@ -408,6 +424,14 @@ knee近傍だけ残す
 
 この用語上の区別は、corrected実験で明確化した重要点である。
 
+![CIFAR-10 CNNの3層SVDのknee近傍組合せ](assets/02_svd_global_compression_using_src_corrected/knee_combination_params_vs_validation_loss.png)
+
+図：既存corrected runのFT前model-wide候補。[元データ](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/knee_combination_results.csv) の全27構成を表示し、星は3層とも単独sweepのkneeを使った構成、黒丸はこの候補集合でdirect validation lossが最小の構成を示す。黒丸をFT後の最終rank `9 / 32 / 48` と同一視しない。
+
+![CIFAR-10 CNNの3層SVD組合せのPareto frontier](assets/02_svd_global_compression_using_src_corrected/parameters_vs_validation_loss_normalize_combination.png)
+
+図：同じFT前model-wide候補から抽出したPareto frontier。左はparametersとRank-Selection Validation loss、右はfrontier内の0〜1正規化。[元データ](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/pareto_frontier_combination.csv) はFT候補を絞る段階であり、全rank空間の大域最適解を示さない。
+
 ---
 
 # 9. Fine-tuning前後
@@ -421,6 +445,10 @@ Fine-tuning候補として、代表的な3構成を比較した。
 | Conservative | **9** | **32** | **48** | **0.4792** | **0.7444** | **0.746920** | **81,405** |
 
 最終選択は `9 / 32 / 48`。
+
+![CIFAR-10 CNNの3層SVDのFine-tuning後の候補比較](assets/02_svd_global_compression_using_src_corrected/fine_tuning_after.png)
+
+図：既存corrected runのFT後のRank-Selection Validation accuracy（左）とloss（右）。候補は順に `6 / 32 / 32`、`9 / 32 / 32`、`9 / 32 / 48`。[元データ](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/fine_tuning_result.csv) は上表と同じで、Conservativeのloss `0.746920` が最小。accuracy `0.7444` は最終Test accuracy `0.7343` とは別指標である。
 
 ConservativeはFine-tuning前には、
 
@@ -443,6 +471,10 @@ Val loss = 0.7469
 truncated SVDは重み近似を最適化するが、classification task lossを直接最適化するわけではない。
 
 Fine-tuningは、SVDで作った低rank因子を初期値として、低rank構造の中でtask lossへ再適応させる処理と解釈する。
+
+![CIFAR-10 CNNの3層SVDのFine-tuning前後の差分](assets/02_svd_global_compression_using_src_corrected/fine_tuning_delta.png)
+
+図：同じ3候補について、FT後 − SVD直後のRank-Selection Validation accuracy（左）とloss（右）。[元データ](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/fine_tuning_result.csv) のaccuracy差は0〜1尺度であり、percentage pointへは100倍する。候補を結ぶ線はepoch別の学習履歴ではなく、推論時間の変化も示さない。
 
 ---
 
@@ -488,7 +520,7 @@ Reduction      45.69%
 
 まで減った。
 
-一方、corrected benchmarkでは、
+2026-09-12に、correctedの保存済みbaseline / 最終FT後checkpointを読み直して再計測した。両checkpointのtest accuracyは既存記録の `0.7327 / 0.7343` と一致した。再学習・rank再選択は行っていない。
 
 ```text
 batch size = 256
@@ -496,11 +528,19 @@ same input_batch
 warmup = 20
 repeats = 2000
 
-Baseline   ≈ 0.531 ms/batch
-Compressed ≈ 0.537 ms/batch
+GPU = NVIDIA GeForce RTX 5070 Ti
+PyTorch = 2.11.0+cu128
+3 trials（各trialの平均推論時間を測り、その中央値を報告）
+
+Baseline   ≈ 0.574813 ms/batch
+Final FT   ≈ 0.551291 ms/batch
 ```
 
-となり、短縮しなかった。
+今回の測定では約4.09%短縮したが、理論MACsの45.69%削減と同じ割合の短縮ではなかった。計測は `eval()` / `no_grad()`、CUDA同期あり、同じrank-selection validationの先頭256枚を共有し、host→device転送を時間に含めない。測定順はtrialごとに入れ替えた。
+
+生データは [final_model_benchmark_20260912.csv](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/final_model_benchmark_20260912.csv)、環境・入力/重みのSHA-256・test再確認値は [同名JSON](../../results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/final_model_benchmark_20260912.json) に保存した。この再計測は元の学習runとは別の計測runである。
+
+従来の `約0.531 → 0.537 ms/batch` は指定された最終FT後成果物から出典を追跡できなかったため、最終計測結果としての採用を撤回した。rank sweep CSVの `compressed_time_ms` はFT前の測定であり、今回のFT後の値へ転用しない。
 
 これは、
 
@@ -647,7 +687,7 @@ historical Notebookは、実験の発展や修正前の問題を学ぶために�
 - 理論MACsを **45.69%** 削減した。
 - Test accuracyは `73.27% → 73.43%` で、ほぼ維持された。
 - 強い圧縮直後の性能低下をFine-tuningで大きく回復できた。
-- MACs削減はGPU latency短縮には直結しなかった。
+- 保存checkpoint再計測ではlatencyは約4.09%短縮したが、MACsの45.69%削減に比例した短縮ではなかった。環境依存の単一計測runであり、一般的なspeedupを保証しない。
 - 探索は全rank空間のglobal optimumではなく、knee近傍に制約したmodel-wide探索である。
 
 この結果を、**行列化したConv SVDの到達点**とし、次はテンソルの多モード構造をより直接扱うTucker decompositionへ進む。

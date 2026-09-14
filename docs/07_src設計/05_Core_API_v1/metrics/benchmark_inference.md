@@ -96,6 +96,7 @@ flowchart TD
 - baseline/compressed比較では**同じ`input_batch`、warmup、repeats**を使う。
 - `warmup/repeats`はbool/Tensor scalar不可。
 - wall-clock時間はhardware・kernel・framework overheadに依存し、MACs削減を直接意味しない。
+- 入力だけを`device`へ移し、model自体は移動しない。modelは[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従い、呼び出し前に指定deviceへ配置する。
 
 ## 関連API
 

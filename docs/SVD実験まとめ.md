@@ -37,7 +37,7 @@ CIFAR-10
 → 30_CIFAR10_CNN
 ```
 
-正式結果を引用するときは `*_corrected.ipynb` と対応するcorrected resultsを優先する。
+MNIST / Fashion-MNISTの正式値は2026-09-12の完全保存 `*_rerun.ipynb` と対応するresultsを優先する。[Notebook・CSV・重み・manifestの出典一覧](../results/10_svd/rerun_20260912T074153Z/README.md) でrunを追跡する。CIFAR-10は既存corrected学習runと、保存済み最終FT後重みの別計測runを区別する。
 
 original / using_src / before_srcはhistorical recordとして残す。
 
@@ -98,6 +98,21 @@ single seedの小差なので、accuracy改善とは主張せず、**約89%圧�
 
 [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]]
 
+## Fashion-MNIST CNN Linear-only
+
+```text
+Selected rank: fc1=28（direct knee=24、FT後に28を選択）
+Parameters: 421,642 → 111,626
+Reduction: 73.53%
+Test acc: 91.28% → 91.49%
+Δ = +0.21pt
+Latency: 約0.346254 → 0.338586 ms/batch（最終FT後・3 trial中央値）
+```
+
+旧03の最終fc1=24はhistoricalとして残す。現行値は独立rerun内でbaselineと比較し、single seedの小差を統計的改善とは扱わない。
+
+[[20_FashionMNIST/08_CNNのLinear SVD]]
+
 ## Fashion-MNIST CNN Conv-only
 
 ```text
@@ -106,7 +121,7 @@ Parameters: 421,642 → 413,066
 Reduction: 2.03%
 Test acc: 91.28% → 91.75%
 Δ = +0.47pt
-Latency: 約0.367 → 0.370 ms/batch
+Latency: 約0.344271 → 0.353625 ms/batch
 ```
 
 Convはモデルparameter数への寄与が小さくても、空間位置で同じweightを繰り返し使うため、MACsへの効果が大きい。
@@ -123,10 +138,10 @@ MACs: 4,241,152 → 2,237,184
 Reduction: 47.25%
 Test acc: 91.28% → 91.33%
 Δ = +0.05pt
-Latency: 約0.378 → 0.399 ms/batch
+Latency: 約0.346444 → 0.383861 ms/batch
 ```
 
-このrank組は、単独実験で選んだrankを組み合わせたもの。`conv2 rank × fc1 rank` 全組合せの最適点ではない。
+このrank組は、従来の単独実験で選んだ固定条件を維持して再実行したもの。新Linear-onlyの最終fc1=28へ変更した構成ではない。`conv2 rank × fc1 rank` 全組合せの最適点ではない。
 
 [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]
 
@@ -140,7 +155,7 @@ MACs: 10,357,248 → 5,625,344
 Reduction: 45.69%
 Test acc: 73.27% → 73.43%
 Δ = +0.16pt
-Latency: 約0.531 → 0.537 ms/batch
+Latency: 約0.574813 → 0.551291 ms/batch（保存済み最終FT後重みの再計測・3 trial中央値）
 ```
 
 探索は、各Conv単独sweepのPareto / knee近傍へ候補を絞ってから組み合わせる**制約付きmodel-wide rank allocation**。全rank空間のglobal optimumではない。
@@ -167,7 +182,7 @@ MACsを減らす
 
 ではなかった。
 
-Fashion-MNIST CNNでもCIFAR-10でも、公平化したGPU benchmarkではMACs削減がlatency短縮へ直結しなかった。
+最終3 trial計測ではFashion-MNIST Conv-only / Combinedは短縮しなかった。一方Linear-onlyは約2.21%、CIFAR-10は約4.09%短縮したが、いずれもMACs削減率に比例するspeedupではない。速度は最終モデルの平均時間の中央値を出典とし、FT前sweep時間とは混ぜない。
 
 したがって、
 

@@ -326,6 +326,55 @@ $$
 
 つまり $z$ 方向を落とし、$U$ の列が張る $xy$ 平面へ射影する。
 
+### 同じ元資料の行列積・入力側の埋め込みまで展開する
+
+この $3\times2$ の $U$ は、添付 `TT_MPS基礎理論.md` の25951–26017行、
+26210–26271行と同じ例である。既存の行列や説明は残し、
+元資料で表示していた転置を含む積と入力の対応を直後へ追加する。
+
+$$
+\begin{aligned}
+U^T U
+&=\begin{pmatrix}1&0&0\\0&1&0\end{pmatrix}
+\begin{pmatrix}1&0\\0&1\\0&0\end{pmatrix}\\
+&=\begin{pmatrix}
+1\cdot1+0\cdot0+0\cdot0&1\cdot0+0\cdot1+0\cdot0\\
+0\cdot1+1\cdot0+0\cdot0&0\cdot0+1\cdot1+0\cdot0
+\end{pmatrix}
+=I_2,\\
+UU^T
+&=\begin{pmatrix}1&0\\0&1\\0&0\end{pmatrix}
+\begin{pmatrix}1&0&0\\0&1&0\end{pmatrix}
+=\begin{pmatrix}1&0&0\\0&1&0\\0&0&0\end{pmatrix}.
+\end{aligned}
+$$
+
+入力 $x=(x_1,x_2)^T$ への作用も全要素で
+
+$$
+\begin{aligned}
+Ux
+&=\begin{pmatrix}1&0\\0&1\\0&0\end{pmatrix}
+\begin{pmatrix}x_1\\x_2\end{pmatrix}
+=\begin{pmatrix}x_1\\x_2\\0\end{pmatrix},\\
+\|Ux\|_2^2&=x_1^2+x_2^2+0^2=x_1^2+x_2^2=\|x\|_2^2,\\
+U^T(Ux)&=\begin{pmatrix}1&0&0\\0&1&0\end{pmatrix}
+\begin{pmatrix}x_1\\x_2\\0\end{pmatrix}
+=\begin{pmatrix}x_1\\x_2\end{pmatrix},\\
+U^Ty&=\begin{pmatrix}1&0&0\\0&1&0\end{pmatrix}
+\begin{pmatrix}a\\b\\c\end{pmatrix}
+=\begin{pmatrix}a\\b\end{pmatrix},\\
+U(U^Ty)&=\begin{pmatrix}1&0\\0&1\\0&0\end{pmatrix}
+\begin{pmatrix}a\\b\end{pmatrix}
+=\begin{pmatrix}a\\b\\0\end{pmatrix}.
+\end{aligned}
+$$
+
+入力側の往復 $U^TU$ は全ての $x\in\mathbb R^2$ を戻す。
+出力側の往復 $UU^T$ は、$c\ne0$ の $y\in\mathbb R^3$ を元どおりに戻さない。
+長方形の等長写像と全空間で可逆なユニタリ変換を区別する元資料の説明が、
+二つの往復の差として具体的に見える。
+
 ---
 
 ## 6. TT-SVDでの意味

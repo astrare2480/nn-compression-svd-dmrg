@@ -939,6 +939,23 @@ rankと圧縮率の関係は単純だが、rankと分類精度の関係はモデ
 
 ## 12. 近似誤差はrank増加に対して単調非増加
 
+### 一つ多く残したときの差を明示する
+
+$0\le r<k$ とすると、二つの残差二乗の差は
+
+$$
+\begin{aligned}
+\|W-W_r\|_F^2-\|W-W_{r+1}\|_F^2
+&=\sum_{i=r+1}^{k}\sigma_i^2-\sum_{i=r+2}^{k}\sigma_i^2\\
+&=\sigma_{r+1}^2+\sum_{i=r+2}^{k}\sigma_i^2
+-\sum_{i=r+2}^{k}\sigma_i^2\\
+&=\sigma_{r+1}^2\ge0.
+\end{aligned}
+$$
+
+両辺のノルムは非負なので、平方根を取っても大小関係は保たれる。
+捨てる特異値が0なら誤差は同じであり、「常に厳密に減る」ではない。
+
 切り詰めSVDのフロベニウス誤差は、
 
 $$
@@ -1551,6 +1568,36 @@ $$
 ---
 
 ## 23. 対象層がモデル全体に占める割合
+
+### 層の削減率からモデル全体の削減率へ
+
+対象外のparameter数を $P_{\mathrm{other}}$ と置き、
+この節の $q,s$ と同じ数え方でbiasも含めるか除くかをそろえる。
+
+$$
+\begin{aligned}
+P_{\mathrm{model}}&=P_{\mathrm{other}}+P_{\mathrm{target}},\\
+P_{\mathrm{model,compressed}}
+&=P_{\mathrm{other}}+P_{\mathrm{target,lowrank}}\\
+&=P_{\mathrm{model}}-P_{\mathrm{target}}+P_{\mathrm{target,lowrank}}.
+\end{aligned}
+$$
+
+従って
+
+$$
+\begin{aligned}
+R_{\mathrm{model,reduce}}
+&=1-\frac{P_{\mathrm{model}}-P_{\mathrm{target}}
++P_{\mathrm{target,lowrank}}}{P_{\mathrm{model}}}\\
+&=\frac{P_{\mathrm{target}}-P_{\mathrm{target,lowrank}}}{P_{\mathrm{model}}}\\
+&=\frac{P_{\mathrm{target}}}{P_{\mathrm{model}}}
+\left(1-\frac{P_{\mathrm{target,lowrank}}}{P_{\mathrm{target}}}\right)\\
+&=qs.
+\end{aligned}
+$$
+
+対象層内の削減率だけをモデル全体の削減率として報告してはいけない理由が、この積に現れる。
 
 対象層の割合を、
 
@@ -2178,6 +2225,31 @@ $$
 
 ## 38. エネルギー保持率と相対誤差
 
+### 分子を「全体から保持分を引いたもの」へ書き換える
+
+$W\ne0$ とし、$S:=\sum_{i=1}^{k}\sigma_i^2>0$ と置く。
+
+$$
+\begin{aligned}
+\frac{\|W-W_r\|_F^2}{\|W\|_F^2}
+&=\frac{\sum_{i=r+1}^{k}\sigma_i^2}{S}\\
+&=\frac{S-\sum_{i=1}^{r}\sigma_i^2}{S}\\
+&=1-\frac{\sum_{i=1}^{r}\sigma_i^2}{S}\\
+&=1-E(r).
+\end{aligned}
+$$
+
+非負の平方根を取ると $\varepsilon_F(r)=\sqrt{1-E(r)}$ となる。
+同じ分母を使って
+
+$$
+E(r+1)-E(r)
+=\frac{\sum_{i=1}^{r+1}\sigma_i^2-\sum_{i=1}^{r}\sigma_i^2}{S}
+=\frac{\sigma_{r+1}^2}{S}\ge0
+$$
+
+も確認できる。零行列では相対誤差・energy比の分母が0になるため、別途規約が必要である。
+
 切り詰めSVDでは、
 
 $$
@@ -2383,6 +2455,23 @@ $$
 ---
 
 ## 43. rankの選び方：目標保持率
+
+この節の保持率は**保存するparameterの割合**であって、特異値energyの保持率ではない。
+parameter数はshapeと選んだrankで決まるが、energyは学習済み重みの特異値の分布で決まる。
+同じshape・同じrankならparameter数は同じでも、重みが違えば保持energyは違い得る。
+さらにenergyが同じでも、入力や後続層が違えばaccuracyは同じとは限らない。
+
+重みだけのparameter予算を $P_{\max}$ とし、上限を必ず守るなら
+
+$$
+r(D_{\mathrm{in}}+D_{\mathrm{out}})\le P_{\max}
+\quad\Longleftrightarrow\quad
+r\le\frac{P_{\max}}{D_{\mathrm{in}}+D_{\mathrm{out}}}
+$$
+
+なので、整数rankには右辺のfloorを使う。近い候補を探すための四捨五入と、予算の厳守では丸め方が違う。
+その後で許容されるrank範囲・bias・他層のparameterを含めて再確認する。
+一つの「保持率」の数で、保存量・重み近似・タスク性能の三つを同時に保証することはできない。
 
 目標とするパラメータ保持率を、
 
@@ -2736,6 +2825,43 @@ Baseline比は「元モデルの何倍か」を表す指標であり、kneeの�
 
 ## 50.4 knee point：端点を結ぶ直線からの最大距離
 
+### 距離の分母が $\sqrt{a^2+1}$ になる理由
+
+正規化後の端点を $(x_A,y_A),(x_B,y_B)$ とし、$x_B\ne x_A$ とする。
+
+$$
+a=\frac{y_B-y_A}{x_B-x_A},
+\qquad
+b=y_A-ax_A.
+$$
+
+直線 $ax-y+b=0$ の法線ベクトルは $(a,-1)$ であり、その単位ベクトルは
+
+$$
+n=\frac{(a,-1)}{\sqrt{a^2+1}}.
+$$
+
+点 $(x_i,y_i)$ と直線上の端点との差を法線へ射影すると
+
+$$
+\begin{aligned}
+d_i
+&=\left|\frac{a(x_i-x_A)-(y_i-y_A)}{\sqrt{a^2+1}}\right|\\
+&=\frac{|ax_i-y_i+(y_A-ax_A)|}{\sqrt{a^2+1}}\\
+&=\frac{|ax_i-y_i+b|}{\sqrt{a^2+1}}.
+\end{aligned}
+$$
+
+垂直な直線も含めたい場合は、この傾きの式を使わず
+
+$$
+d_i=
+\frac{|(x_B-x_A)(y_i-y_A)-(y_B-y_A)(x_i-x_A)|}
+{\sqrt{(x_B-x_A)^2+(y_B-y_A)^2}}
+$$
+
+とする。二つの端点が一致する場合は分母が0なのでkneeを定義できない。
+
 Pareto frontierをパラメータ数の昇順へ並べる。
 正規化後の左端を $p_0=(x_0,y_0)$、右端を $p_1=(x_1,y_1)$ とする。
 
@@ -2808,6 +2934,32 @@ Aggressive  ←  Balanced(knee)  →  Conservative
 ---
 
 ## 50.7 1-SEルールを使える条件
+
+### SDからSEへ移る前提と途中式
+
+同じrankのseedごとのvalidation lossを確率変数 $L_1,\ldots,L_K$ とする。
+固定したvalidation集合の下で、独立なseed runによるlossを同分散 $\sigma_L^2$ の標本とみなすと
+
+$$
+\begin{aligned}
+\operatorname{Var}\left(\frac{1}{K}\sum_{k=1}^{K}L_k\right)
+&=\frac{1}{K^2}\sum_{k=1}^{K}\sum_{\ell=1}^{K}
+\operatorname{Cov}(L_k,L_\ell)\\
+&=\frac{1}{K^2}\sum_{k=1}^{K}\sigma_L^2\\
+&=\frac{\sigma_L^2}{K}.
+\end{aligned}
+$$
+
+平均の標準偏差は $\sigma_L/\sqrt K$ なので、未知の $\sigma_L$ を標本SD $s_r$ で推定し
+
+$$
+\operatorname{SE}_r=\frac{s_r}{\sqrt K}
+$$
+
+とする。以下の1-SE閾値は、この**平均lossの不確かさ**を使う。
+個々のrunのばらつき $s_r$ そのもの、異なるrank間のSD、
+validation sampleの標本変動とは同じものではない。
+run間の依存が強い場合は共分散の交差項を落とせず、この導出の前提を満たさない。
 
 1-SE ruleは、複数回の学習・交差検証などから得た平均性能と、その平均の標準誤差を使って「最良と統計的に同程度の単純なモデル」を選ぶ考え方である。
 
@@ -3073,6 +3225,61 @@ print(
 ```
 
 ---
+
+### 元教材と現行のfield名を対応させて実行する
+
+上の個別表示コードは、元教材 `05_圧縮率とRank.md` のfield名を残した例である。正本 [[07_PyTorch実装#3. 実装全体]] の `CompressionStats` は重みだけの数とbias込みの総数を区別するため、次のfield名になっている。
+
+- 元教材の `low_rank_weight_parameters` に対応するのは `compressed_weight_parameters`。
+- `parameter_keep_ratio` に対応するのは `weight_keep_ratio`。
+- `parameter_reduction_ratio` に対応するのは `weight_reduction_ratio`。
+- `compression_factor` に対応するのは `weight_compression_factor`。
+- `original_weight_parameters` と `maximum_compressing_rank` は同名。
+- bias込みの比率は `total_keep_ratio`、`total_reduction_ratio`、`total_compression_factor`。
+
+元教材の関数は重みだけを数えるので、旧 `parameter_keep_ratio` を `total_keep_ratio` と対応付けてはいけない。正本の関数を使う場合は、旧field名の上の表示ブロックではなく、次を使う。後続の表・グラフで旧field名を使う箇所も、同じ対応で読み替える。
+
+```python
+# 07の実装全体にあるcompression_statsを定義済みとして使用する。
+stats = compression_stats(in_features=784, out_features=512, rank=64)
+print("original:", stats.original_weight_parameters)
+print("low rank:", stats.compressed_weight_parameters)
+print("keep ratio:", stats.weight_keep_ratio)
+print("reduction ratio:", stats.weight_reduction_ratio)
+print("compression factor:", stats.weight_compression_factor)
+print("maximum compressing rank:", stats.maximum_compressing_rank)
+```
+
+元教材の次元・rankを変更せずに代入すると、
+
+$$
+\begin{aligned}
+P_{\mathrm{original,weight}}
+&=784\cdot512=401408,\\
+P_{\mathrm{lowrank,weight}}
+&=64(784+512)=64\cdot1296=82944,\\
+q_{\mathrm{weight}}
+&=\frac{82944}{401408}
+=\frac{81}{392}
+\approx0.206633,\\
+1-q_{\mathrm{weight}}
+&=\frac{311}{392}
+\approx0.793367,\\
+c_{\mathrm{weight}}
+&=\frac{401408}{82944}
+=\frac{392}{81}
+\approx4.839506,\\
+r_{\mathrm{break}}
+&=\frac{401408}{1296}
+=\frac{25088}{81}
+\approx309.728395,\\
+r_{\mathrm{max,compress}}
+&=\left\lceil\frac{25088}{81}\right\rceil-1\\
+&=310-1=309
+\end{aligned}
+$$
+
+となる。元biasを後段に残す場合は両方へ $512$ を加え、$P_{\mathrm{original,total}}=401920$、$P_{\mathrm{lowrank,total}}=83456$ となる。重み保持率と総数保持率 $83456/401920$ は別であり、biasを含めるかをそろえて比較する。
 
 ## 53. bias込みのパラメータ数
 

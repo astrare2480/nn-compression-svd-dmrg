@@ -90,6 +90,31 @@ HOOIでは、更新対象以外のfactorを使ってTensorをrank空間へ射影
 
 ## 2. factorが固定されたときのcore
 
+ここで「factor固定」は、各modeで保持する基底は既に決まっていて、その基底の組合せへどの係数を付けるかだけを決める、という意味である。
+coreを元Tensorの一部の値から選ぶのではなく、元Tensorと基底の積との内積で係数を測る。
+正規直交factorなら、各基底の組合せもTensorのFrobenius内積に対して正規直交するので、係数同士の混合を解く必要がない。
+
+3階の場合、基底の組合せを
+
+$$
+E^{(\alpha_0,\alpha_1,\alpha_2)}_{i_0,i_1,i_2}
+:=U^{(0)}_{i_0,\alpha_0}U^{(1)}_{i_1,\alpha_1}U^{(2)}_{i_2,\alpha_2}
+$$
+
+と書けば、coreの一要素は
+
+$$
+G_{\alpha_0,\alpha_1,\alpha_2}
+=\langle E^{(\alpha_0,\alpha_1,\alpha_2)},X\rangle_F
+=\sum_{i_0,i_1,i_2}
+U^{(0)}_{i_0,\alpha_0}U^{(1)}_{i_1,\alpha_1}U^{(2)}_{i_2,\alpha_2}
+X_{i_0,i_1,i_2}.
+$$
+
+これはベクトルの座標 $c_\alpha=u_\alpha^{\mathsf T}x$ を三つのmodeへ広げた式である。
+coreをこの最適な係数で作り直した上で、次にfactor自体を更新するのがHOOIである。
+coreを固定したまま全factorを一度ずつSVDするというアルゴリズムとは区別する。
+
 factorの列が直交して
 
 $$
@@ -305,6 +330,23 @@ $$
 
 ## 4. 1 factorだけ更新すると何を最大化するか
 
+更新対象以外のfactorを固定するのは、そのmodeだけの行列SVDで解ける局所問題にするためである。
+他modeで先に座標を取り出したTensor $Z$ は、現在の他factorで保持できる情報だけを含む。
+その $Z$ を対象modeでunfoldし、保持できる二乗normが大きい左特異方向を選ぶ。
+元Tensor $X$ を毎回独立にunfoldするHOSVDとは、SVDへ入力する行列が違う。
+
+固定された $Z$ の対象modeの列を $z_c$ と書くと、候補factor $U$ による保持量は
+
+$$
+\|U^{\mathsf T}Z_{(n)}\|_F^2
+=\sum_c\|U^{\mathsf T}z_c\|_2^2
+=\sum_c\sum_{\alpha=1}^{R_n}(u_\alpha^{\mathsf T}z_c)^2.
+$$
+
+つまり、全列について「選んだ基底に沿う成分の二乗」を足した量である。
+一つの列だけに最適な方向ではなく、全列をまとめて保持する部分空間を選ぶ。
+第5節のtrace最大化はこの量を行列記法で書き直したものである。
+
 更新対象をmode $n\in\mathcal M$ とする。
 
 他のactive modeを現在のfactorで射影したTensorを
@@ -420,6 +462,97 @@ $$
 $$
 
 という直交部分空間の最大化問題になる。
+
+### 固定factorに対するcoreが最適になる理由
+
+前節で「直交射影」と述べた部分を、未知のcoreに対する最小化から確認する。現在factorによる展開演算子を
+
+$$
+\mathcal A(C):=C\underset{m\in\mathcal M}{\times_m}U^{(m)}
+$$
+
+と置く。Frobenius内積に対する随伴はfactor転置による射影であり、
+
+$$
+\mathcal A^*(X)=X\underset{m\in\mathcal M}{\times_m}U^{(m)\mathsf T},
+\qquad
+\mathcal A^*\mathcal A=I
+$$
+
+である。$G=\mathcal A^*X$ とし、任意の候補coreを $C=G+D$ と書くと、
+
+$$
+\begin{aligned}
+\mathcal A^*(X-\mathcal A(G))
+&=\mathcal A^*X-\mathcal A^*\mathcal A(G)=G-G=0,\\
+\langle X-\mathcal A(G),\mathcal A(D)\rangle_F
+&=\langle\mathcal A^*(X-\mathcal A(G)),D\rangle_F=0,\\
+\|X-\mathcal A(C)\|_F^2
+&=\|X-\mathcal A(G)-\mathcal A(D)\|_F^2\\
+&=\|X-\mathcal A(G)\|_F^2+\|\mathcal A(D)\|_F^2\\
+&=\|X-\mathcal A(G)\|_F^2+\|D\|_F^2.
+\end{aligned}
+$$
+
+したがって $D=0$ で最小になり、factor固定時には第2節のcoreが最適である。第3節で使った残差と再構成の直交性も、この随伴の計算から従う。
+
+### Ky Fanの重みを展開して上界を達成する
+
+定理名だけで済ませず、上位固有ベクトルを取る理由を計算する。以下では $d=I_n$、$R=R_n$ とし、$ZZ^{\mathsf T}$ の完全な正規直交固有基底を $Q=(q_1,\ldots,q_d)$ とする。固有値は
+
+$$
+ZZ^{\mathsf T}=Q\Lambda Q^{\mathsf T},
+\qquad
+\Lambda=\operatorname{diag}(\lambda_1,\ldots,\lambda_d),
+\qquad
+\lambda_i=\sigma_i^2,
+\qquad
+\lambda_1\ge\cdots\ge\lambda_d\ge0
+$$
+
+であり、reduced SVDで返らない方向があれば固有値0として補う。候補factorの座標を $H=Q^{\mathsf T}U$ と置くと、
+
+$$
+H^{\mathsf T}H=U^{\mathsf T}QQ^{\mathsf T}U=I_R,
+\qquad
+w_i:=\sum_{a=1}^{R}H_{i,a}^2
+=q_i^{\mathsf T}UU^{\mathsf T}q_i
+$$
+
+である。射影の性質とtraceから、
+
+$$
+0\le w_i\le1,
+\qquad
+\sum_{i=1}^{d}w_i
+=\sum_{a=1}^{R}\sum_{i=1}^{d}H_{i,a}^2
+=R
+$$
+
+となり、目的関数は
+
+$$
+\begin{aligned}
+\operatorname{tr}(U^{\mathsf T}ZZ^{\mathsf T}U)
+&=\operatorname{tr}(H^{\mathsf T}\Lambda H)\\
+&=\sum_{a=1}^{R}\sum_{i=1}^{d}\lambda_iH_{i,a}^2\\
+&=\sum_{i=1}^{d}\lambda_iw_i.
+\end{aligned}
+$$
+
+$1\le R<d$ なら、降順性から
+
+$$
+\begin{aligned}
+\sum_{i=1}^{d}\lambda_iw_i
+&\le\sum_{i=1}^{R}\lambda_iw_i+\lambda_R\sum_{i=R+1}^{d}w_i\\
+&=R\lambda_R+\sum_{i=1}^{R}(\lambda_i-\lambda_R)w_i\\
+&\le R\lambda_R+\sum_{i=1}^{R}(\lambda_i-\lambda_R)\\
+&=\sum_{i=1}^{R}\lambda_i.
+\end{aligned}
+$$
+
+$U=(q_1,\ldots,q_R)$ なら $w_1=\cdots=w_R=1$、残りが0となって上界を達成する。$R=d$ では全空間を取るので同じ結論である。これにより、既存のSVDによる更新式を、固有基底での成分和から証明できる。境界固有値が重複すると最適部分空間は一意とは限らない。
 
 ここでSVDを
 
@@ -710,6 +843,47 @@ $$
 
 ## 8. core・再構成・errorを $t+1$ まで追う
 
+### 一つのsweepで誤差が増えないことの途中式
+
+固定rankと列直交factorの下で、coreをその都度最適な射影で計算するとする。
+保持coreの二乗normを
+
+$$
+F(U_{\mathrm{out}},U_{\mathrm{in}})
+:=\|W\times_0U_{\mathrm{out}}^{\mathsf T}
+\times_1U_{\mathrm{in}}^{\mathsf T}\|_F^2
+$$
+
+と置く。第5節の局所最大化により、出力factor更新では
+
+$$
+F(U_{\mathrm{out}}^{(t+1)},U_{\mathrm{in}}^{(t)})
+\ge F(U_{\mathrm{out}}^{(t)},U_{\mathrm{in}}^{(t)}).
+$$
+
+更新済みの出力factorを固定した入力factor更新では
+
+$$
+F(U_{\mathrm{out}}^{(t+1)},U_{\mathrm{in}}^{(t+1)})
+\ge F(U_{\mathrm{out}}^{(t+1)},U_{\mathrm{in}}^{(t)}).
+$$
+
+第3節の誤差式へ代入すると、$W\ne0$ に対して
+
+$$
+\begin{aligned}
+e_{t+1}^2
+&=1-\frac{F(U_{\mathrm{out}}^{(t+1)},U_{\mathrm{in}}^{(t+1)})}{\|W\|_F^2}\\
+&\le1-\frac{F(U_{\mathrm{out}}^{(t+1)},U_{\mathrm{in}}^{(t)})}{\|W\|_F^2}\\
+&\le1-\frac{F(U_{\mathrm{out}}^{(t)},U_{\mathrm{in}}^{(t)})}{\|W\|_F^2}\\
+&=e_t^2.
+\end{aligned}
+$$
+
+理想的な厳密SVD更新では $e_t\ge0$ の単調非増加列なので誤差値は収束する。
+これはfactorの一意な収束や大域最適性の証明ではない。
+丸め・近似SVD・異なる停止条件を含む実装では、微小な増加も別途確認する。
+
 factorを1 sweep更新した後、
 
 $$
@@ -796,6 +970,35 @@ $$
 
 である。各unfoldingの行は互いに直交するため、rank 1のHOSVD初期値は
 
+この例のunfoldingも省略せず書くと、残る添字は後ろの添字が速く変わる順に並べて
+
+$$
+X_{(0)}=\begin{pmatrix}0&8&10&0\\9&0&0&0\end{pmatrix},
+\qquad
+X_{(1)}=\begin{pmatrix}0&8&9&0\\10&0&0&0\end{pmatrix}.
+$$
+
+各行の内積から
+
+$$
+\begin{aligned}
+X_{(0)}X_{(0)}^{\mathsf T}
+&=\begin{pmatrix}
+0^2+8^2+10^2+0^2&0\cdot9+8\cdot0+10\cdot0+0\cdot0\\
+9\cdot0+0\cdot8+0\cdot10+0\cdot0&9^2+0^2+0^2+0^2
+\end{pmatrix}
+=\begin{pmatrix}164&0\\0&81\end{pmatrix},\\
+X_{(1)}X_{(1)}^{\mathsf T}
+&=\begin{pmatrix}
+0^2+8^2+9^2+0^2&0\cdot10+8\cdot0+9\cdot0+0\cdot0\\
+10\cdot0+0\cdot8+0\cdot9+0\cdot0&10^2+0^2+0^2+0^2
+\end{pmatrix}
+=\begin{pmatrix}145&0\\0&100\end{pmatrix}.
+\end{aligned}
+$$
+
+対角Gram行列の最大固有値はそれぞれ164と145で、どちらも固有ベクトルは $(1,0)^{\mathsf T}$ である。従って、下の初期factorになる。
+
 $$
 U_0^{(0)}
 =
@@ -863,6 +1066,23 @@ $$
 
 2行の二乗normは $8^2=64$ と $9^2=81$ なので、上位左特異ベクトルは
 
+更新時もGram行列を計算すると
+
+$$
+\begin{aligned}
+Z_{0,(0)}Z_{0,(0)}^{\mathsf T}
+&=\begin{pmatrix}
+0^2+8^2&0\cdot9+8\cdot0\\
+9\cdot0+0\cdot8&9^2+0^2
+\end{pmatrix}
+=\begin{pmatrix}64&0\\0&81\end{pmatrix},\\
+\det(Z_{0,(0)}Z_{0,(0)}^{\mathsf T}-\lambda I_2)
+&=(64-\lambda)(81-\lambda).
+\end{aligned}
+$$
+
+最大固有値81の方向が第2行に移るため、次のfactorになる。
+
 $$
 U_0^{(1)}
 =
@@ -884,6 +1104,16 @@ Z_{1,(1)}
 $$
 
 したがって
+
+この第2更新のGram行列も
+
+$$
+Z_{1,(1)}Z_{1,(1)}^{\mathsf T}
+=\begin{pmatrix}9^2+0^2&9\cdot0+0\cdot0\\0\cdot9+0\cdot0&0^2+0^2\end{pmatrix}
+=\begin{pmatrix}81&0\\0&0\end{pmatrix}
+$$
+
+となり、最大固有値81の固有ベクトルは $(1,0)^{\mathsf T}$ である。
 
 $$
 U_1^{(1)}

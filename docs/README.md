@@ -97,7 +97,7 @@ SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎�
 対応するcorrected results/
 ```
 
-を使用する。
+を使用する。MNIST / Fashion-MNISTの現行正式値は2026-09-12の完全保存 `*_rerun.ipynb` と対応するresultsを優先する。旧correctedの記録も残し、[出典一覧](../results/10_svd/rerun_20260912T074153Z/README.md) でrunを追跡する。CIFAR-10は既存学習runと最終FT後重みの再計測runを区別する。
 
 Tucker/HOOIでは、
 
@@ -112,8 +112,11 @@ results/20_tucker/
 Notebookの位置付けは次のとおり。
 
 ```text
+corrected rerun
+→ MNIST / Fashion-MNISTの現在のcanonicalなSVD実験結果
+
 corrected
-→ 現在のcanonicalなSVD実験結果
+→ 従来corrected run。CIFAR-10では現行学習結果
 
 using_src
 → src共通化時点のsnapshot
@@ -285,12 +288,12 @@ Conv + Linear
 ## Linear-only
 
 ```text
-fc1 rank = 24
-Parameters 421,642 → 98,570
-Test acc 91.75% → 91.87%
+fc1 rank = 28
+Parameters 421,642 → 111,626
+Test acc 91.28% → 91.49%
 ```
 
-このLinear-onlyはcorrected 04/05とは別runなので、absolute baseline値を混ぜずrun内差として読む。
+このLinear-onlyはConv-only / Combinedとは別runなので、baseline値が一致しても各run自身の重みと比較する。direct knee=24とFT後最終rank=28は別段階の選択である。
 
 - [[20_FashionMNIST/08_CNNのLinear SVD]]
 
@@ -300,7 +303,7 @@ Test acc 91.75% → 91.87%
 conv2 rank = 28
 Parameters 421,642 → 413,066
 Test acc 91.28% → 91.75%
-Latency 約0.367 → 0.370 ms/batch
+Latency 約0.344271 → 0.353625 ms/batch
 ```
 
 - [[20_FashionMNIST/09_CNNのConv SVD]]
@@ -313,10 +316,10 @@ fc1 rank = 24
 Parameters 421,642 → 89,994   (-78.66%)
 MACs 4,241,152 → 2,237,184    (-47.25%)
 Test acc 91.28% → 91.33%
-Latency 約0.378 → 0.399 ms/batch
+Latency 約0.346444 → 0.383861 ms/batch
 ```
 
-`(28, 24)` は各層を単独で選んだrankの組合せであり、2次元rank空間のglobal optimumではない。
+`(28, 24)` は従来の単独実験のrankを固定して再実行した構成であり、2次元rank空間のglobal optimumではない。新Linear-onlyのfc1=28へ変更した構成ではない。
 
 - [[20_FashionMNIST/10_CNNのConvとLinear同時圧縮]]
 - [[20_FashionMNIST/11_CNNでの実験結果]]
@@ -362,7 +365,7 @@ conv3 = 48
 Parameters 128,842 → 81,405   (-36.82%)
 MACs 10,357,248 → 5,625,344   (-45.69%)
 Test acc 73.27% → 73.43%
-Latency 約0.531 → 0.537 ms/batch
+Latency 約0.574813 → 0.551291 ms/batch（保存済み最終FT後重みの再計測・3 trial中央値）
 ```
 
 探索は、各層の単独rank sweepからPareto / knee近傍を作り、その候補集合を組み合わせた**制約付きmodel-wide rank allocation**。
@@ -438,7 +441,7 @@ MACs reduction
 wall-clock speedup
 ```
 
-Fashion-MNIST CNNとCIFAR-10のcorrected benchmarkでは、理論MACsを大幅に減らしてもGPU latencyは短くならなかった。
+2026-09-12の最終計測ではFashion-MNIST Conv-only / Combinedは短縮せず、Linear-onlyは約2.21%、CIFAR-10は約4.09%短縮した。いずれもMACs削減率と同じ割合のspeedupではなく、このGPU・batch・計測runの結果として読む。FT前sweepの単回時間と最終モデルの3 trial平均時間の中央値を区別する。
 
 ## single seed
 

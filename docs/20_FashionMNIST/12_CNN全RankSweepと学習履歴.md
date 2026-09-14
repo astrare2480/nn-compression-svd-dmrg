@@ -14,7 +14,9 @@ tags:
 
 # CNN全RankSweepと学習履歴
 
-01〜05の主要な数値を後から確認するための記録用ノート。
+旧01〜05の主要な数値を後から確認するためのhistorical記録用ノート。以下の表は当時の値を保持し、現行rerunへ数値だけ差し替えない。
+
+現在の全rank・baseline/FT各epoch・Test値は [完全保存runの出典一覧](../../results/10_svd/rerun_20260912T074153Z/README.md) と、各runの `rank_sweep_results.csv`（Combinedは固定1構成の `compression_summary.csv`）、`baseline_history.csv`、`all_fine_tuning_history.csv`（Combinedは `fine_tuning_history.csv`）を参照。旧Linearの最終fc1=24と現行Linearのfc1=28、旧04/05とcorrected rerunの値を混ぜない。
 
 解釈は以下を参照。
 

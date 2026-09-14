@@ -1,0 +1,5 @@
+stage,best_epoch,best_validation_loss,epochs_ran,fc1_rank,fc2_rank
+baseline,7,0.29988527626991274,12,,
+fine_tuning,5,0.3201580042362213,10,16.0,16.0
+fine_tuning,7,0.3049732960700989,12,32.0,16.0
+fine_tuning,4,0.31309863495826723,9,32.0,32.0

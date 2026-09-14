@@ -2,7 +2,7 @@
 
 Fashion-MNISTでは、MNISTから一段進めて、MLP Fine-tuning、CNN、Linear SVD、Conv SVD、Conv + Linear同時圧縮まで扱う。
 
-このディレクトリには学習途中の試行錯誤とraw resultsも残している。**最終数値を引用するときはcorrected結果を優先する。**
+このディレクトリには学習途中の試行錯誤とraw resultsも残している。**最終数値は2026-09-12の完全保存rerunを優先する。** run IDは `rerun_20260912T074153Z`。旧corrected / originalの記録は削除しない。
 
 ## まず読むノート
 
@@ -28,7 +28,7 @@ Fashion-MNISTでは、MNISTから一段進めて、MLP Fine-tuning、CNN、Linea
 | `05_全RankSweep結果.md` | 旧02/03のraw result保存用。historical |
 | `06_学習履歴とFine-tuning履歴.md` | 旧MLPのepoch履歴保存用。historical |
 | `07_CNN実験.md` | CNN実験全体の設計とNotebook世代の整理 |
-| `08_CNNのLinear SVD.md` | `02/03` のLinear-SVD実験。独立runとして有効 |
+| `08_CNNのLinear SVD.md` | **現行03 rerunのLinear-SVD結果。旧02/03はhistorical** |
 | `09_CNNのConv SVD.md` | **Conv-only correctedを基準に整理** |
 | `10_CNNのConvとLinear同時圧縮.md` | **Conv+Linear correctedを基準に整理** |
 | `11_CNNでの実験結果.md` | **CNN全体のcanonical summary** |
@@ -38,8 +38,8 @@ Fashion-MNISTでは、MNISTから一段進めて、MLP Fine-tuning、CNN、Linea
 ## MLPのcanonical result
 
 ```text
-notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
-results/20_fashion_mnist/03_mlp_svd_finetuning_using_src_corrected/
+notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb
+results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/
 ```
 
 ```text
@@ -56,37 +56,38 @@ single seedの小差なので、accuracy改善ではなく、**約89%圧縮後�
 
 ## CNNのcanonical result
 
-### Linear-only 02/03
+### Linear-only 03 rerun
 
 ```text
-fc1 rank = 24
-Parameters 421,642 → 98,570  (-76.62%)
-Test acc   0.9175  → 0.9187
+notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun.ipynb
+results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/
+
+fc1 rank = 28
+Parameters 421,642 → 111,626  (-73.53%)
+Test acc   0.9128  → 0.9149
 ```
 
-`02_cnn_linear_svd.ipynb` / `03_cnn_linear_svd_finetuning.ipynb` は、レビュー時点でBaseline / compressedのbenchmark条件が揃っており、candidate Fine-tuningのseed条件も揃っていたため、04/05のようなcorrectedコピーは作っていない。
-
-この結果は独立runとして有効。ただし、corrected 04/05とはBaselineの再学習runが異なるためabsolute値を混ぜない。
+direct kneeは24だが、FT後の最小rank-selection validation lossで28を採用した。旧03のfc1=24、Test `0.9175 → 0.9187` はhistoricalとして残す。共有train評価処理の変更と旧/new差の根拠は [[20_FashionMNIST/08_CNNのLinear SVD]] を参照。各runで学習・保存したbaselineを使い、別runの重みを代用しない。
 
 ### Conv-only corrected
 
 ```text
-notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb
-results/20_fashion_mnist/04_cnn_conv_svd_corrected/
+notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb
+results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/
 ```
 
 ```text
 conv2 rank = 28
 Parameters 421,642 → 413,066  (-2.03%)
 Test acc   0.9128  → 0.9175
-Latency    約0.367 → 0.370 ms/batch
+Latency    約0.344271 → 0.353625 ms/batch
 ```
 
 ### Conv + Linear corrected
 
 ```text
-notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb
-results/20_fashion_mnist/05_cnn_conv_linear_svd_corrected/
+notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun.ipynb
+results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/
 ```
 
 ```text
@@ -96,10 +97,10 @@ fc1 rank   = 24
 Parameters 421,642 → 89,994      (-78.66%)
 MACs       4,241,152 → 2,237,184 (-47.25%)
 Test acc   0.9128 → 0.9133
-Latency    約0.378 → 0.399 ms/batch
+Latency    約0.346444 → 0.383861 ms/batch
 ```
 
-`(conv2=28, fc1=24)` は各層を単独で選んだrankを組み合わせた実験で、`conv2 rank × fc1 rank` の全空間を探索したglobal optimumではない。
+`(conv2=28, fc1=24)` は従来の単独実験で選んだrankを固定して再実行した構成。新Linear-onlyのfc1=28へ変更した実験ではない。`conv2 rank × fc1 rank` の全空間を探索したglobal optimumではない。
 
 ## CNNで分かった役割分担
 
@@ -123,9 +124,9 @@ warmup=20
 repeats=2000
 ```
 
-へ統一した。
+へ統一した。現在の速度値は最終FT後の3 trial平均時間の中央値。`eval()` / `no_grad()`、CUDA同期あり、host→device転送を除外し、FT前sweepの単回時間とは区別する。各runのCSV・manifest・checkpointは [完全保存runの出典一覧](../../results/10_svd/rerun_20260912T074153Z/README.md) から追跡できる。
 
-その結果、理論MACsを大きく減らしてもGPU実測latencyは短縮しなかった。
+Conv-only / Combinedでは、理論MACsを大きく減らしてもGPU実測latencyは短縮しなかった。
 
 ```text
 MACs reduction
@@ -150,7 +151,7 @@ wall-clock speedup
 
 という実験設計上の修正も含まれるためである。
 
-正式な数値を引用するときだけ、correctedを優先する。
+正式な数値を引用するときは、現在はcorrectedの独立rerunを優先する。
 
 ## 次
 

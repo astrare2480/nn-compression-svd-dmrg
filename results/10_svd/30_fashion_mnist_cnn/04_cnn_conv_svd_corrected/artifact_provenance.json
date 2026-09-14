@@ -1,0 +1,65 @@
+{
+  "audit_date": "2026-09-12",
+  "notebook": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb",
+  "notebook_before_fix_sha256": "a4ca722fb41c3f6374fef5c52089a1a21aee5b21d8dc5fe9c507dca1026fe2bd",
+  "artifact_status": "preserved historical saved records; not a fresh Run All of current source",
+  "preserved_artifacts": [
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/fine_tuning_after.png",
+      "sha256": "580cc02b28e931562039aea267b0c524cfb4aa3e2f6b3a44c8a3579dcda2ce5d"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/fine_tuning_delta.png",
+      "sha256": "9a237c0152a4df18af333d9c025653de31d44d29f8976cd061472eb863517a70"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/fine_tuning_result.csv",
+      "sha256": "cf606e253262ba136bf235fbfd9ef0f3ae17f8aaeed4f283fe98a64637660192"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/fit_history.csv",
+      "sha256": "8257a11d2a4adb88c31185ed4ec74e096ebf467023e343955cb0d724fd09ef34"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/fit_loss_history.csv",
+      "sha256": "d13af7d0c18c9546605e324216e19164cb893afb0c0ee6432c65a2e24293cf98"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/model_comparison.csv",
+      "sha256": "c7f8ebe7b7ca40002543dceaa5605070030230ebb82b91e7cee8aafcf84c4b01"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/parameters_vs_validation_loss_normalize.png",
+      "sha256": "a60d3bc0960eb347b52fa8539cadf6a82d254c47890e4cf4edf5d81b431baf1c"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/pareto_frontier.csv",
+      "sha256": "4e26a410ac787cf26c7c9433e64fa75870ba883d0ac843c27047627a24e8d560"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/rank_sweep_results.csv",
+      "sha256": "b14c959eca783e77a92838095ca562844385f2c4bb4db87b9184a0f178deb129"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/selected_final_model.csv",
+      "sha256": "96b00e981add7c3cdaa7b0fd65b69e903fd434963a4df19c4ddcdf6621104bcd"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/selected_rank.csv",
+      "sha256": "a5c76ac1979108a0f6c7e0a2a2afa6f30d4ecc92ac0455cb2e93aa8baf7e87da"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/selected_rank_neighbors.csv",
+      "sha256": "3890bc8e64de9962f1f003a98e2b5e2ee2ddc017ec6aab724dfa659b468cfbc0"
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/test_comparison.csv",
+      "sha256": "522d0ab008b510fa4b2de038d3521917afdf38a70a39d4b7489477f2591a87ef"
+    }
+  ],
+  "training_rerun": false,
+  "historical_gaps": [
+    "same-run baseline checkpoint was not persisted; cannot reconstruct original weights from low-rank checkpoints"
+  ],
+  "future_prevention": "baseline_same_run.pt saving added immediately after fitting; this added training/save path was not executed"
+}

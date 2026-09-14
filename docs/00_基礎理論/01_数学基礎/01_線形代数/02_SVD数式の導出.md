@@ -576,6 +576,46 @@ $$
 
 ここではFrobenius側の理由を、直交変換不変性まで追う。
 
+### この小節では完全SVDへ拡張する
+
+任意の比較行列 $B$ のnormとrankまで保存するため、**この小節だけ**は
+
+$$
+U\in\mathbb R^{m\times m},
+\qquad
+V\in\mathbb R^{n\times n},
+\qquad
+\Sigma\in\mathbb R^{m\times n},
+\qquad
+U^TU=UU^T=I_m,
+\qquad
+V^TV=VV^T=I_n
+$$
+
+という完全SVDの記号を使う。冒頭のreduced SVDの列直交行列とはshapeが異なる。reducedの長方形 $U,V$ のまま、任意の $B$ に対して以下のnorm・rankの等号を使うことはできない。
+
+例えば、
+
+$$
+U_{\mathrm{red}}=\begin{pmatrix}1\\0\end{pmatrix},
+\qquad
+V_{\mathrm{red}}=(1),
+\qquad
+B=\begin{pmatrix}0\\1\end{pmatrix}
+$$
+
+なら、
+
+$$
+U_{\mathrm{red}}^TBV_{\mathrm{red}}=(0),
+\qquad
+\|B\|_F=1,
+\qquad
+\operatorname{rank}(B)=1
+$$
+
+であり、射影でnormもrankも落ちる。完全SVDへ拡張してから座標変換する必要がある。
+
 任意のrank$r$以下の $B$ に対し、
 
 $$
@@ -603,6 +643,8 @@ $$
 $$
 
 したがって問題は、対角行列 $\Sigma$ をrank$r$以下の $C$ で近似する問題へ移る。
+
+以下の $\operatorname{diag}$ は、ここでは長方形の $\Sigma$ と同じ $m\times n$ のshapeを保つ略記である。すなわち $\Sigma_r$ の $(i,i)$ 成分を $i\le r$ では $\sigma_i$、$i>r$ では0とし、対角以外の全成分も0にする。
 
 上位$r$個の対角成分だけを残した
 
@@ -653,6 +695,99 @@ $$
 $$
 
 であり、$r=k$ なら誤差は0である。
+
+### 「どのrank-$r$行列もこれより良くならない」を導く
+
+前の議論は直交変換で問題を移したところまでだった。最適性そのものの下界を、定理名に委ねず計算する。
+
+任意の $\operatorname{rank}(B)=p\le r$ に対し、$B$ の列空間への直交射影を $P$ とする。
+
+$$
+P^T=P,\qquad P^2=P,\qquad PB=B,\qquad\operatorname{tr}(P)=p.
+$$
+
+残差を列空間とその直交補空間へ分けると、
+
+$$
+\begin{aligned}
+W-B&=P(W-B)+(I-P)(W-B),\\
+\langle P(W-B),(I-P)(W-B)\rangle_F
+&=\operatorname{tr}((W-B)^TP(I-P)(W-B))=0,\\
+\|W-B\|_F^2
+&=\|P(W-B)\|_F^2+\|(I-P)W\|_F^2\\
+&\ge\|(I-P)W\|_F^2\\
+&=\operatorname{tr}(W^T(I-P)W)\\
+&=\|W\|_F^2-\operatorname{tr}(PWW^T).
+\end{aligned}
+$$
+
+完全な左特異基底を使い、$i>k$ では $\sigma_i=0$ と置く。重み
+
+$$
+w_i:=u_i^TPu_i=\|Pu_i\|_2^2
+$$
+
+は
+
+$$
+0\le w_i\le1,\qquad
+\sum_{i=1}^{m}w_i=\operatorname{tr}(U^TPU)=\operatorname{tr}(P)=p\le r
+$$
+
+を満たす。$1\le r<k$ について、特異値の降順性から
+
+$$
+\begin{aligned}
+\operatorname{tr}(PWW^T)
+&=\sum_{i=1}^{m}\sigma_i^2w_i\\
+&\le\sum_{i=1}^{r}\sigma_i^2w_i
++\sigma_r^2\sum_{i=r+1}^{m}w_i\\
+&\le\sum_{i=1}^{r}\sigma_i^2w_i
++\sigma_r^2\left(r-\sum_{i=1}^{r}w_i\right)\\
+&=r\sigma_r^2+\sum_{i=1}^{r}(\sigma_i^2-\sigma_r^2)w_i\\
+&\le r\sigma_r^2+\sum_{i=1}^{r}(\sigma_i^2-\sigma_r^2)\\
+&=\sum_{i=1}^{r}\sigma_i^2.
+\end{aligned}
+$$
+
+したがって、
+
+$$
+\|W-B\|_F^2
+\ge\sum_{i=1}^{k}\sigma_i^2-\sum_{i=1}^{r}\sigma_i^2
+=\sum_{i=r+1}^{k}\sigma_i^2.
+$$
+
+$B=W_r$ が既出の誤差公式によってこの下界を達成するので、Frobenius側の最適性が証明された。$r=0$ では $B=0$ のみ、$r=k$ では $B=W$ で誤差0になる。
+
+spectral側も、$S=\operatorname{span}\{v_1,\ldots,v_{r+1}\}$ への $B$ の制限のrankが $r$ 以下なので、単位ベクトル $x\in S$ で $Bx=0$ となるものが存在する。これを
+
+$$
+x=\sum_{i=1}^{r+1}c_iv_i,\qquad\sum_{i=1}^{r+1}c_i^2=1
+$$
+
+と書けば、
+
+$$
+\begin{aligned}
+\|W-B\|_2^2
+&\ge\|(W-B)x\|_2^2\\
+&=\|Wx\|_2^2\\
+&=\sum_{i=1}^{r+1}\sigma_i^2c_i^2\\
+&\ge\sigma_{r+1}^2\sum_{i=1}^{r+1}c_i^2\\
+&=\sigma_{r+1}^2.
+\end{aligned}
+$$
+
+一方、
+
+$$
+\|(W-W_r)x\|_2^2
+=\sum_{i=r+1}^{k}\sigma_i^2(v_i^Tx)^2
+\le\sigma_{r+1}^2\|x\|_2^2
+$$
+
+であり、$x=v_{r+1}$ で等号になる。よって $W_r$ がspectral側の下界も達成する。
 
 > [!important]
 > 「最良」は、切り詰めSVDより**小さい誤差**を持つrank$r$以下の行列がない、という意味である。境界で特異値が重複する場合、同じ最小誤差を持つ別の最適解が存在し得るので、常に一意とは限らない。
@@ -800,6 +935,82 @@ $$
 なので、$\mu=0$ のときに両者が一致する。
 
 この式から、通常SVDがweightだけを見て最良でも、実データ分布 $C_x$ に対するoutput errorで常に最良とは限らないことが分かる。
+
+---
+
+### 入力分布の重み付きFrobenius誤差へ変形する
+
+元のTucker会話資料で示された出力保存目的との接続を、traceから続ける。入力の二次モーメントを $C_x=\mathbb E[xx^{\mathsf T}]$ とし、
+
+$$
+C_x^{1/2}=(C_x^{1/2})^{\mathsf T},
+\qquad
+C_x^{1/2}C_x^{1/2}=C_x
+$$
+
+を満たす半正定値平方根を使うと、
+
+$$
+\begin{aligned}
+\mathbb E[\|\Delta W x\|_2^2]
+&=\operatorname{tr}(\Delta W C_x\Delta W^{\mathsf T})\\
+&=\operatorname{tr}[
+(\Delta W C_x^{1/2})(\Delta W C_x^{1/2})^{\mathsf T}]\\
+&=\|\Delta W C_x^{1/2}\|_F^2.
+\end{aligned}
+$$
+
+平均 $\mu=\mathbb E[x]$ が0でないときは、
+
+$$
+\begin{aligned}
+C_x
+&=\mathbb E[((x-\mu)+\mu)((x-\mu)+\mu)^{\mathsf T}]\\
+&=\operatorname{Cov}(x)+\mu\mu^{\mathsf T},\\
+\mathbb E[\|\Delta W x\|_2^2]
+&=\operatorname{tr}(\Delta W\operatorname{Cov}(x)\Delta W^{\mathsf T})
++\|\Delta W\mu\|_2^2.
+\end{aligned}
+$$
+
+したがって、二次モーメントを無条件に中心化済みの共分散へ置き換えると、平均方向の誤差が抜ける。
+
+本節独自の小さい実行列で、例えば
+
+$$
+\Delta W=\begin{pmatrix}1&2\end{pmatrix},
+\qquad
+C_x=\begin{pmatrix}4&1\\1&3\end{pmatrix}
+$$
+
+なら、
+
+$$
+\Delta WC_x=\begin{pmatrix}1\cdot4+2\cdot1&1\cdot1+2\cdot3\end{pmatrix}
+=\begin{pmatrix}6&7\end{pmatrix},
+$$
+
+$$
+\mathbb E[\|\Delta Wx\|_2^2]
+=\begin{pmatrix}6&7\end{pmatrix}\begin{pmatrix}1\\2\end{pmatrix}
+=6+14=20.
+$$
+
+平方根の代わりに $C_x=LL^{\mathsf T}$ を満たす因子を使っても同じnormになる。この例では、
+
+$$
+L=\begin{pmatrix}2&0\\1/2&\sqrt{11}/2\end{pmatrix},
+\qquad
+LL^{\mathsf T}=\begin{pmatrix}4&1\\1&3\end{pmatrix},
+\qquad
+\Delta WL=\begin{pmatrix}3&\sqrt{11}\end{pmatrix},
+$$
+
+$$
+\|\Delta WL\|_F^2=3^2+(\sqrt{11})^2=20.
+$$
+
+一方、重み付けのない $\|\Delta W\|_F^2=1^2+2^2=5$ である。これが、weight Frobenius誤差の最小化と入力分布を考慮した出力誤差の最小化を区別する具体例になる。
 
 ---
 

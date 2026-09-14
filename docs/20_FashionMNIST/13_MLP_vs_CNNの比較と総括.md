@@ -38,7 +38,7 @@ CNN
 
 **ネットワーク構造が変わると、どの層を圧縮すべきか、ParametersとMACsがどう変わるかが変わる**ことを整理する。
 
-正式結果を引用するときはcorrected版を優先する。
+正式結果は2026-09-12の完全保存rerunを優先する。出典は [run一覧・CSV・manifest](../../results/10_svd/rerun_20260912T074153Z/README.md) を参照し、各run内でbaselineとの差を読む。
 
 ---
 
@@ -245,8 +245,8 @@ Fashion-MNISTの `conv2` がその例。
 ## fc1 Linear SVD
 
 ```text
-fc1 rank=24
-Parameters: 421,642 → 98,570
+fc1 rank=28
+Parameters: 421,642 → 111,626
 ```
 
 parameter削減に非常に強い。
@@ -305,7 +305,7 @@ conv2 rank × fc1 rank
 
 の全組合せを探索した結果ではない。
 
-各層単独で選んだrankを固定して組み合わせた実験なので、global optimumとは呼ばない。
+従来の各層単独実験で選んだrankを固定して組み合わせた実験なので、global optimumとは呼ばない。今回のLinear-only最終rank=28へCombinedのfc1=24を変更したわけではない。
 
 関連：
 
@@ -338,10 +338,10 @@ MACs
 にもかかわらず、latencyは、
 
 ```text
-約0.378 → 0.399 ms/batch
+約0.346444 → 0.383861 ms/batch
 ```
 
-で短縮しなかった。
+（最終FT後・3 trial平均時間の中央値、batch=256）で短縮しなかった。FT前sweep時間とは区別する。
 
 ここから、
 

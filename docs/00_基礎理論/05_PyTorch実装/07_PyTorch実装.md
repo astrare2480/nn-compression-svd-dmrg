@@ -1401,6 +1401,26 @@ $$
 
 ## 9. 特異値の配置方法
 
+三つの配置が同じ再構成になることを、因子を代入して確認する。
+$D:=\operatorname{diag}(\sigma_1,\ldots,\sigma_r)$ とすると
+
+$$
+\begin{aligned}
+B_{\mathrm{first}}A_{\mathrm{first}}
+&=U_r(DV_r^{\mathsf T})
+=(U_rD)V_r^{\mathsf T}=W_r,\\
+B_{\mathrm{second}}A_{\mathrm{second}}
+&=(U_rD)V_r^{\mathsf T}=W_r,\\
+B_{\mathrm{symmetric}}A_{\mathrm{symmetric}}
+&=(U_rD^{1/2})(D^{1/2}V_r^{\mathsf T})\\
+&=U_r(D^{1/2}D^{1/2})V_r^{\mathsf T}\\
+&=U_rDV_r^{\mathsf T}=W_r.
+\end{aligned}
+$$
+
+対角成分では $\sqrt{\sigma_j}\sqrt{\sigma_j}=\sigma_j$ なので最後の置換が成立する。
+これは置換時の積の一致であり、fine-tuning中の各因子の勾配や学習軌跡まで同じという意味ではない。
+
 ### `placement="first"`
 
 $$
@@ -1700,6 +1720,145 @@ print(metrics)
 が入る。
 
 ---
+
+### 元教材のコサイン類似度平均を別の指標として補う
+
+元教材の `06_誤差評価.md` では、`TensorErrorMetrics` に `cosine_similarity_mean` も含めていた。本書の第3節のデータクラスにはこのfieldがないため、上の `compare_tensors` の結果にコサイン類似度平均が含まれると解釈してはいけない。既存のデータクラスを変更せず、元教材の「最後の軸を特徴量として、非零ベクトル同士だけ平均する」処理を別に補う。
+
+入力shapeを $(N_1,\ldots,N_s,D)$ とすれば、最後の軸以外をまとめたベクトル数は $M=N_1\cdots N_s$ である。`reshape(-1, D)` 後の行 $m$ を $y_m,\widehat y_m$ とし、両方のノルムが正の行の集合を
+
+$$
+\mathcal V
+=
+\left\{
+m:
+\lVert y_m\rVert_2>0,\
+\lVert\widehat y_m\rVert_2>0
+\right\}
+$$
+
+とする。数学上の平均は
+
+$$
+\begin{aligned}
+s_m
+&=
+\frac{
+\sum_{j=1}^{D}y_{m,j}\widehat y_{m,j}
+}{
+\sqrt{\sum_{j=1}^{D}y_{m,j}^2}
+\sqrt{\sum_{j=1}^{D}\widehat y_{m,j}^2}
+},\qquad m\in\mathcal V,\\
+\overline s
+&=
+\frac{1}{|\mathcal V|}
+\sum_{m\in\mathcal V}s_m
+\end{aligned}
+$$
+
+である。零ベクトルを含む行にはこの比を定義できないため、平均の分母は全行数 $M$ でなく有効行数 $|\mathcal V|$ にする。有効行がなければ平均も未定義として `None` を返す。スカラーには特徴量軸がないため、この平均を割り当てない。
+
+```python
+import torch
+import torch.nn.functional as F
+
+
+def cosine_similarity_mean(
+    reference: torch.Tensor,
+    approximation: torch.Tensor,
+) -> float | None:
+    """元教材の非零ベクトルだけを平均する処理を、別指標として計算する。"""
+    if reference.shape != approximation.shape:
+        raise ValueError("tensor shapes must match.")
+    if reference.numel() == 0:
+        raise ValueError("tensors must not be empty.")
+    if reference.ndim == 0:
+        return None
+
+    # 最後の軸が特徴量。比較用の値だけを取り出し、勾配の記録はしない。
+    feature_count = reference.shape[-1]
+    reference_rows = reference.detach().to(dtype=torch.float64).reshape(
+        -1, feature_count
+    )
+    approximation_rows = approximation.detach().to(dtype=torch.float64).reshape(
+        -1, feature_count
+    )
+    valid = (
+        torch.linalg.vector_norm(reference_rows, dim=-1) > 0
+    ) & (
+        torch.linalg.vector_norm(approximation_rows, dim=-1) > 0
+    )
+    if not bool(valid.any()):
+        return None
+
+    # 元教材と同様にPyTorchの安定化されたコサイン計算を使う。
+    similarities = F.cosine_similarity(
+        reference_rows[valid],
+        approximation_rows[valid],
+        dim=-1,
+    )
+    return float(similarities.mean().item())
+```
+
+このコードは同一deviceの有限な実数の浮動小数点Tensorを比較する教材用の処理である。数学的な非零判定と、`F.cosine_similarity` が極小ノルムに対して使うepsilonによる安定化は別であり、極小ベクトルでは上の数学的な比と実装値が一致するとは限らない。
+
+要素を追うため、本書で追加した次の小さい例を使う。元教材にあった数値例ではなく、零行を除く理由の確認用である。
+
+$$
+Y=
+\begin{pmatrix}
+1&0\\
+0&0\\
+1&1
+\end{pmatrix},
+\qquad
+\widehat Y=
+\begin{pmatrix}
+10&0\\
+1&0\\
+-1&1
+\end{pmatrix}.
+$$
+
+第1行は
+
+$$
+s_1
+=
+\frac{1\cdot10+0\cdot0}{
+\sqrt{1^2+0^2}\sqrt{10^2+0^2}
+}
+=
+\frac{10}{1\cdot10}
+=
+1,
+$$
+
+第2行は $\lVert y_2\rVert_2=0$ なので除外し、第3行は
+
+$$
+s_3
+=
+\frac{1\cdot(-1)+1\cdot1}{
+\sqrt{1^2+1^2}\sqrt{(-1)^2+1^2}
+}
+=
+\frac{0}{2}
+=
+0
+$$
+
+となる。従って $\mathcal V=\{1,3\}$、$\overline s=(1+0)/2=0.5$ である。第1行の向きは完全一致していても、値は10倍違うので、MAE・RMSEを省いてよいわけではない。
+
+```python
+# 上の3行の例を確認する。第2行は平均に含めない。
+reference = torch.tensor([[1.0, 0.0], [0.0, 0.0], [1.0, 1.0]])
+approximation = torch.tensor([[10.0, 0.0], [1.0, 0.0], [-1.0, 1.0]])
+assert cosine_similarity_mean(reference, approximation) == 0.5
+assert cosine_similarity_mean(torch.zeros(2, 3), torch.ones(2, 3)) is None
+```
+
+同様に、元教材の `WeightErrorMetrics.weight_mse` と `weight_rmse` は、本書のデータクラスでは `mse` と `rmse` という名前である。計算する指標は同じでもfield名まで同一ではないことを、原資料との対応では区別する。
 
 ## 16. 重み誤差
 
@@ -2361,6 +2520,90 @@ for rank in ranks:
 ```
 
 ---
+
+### 元教材の1回のSVDを共有したrank評価と、全特異値の扱い
+
+元教材 `03_SVDによる低ランク近似.md` の `evaluate_weight_ranks` は、元重みへSVDを1回行い、同じ因子を切り出して複数rankを比較している。上の各rankで層を作る比較と目的は共通だが、元教材の「同じ分解の尾部を再利用する」という計算手順も残す。
+
+元教材の `LowRankFactors.singular_values` は、保持した `S_r` だけでなく全特異値 `S` を返す例である。一方、本書の `factor_weights` の第3戻り値は `S_r` である。`S_r` の二乗和を分母にも使うと保持率が常に1になり、捨てた成分を評価できない。energyと尾部誤差には、元重みの全特異値 `S` を保存するか、`torch.linalg.svdvals(weight)` で取得する。
+
+具体的には、元教材の $W:(6,4)$、$r=3$ の因子確認例なら、
+
+$$
+A:(3,4),\qquad B:(6,3),\qquad
+BA:(6,4),\qquad
+S:(4,),\qquad S_r:(3,)
+$$
+
+である。再構成後のshapeが元と同じでも、rank 3では第4特異成分を捨てている。全成分を戻す確認は $r=k=\min(6,4)=4$ で別に行い、丸め誤差を許容して比較する。
+
+以下は元教材の手順・出力指標を本書の記号へ合わせたものである。元教材で零行列に対する比率をそのまま計算していた部分は、数学的に未定義なので `None` として区別する。これは第3節の `retained_energy` が零行列に1を返す実装上の規約とは別である。
+
+```python
+import torch
+
+
+def evaluate_svd_weight_ranks(
+    weight: torch.Tensor,
+    ranks: list[int],
+) -> list[dict[str, float | int | None]]:
+    """元教材と同様、1回のSVDから複数rankの重み誤差を比較する。"""
+    if weight.ndim != 2 or weight.numel() == 0:
+        raise ValueError("weight must be a nonempty 2D tensor.")
+
+    # 評価用の有限な実数重みを使い、元Parameterや勾配を変更しない。
+    reference = weight.detach().to(dtype=torch.float64)
+    U, S, Vh = torch.linalg.svd(reference, full_matrices=False)
+    total_energy = S.square().sum()
+    reference_norm = total_energy.sqrt()
+    has_energy = total_energy.item() > 0.0
+    rows = []
+
+    for rank in ranks:
+        if isinstance(rank, bool) or not isinstance(rank, int):
+            raise TypeError("rank must be a Python integer.")
+        if not 1 <= rank <= S.numel():
+            raise ValueError("rank is out of range.")
+
+        # 同じ分解の上位成分を切り出し、密行列は誤差確認のためだけに作る。
+        approximation = (U[:, :rank] * S[:rank]) @ Vh[:rank, :]
+        measured = torch.linalg.matrix_norm(reference - approximation, ord="fro")
+        theoretical = S[rank:].square().sum().sqrt()
+        assert torch.allclose(measured, theoretical, rtol=1e-10, atol=1e-10)
+        rows.append({
+            "rank": rank,
+            "frobenius_error": float(measured.item()),
+            "relative_error": (
+                float((measured / reference_norm).item()) if has_energy else None
+            ),
+            "retained_energy": (
+                float((S[:rank].square().sum() / total_energy).item())
+                if has_energy else None
+            ),
+        })
+    return rows
+```
+
+元教材の理論誤差確認に使った $8\times5$ 行列とrank 2を、この同じ関数で確認できる。表はpandasへ渡し、重み誤差・保持率だけの評価と分かる名前にする。
+
+```python
+import pandas as pd
+
+# 元教材の8×5・rank 2・seed 0の条件。モデル精度を測る実験ではない。
+torch.manual_seed(0)
+weight = torch.randn(8, 5, dtype=torch.float64)
+weight_rank_metrics = pd.DataFrame(
+    evaluate_svd_weight_ranks(weight, ranks=[2, 5])
+)
+print(weight_rank_metrics)
+
+# 元教材の特異値列による確認。rank選択のkeyword名は正本に合わせる。
+singular_values = torch.tensor([10.0, 4.0, 1.0, 0.5], dtype=torch.float64)
+assert abs(retained_energy(singular_values, rank=2) - 116 / 117.25) < 1e-12
+assert rank_for_energy(singular_values, target_energy=0.98) == 2
+```
+
+元教材の `rank_for_energy(..., target=...)` は、正本では `target_energy=...` というkeyword名である。計算する最小rankは同じでも、名前まで同じだと考えて呼び出さない。ここでは重みだけを比較しており、層出力・logits・loss・accuracyやfine-tuning後性能は別に測る。
 
 ## 36. rankごとの層出力評価
 

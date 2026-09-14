@@ -210,7 +210,7 @@ $$
 $$
 F_1
 :=
-V_r^{\mathsf T}
+\sqrt{30}V_r^{\mathsf T}
 =
 \begin{pmatrix}
 1&2&3&4
@@ -242,7 +242,7 @@ $$
 $$
 F_2
 :=
-U_r\Sigma_r
+\frac{1}{\sqrt{30}}U_r\Sigma_r
 =
 \begin{pmatrix}
 2\\
@@ -339,6 +339,86 @@ F_2F_1
 $$
 
 を$(2,1,2,2)$へreshapeしたものと全要素で一致する。
+
+### 整数因子例と、正規化されたSVD因子を区別する
+
+上の整数因子例は積・reshape・forwardの対応を見やすくした**スケールを再分配した因子**である。厳密には、ノルムが $\sqrt{30}$ の整数行ベクトルをそのまま $V_r^{\mathsf T}$ と呼ぶことはできない。正規化されたSVDは、
+
+$$
+U_r=\frac1{\sqrt5}\begin{pmatrix}2\\-1\end{pmatrix},
+\qquad
+\Sigma_r=(\sqrt{150}),
+\qquad
+V_r^{\mathsf T}=\frac1{\sqrt{30}}\begin{pmatrix}1&2&3&4\end{pmatrix}.
+$$
+
+列・行の規格化は
+
+$$
+U_r^{\mathsf T}U_r=\frac{2^2+(-1)^2}{5}=1,
+\qquad
+V_r^{\mathsf T}V_r=\frac{1^2+2^2+3^2+4^2}{30}=1
+$$
+
+である。標準の実装方式なら、
+
+$$
+F_1^{\mathrm{SVD}}=V_r^{\mathsf T}
+=\frac1{\sqrt{30}}F_1,
+\qquad
+F_2^{\mathrm{SVD}}=U_r\Sigma_r
+=\sqrt{30}F_2,
+$$
+
+$$
+F_2^{\mathrm{SVD}}F_1^{\mathrm{SVD}}
+=(\sqrt{30}F_2)\left(\frac1{\sqrt{30}}F_1\right)
+=F_2F_1.
+$$
+
+したがって、上の整数例の積とforward結果は正しいが、整数因子と正規化されたSVD因子を同一視しない。圧縮実装ではSVDから得た規格化済みの因子を使い、既存コードをこの整数例へ変更するものではない。
+
+### 2層のforwardを代入して実効kernelを導く
+
+第1 Convは元のstride・padding・dilationを持つ。第2 Convはstride 1、padding 0の $1\times1$ Convとする。0始まりの添字で
+
+$$
+Z_{n,\alpha,h,w}
+=\sum_c\sum_a\sum_b
+(F_1)_{\alpha,q(c,a,b)}
+X_{n,c,\ hS_h-P_h+aD_h,\ wS_w-P_w+bD_w},
+$$
+
+$$
+\hat Y_{n,o,h,w}
+=b_o+\sum_\alpha(F_2)_{o,\alpha}Z_{n,\alpha,h,w}
+$$
+
+である。$q(c,a,b)=(cK_h+a)K_w+b$ とし、第1式を第2式へ代入する。
+
+$$
+\begin{aligned}
+\hat Y_{n,o,h,w}
+&=b_o+\sum_\alpha(F_2)_{o,\alpha}
+\left[
+\sum_{c,a,b}(F_1)_{\alpha,q(c,a,b)}
+X_{n,c,\ hS_h-P_h+aD_h,\ wS_w-P_w+bD_w}
+\right]\\
+&=b_o+\sum_{c,a,b}
+\left[\sum_\alpha(F_2)_{o,\alpha}(F_1)_{\alpha,q(c,a,b)}\right]
+X_{n,c,\ hS_h-P_h+aD_h,\ wS_w-P_w+bD_w}\\
+&=b_o+\sum_{c,a,b}\hat W_{o,c,a,b}
+X_{n,c,\ hS_h-P_h+aD_h,\ wS_w-P_w+bD_w},
+\end{aligned}
+$$
+
+$$
+\hat W_{o,c,a,b}
+=\sum_\alpha(F_2)_{o,\alpha}(F_1)_{\alpha,q(c,a,b)}
+=(F_2F_1)_{o,q(c,a,b)}.
+$$
+
+この代入計算により、kernelの因子化と実際の2層forwardの対応が示された。途中に非線形関数を入れると、和をまとめて同じ実効kernelへ戻す段階が成立しなくなる。
 
 ---
 

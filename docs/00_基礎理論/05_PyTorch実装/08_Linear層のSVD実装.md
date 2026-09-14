@@ -616,6 +616,59 @@ B                   : (m, r)
 
 大きな対角行列を作らないため、こちらの方が簡潔である。
 
+### 対角行列積と列broadcastの要素を対応させる
+
+一般の要素 $(a,j)$ では
+
+$$
+\begin{aligned}
+[U_r\operatorname{diag}(S_r)]_{a,j}
+&=\sum_{\ell=1}^{r}(U_r)_{a,\ell}
+[\operatorname{diag}(S_r)]_{\ell,j}\\
+&=\sum_{\ell=1}^{r}(U_r)_{a,\ell}(S_r)_j\delta_{\ell,j}\\
+&=(U_r)_{a,j}(S_r)_j.
+\end{aligned}
+$$
+
+列 $j$ を特異値 $(S_r)_j$ 倍する操作なので、shape $(1,r)$ のbroadcastと一致する。
+この節独自の小さい実SVD例で
+
+$$
+U_r=\frac{1}{13}\begin{pmatrix}5&-12\\12&5\end{pmatrix},
+\qquad
+S_r=\begin{pmatrix}7\\3\end{pmatrix},
+\qquad
+V_{h,r}=\begin{pmatrix}0&1\\1&0\end{pmatrix}
+$$
+
+とすると
+
+$$
+\begin{aligned}
+B
+&=\frac{1}{13}\begin{pmatrix}5&-12\\12&5\end{pmatrix}
+\begin{pmatrix}7&0\\0&3\end{pmatrix}\\
+&=\frac{1}{13}
+\begin{pmatrix}5\cdot7&(-12)\cdot3\\12\cdot7&5\cdot3\end{pmatrix}\\
+&=\frac{1}{13}\begin{pmatrix}35&-36\\84&15\end{pmatrix},\\
+W_r=BV_{h,r}
+&=\frac{1}{13}\begin{pmatrix}-36&35\\15&84\end{pmatrix}.
+\end{aligned}
+$$
+
+$U_rS_r$ と単なる行列・ベクトル積を行うのではなく、
+各列の値を残した $B$ を作る点が重要である。
+逆に $\operatorname{diag}(S_r)V_{h,r}$ を作る場合は
+
+$$
+[\operatorname{diag}(S_r)V_{h,r}]_{j,b}
+=\sum_\ell(S_r)_j\delta_{j,\ell}(V_{h,r})_{\ell,b}
+=(S_r)_j(V_{h,r})_{j,b},
+$$
+
+なので、今度は各**行**を特異値倍する。
+この違いが列側のunsqueeze(0)と行側のunsqueeze(1)に対応する。
+
 ---
 
 ## 10. 最大rankでの再構成テスト

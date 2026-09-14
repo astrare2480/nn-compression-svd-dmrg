@@ -58,7 +58,8 @@ historical Notebookを変更せず再実行するとき。新規コードでは`
 
 ## 主なcontract / 注意事項
 
-Compatibility APIへ新しい機能や独自挙動を追加しない。
+- Compatibility APIへ新しい機能や独自挙動を追加しない。
+- device配置は委譲先の[[07_src設計/05_Core_API_v1/compression/sweep_conv2d_ranks]]と[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従う。
 
 ## 関連API
 

@@ -1,0 +1,391 @@
+{
+  "description": "Supplementary snapshot derived from executed Notebook source; runtime measurements are in run_manifest.json. No training repeated for this metadata extraction.",
+  "run_id": "rerun_20260912T074153Z",
+  "executed_notebook": "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb",
+  "repository_head_at_metadata_capture": "fcc7e6f7ed51f1019a1496608727a2de6933e399",
+  "package_versions": {
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "numpy": "2.0.1",
+    "pandas": "3.0.3",
+    "scikit-learn": "1.9.0",
+    "matplotlib": "3.11.1",
+    "nbclient": "0.11.0",
+    "nbformat": "5.10.4"
+  },
+  "split_sizes": {
+    "train": 50000,
+    "early_stopping_validation": 5000,
+    "rank_or_final_validation": 5000,
+    "test": 10000
+  },
+  "split_evidence": "The dataset construction source and its executed size output are preserved in the executed Notebook. Seed and source/data hashes are recorded below.",
+  "seed": 0,
+  "ordered_constant_assignments": [
+    {
+      "cell": 7,
+      "line": 1,
+      "name": "SEED",
+      "value": 0
+    },
+    {
+      "cell": 7,
+      "line": 2,
+      "name": "LEARNING_RATE",
+      "value": 0.001
+    },
+    {
+      "cell": 7,
+      "line": 3,
+      "name": "MAX_EPOCHS",
+      "value": 5
+    },
+    {
+      "cell": 7,
+      "line": 4,
+      "name": "PATIENCE",
+      "value": 5
+    },
+    {
+      "cell": 7,
+      "line": 5,
+      "name": "MIN_DELTA",
+      "value": 0.0001
+    },
+    {
+      "cell": 7,
+      "line": 6,
+      "name": "BATCH_SIZE",
+      "value": 64
+    },
+    {
+      "cell": 7,
+      "line": 7,
+      "name": "R1_LIST",
+      "value": [
+        16,
+        32,
+        64,
+        128
+      ]
+    },
+    {
+      "cell": 7,
+      "line": 8,
+      "name": "R2_LIST",
+      "value": [
+        16,
+        32,
+        64,
+        128
+      ]
+    },
+    {
+      "cell": 7,
+      "line": 9,
+      "name": "BENCH_WARMUP",
+      "value": 20
+    },
+    {
+      "cell": 7,
+      "line": 10,
+      "name": "BENCH_REPEATS",
+      "value": 200
+    },
+    {
+      "cell": 7,
+      "line": 13,
+      "name": "METHOD_NAME",
+      "value": "10_svd"
+    },
+    {
+      "cell": 7,
+      "line": 14,
+      "name": "CASE_NAME",
+      "value": "10_mnist_mlp"
+    },
+    {
+      "cell": 7,
+      "line": 15,
+      "name": "EXPERIMENT_NAME",
+      "value": "02_rank_accuracy_tradeoff_corrected_rerun"
+    }
+  ],
+  "fit_calls": [
+    {
+      "cell": 11,
+      "line": 6,
+      "arguments": {
+        "model": "model",
+        "train_loader": "train_loader",
+        "val_loader": "val_fit_loader",
+        "criterion": "criterion",
+        "optimizer": "optimizer",
+        "device": "device",
+        "max_epochs": 5,
+        "patience": 5,
+        "min_delta": 0.0001,
+        "train_eval_loader": "train_eval_loader",
+        "log_every_epoch": true,
+        "reevaluate_train": true
+      }
+    }
+  ],
+  "optimizer_calls": [
+    {
+      "cell": 11,
+      "line": 5,
+      "class": "torch.optim.Adam",
+      "arguments": {
+        "lr": 0.001
+      }
+    }
+  ],
+  "data_loader_calls": [
+    {
+      "cell": 9,
+      "line": 27,
+      "function": "DataLoader",
+      "keywords": {
+        "batch_size": 64,
+        "shuffle": true,
+        "generator": "loader_generator"
+      }
+    },
+    {
+      "cell": 9,
+      "line": 35,
+      "function": "DataLoader",
+      "keywords": {
+        "batch_size": 64,
+        "shuffle": false
+      }
+    },
+    {
+      "cell": 9,
+      "line": 36,
+      "function": "DataLoader",
+      "keywords": {
+        "batch_size": 64,
+        "shuffle": false
+      }
+    },
+    {
+      "cell": 9,
+      "line": 37,
+      "function": "DataLoader",
+      "keywords": {
+        "batch_size": 1000,
+        "shuffle": false
+      }
+    }
+  ],
+  "optimizer_unspecified_options": "PyTorch Adam defaults for the recorded torch version; see preserved Notebook call.",
+  "dataset": {
+    "class": "MNIST",
+    "files": [
+      {
+        "path": "data/MNIST/raw/t10k-images-idx3-ubyte",
+        "sha256": "0fa7898d509279e482958e8ce81c8e77db3f2f8254e26661ceb7762c4d494ce7",
+        "bytes": 7840016
+      },
+      {
+        "path": "data/MNIST/raw/t10k-images-idx3-ubyte.gz",
+        "sha256": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+        "bytes": 1648877
+      },
+      {
+        "path": "data/MNIST/raw/t10k-labels-idx1-ubyte",
+        "sha256": "ff7bcfd416de33731a308c3f266cc351222c34898ecbeaf847f06e48f7ec33f2",
+        "bytes": 10008
+      },
+      {
+        "path": "data/MNIST/raw/t10k-labels-idx1-ubyte.gz",
+        "sha256": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6",
+        "bytes": 4542
+      },
+      {
+        "path": "data/MNIST/raw/train-images-idx3-ubyte",
+        "sha256": "ba891046e6505d7aadcbbe25680a0738ad16aec93bde7f9b65e87a2fc25776db",
+        "bytes": 47040016
+      },
+      {
+        "path": "data/MNIST/raw/train-images-idx3-ubyte.gz",
+        "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+        "bytes": 9912422
+      },
+      {
+        "path": "data/MNIST/raw/train-labels-idx1-ubyte",
+        "sha256": "65a50cbbf4e906d70832878ad85ccda5333a97f0f4c3dd2ef09a8a9eef7101c5",
+        "bytes": 60008
+      },
+      {
+        "path": "data/MNIST/raw/train-labels-idx1-ubyte.gz",
+        "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+        "bytes": 28881
+      }
+    ]
+  },
+  "source_files": [
+    {
+      "path": "src/nn_compression/__init__.py",
+      "sha256": "61496c2b5a98448e42f1c720262429eba87e19653c8e54e990cae9296e872258"
+    },
+    {
+      "path": "src/nn_compression/compression/__init__.py",
+      "sha256": "751ce42dfe209d4a3fadb17ff12213409f872923275085ff07aa76ab1ce1d666"
+    },
+    {
+      "path": "src/nn_compression/compression/conv_svd.py",
+      "sha256": "8e7310e71dbbe02d705ec44cb8a9b72bcd5d818b5dc4293781b0dec71766696d"
+    },
+    {
+      "path": "src/nn_compression/compression/conv_tucker.py",
+      "sha256": "6db719b6a619b8e3a54cae68c1cbafb8360d2442daca9f2ed1bbda4f54a761f3"
+    },
+    {
+      "path": "src/nn_compression/compression/hooi.py",
+      "sha256": "aaa59da5898b20064c312d87480d26a6a14d2e01b42759278c53115b3a8ad487"
+    },
+    {
+      "path": "src/nn_compression/compression/linear_svd.py",
+      "sha256": "07635d995bfba72463b48cea366db5381bedda37d0cc9ba0ab62bb688c3f619c"
+    },
+    {
+      "path": "src/nn_compression/compression/mlp_svd.py",
+      "sha256": "2bfec42d1ebdb4cd6fae412a3436468a4d8712e4bff23214289549049726c707"
+    },
+    {
+      "path": "src/nn_compression/compression/named_layers.py",
+      "sha256": "44995993ee5f2859286edf4f1be6f7211eb5c6ea125099922db264b1eb1bf9cc"
+    },
+    {
+      "path": "src/nn_compression/compression/rank_sweep.py",
+      "sha256": "996faba54275f51bba77ef6f3411fa256a09997eeefc2055910b26b4ebc49d24"
+    },
+    {
+      "path": "src/nn_compression/compression/svd.py",
+      "sha256": "e40ad11f46befc48d6baa243ca2907e09d0c25fa90789ada3603ee8f2538b449"
+    },
+    {
+      "path": "src/nn_compression/compression/tt.py",
+      "sha256": "26a72ea04593ba90d5c1655b9d066ce12a3a6a733bae3b18ea594bcaecb2ffa1"
+    },
+    {
+      "path": "src/nn_compression/compression/tt_validation.py",
+      "sha256": "696784665f24928eae8295d88211f38cd5ccaf2e6b53f78d30bd69a9b9b26854"
+    },
+    {
+      "path": "src/nn_compression/compression/tucker.py",
+      "sha256": "d151fbab7bb09b76c8f8373bd4f56891d5f46520561bbf0df28655c597d701d5"
+    },
+    {
+      "path": "src/nn_compression/compression/tucker_validation.py",
+      "sha256": "bd1f42969b2de447b41ff6117af81d59c50c26c20779dd438e59ec6a05f3601b"
+    },
+    {
+      "path": "src/nn_compression/datasets/__init__.py",
+      "sha256": "268af0e182880ccdbec09d7b68a41556674605bffd1f37ae904d5cdd84752624"
+    },
+    {
+      "path": "src/nn_compression/datasets/fashion_mnist.py",
+      "sha256": "ada4b854ef3bb0f40f7782a578f76faef89d1412f69d31e8d1aaa6815a74fa20"
+    },
+    {
+      "path": "src/nn_compression/datasets/splits.py",
+      "sha256": "ee146dcb262f55dd0cef3c5e4fb701453ad8d50dfeaeec8b2c89db9feb00f954"
+    },
+    {
+      "path": "src/nn_compression/metrics/__init__.py",
+      "sha256": "c158a2ba85c0474a02554a534e3bcdc56c22cdb22b050a667594989e3c3d5df8"
+    },
+    {
+      "path": "src/nn_compression/metrics/cnn_macs.py",
+      "sha256": "16ddc223bd250822436a63dd950796359bdfea486ee8e5ce880d2553e8ff8a14"
+    },
+    {
+      "path": "src/nn_compression/metrics/macs.py",
+      "sha256": "ad86a126833fcb5b8bfd3818e142ff108a3cc9229aae07d9e848e0eb0772510c"
+    },
+    {
+      "path": "src/nn_compression/metrics/mlp_macs.py",
+      "sha256": "12d1012f31b30bf316bfe78a7ea6a5318e5d3d4533c2b855339aef88cf8c4b46"
+    },
+    {
+      "path": "src/nn_compression/metrics/model_comparison.py",
+      "sha256": "5d2c5cb11df842823a6cfead0e9df82eaaca29de4d5c276e165ab0c0ee2ed1f8"
+    },
+    {
+      "path": "src/nn_compression/metrics/tensor_approximation.py",
+      "sha256": "c7610f8112b4fd42bb09efa32b479d2a27a5545b6bc8c17363029c88a7c574bb"
+    },
+    {
+      "path": "src/nn_compression/models/__init__.py",
+      "sha256": "64ad88de980fa1b39ba25c54f9a05c72a27f4c723c364ea8142994f08859d62a"
+    },
+    {
+      "path": "src/nn_compression/models/cifar10.py",
+      "sha256": "84265c8159166c331253c93b97dc0fbaf30556dbca896e7a6924c004a1447b04"
+    },
+    {
+      "path": "src/nn_compression/models/cnn.py",
+      "sha256": "d99b8c5c1a7a07ed9f3bdbd3ee8ec67474bdd820d0932bb0e31e1c5314ce3da9"
+    },
+    {
+      "path": "src/nn_compression/models/mlp.py",
+      "sha256": "d524642cc3a99d12c246f571c9505bdcf841b5ad999eb569b662fa4524283d7a"
+    },
+    {
+      "path": "src/nn_compression/selection/__init__.py",
+      "sha256": "af815708cbf2a712d86e9cb776f0cd45174bd54ed2d69bec342e03c508431993"
+    },
+    {
+      "path": "src/nn_compression/selection/knee.py",
+      "sha256": "2695a59f90c56aba37fe3ef561581a4d7454a0b10bb0e849f908f90cace11b6f"
+    },
+    {
+      "path": "src/nn_compression/selection/pareto.py",
+      "sha256": "a8895001423c165ca8a1b7f0e7c901049ec1cb9b765d93e1487864a0ce15b92a"
+    },
+    {
+      "path": "src/nn_compression/tensor/__init__.py",
+      "sha256": "02899c20c9a4a9b4aab5e1160825a5d56ba8df2db4d27f271b64ebd3fc054431"
+    },
+    {
+      "path": "src/nn_compression/tensor/operations.py",
+      "sha256": "c3a95c4fb99035f201c964b2eb781f6fc22c0ca7e2d74076628e3dd5d6d2b0a5"
+    },
+    {
+      "path": "src/nn_compression/tensor/validation.py",
+      "sha256": "f9a20c129a1293e8bc7ec35b76eed36f41dbe6bed7359db659003dcb7fcce9c4"
+    },
+    {
+      "path": "src/nn_compression/training/__init__.py",
+      "sha256": "1f8fe965227f507ffa6deebec47a69112f4290a071eb1608200fa645842bb176"
+    },
+    {
+      "path": "src/nn_compression/training/fit.py",
+      "sha256": "cb1f4118be058ae87ceaeb21a71f3307c7d70659b73e5fe1f1ab2304ace43803"
+    },
+    {
+      "path": "src/nn_compression/training/loops.py",
+      "sha256": "11d3808c7f7f111e2ced76059034639a35e10203f8f895903f45318f3dc2d718"
+    },
+    {
+      "path": "src/nn_compression/utils/__init__.py",
+      "sha256": "3c2781075ef3388659901a8626aca2dddf8d61ee87e25e029b3255f6f0bb4c99"
+    },
+    {
+      "path": "src/nn_compression/utils/modules.py",
+      "sha256": "a2b112bcba2bf3a2379618166e5db8460e755b96d16cae6652773dd9eec4ac4b"
+    },
+    {
+      "path": "src/nn_compression/utils/paths.py",
+      "sha256": "1af9c5e3caf0303e077d63d549e4aad89b7a31809e8c32194f071ca49090ec7f"
+    },
+    {
+      "path": "src/nn_compression/utils/seed.py",
+      "sha256": "e709640d67acc5cedd1d5d1dc528831bc0abffbc1c46f9680780e04e81ab4f7f"
+    }
+  ]
+}

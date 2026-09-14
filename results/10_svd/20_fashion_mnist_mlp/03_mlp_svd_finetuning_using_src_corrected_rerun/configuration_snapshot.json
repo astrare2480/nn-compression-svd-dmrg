@@ -1,0 +1,389 @@
+{
+  "description": "Supplementary snapshot derived from executed Notebook source; runtime measurements are in run_manifest.json. No training repeated for this metadata extraction.",
+  "run_id": "rerun_20260912T074153Z",
+  "executed_notebook": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb",
+  "repository_head_at_metadata_capture": "fcc7e6f7ed51f1019a1496608727a2de6933e399",
+  "package_versions": {
+    "torch": "2.11.0+cu128",
+    "torchvision": "0.26.0+cu128",
+    "numpy": "2.0.1",
+    "pandas": "3.0.3",
+    "scikit-learn": "1.9.0",
+    "matplotlib": "3.11.1",
+    "nbclient": "0.11.0",
+    "nbformat": "5.10.4"
+  },
+  "split_sizes": {
+    "train": 50000,
+    "early_stopping_validation": 5000,
+    "rank_or_final_validation": 5000,
+    "test": 10000
+  },
+  "split_evidence": "The dataset construction source and its executed size output are preserved in the executed Notebook. Seed and source/data hashes are recorded below.",
+  "seed": 0,
+  "ordered_constant_assignments": [
+    {
+      "cell": 7,
+      "line": 4,
+      "name": "SEED",
+      "value": 0
+    },
+    {
+      "cell": 7,
+      "line": 5,
+      "name": "LEARNING_RATE",
+      "value": 0.001
+    },
+    {
+      "cell": 7,
+      "line": 6,
+      "name": "MAX_EPOCHS",
+      "value": 50
+    },
+    {
+      "cell": 7,
+      "line": 7,
+      "name": "PATIENCE",
+      "value": 5
+    },
+    {
+      "cell": 7,
+      "line": 8,
+      "name": "MIN_DELTA",
+      "value": 0.0001
+    },
+    {
+      "cell": 7,
+      "line": 10,
+      "name": "R1_LIST",
+      "value": [
+        16,
+        32,
+        64,
+        128,
+        256,
+        512
+      ]
+    },
+    {
+      "cell": 7,
+      "line": 11,
+      "name": "R2_LIST",
+      "value": [
+        16,
+        32,
+        64,
+        128,
+        256
+      ]
+    },
+    {
+      "cell": 7,
+      "line": 13,
+      "name": "METHOD_NAME",
+      "value": "10_svd"
+    },
+    {
+      "cell": 7,
+      "line": 14,
+      "name": "CASE_NAME",
+      "value": "20_fashion_mnist_mlp"
+    },
+    {
+      "cell": 7,
+      "line": 17,
+      "name": "EXPERIMENT_NAME",
+      "value": "03_mlp_svd_finetuning_using_src_corrected_rerun"
+    },
+    {
+      "cell": 13,
+      "line": 9,
+      "name": "BENCH_WARMUP",
+      "value": 20
+    },
+    {
+      "cell": 13,
+      "line": 10,
+      "name": "BENCH_REPEATS",
+      "value": 2000
+    }
+  ],
+  "fit_calls": [
+    {
+      "cell": 11,
+      "line": 22,
+      "arguments": {
+        "model": "model",
+        "train_loader": "train_loader",
+        "val_loader": "validation_loader",
+        "criterion": "criterion",
+        "optimizer": "optimizer",
+        "device": "device",
+        "max_epochs": 50,
+        "patience": 5,
+        "min_delta": 0.0001,
+        "train_eval_loader": "train_eval_loader",
+        "log_every_epoch": true,
+        "reevaluate_train": true
+      }
+    },
+    {
+      "cell": 18,
+      "line": 28,
+      "arguments": {
+        "model": "fine_tuned_model",
+        "train_loader": "train_loader",
+        "val_loader": "validation_loader",
+        "criterion": "criterion",
+        "optimizer": "candidate_optimizer",
+        "device": "device",
+        "max_epochs": 50,
+        "patience": 5,
+        "min_delta": 0.0001,
+        "train_eval_loader": "train_eval_loader",
+        "log_every_epoch": true,
+        "reevaluate_train": true
+      }
+    }
+  ],
+  "optimizer_calls": [
+    {
+      "cell": 11,
+      "line": 14,
+      "class": "optim.Adam",
+      "arguments": {
+        "lr": 0.001
+      }
+    },
+    {
+      "cell": 18,
+      "line": 20,
+      "class": "optim.Adam",
+      "arguments": {
+        "lr": 0.001
+      }
+    }
+  ],
+  "data_loader_calls": [
+    {
+      "cell": 9,
+      "line": 25,
+      "function": "make_fashion_mnist_loaders",
+      "keywords": {
+        "train_batch_size": 64,
+        "validation_batch_size": 64,
+        "test_batch_size": 1000,
+        "rank_validation_dataset": "validation_dataset_rank",
+        "train_generator": "train_generator"
+      }
+    }
+  ],
+  "optimizer_unspecified_options": "PyTorch Adam defaults for the recorded torch version; see preserved Notebook call.",
+  "dataset": {
+    "class": "FashionMNIST",
+    "files": [
+      {
+        "path": "data/FashionMNIST/raw/t10k-images-idx3-ubyte",
+        "sha256": "5b4141f0afbad91edebe8549f8fcffe087ea10ca49f1dbef5c9a5cd8815ce37b",
+        "bytes": 7840016
+      },
+      {
+        "path": "data/FashionMNIST/raw/t10k-images-idx3-ubyte.gz",
+        "sha256": "346e55b948d973a97e58d2351dde16a484bd415d4595297633bb08f03db6a073",
+        "bytes": 4422102
+      },
+      {
+        "path": "data/FashionMNIST/raw/t10k-labels-idx1-ubyte",
+        "sha256": "0402a96d92fd2663957122ceb108a494c5af83dab82d92729df917d7dec38c34",
+        "bytes": 10008
+      },
+      {
+        "path": "data/FashionMNIST/raw/t10k-labels-idx1-ubyte.gz",
+        "sha256": "67da17c76eaffca5446c3361aaab5c3cd6d1c2608764d35dfb1850b086bf8dd5",
+        "bytes": 5148
+      },
+      {
+        "path": "data/FashionMNIST/raw/train-images-idx3-ubyte",
+        "sha256": "c59f468a2f672dc815687fe0f83887768d799fd8a3f3276145d20f83aa44d888",
+        "bytes": 47040016
+      },
+      {
+        "path": "data/FashionMNIST/raw/train-images-idx3-ubyte.gz",
+        "sha256": "3aede38d61863908ad78613f6a32ed271626dd12800ba2636569512369268a84",
+        "bytes": 26421880
+      },
+      {
+        "path": "data/FashionMNIST/raw/train-labels-idx1-ubyte",
+        "sha256": "bad3541b69d912435c50bb6ba87bec294ff4f6a2e1246121d8633921760443d9",
+        "bytes": 60008
+      },
+      {
+        "path": "data/FashionMNIST/raw/train-labels-idx1-ubyte.gz",
+        "sha256": "a04f17134ac03560a47e3764e11b92fc97de4d1bfaf8ba1a3aa29af54cc90845",
+        "bytes": 29515
+      }
+    ]
+  },
+  "source_files": [
+    {
+      "path": "src/nn_compression/__init__.py",
+      "sha256": "61496c2b5a98448e42f1c720262429eba87e19653c8e54e990cae9296e872258"
+    },
+    {
+      "path": "src/nn_compression/compression/__init__.py",
+      "sha256": "751ce42dfe209d4a3fadb17ff12213409f872923275085ff07aa76ab1ce1d666"
+    },
+    {
+      "path": "src/nn_compression/compression/conv_svd.py",
+      "sha256": "8e7310e71dbbe02d705ec44cb8a9b72bcd5d818b5dc4293781b0dec71766696d"
+    },
+    {
+      "path": "src/nn_compression/compression/conv_tucker.py",
+      "sha256": "6db719b6a619b8e3a54cae68c1cbafb8360d2442daca9f2ed1bbda4f54a761f3"
+    },
+    {
+      "path": "src/nn_compression/compression/hooi.py",
+      "sha256": "aaa59da5898b20064c312d87480d26a6a14d2e01b42759278c53115b3a8ad487"
+    },
+    {
+      "path": "src/nn_compression/compression/linear_svd.py",
+      "sha256": "07635d995bfba72463b48cea366db5381bedda37d0cc9ba0ab62bb688c3f619c"
+    },
+    {
+      "path": "src/nn_compression/compression/mlp_svd.py",
+      "sha256": "2bfec42d1ebdb4cd6fae412a3436468a4d8712e4bff23214289549049726c707"
+    },
+    {
+      "path": "src/nn_compression/compression/named_layers.py",
+      "sha256": "44995993ee5f2859286edf4f1be6f7211eb5c6ea125099922db264b1eb1bf9cc"
+    },
+    {
+      "path": "src/nn_compression/compression/rank_sweep.py",
+      "sha256": "996faba54275f51bba77ef6f3411fa256a09997eeefc2055910b26b4ebc49d24"
+    },
+    {
+      "path": "src/nn_compression/compression/svd.py",
+      "sha256": "e40ad11f46befc48d6baa243ca2907e09d0c25fa90789ada3603ee8f2538b449"
+    },
+    {
+      "path": "src/nn_compression/compression/tt.py",
+      "sha256": "26a72ea04593ba90d5c1655b9d066ce12a3a6a733bae3b18ea594bcaecb2ffa1"
+    },
+    {
+      "path": "src/nn_compression/compression/tt_validation.py",
+      "sha256": "696784665f24928eae8295d88211f38cd5ccaf2e6b53f78d30bd69a9b9b26854"
+    },
+    {
+      "path": "src/nn_compression/compression/tucker.py",
+      "sha256": "d151fbab7bb09b76c8f8373bd4f56891d5f46520561bbf0df28655c597d701d5"
+    },
+    {
+      "path": "src/nn_compression/compression/tucker_validation.py",
+      "sha256": "bd1f42969b2de447b41ff6117af81d59c50c26c20779dd438e59ec6a05f3601b"
+    },
+    {
+      "path": "src/nn_compression/datasets/__init__.py",
+      "sha256": "268af0e182880ccdbec09d7b68a41556674605bffd1f37ae904d5cdd84752624"
+    },
+    {
+      "path": "src/nn_compression/datasets/fashion_mnist.py",
+      "sha256": "ada4b854ef3bb0f40f7782a578f76faef89d1412f69d31e8d1aaa6815a74fa20"
+    },
+    {
+      "path": "src/nn_compression/datasets/splits.py",
+      "sha256": "ee146dcb262f55dd0cef3c5e4fb701453ad8d50dfeaeec8b2c89db9feb00f954"
+    },
+    {
+      "path": "src/nn_compression/metrics/__init__.py",
+      "sha256": "c158a2ba85c0474a02554a534e3bcdc56c22cdb22b050a667594989e3c3d5df8"
+    },
+    {
+      "path": "src/nn_compression/metrics/cnn_macs.py",
+      "sha256": "16ddc223bd250822436a63dd950796359bdfea486ee8e5ce880d2553e8ff8a14"
+    },
+    {
+      "path": "src/nn_compression/metrics/macs.py",
+      "sha256": "ad86a126833fcb5b8bfd3818e142ff108a3cc9229aae07d9e848e0eb0772510c"
+    },
+    {
+      "path": "src/nn_compression/metrics/mlp_macs.py",
+      "sha256": "12d1012f31b30bf316bfe78a7ea6a5318e5d3d4533c2b855339aef88cf8c4b46"
+    },
+    {
+      "path": "src/nn_compression/metrics/model_comparison.py",
+      "sha256": "5d2c5cb11df842823a6cfead0e9df82eaaca29de4d5c276e165ab0c0ee2ed1f8"
+    },
+    {
+      "path": "src/nn_compression/metrics/tensor_approximation.py",
+      "sha256": "c7610f8112b4fd42bb09efa32b479d2a27a5545b6bc8c17363029c88a7c574bb"
+    },
+    {
+      "path": "src/nn_compression/models/__init__.py",
+      "sha256": "64ad88de980fa1b39ba25c54f9a05c72a27f4c723c364ea8142994f08859d62a"
+    },
+    {
+      "path": "src/nn_compression/models/cifar10.py",
+      "sha256": "84265c8159166c331253c93b97dc0fbaf30556dbca896e7a6924c004a1447b04"
+    },
+    {
+      "path": "src/nn_compression/models/cnn.py",
+      "sha256": "d99b8c5c1a7a07ed9f3bdbd3ee8ec67474bdd820d0932bb0e31e1c5314ce3da9"
+    },
+    {
+      "path": "src/nn_compression/models/mlp.py",
+      "sha256": "d524642cc3a99d12c246f571c9505bdcf841b5ad999eb569b662fa4524283d7a"
+    },
+    {
+      "path": "src/nn_compression/selection/__init__.py",
+      "sha256": "af815708cbf2a712d86e9cb776f0cd45174bd54ed2d69bec342e03c508431993"
+    },
+    {
+      "path": "src/nn_compression/selection/knee.py",
+      "sha256": "2695a59f90c56aba37fe3ef561581a4d7454a0b10bb0e849f908f90cace11b6f"
+    },
+    {
+      "path": "src/nn_compression/selection/pareto.py",
+      "sha256": "a8895001423c165ca8a1b7f0e7c901049ec1cb9b765d93e1487864a0ce15b92a"
+    },
+    {
+      "path": "src/nn_compression/tensor/__init__.py",
+      "sha256": "02899c20c9a4a9b4aab5e1160825a5d56ba8df2db4d27f271b64ebd3fc054431"
+    },
+    {
+      "path": "src/nn_compression/tensor/operations.py",
+      "sha256": "c3a95c4fb99035f201c964b2eb781f6fc22c0ca7e2d74076628e3dd5d6d2b0a5"
+    },
+    {
+      "path": "src/nn_compression/tensor/validation.py",
+      "sha256": "f9a20c129a1293e8bc7ec35b76eed36f41dbe6bed7359db659003dcb7fcce9c4"
+    },
+    {
+      "path": "src/nn_compression/training/__init__.py",
+      "sha256": "1f8fe965227f507ffa6deebec47a69112f4290a071eb1608200fa645842bb176"
+    },
+    {
+      "path": "src/nn_compression/training/fit.py",
+      "sha256": "cb1f4118be058ae87ceaeb21a71f3307c7d70659b73e5fe1f1ab2304ace43803"
+    },
+    {
+      "path": "src/nn_compression/training/loops.py",
+      "sha256": "11d3808c7f7f111e2ced76059034639a35e10203f8f895903f45318f3dc2d718"
+    },
+    {
+      "path": "src/nn_compression/utils/__init__.py",
+      "sha256": "3c2781075ef3388659901a8626aca2dddf8d61ee87e25e029b3255f6f0bb4c99"
+    },
+    {
+      "path": "src/nn_compression/utils/modules.py",
+      "sha256": "a2b112bcba2bf3a2379618166e5db8460e755b96d16cae6652773dd9eec4ac4b"
+    },
+    {
+      "path": "src/nn_compression/utils/paths.py",
+      "sha256": "1af9c5e3caf0303e077d63d549e4aad89b7a31809e8c32194f071ca49090ec7f"
+    },
+    {
+      "path": "src/nn_compression/utils/seed.py",
+      "sha256": "e709640d67acc5cedd1d5d1dc528831bc0abffbc1c46f9680780e04e81ab4f7f"
+    }
+  ]
+}

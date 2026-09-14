@@ -48,7 +48,9 @@ argmaxが同じかだけでは分からない出力分布のずれを、baseline
 
 ## 主なcontract / 注意事項
 
-empty loader拒否。accuracyやagreementよりも細かくlogit値の変化を見る指標。
+- empty loaderを拒否する。
+- accuracyやagreementよりも細かくlogit値の変化を見る指標である。
+- 入力だけを`device`へ移す。baseline/compressed modelは[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従い、呼び出し前に同じdeviceへ配置する。
 
 ## 関連API
 

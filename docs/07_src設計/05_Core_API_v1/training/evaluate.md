@@ -58,6 +58,7 @@ validation/test評価、rank candidate評価、Early Stopping判定、Fine-tunin
 - `model.train(old_state)`で一括復元しない。再帰的変更によって混在状態が壊れるため。
 - `len(loader)`を仮定しない。
 - empty loaderは`ValueError`。
+- modelと、Parameter / bufferを持つcriterionは[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従い、呼び出し前に指定deviceへ配置する。
 
 ## 関連API
 

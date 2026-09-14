@@ -359,6 +359,24 @@ $$
 
 ## 6. dataset全体のRMSEを正しく集計する
 
+バッチ $b$ の差分Tensorの全要素数を $M_b$ とすると、
+二乗誤差和と全体MSEは
+
+$$
+\begin{aligned}
+S_b&=\sum_{n,j}(Y^{(b)}_{n,j}-(Y_r^{(b)})_{n,j})^2,\\
+\operatorname{MSE}_{\mathrm{all}}
+&=\frac{\sum_bS_b}{\sum_bM_b}
+=\sum_b\frac{M_b}{\sum_\ell M_\ell}\operatorname{MSE}_b,\\
+\operatorname{RMSE}_{\mathrm{all}}
+&=\sqrt{\frac{\sum_bS_b}{\sum_bM_b}}.
+\end{aligned}
+$$
+
+ここで固定出力次元 $D$ なら $M_b=N_bD$ であり、$N_b$ はbatchのsample数である。
+sample数だけで割ると、全要素MSEではなくsample当たりの二乗L2誤差になる。
+二乗誤差を集計してから平方根を取る順序を保つ。
+
 バッチごとのRMSEを単純平均すると、最後の小さいバッチや要素数の差によって重み付けがずれる。
 
 正しくは、全バッチの二乗誤差和と要素数を積算する。
@@ -685,6 +703,37 @@ rank 16のfine-tuning結果を、rank 32の初期値に使わない。
 ---
 
 ## 16. validationとtestの役割
+
+### 元資料のvalidation lossをrank候補の添字付きで書く
+
+rank候補 $r$ のモデルを $f_r$、1 sampleのlossを $\ell$ とすると
+
+$$
+L_{\mathrm{val}}(r)
+=\frac{1}{N_{\mathrm{val}}}
+\sum_{i=1}^{N_{\mathrm{val}}}\ell(f_r(x_i),y_i),
+$$
+
+$$
+A_{\mathrm{val}}(r)
+=\frac{1}{N_{\mathrm{val}}}\sum_{i=1}^{N_{\mathrm{val}}}
+\mathbf 1\left[\operatorname*{arg\,max}_c(f_r(x_i))_c=y_i\right].
+$$
+
+各batchでlossをsample平均した $L_b(r)$ を記録する場合、
+sample数を $N_b$ として
+
+$$
+\begin{aligned}
+L_{\mathrm{val}}(r)
+&=\frac{\sum_b\sum_{i\in b}\ell(f_r(x_i),y_i)}{\sum_bN_b}\\
+&=\frac{\sum_bN_bL_b(r)}{\sum_bN_b}.
+\end{aligned}
+$$
+
+これはclass weightやignore対象がない、通常の1 sampleごとのloss平均の式である。
+末尾の小さいbatchも同じ1票で平均する方式とは区別する。
+候補選択ではvalidationを使い、test loss・accuracyを見てrankを選び直さない。
 
 rankを選ぶためにtest setを使わない。
 

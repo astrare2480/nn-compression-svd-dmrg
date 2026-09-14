@@ -170,6 +170,16 @@ X
 
 ## 4. rankの意味が違う
 
+$R_k$ 本のfactor列からなる基底は、一つの物理mode $i_k$ の空間を近似する基底である。
+一方、TTの $r_k$ 本の左ブロック基底は、物理modeを $1$ から $k$ までまとめた空間に属する。
+例えば第2cutの左状態は $|i_1,i_2\rangle$ の線形結合であり、サイト2だけの $|i_2\rangle$ の線形結合ではない。
+そのため、$R_2$ と $r_2$ に同じ整数を指定しても、同じ部分空間を残すという条件にはならない。
+
+[[31_TT-rankとunfolding]] のrank反例は、この違いを同じTensorの具体行列で確認するための例である。
+本章では数値例を再掲せず、以下のrank定義の「行にまとめる物理添字」を比較する。
+なお、定義上のexact rankと、圧縮時に指定するfactor列数・bondサイズも別である。
+後者は保持する容量の指定であり、そのサイズの表現から復元したTensorの実際のrankが必ず等しいとは限らない。
+
 ### Tucker rank
 
 Tuckerのmultilinear rankは各mode-n unfoldingのrankである。
@@ -206,6 +216,43 @@ $$
 ---
 
 ## 5. パラメータ数
+
+### 境界coreと内部coreを分けて数える
+
+まず不均一な次元とrankのまま数えると、保存する全要素数は
+
+$$
+P_{\mathrm{Tucker}}
+=\prod_{k=1}^{d}R_k+\sum_{k=1}^{d}n_kR_k,
+\qquad
+P_{\mathrm{TT}}=\sum_{k=1}^{d}r_{k-1}n_kr_k,
+\qquad r_0=r_d=1.
+$$
+
+$d\ge2$、全physical dimensionを $n$、全Tucker rankと内部TT bondを $r$ とする場合、
+Tuckerのcoreは $r$ 要素の軸が $d$ 本、factorは $n\times r$ 行列が $d$ 枚なので
+
+$$
+P_{\mathrm{Tucker}}=\underbrace{r\cdots r}_{d\text{ 本}}
++\underbrace{nr+\cdots+nr}_{d\text{ 枚}}=r^d+dnr.
+$$
+
+TTの第1・最終coreはそれぞれ $1\times n\times r$、
+$r\times n\times1$、残る $d-2$ 個は $r\times n\times r$ なので
+
+$$
+\begin{aligned}
+P_{\mathrm{TT}}
+&=1\cdot n\cdot r
++\sum_{k=2}^{d-1}r\cdot n\cdot r+r\cdot n\cdot1\\
+&=nr+(d-2)nr^2+nr\\
+&=2nr+(d-2)nr^2.
+\end{aligned}
+$$
+
+これは指定した一様なshapeでの正確な**保存要素数**であり、
+Gauge自由度を除いた独立自由度の数ではない。
+以下の概算表記はこの一様rankの仮定を省略したものである。
 
 簡単のため全mode sizeを $n$、Tucker/TT rankを概ね $r$、階数を $d$ とする。
 

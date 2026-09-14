@@ -64,7 +64,7 @@ Notebook:
 notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb
 
 Results:
-results/30_cifar10/02_svd_global_compression_using_src_corrected/
+results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/
 ```
 
 最終rank：
@@ -95,7 +95,7 @@ Conservative 9 / 32 / 48 : 0.4792 → 0.7444
 
 ## SVDのMACsとlatency
 
-corrected benchmarkでは、
+2026-09-12のcorrected保存checkpoint再計測では、
 
 ```text
 batch size = 256
@@ -108,10 +108,10 @@ repeats = 2000
 
 ```text
 MACs:    -45.69%
-Latency: 約0.531 → 0.537 ms/batch
+Latency: 約0.575 → 0.551 ms/batch（3 trialの平均時間の中央値）
 ```
 
-理論演算量削減はwall-clock speedupを保証しなかった。
+今回は約4.09%短縮したが、MACsの45.69%削減に比例した短縮ではない。GPUはRTX 5070 Ti、PyTorchは2.11.0+cu128。元の学習とは別の計測runで、再学習は行っていない。生データ・checkpoint/入力hashと、出典不明の旧値の扱いは [[30_CIFAR10_CNN/01_CIFAR10_SVD実験]] の「MACsとlatency」を参照。
 
 ## Tucker / HOSVD / HOOIへの拡張
 

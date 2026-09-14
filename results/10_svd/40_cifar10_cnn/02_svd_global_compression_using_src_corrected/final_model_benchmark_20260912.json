@@ -1,0 +1,119 @@
+{
+  "cifar_test_checkpoint_verification": [
+    {
+      "model": "Baseline",
+      "test_loss": 0.7556182265281677,
+      "test_acc": 0.7327,
+      "saved_test_acc": 0.7327
+    },
+    {
+      "model": "Final (compressed + FT)",
+      "test_loss": 0.7509943723678589,
+      "test_acc": 0.7343,
+      "saved_test_acc": 0.7343
+    }
+  ],
+  "measurements": [
+    {
+      "trial": 1,
+      "model": "Baseline",
+      "parameters": 128842,
+      "time_ms": 0.5770559000011417,
+      "batch_size": 256,
+      "input_shape": "(256, 3, 32, 32)",
+      "warmup": 20,
+      "repeats": 2000,
+      "checkpoint": "models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/cifar10_cnn_baseline.pt",
+      "checkpoint_sha256": "0b9dce2ff5d4d464ad55acd0ef705c08f34bd3d42c33e4feacac1b5352e2e21d"
+    },
+    {
+      "trial": 1,
+      "model": "Final (compressed + FT)",
+      "parameters": 81405,
+      "time_ms": 0.5552146000009088,
+      "batch_size": 256,
+      "input_shape": "(256, 3, 32, 32)",
+      "warmup": 20,
+      "repeats": 2000,
+      "checkpoint": "models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/conv1-9_conv2-32_conv3-48_final.pt",
+      "checkpoint_sha256": "24f5256833fbdf4f5017150a0411b28e683e2a2b21a76cdead5788cf472d3eef"
+    },
+    {
+      "trial": 2,
+      "model": "Final (compressed + FT)",
+      "parameters": 81405,
+      "time_ms": 0.5512906000003568,
+      "batch_size": 256,
+      "input_shape": "(256, 3, 32, 32)",
+      "warmup": 20,
+      "repeats": 2000,
+      "checkpoint": "models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/conv1-9_conv2-32_conv3-48_final.pt",
+      "checkpoint_sha256": "24f5256833fbdf4f5017150a0411b28e683e2a2b21a76cdead5788cf472d3eef"
+    },
+    {
+      "trial": 2,
+      "model": "Baseline",
+      "parameters": 128842,
+      "time_ms": 0.5733908500005782,
+      "batch_size": 256,
+      "input_shape": "(256, 3, 32, 32)",
+      "warmup": 20,
+      "repeats": 2000,
+      "checkpoint": "models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/cifar10_cnn_baseline.pt",
+      "checkpoint_sha256": "0b9dce2ff5d4d464ad55acd0ef705c08f34bd3d42c33e4feacac1b5352e2e21d"
+    },
+    {
+      "trial": 3,
+      "model": "Baseline",
+      "parameters": 128842,
+      "time_ms": 0.574813000001086,
+      "batch_size": 256,
+      "input_shape": "(256, 3, 32, 32)",
+      "warmup": 20,
+      "repeats": 2000,
+      "checkpoint": "models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/cifar10_cnn_baseline.pt",
+      "checkpoint_sha256": "0b9dce2ff5d4d464ad55acd0ef705c08f34bd3d42c33e4feacac1b5352e2e21d"
+    },
+    {
+      "trial": 3,
+      "model": "Final (compressed + FT)",
+      "parameters": 81405,
+      "time_ms": 0.5512858499987487,
+      "batch_size": 256,
+      "input_shape": "(256, 3, 32, 32)",
+      "warmup": 20,
+      "repeats": 2000,
+      "checkpoint": "models/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/conv1-9_conv2-32_conv3-48_final.pt",
+      "checkpoint_sha256": "24f5256833fbdf4f5017150a0411b28e683e2a2b21a76cdead5788cf472d3eef"
+    }
+  ],
+  "median_ms": {
+    "Baseline": 0.574813000001086,
+    "Final (compressed + FT)": 0.5512906000003568
+  },
+  "provenance": {
+    "measured_at_utc": "2026-09-12T07:30:20.217727+00:00",
+    "run_id": "checkpoint_rebenchmark_20260912",
+    "scope": "saved baseline/final checkpoints; no training, no rank reselection",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti",
+    "cudnn": 91900,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": false,
+    "tf32_matmul": false,
+    "tf32_cudnn": true,
+    "input_sha256": "fcde8aae4832aa7d003bc3de7ab475b1b58bcf7754b9c5c4e950940ace377836",
+    "split_seed": 0,
+    "split_lengths": [
+      40000,
+      5000,
+      5000
+    ],
+    "input_source": "first 256 samples of rank-validation; no augmentation; ToTensor+Normalize(0.5,0.5)",
+    "metric": "median across 3 trials of mean forward ms/batch; H2D excluded; eval/no_grad; CUDA synchronized",
+    "verification_script_sha256": "345a1ef4e07c54d548436533f5e6f5da8c0f3acc412ed1932a944611ba5398a8",
+    "benchmark_source_sha256": "5d2c5cb11df842823a6cfead0e9df82eaaca29de4d5c276e165ab0c0ee2ed1f8"
+  }
+}

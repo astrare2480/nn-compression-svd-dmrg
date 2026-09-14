@@ -204,6 +204,10 @@ balanced     = (32,16)
 conservative = (32,24)
 ```
 
+2026-09-12に保存済み `rank_sweep_results.csv` から現行srcのPareto / kneeを限定再実行し、Pareto全8点・上記3候補の全保存数値がCSVと一致した。`02_rank_sweep.ipynb` 末尾に実行済みのCSV限定検証セルを残した。これは元の学習・rank sweep・CSV保存セルを実行済みにしたものではなく、旧セルの未実行状態はそのままである。
+
+保存成果物のhash・検証範囲は `results/20_tucker/10_cifar10_cnn/02_rank_sweep/artifact_provenance.json` に記録した。
+
 ## 9. HOSVD Tucker-2 fine-tuning
 
 | role | rank | val before | test before | val after | test after | best epoch | params | Conv2 MAC削減 |
@@ -211,6 +215,16 @@ conservative = (32,24)
 | aggressive | `(16,24)` | 0.5162 | 0.5297 | 0.7462 | 0.7476 | 16 | 115,658 | 71.53% |
 | balanced | `(32,16)` | 0.6280 | 0.6378 | 0.7628 | 0.7682 | 30 | 117,578 | 61.11% |
 | conservative | `(32,24)` | 0.6532 | 0.6612 | 0.7568 | 0.7571 | 19 | 120,138 | 47.22% |
+
+上表のvalidationはrank選択用であり、学習曲線・best epochの判定は別のEarly-Stopping用validationによる。
+
+![CIFAR-10 HOSVD Tucker-2の3候補のFine-tuning学習曲線](assets/03_finetuning/finetuning_learning_curves.png)
+
+掲載画像はdocs内表示用の複製で、[出典runの元画像](../../results/20_tucker/10_cifar10_cnn/03_finetuning/) とバイト同一。旧runの画像は上書きしていない。
+
+図：既存 [03_finetuning.ipynb](../../notebooks/20_tucker/10_cifar10_cnn/03_finetuning.ipynb) の保存図。左はEarly-Stopping Validation loss、右は同accuracyのepoch推移で、候補はaggressive `(16,24)` / balanced `(32,16)` / conservative `(32,24)`。[aggressive履歴](../../results/20_tucker/10_cifar10_cnn/03_finetuning/aggressive_history.csv)、[balanced履歴](../../results/20_tucker/10_cifar10_cnn/03_finetuning/balanced_history.csv)、[conservative履歴](../../results/20_tucker/10_cifar10_cnn/03_finetuning/conservative_history.csv) に対応する。2026-09-12に再学習・再作図した結果ではなく、上表のrank選択用validation / Test値や、別runの05 HOSVD/HOOI比較とは混ぜない。
+
+`03_finetuning` の `finetuning_comparison.csv` にある `weight_relative_error` は、02で測ったFT前の圧縮誤差をbefore/after両行に載せた参照列である。**after行もFT後の重み誤差を再計算した値ではない。** FT後に再計算する05の `post_weight_relative_error` と混同しない。既存CSVの数値は保持し、この列定義をNotebookのコメントと `03_finetuning/artifact_provenance.json` にも明記した。
 
 balancedのtest回復量は、この03 run内では
 

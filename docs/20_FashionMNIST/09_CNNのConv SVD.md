@@ -28,11 +28,15 @@ conv2 = Conv2d(32, 64, kernel_size=3, padding=1)
 正式結果は、
 
 ```text
-notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb
-results/20_fashion_mnist/04_cnn_conv_svd_corrected/
+notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb
+results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/
 ```
 
 を基準とする。
+
+run ID: `rerun_20260912T074153Z`（2026-09-12）。現在の数値は独立した新runを出典とし、旧runの欠落値の復元ではない。途中表は本文で丸めているが、元CSVの値は変更していない。
+
+出典：[実行済みNotebook](../../notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb)、[Test比較](../../results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/test_comparison.csv)、[学習・FTの要約](../../results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fit_summary.csv)、[最終benchmark](../../results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/final_model_benchmark.csv)、[manifest](../../results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/run_manifest.json)。
 
 ```text
 conv2.weight: (64, 32, 3, 3)
@@ -188,6 +192,12 @@ validation accuracy / loss
 
 として分ける。
 
+![Fashion-MNIST CNNのConv SVD直後のPareto frontier](assets/04_cnn_conv_svd_corrected_rerun/parameters_vs_validation_loss_normalize.png)
+
+掲載画像はdocs内表示用の複製で、[出典runの元画像](../../results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/) とバイト同一。旧runの画像は上書きしていない。
+
+図：上記rerunのFT前Pareto frontier。左はCNN全体のparametersとRank-Selection Validation loss、右はfrontier内の0〜1正規化。[元データ](../../results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/pareto_frontier.csv) に基づきknee近傍のrank20 / 24 / 28をFT候補にする図であり、FT後の性能ではない。
+
 ---
 
 # 4. Fine-tuning前後
@@ -215,6 +225,14 @@ Val loss = 0.209190
 ```
 
 このため、rank28は「accuracy最大rank」ではなく、今回の最終選択規則の下で採用したcandidateである。
+
+![Fashion-MNIST CNN Conv SVDのFine-tuning前後の差分](assets/04_cnn_conv_svd_corrected_rerun/fine_tuning_delta.png)
+
+図：上記rerunのrank20 / 24 / 28について、FT後 − SVD直後のRank-Selection Validation accuracy（左）とloss（右）。[元データ](../../results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fine_tuning_result.csv) のaccuracy差は0〜1尺度で、percentage pointではない。横軸は3候補であり、epoch履歴ではない。
+
+![Fashion-MNIST CNN Conv SVDのFine-tuning後の候補比較](assets/04_cnn_conv_svd_corrected_rerun/fine_tuning_after.png)
+
+図：同じ3候補のFT後のRank-Selection Validation accuracy（左）とloss（右）。accuracy最大はrank24だが、loss最小 `0.209190` のrank28を最終採用した。最終Test値や推論時間の図ではない。
 
 ---
 
@@ -334,6 +352,7 @@ batch size = 256
 same input_batch
 warmup = 20
 repeats = 2000
+3 trials（最終FT後モデルと同一run baselineの平均時間の中央値）
 ```
 
 へ統一した。
@@ -341,11 +360,11 @@ repeats = 2000
 結果は、
 
 ```text
-Baseline   ≈ 0.367 ms/batch
-Compressed ≈ 0.370 ms/batch
+Baseline   ≈ 0.344271 ms/batch
+Final FT   ≈ 0.353625 ms/batch
 ```
 
-で、ほぼ同等〜わずかにcompressedが遅かった。
+で、今回は約2.72%Final FTが遅かった。計測は `eval()` / `no_grad()`、CUDA同期あり、host→device転送を除外。速度の出典は `final_model_benchmark.csv` であり、FT前rank sweepの単回時間は最終FT後の値として使用しない。
 
 ここから言えるのは、
 

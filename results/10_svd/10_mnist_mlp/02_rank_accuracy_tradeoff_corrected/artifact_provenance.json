@@ -1,0 +1,25 @@
+{
+  "audit_date": "2026-09-12",
+  "notebook": "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb",
+  "notebook_before_fix_sha256": "30d310d81f2819e2756a27a093a5ac1358bc32377cdb8bfecb1b97641b5dce32",
+  "artifact_status": "preserved historical saved records; not a fresh Run All of current source",
+  "preserved_artifacts": [
+    {
+      "path": "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/rank_accuracy_tradeoff_validation.png",
+      "sha256": "e1779da7b4a4014487276f8968c39c8c4b3c7c1eee1dcd3227242084caec49fa"
+    },
+    {
+      "path": "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/rank_sweep_validation.csv",
+      "sha256": "d56d5748fee83c02a39a3858fc26d3879d684e70d0870076ad235da4e9fef874"
+    },
+    {
+      "path": "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/test_comparison.csv",
+      "sha256": "1b6dffa6ccc3162c9ca4abdeae241ac80750a7f2ac5c830c2c30c3c6b19aecb7"
+    }
+  ],
+  "training_rerun": false,
+  "historical_gaps": [
+    "same-run baseline checkpoint was not persisted; cannot reconstruct original weights from low-rank checkpoints"
+  ],
+  "future_prevention": "baseline_same_run.pt saving added immediately after fitting; this added training/save path was not executed"
+}

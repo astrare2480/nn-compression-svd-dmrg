@@ -199,6 +199,40 @@ W_mat.shape
 
 ---
 
+### 元資料の64filterの行表示を残す
+
+添付 `CNNとMLP (1).md` の4170–4200行は、
+各filterをcolumn vector $\widetilde w_o\in\mathbb R^{288}$ と見たとき、
+その転置を行へ積んでいる。元資料と同じ0始まりのfilter番号で書けば
+
+$$
+W_{\mathrm{mat}}=
+\begin{pmatrix}
+\widetilde w_0^T\\
+\widetilde w_1^T\\
+\vdots\\
+\widetilde w_{63}^T
+\end{pmatrix}
+\in\mathbb R^{64\times288}.
+$$
+
+各行は同じ $(c,h,w)$ 順でflattenされる。
+0始まりで列位置 $q=(cK_h+h)K_w+w$ と置くと
+
+$$
+\begin{aligned}
+\widetilde w_o(q)&=W(o,c,h,w),\\
+\widetilde w_o^T
+&=\begin{pmatrix}
+W(o,0,0,0)&W(o,0,0,1)&\cdots&W(o,31,2,2)
+\end{pmatrix}.
+\end{aligned}
+$$
+
+「64行」は64枚の学習画像ではなく、64個の出力filterである。
+各filterの32入力channel分の $3\times3$ kernelが1行の288成分に入る。
+後の `torch.stack(rows, dim=0)` は、この行表示をそのままコードにしたものである。
+
 ## 3. PyTorchでは1行で行列化できる
 
 ```python
@@ -400,6 +434,44 @@ $$
 というLinearに似た形で表せる。
 
 このため、Linearで使った低ランクSVDの考え方をConv weightへ持ち込める。
+
+### 局所積和から行列積へ、添字を省略せず変換する
+
+0始まりのchannel・kernel添字を使う。kernel位置をまとめる列位置は
+
+$$
+q(c,a,b)=(cK_h+a)K_w+b,
+\qquad
+0\le q<C_{\mathrm{in}}K_hK_w
+$$
+
+である。weightと入力patchを同じ順に並べ、
+
+$$
+(W_{\mathrm{mat}})_{o,q(c,a,b)}=W_{o,c,a,b},
+$$
+
+$$
+(x_{\mathrm{patch}}^{\,n,h,w})_{q(c,a,b)}
+=X_{n,c,\ hS_h-P_h+aD_h,\ wS_w-P_w+bD_w}
+$$
+
+と定義する。範囲外の入力位置は元のpadding規則に従う。Conv2dの出力は
+
+$$
+\begin{aligned}
+Y_{n,o,h,w}
+&=b_o+\sum_{c=0}^{C_{\mathrm{in}}-1}
+\sum_{a=0}^{K_h-1}\sum_{b=0}^{K_w-1}
+W_{o,c,a,b}
+X_{n,c,\ hS_h-P_h+aD_h,\ wS_w-P_w+bD_w}\\
+&=b_o+\sum_{q=0}^{C_{\mathrm{in}}K_hK_w-1}
+(W_{\mathrm{mat}})_{o,q}(x_{\mathrm{patch}}^{\,n,h,w})_q\\
+&=(W_{\mathrm{mat}}x_{\mathrm{patch}}^{\,n,h,w}+b)_o.
+\end{aligned}
+$$
+
+三重和の項が一対一に列位置 $q$ へ移るので、値を近似せず行列積へ書き換えられる。ここで行列化しているのは共有kernelであり、画像全体に作用する巨大な畳み込み演算子そのもののSVDではない。入力patchのサイズと画像全体の入力サイズを混同しない。
 
 ---
 

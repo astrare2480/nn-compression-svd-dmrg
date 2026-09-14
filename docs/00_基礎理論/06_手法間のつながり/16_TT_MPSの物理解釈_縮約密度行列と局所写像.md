@@ -61,6 +61,53 @@ $$
 
 の固有ベクトルを指す。
 
+### partial traceを物理基底の成分まで展開する
+
+右側の複合添字を $\mu=(i_2,\ldots,i_d)$ とし、係数行列を $C=X^{\langle1\rangle}$ と略記する。
+
+$$
+|\psi\rangle=\sum_{i_1,\mu}C_{i_1,\mu}|i_1\rangle\otimes|\mu\rangle.
+$$
+
+密度演算子には二つの係数が現れ、bra側は複素共役される。
+
+$$
+|\psi\rangle\langle\psi|
+=\sum_{i_1,j_1}\sum_{\mu,\nu}
+C_{i_1,\mu}C^*_{j_1,\nu}
+|i_1\rangle\langle j_1|\otimes|\mu\rangle\langle\nu|.
+$$
+
+右側のpartial traceを定義から計算すると、
+
+$$
+\begin{aligned}
+\operatorname{Tr}_{R}(|\mu\rangle\langle\nu|)
+&=\sum_\eta\langle\eta|\mu\rangle\langle\nu|\eta\rangle\\
+&=\sum_\eta\delta_{\eta,\mu}\delta_{\nu,\eta}\\
+&=\delta_{\mu,\nu}.
+\end{aligned}
+$$
+
+したがって、
+
+$$
+\begin{aligned}
+\rho_1
+&=\sum_{i_1,j_1}\sum_{\mu,\nu}
+C_{i_1,\mu}C^*_{j_1,\nu}
+\delta_{\mu,\nu}|i_1\rangle\langle j_1|\\
+&=\sum_{i_1,j_1}
+\left(\sum_\mu C_{i_1,\mu}C^*_{j_1,\mu}\right)
+|i_1\rangle\langle j_1|,\\
+(\rho_1)_{i_1,j_1}
+&=\sum_\mu C_{i_1,\mu}C^*_{j_1,\mu}
+=(CC^\dagger)_{i_1,j_1}.
+\end{aligned}
+$$
+
+この計算が、第3節で用いる係数行列からの密度行列の式を与える。右基底を追跡しない「traceを取る」の一言だけではなく、二つの右添字の和をデルタで一つにしている。
+
 サイト1の局所Hilbert空間の次元が $n_1$ なら、
 
 $$
@@ -234,6 +281,73 @@ $$
 
 この意味で、SVDの左特異ベクトルは物理側ではSchmidtベクトルであり、縮約密度行列の固有ベクトルでもある。
 
+固有ベクトルという結論も、列 $u_{\alpha_1}=Ue_{\alpha_1}$ を代入すると、
+
+$$
+\begin{aligned}
+\rho_1u_{\alpha_1}
+&=U\Sigma^2U^\dagger Ue_{\alpha_1}\\
+&=U\Sigma^2e_{\alpha_1}\\
+&=\sigma_{\alpha_1}^2Ue_{\alpha_1}\\
+&=\sigma_{\alpha_1}^2u_{\alpha_1}
+\end{aligned}
+$$
+
+と確認できる。rank-sized SVDなら $U$ の列は非ゼロ固有値の方向だけであり、零固有値を含めた完全な固有基底とは区別する。
+
+また、
+
+$$
+\operatorname{tr}(\rho_1)
+=\sum_{i_1,\mu}|C_{i_1,\mu}|^2
+=\|C\|_F^2
+=\sum_{\alpha_1}\sigma_{\alpha_1}^2
+$$
+
+である。規格化された状態ならtraceは1。規格化前の数値テンソルを量子状態として使う場合は、$CC^\dagger/\|C\|_F^2$ に規格化してから確率として読む。
+
+### 非対角の密度行列を全要素から計算する
+
+本節独自の、二つの非ゼロSchmidt係数を持つ規格化係数行列として
+
+$$
+C=\frac12\begin{pmatrix}1&1&0\\1&0&1\end{pmatrix}
+$$
+
+を使う。右側は次元3のまとめた空間とする。partial traceの全要素は
+
+$$
+\begin{aligned}
+\rho_1
+&=CC^T\\
+&=\frac14\begin{pmatrix}
+1^2+1^2+0^2&1\cdot1+1\cdot0+0\cdot1\\
+1\cdot1+0\cdot1+1\cdot0&1^2+0^2+1^2
+\end{pmatrix}\\
+&=\frac14\begin{pmatrix}2&1\\1&2\end{pmatrix}.
+\end{aligned}
+$$
+
+非対角要素も残る。固有値と固有ベクトルを最後まで求めると、
+
+$$
+\det(\rho_1-\lambda I_2)
+=(1/2-\lambda)^2-\frac1{16}
+=\left(\lambda-\frac34\right)\left(\lambda-\frac14\right)=0,
+$$
+
+$$
+u_1=\frac1{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix},
+\qquad
+u_2=\frac1{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix},
+\qquad
+\rho_1u_1=\frac34u_1,
+\qquad
+\rho_1u_2=\frac14u_2.
+$$
+
+したがって、Schmidt係数は $\sqrt3/2,1/2$、exact rankは2である。係数行列を最初から対角にして結論を読むのではなく、partial traceの成分和から固有値問題へ進んでいる。
+
 ---
 
 ## 4. 「全部で何本」と「状態に必要な本数」を分ける
@@ -361,6 +475,60 @@ r_1=1.
 $$
 
 ---
+
+### 積状態の密度行列を要素まで展開する
+
+上の積状態について、rankが1になる式も要素まで追っておく。
+係数を $a_{i_1}$ と $\phi_\mu$ とすると
+
+$$
+C_{i_1,\mu}=a_{i_1}\phi_\mu,
+$$
+
+$$
+\begin{aligned}
+(\rho_1)_{i_1,j_1}
+&=\sum_\mu C_{i_1,\mu}C^*_{j_1,\mu}\\
+&=\sum_\mu a_{i_1}\phi_\mu a^*_{j_1}\phi_\mu^*\\
+&=a_{i_1}a^*_{j_1}\sum_\mu|\phi_\mu|^2\\
+&=\|\phi\|_2^2a_{i_1}a^*_{j_1}.
+\end{aligned}
+$$
+
+$a,\phi$ がともに単位ベクトルなら $\rho_1=aa^\dagger$、
+$\rho_1a=a(a^\dagger a)=a$ であり、$a$ に直交する全ての方向には $\rho_1z=0$ となる。
+従って固有値は1が1本、残りが0でrankは1である。
+非正規化の積状態では、非零固有値は $\|a\|_2^2\|\phi\|_2^2$ となる。
+
+左と右に各2本の基底を使った、この節独自の非自明な積状態の例は
+
+$$
+a=\frac{1}{\sqrt5}\begin{pmatrix}1\\2\end{pmatrix},
+\qquad
+\phi=\frac{1}{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix},
+\qquad
+C=\frac{1}{\sqrt{10}}\begin{pmatrix}1&-1\\2&-2\end{pmatrix}.
+$$
+
+全要素の積から
+
+$$
+\begin{aligned}
+CC^{\mathsf T}
+&=\frac{1}{10}\begin{pmatrix}
+1^2+(-1)^2&1\cdot2+(-1)\cdot(-2)\\
+2\cdot1+(-2)\cdot(-1)&2^2+(-2)^2
+\end{pmatrix}\\
+&=\frac{1}{10}\begin{pmatrix}2&4\\4&8\end{pmatrix}
+=\frac{1}{5}\begin{pmatrix}1&2\\2&4\end{pmatrix},\\
+\det(\rho_1-\lambda I_2)
+&=(1/5-\lambda)(4/5-\lambda)-(2/5)^2\\
+&=\lambda^2-\lambda=\lambda(\lambda-1).
+\end{aligned}
+$$
+
+見かけ上は非対角の密度行列でも、固有値は $(1,0)$ である。
+右基底はサイト $2,3$ の複合基底のうち2本と考えてよく、サイト1とのcutが積状態であることだけを使った。
 
 ## 6. MPSコアの3本の添字を物理で読む
 

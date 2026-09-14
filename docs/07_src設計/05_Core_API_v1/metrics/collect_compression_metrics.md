@@ -150,6 +150,7 @@ sequenceDiagram
 - `include_model=False`が既定。
 - 同じloaderを複数回走査するためone-shot iteratorは未対応。
 - baseline/compressedのtraining状態を復元する。
+- baseline/compressed modelと、Parameter / bufferを持つcriterionは[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従い、呼び出し前に指定deviceへ配置する。
 
 ## 関連API
 

@@ -1,0 +1,2 @@
+model,fc1_rank,validation_acc,validation_loss,parameters,parameters_reduction
+Conservative after FT,28,0.9228,0.21700971381664277,111626,0.7352588214646549

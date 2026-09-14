@@ -1,0 +1,94 @@
+{
+  "audit_date": "2026-09-12",
+  "notebook": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb",
+  "notebook_before_fix_sha256": "743a5adf7b670f2932bc932efdfe60d7b5655c6610f2ae2ecae856146b874c63",
+  "artifact_status": "preserved historical saved records; not a fresh Run All of current source",
+  "preserved_artifacts": [
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/fine_tuning_after.png",
+      "sha256": "6fb16eccdb51b96844da7e19c0ef1825c1abf7103c7c0f4107374f7ba5a07634"
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/fine_tuning_delta.png",
+      "sha256": "058b0833ce01851c5ff9fbd45b0d9802d6bff2c17fe1872b7f47677876839e7a"
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/fine_tuning_result.csv",
+      "sha256": "b380bc64e72fa11558526599835e502de9d6abcfd8e00e937ced57c79b41571d"
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/model_comparison.csv",
+      "sha256": "17b43b23667c6395d5a0dc6049e812be3da51659d05517f100acb7a93499ae51"
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/parameters_vs_validation_loss_normalize.png",
+      "sha256": "856329874d9b14a4c6b4a738ea7d812223e2483a5f34eb60e3031d5dffb41174"
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/selected_final_model.csv",
+      "sha256": "5af491afb7d077d310649d4da40fcbf5614e713262d54b6c9685e8378eacc8c4"
+    }
+  ],
+  "training_rerun": false,
+  "historical_gaps": [
+    "same-run baseline checkpoint was not persisted; cannot reconstruct original weights from low-rank checkpoints",
+    "raw-precision full-rank metrics and unshown columns",
+    "per-epoch fine-tuning histories"
+  ],
+  "future_prevention": "baseline_same_run.pt saving added immediately after fitting; this added training/save path was not executed; full rank/Pareto/test/baseline/FT histories and benchmark batch metadata saving added",
+  "restored_records": [
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/baseline_history_saved_output.csv",
+      "rows": 12,
+      "source_cell_position": 9,
+      "source_output_position": 2,
+      "source": "Notebook saved HTML table; not reexecuted",
+      "precision": "displayed values only; floats generally rounded to 6 decimal places",
+      "unshown_columns_reconstructed": false
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/pareto_frontier_saved_output.csv",
+      "rows": 8,
+      "source_cell_position": 13,
+      "source_output_position": 2,
+      "source": "Notebook saved HTML table; not reexecuted",
+      "precision": "displayed values only; floats generally rounded to 6 decimal places",
+      "unshown_columns_reconstructed": false
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/selected_rank_neighbors_saved_output.csv",
+      "rows": 3,
+      "source_cell_position": 14,
+      "source_output_position": 4,
+      "source": "Notebook saved HTML table; not reexecuted",
+      "precision": "displayed values only; floats generally rounded to 6 decimal places",
+      "unshown_columns_reconstructed": false
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/fine_tuning_fit_summary_saved_output.csv",
+      "rows": 3,
+      "source_cell_position": 16,
+      "source_output_position": 2,
+      "source": "Notebook saved HTML table; not reexecuted",
+      "precision": "displayed values only; floats generally rounded to 6 decimal places",
+      "unshown_columns_reconstructed": false
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/test_comparison_saved_output.csv",
+      "rows": 2,
+      "source_cell_position": 20,
+      "source_output_position": 5,
+      "source": "Notebook saved HTML table; not reexecuted",
+      "precision": "displayed values only; floats generally rounded to 6 decimal places",
+      "unshown_columns_reconstructed": false
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/rank_sweep_saved_log.csv",
+      "rows": 30,
+      "source_cell_position": 11,
+      "source": "Notebook saved stream log; not reexecuted",
+      "precision": "loss/accuracy/agreement printed to 4 decimals; parameter/MAC counts exact",
+      "unshown_columns_reconstructed": false
+    }
+  ]
+}

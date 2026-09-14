@@ -65,7 +65,8 @@ Conv SVDのrank sweepをNotebookから簡潔に実行するとき。
 
 ## 主なcontract / 注意事項
 
-`out_hw`は対象Convの実際の出力空間sizeを呼び出し側が与える。
+- `out_hw`は対象Convの実際の出力空間sizeを呼び出し側が与える。
+- device配置は[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従う。baseline modelと、Parameter / bufferを持つcriterionは呼び出し前に指定deviceへ配置する。
 
 ## 関連API
 

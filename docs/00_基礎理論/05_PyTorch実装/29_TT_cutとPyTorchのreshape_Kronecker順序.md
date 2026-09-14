@@ -17,6 +17,11 @@ tags:
 
 ## サマリー
 
+本章のmode名は数学の1始まりである。「mode-2」は物理添字 $i_2$ に対応する第2軸を指し、PyTorchのaxis番号では $1$ になる。
+[[21_テンソルとmode演算]] とTucker実装の章はmode番号も0始まりで数えるため、同じ第2軸を「mode 1」と呼ぶ。
+本章の `permute(1, 0, 2)` の整数はPyTorchの0始まりaxis番号であり、数式のmode-2と矛盾しない。
+mode名の番号だけで比較せず、「どの物理添字を行側へ置いたか」を合わせる。
+
 TT/MPS基礎実装では、次の三つを混同しないことが重要である。
 
 1. TTの第2cut
@@ -104,6 +109,12 @@ $$
 ---
 
 ## 2. `i2 | (i1,i3)` はTTの第2cutではない
+
+同じcutの中で $(i_1,i_2)$ の行位置を入れ替えるだけなら、行の置換であり、rankは変わらない。
+しかし $(i_1,i_2)\mid i_3$ を $i_2\mid(i_1,i_3)$ に変えると、$i_1$ が行側から列側へ移る。
+これは同じ行列の行・列を並べ替える操作とは異なり、どの空間同士を分けるかという分割そのものの変更である。
+元Tensorの値を捨ててはいないが、出来上がる行列のrankは異なることがある。
+後で扱う置換行列 $P$ は、同じ分割内の複合添字の順序をそろえる道具であって、任意のTT cutとmode unfoldingのrankを等しくする道具ではない。
 
 もし本当に
 
@@ -467,6 +478,149 @@ $$
 
 ---
 
+### 元資料の $3\times2$ 行列：blockの中身と順序を省略しない
+
+添付 `TT_MPS基礎理論.md` の27239–27383行にある例を、元と同じ
+$n_1=3,r_1=2,n_2=2$ で回収する。本節の添字はPyTorchと同じ0始まりである。
+
+$$
+U_1=\begin{pmatrix}a&b\\c&d\\e&f\end{pmatrix},\qquad
+B^{(j)}_{\alpha_1,i_3}=B_{\alpha_1,j,i_3},\qquad
+B^{(0)},B^{(1)}\in\mathbb R^{2\times n_3}.
+$$
+
+「block」は $i_2=j$ を固定したsliceである。$i_3$ は各sliceの列に残り、
+サイト2の値が違う二つのsliceへ、同じ $U_1$ を別々に掛ける。
+
+$$
+\begin{aligned}
+B_{\mathrm{block}}
+&=\begin{pmatrix}B^{(0)}\\B^{(1)}\end{pmatrix}
+\in\mathbb R^{4\times n_3},\\
+X_{\mathrm{block}}
+&=\begin{pmatrix}U_1B^{(0)}\\U_1B^{(1)}\end{pmatrix}
+=\begin{pmatrix}U_1&0\\0&U_1\end{pmatrix}
+\begin{pmatrix}B^{(0)}\\B^{(1)}\end{pmatrix}.
+\end{aligned}
+$$
+
+このときの0は $3\times2$ の零blockである。まず、sliceの中身を確認する。
+
+元資料27190–27217行の $i_2=0$ に固定したsliceの中身も、
+行のphysical/bond添字を明記して
+
+$$
+X^{(0)}=
+\begin{pmatrix}
+X_{0,0,0}&\cdots&X_{0,0,n_3-1}\\
+\vdots&\ddots&\vdots\\
+X_{n_1-1,0,0}&\cdots&X_{n_1-1,0,n_3-1}
+\end{pmatrix},\qquad
+B^{(0)}=
+\begin{pmatrix}
+B_{0,0,0}&\cdots&B_{0,0,n_3-1}\\
+\vdots&\ddots&\vdots\\
+B_{r_1-1,0,0}&\cdots&B_{r_1-1,0,n_3-1}
+\end{pmatrix},\qquad X^{(0)}=U_1B^{(0)}
+$$
+
+となる。どちらも第2添字は固定され、第3添字 $i_3$ は列のままである。
+同じことを $i_2=j$ ごとに行うため、一般のblock対角行列は
+
+$$
+I_{n_2}\otimes U_1=
+\begin{pmatrix}
+U_1&0&\cdots&0\\
+0&U_1&\cdots&0\\
+\vdots&\vdots&\ddots&\vdots\\
+0&0&\cdots&U_1
+\end{pmatrix}.
+$$
+
+これが元資料26997–27002行、27320–27325行、28778–28781行の表示の意味である。
+先の $n_2=2$ の例へ戻り、その二つのblockを全要素で展開する。
+
+$$
+I_2\otimes U_1
+=\begin{pmatrix}
+a&b&0&0\\c&d&0&0\\e&f&0&0\\
+0&0&a&b\\0&0&c&d\\0&0&e&f
+\end{pmatrix}
+\in\mathbb R^{6\times4}.
+$$
+
+入力の行は $(i_2,\alpha_1)=(0,0),(0,1),(1,0),(1,1)$、
+出力の行は $(i_2,i_1)=(0,0),(0,1),(0,2),(1,0),(1,1),(1,2)$ の順である。
+積の第1–3行には $B^{(0)}$ だけ、第4–6行には $B^{(1)}$ だけが寄与する。
+各列 $i_3$ の要素まで展開すれば
+
+$$
+X_{\mathrm{block}}(:,i_3)=
+\begin{pmatrix}
+aB_{0,0,i_3}+bB_{1,0,i_3}\\
+cB_{0,0,i_3}+dB_{1,0,i_3}\\
+eB_{0,0,i_3}+fB_{1,0,i_3}\\
+aB_{0,1,i_3}+bB_{1,1,i_3}\\
+cB_{0,1,i_3}+dB_{1,1,i_3}\\
+eB_{0,1,i_3}+fB_{1,1,i_3}
+\end{pmatrix}.
+$$
+
+同じ元資料のPyTorch順との比較を、この長方形でも最後まで展開すると
+
+$$
+U_1\otimes I_2
+=\begin{pmatrix}
+a&0&b&0\\0&a&0&b\\
+c&0&d&0\\0&c&0&d\\
+e&0&f&0\\0&e&0&f
+\end{pmatrix}.
+$$
+
+こちらの入力は $(\alpha_1,i_2)$ 順、出力は $(i_1,i_2)$ 順である。
+次節の定義に従い、torch順からblock順への出力置換を要素で書くと
+
+$$
+P_{\mathrm{out}}=
+\begin{pmatrix}
+1&0&0&0&0&0\\
+0&0&1&0&0&0\\
+0&0&0&0&1&0\\
+0&1&0&0&0&0\\
+0&0&0&1&0&0\\
+0&0&0&0&0&1
+\end{pmatrix}.
+$$
+
+入力置換 $P_{\mathrm{in}}$ は次節の $4\times4$ の $P$ と同じである。
+$P_{\mathrm{out}}$ は行を1,3,5,2,4,6行目の順へ、
+$P_{\mathrm{in}}^T$ は列を1,3,2,4列目の順へ並べる。したがって
+
+$$
+\begin{aligned}
+P_{\mathrm{out}}(U_1\otimes I_2)
+&=\begin{pmatrix}
+a&0&b&0\\c&0&d&0\\e&0&f&0\\
+0&a&0&b\\0&c&0&d\\0&e&0&f
+\end{pmatrix},\\
+P_{\mathrm{out}}(U_1\otimes I_2)P_{\mathrm{in}}^T
+&=\begin{pmatrix}
+a&b&0&0\\c&d&0&0\\e&f&0&0\\
+0&0&a&b\\0&0&c&d\\0&0&e&f
+\end{pmatrix}
+=I_2\otimes U_1.
+\end{aligned}
+$$
+
+$P_{\mathrm{out}}$ の全要素表示と置換積は、元資料のblock例から導いた補足である。
+元資料の $3\times2$ の $U_1$ と $6\times4$ のblock対角行列そのものとは区別する。
+長方形では出力置換が $6\times6$、入力置換が $4\times4$ なので、
+同じ $P$ を両側へ掛ける式にはできない。
+最初から `reshape(n1*n2,n3)`・`reshape(r1*n2,n3)`・$U_1\otimes I_2$
+を使えば、この並べ替えを実装する必要はない。
+
+---
+
 ## 9. 置換行列 $P$ は何をするか
 
 PyTorch順とblock順には、同じ添字ペアが全て含まれている。ただし並ぶ位置が違う。
@@ -601,6 +755,38 @@ P^T
 }
 $$
 
+この積でも、中間行列を省略せず確認できる。左から $P$ を掛けると第2・第3行が入れ替わり、
+
+$$
+P(U\otimes I_2)
+=\begin{pmatrix}
+1&0&2&0\\
+3&0&4&0\\
+0&1&0&2\\
+0&3&0&4
+\end{pmatrix}.
+$$
+
+次に右から $P^T$ を掛けると第2・第3列が入れ替わるので、
+
+$$
+\begin{aligned}
+P(U\otimes I_2)P^T
+&=\begin{pmatrix}
+1&0&2&0\\3&0&4&0\\0&1&0&2\\0&3&0&4
+\end{pmatrix}
+\begin{pmatrix}
+1&0&0&0\\0&0&1&0\\0&1&0&0\\0&0&0&1
+\end{pmatrix}\\
+&=\begin{pmatrix}
+1&2&0&0\\3&4&0&0\\0&0&1&2\\0&0&3&4
+\end{pmatrix}\\
+&=I_2\otimes U.
+\end{aligned}
+$$
+
+ここでの $U$ は順序を確認する一般行列であり、SVDの列直交性を仮定した数値例ではない。
+
 となる。つまり両者は異なる作用ではなく、同じ添字操作を $(i_1,i_2)$ 順と $(i_2,i_1)$ 順で表した行列である。この例では入出力の次元がどちらも $2\times2$ なので同じ $P$ を使えるが、一般の次元では後述する $P_{\mathrm{in}}$ と $P_{\mathrm{out}}$ を区別する。
 
 置換行列は直交行列なので、
@@ -660,6 +846,39 @@ P_{\mathrm{out}}^T
 (I_{n_2}\otimes U)
 P_{\mathrm{in}}
 $$
+
+一般の長方形 $U$ では、二つの置換は同じshapeとは限らない。0始まりの添字で、torch順からblock順へ写す置換を
+
+$$
+\begin{aligned}
+(P_{\mathrm{out}})_{j_2n_1+i_1,\ i'_1n_2+j'_2}
+&=\delta_{i_1,i'_1}\delta_{j_2,j'_2},\\
+(P_{\mathrm{in}})_{j_2r_1+\alpha_1,\ \alpha'_1n_2+j'_2}
+&=\delta_{\alpha_1,\alpha'_1}\delta_{j_2,j'_2}
+\end{aligned}
+$$
+
+と定義する。shapeは各々
+
+$$
+P_{\mathrm{out}}\in\mathbb R^{(n_1n_2)\times(n_1n_2)},
+\qquad
+P_{\mathrm{in}}\in\mathbb R^{(r_1n_2)\times(r_1n_2)}.
+$$
+
+成分で順序変換を確かめると、
+
+$$
+\begin{aligned}
+[P_{\mathrm{out}}(U\otimes I_{n_2})P_{\mathrm{in}}^T]
+_{(j_2,i_1),(k_2,\alpha_1)}
+&=(U\otimes I_{n_2})_{(i_1,j_2),(\alpha_1,k_2)}\\
+&=U_{i_1,\alpha_1}\delta_{j_2,k_2}\\
+&=(I_{n_2}\otimes U)_{(j_2,i_1),(k_2,\alpha_1)}.
+\end{aligned}
+$$
+
+したがって、上の変換式は入出力の両方の並べ替えから従う。$n_1=r_1=n_2=2$ の例では両方が同じ対称行列 $P$ になるが、一般に同じ置換や対称な置換になるとは限らない。
 
 という関係として理解できる。
 

@@ -133,6 +133,29 @@ $$
 
 複数channelの場合も、channel間を混ぜず、この計算を各$(n,c)$の特徴マップへ独立に行う。
 
+### 元資料の数値例もそのまま計算する
+
+元資料 `CNN CIFAR-10→SVD_まず、CIFAR-10とは？ (1).md` の3978〜4002行付近の数値例は、直前の例とは値が異なる。
+原資料の例を一般式だけで代替せず、1 channelの特徴マップ
+
+$$
+X_{\mathrm{source}}=\begin{pmatrix}1&3\\5&7\end{pmatrix}
+$$
+
+について、
+
+$$
+\begin{aligned}
+\operatorname{GAP}(X_{\mathrm{source}})
+&=\frac1{2\cdot2}\sum_{h=1}^{2}\sum_{w=1}^{2}(X_{\mathrm{source}})_{h,w}\\
+&=\frac{(1+3)+(5+7)}4\\
+&=\frac{16}{4}=4
+\end{aligned}
+$$
+
+と全要素を対応付ける。batchとchannelを固定して空間4要素だけを平均するので、他channelの値はこの和には入らない。
+直前の $(1,2;3,4)$ の平均2.5は教育的な別例であり、元資料の値を回収した例ではなかった。
+
 ## PyTorchでは`AdaptiveAvgPool2d(1)`を使う
 
 PyTorchでは、入力の$H,W$に依存せず出力を$1\times1$にする `nn.AdaptiveAvgPool2d(1)` でGAPを表せる。
@@ -499,6 +522,154 @@ GAPは可視化手法でも登場するため、混同しやすい。
 
 古典的なCAMでは、モデルのforward中で特徴マップをGAPし、その後のLinear weightと対応させる構造を使う。
 
+### GAPからCAMまで、和を入れ替える途中式
+
+1 sampleの特徴マップを $A^k_{i,j}$、空間要素数を $Z=HW$ とする。
+ここでは **GAPの直後が1個のLinear** であるCAM形式を仮定する。
+
+$$
+F_k=\frac{1}{Z}\sum_{i=1}^{H}\sum_{j=1}^{W}A^k_{i,j},
+\qquad
+S_c=\sum_{k=1}^{K}w_k^cF_k+b_c.
+$$
+
+GAPの式を代入し、有限和の順番を変えると
+
+$$
+\begin{aligned}
+S_c
+&=\sum_{k=1}^{K}w_k^c
+\left(\frac{1}{Z}\sum_{i=1}^{H}\sum_{j=1}^{W}A^k_{i,j}\right)+b_c\\
+&=\frac{1}{Z}\sum_{k=1}^{K}\sum_{i=1}^{H}\sum_{j=1}^{W}
+w_k^cA^k_{i,j}+b_c\\
+&=\frac{1}{Z}\sum_{i=1}^{H}\sum_{j=1}^{W}
+\left(\sum_{k=1}^{K}w_k^cA^k_{i,j}\right)+b_c\\
+&=\frac{1}{Z}\sum_{i=1}^{H}\sum_{j=1}^{W}M_c(i,j)+b_c,
+\end{aligned}
+$$
+
+$$
+M_c(i,j):=\sum_{k=1}^{K}w_k^cA^k_{i,j}.
+$$
+
+例えば $H=W=2$、channelが2本なら、全位置を残したCAMは
+
+$$
+M_c=
+\begin{pmatrix}
+w_1^cA^1_{1,1}+w_2^cA^2_{1,1}
+&
+w_1^cA^1_{1,2}+w_2^cA^2_{1,2}\\
+w_1^cA^1_{2,1}+w_2^cA^2_{2,1}
+&
+w_1^cA^1_{2,2}+w_2^cA^2_{2,2}
+\end{pmatrix},
+$$
+
+$$
+S_c=\frac{M_c(1,1)+M_c(1,2)+M_c(2,1)+M_c(2,2)}{4}+b_c.
+$$
+
+biasは位置に依存しないスコアの定数項として分離した。
+今回のCIFAR-10モデルはGAPの後が fc1 → ReLU → Dropout → fc2 なので、
+fc2の分類重みをそのままConv channelのCAM重みにすることはできない。
+元資料の直接CAMの説明を、この非線形classifierへ無条件には適用しない。
+
+### 元資料の3チャネル重みを、全位置のCAMへ対応させる
+
+元資料S04の4251–4285行には、猫クラスの重みを $w_1^{\mathrm{cat}}=1.2$、$w_2^{\mathrm{cat}}=2.0$、$w_3^{\mathrm{cat}}=0.8$ とする例がある。この値を一般式へ代入すると
+
+$$
+M_{\mathrm{cat}}(i,j)
+=1.2A^1_{i,j}+2.0A^2_{i,j}+0.8A^3_{i,j}.
+$$
+
+元資料の「毛並み・耳・四足」のようなチャネルの名前は直感のための例であり、学習した各チャネルが必ず一つの人間的な概念に対応する保証ではない。GAPは全位置を平均へ含めるため、最大の1位置だけを採るGlobal Max Poolingとは異なる。ただし平均が大きいだけで、反応が物体全体へ広がっているとは断定しない。
+
+次の特徴マップの値とbiasは、元資料には表示されていない**独自の補足**である。元資料の3つの重みは変えず、$H=W=2$、$Z=4$ として全要素を計算する。
+
+$$
+A^1=\begin{pmatrix}1&0\\0&1\end{pmatrix},\qquad
+A^2=\begin{pmatrix}0&2\\1&0\end{pmatrix},\qquad
+A^3=\begin{pmatrix}1&1\\0&2\end{pmatrix},\qquad
+b_{\mathrm{cat}}=0.5.
+$$
+
+$$
+\begin{aligned}
+M_{\mathrm{cat}}
+&=\begin{pmatrix}
+1.2\cdot1+2.0\cdot0+0.8\cdot1&
+1.2\cdot0+2.0\cdot2+0.8\cdot1\\
+1.2\cdot0+2.0\cdot1+0.8\cdot0&
+1.2\cdot1+2.0\cdot0+0.8\cdot2
+\end{pmatrix}\\
+&=\begin{pmatrix}2.0&4.8\\2.0&2.8\end{pmatrix}.
+\end{aligned}
+$$
+
+GAPの特徴と線形スコアから計算する経路では
+
+$$
+\begin{aligned}
+F_1&=\frac{1+0+0+1}{4}=0.5,\\
+F_2&=\frac{0+2+1+0}{4}=0.75,\\
+F_3&=\frac{1+1+0+2}{4}=1,\\
+S_{\mathrm{cat}}
+&=1.2\cdot0.5+2.0\cdot0.75+0.8\cdot1+0.5\\
+&=0.6+1.5+0.8+0.5=3.4.
+\end{aligned}
+$$
+
+CAMを平均する経路でも
+
+$$
+S_{\mathrm{cat}}
+=\frac{2.0+4.8+2.0+2.8}{4}+0.5
+=\frac{11.6}{4}+0.5=3.4
+$$
+
+となる。biasを空間位置ごとに足してCAMへ混ぜるのでなく、スコアの定数項として分離している。
+
+元資料のCAM関数の縮約も、この例と対応させる。元のexport中の `feature_maps[^27_0]` は脚注記号が混入したコードなので、1 sampleを取り出す `feature_maps[0]` として記述する。以下は**GAPの直後が1個のLinear**という構造に限った関数であり、今回の非線形classifierへそのまま適用するものではない。
+
+```python
+import torch
+
+
+def make_cam(
+    feature_maps: torch.Tensor,
+    classifier_weight: torch.Tensor,
+    class_index: int,
+) -> torch.Tensor:
+    """元資料と同じく、正のクラス寄与を残したCAMを返す。"""
+    # 1 sampleを取り出し、チャネルKだけを縮約する。
+    weights = classifier_weight[class_index]
+    raw_cam = torch.einsum("k,khw->hw", weights, feature_maps[0])
+    return torch.relu(raw_cam)
+
+
+# 特徴マップとbiasは上の補足例。クラス番号0を例の猫クラスとする。
+feature_maps = torch.tensor(
+    [[[[1., 0.], [0., 1.]],
+      [[0., 2.], [1., 0.]],
+      [[1., 1.], [0., 2.]]]],
+    dtype=torch.float64,
+)
+classifier_weight = torch.tensor([[1.2, 2.0, 0.8]], dtype=torch.float64)
+cam = make_cam(feature_maps, classifier_weight, class_index=0)
+expected = torch.tensor([[2.0, 4.8], [2.0, 2.8]], dtype=torch.float64)
+assert torch.allclose(cam, expected)
+
+# この例では全CAM要素が正なので、ReLU前後が同じになる。
+pooled = feature_maps.mean(dim=(-2, -1))
+score = (pooled @ classifier_weight.T)[0, 0] + 0.5
+assert torch.allclose(score, cam.mean() + 0.5)
+assert abs(score.item() - 3.4) < 1e-12
+```
+
+入力shapeは `(1, K, H, W)`、重みshapeは `(C, K)`、クラス番号は $0\le c<C$ を前提とする。一般にはraw CAMに負の要素もあり、正の寄与だけを見るReLU後のヒートマップの平均から元スコアをそのまま復元できない。スコアとの厳密な等式はReLU前の $M_c$ に対するものである。
+
 ## Grad-CAM
 
 Grad-CAMは、モデル自体にGAPが必須ではない。
@@ -530,6 +701,44 @@ Grad-CAMで勾配をGAPする処理
 ```
 
 である。
+
+### CAM形式で勾配の平均を最後まで計算する
+
+上のCAM形式のスコア $S_c$ を用いる場合に限り、特徴マップに対する偏微分は
+
+$$
+\begin{aligned}
+\frac{\partial S_c}{\partial A^k_{i,j}}
+&=\frac{1}{Z}\sum_{\ell=1}^{K}\sum_{u=1}^{H}\sum_{v=1}^{W}
+w_\ell^c
+\frac{\partial A^\ell_{u,v}}{\partial A^k_{i,j}}\\
+&=\frac{1}{Z}\sum_{\ell,u,v}
+w_\ell^c\delta_{\ell,k}\delta_{u,i}\delta_{v,j}\\
+&=\frac{w_k^c}{Z}.
+\end{aligned}
+$$
+
+その空間平均は、同じ値が $Z$ 個あることから
+
+$$
+\begin{aligned}
+\alpha_k^c
+&=\frac{1}{Z}\sum_{i=1}^{H}\sum_{j=1}^{W}\frac{w_k^c}{Z}\\
+&=\frac{1}{Z}\cdot Z\cdot\frac{w_k^c}{Z}\\
+&=\frac{w_k^c}{Z}.
+\end{aligned}
+$$
+
+Grad-CAMの通常のヒートマップは
+
+$$
+L_{\mathrm{Grad\text{-}CAM}}^c(i,j)
+=\operatorname{ReLU}\left(\sum_k\alpha_k^cA^k_{i,j}\right)
+=\frac{1}{Z}\operatorname{ReLU}\left(M_c(i,j)\right).
+$$
+
+従って、この線形CAM形式では正のスケール $1/Z$ とReLUを除いて対応する。
+一般の非線形classifierでは勾配が入力に依存するため、同じ定数重みの式にはならない。
 
 今回のSVD圧縮では可視化が主題ではないが、GAPという用語の意味を分けておく。
 

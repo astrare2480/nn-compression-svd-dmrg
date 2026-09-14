@@ -1,0 +1,4 @@
+fc1_rank,fc2_rank,best_epoch,best_validation_loss
+16,16,5,0.320158
+32,16,7,0.304973
+32,32,4,0.313099

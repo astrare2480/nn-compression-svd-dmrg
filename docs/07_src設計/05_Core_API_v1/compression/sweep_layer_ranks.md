@@ -130,6 +130,7 @@ sequenceDiagram
 - candidateは常に同じbaselineから作る。
 - 全candidate modelを結果表へ保存しないため、メモリ使用量を抑える。
 - benchmarkでは可能なら共通`input_batch`を渡す。
+- device配置は[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従う。baseline modelと、Parameter / bufferを持つcriterionは呼び出し前に指定deviceへ配置する。
 
 ## 関連API
 

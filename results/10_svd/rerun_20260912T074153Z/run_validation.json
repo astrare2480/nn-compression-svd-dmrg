@@ -1,0 +1,451 @@
+{
+  "run_id": "rerun_20260912T074153Z",
+  "status": "all five fresh runs executed and verified",
+  "runs": [
+    {
+      "notebook": "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb",
+      "status": "verified completed",
+      "code_cells": 9,
+      "rank_rows": 16,
+      "baseline_epochs": 5,
+      "ft_candidates": 0,
+      "ft_epochs": 0,
+      "csv_files": 5,
+      "png_files": 1,
+      "checkpoint_files": 3,
+      "test_records": [
+        {
+          "model": "baseline",
+          "fc1_rank": "-",
+          "fc2_rank": "-",
+          "test_loss": 0.06544245900586247,
+          "test_acc": 0.9817
+        },
+        {
+          "model": "selected SVD",
+          "fc1_rank": 128,
+          "fc2_rank": 128,
+          "test_loss": 0.06575845070183277,
+          "test_acc": 0.9808
+        }
+      ],
+      "median_ms": {
+        "baseline": 0.1196410000011383,
+        "final": 0.1957469999979366
+      },
+      "preserved_historical_artifacts_checked": 76
+    },
+    {
+      "notebook": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb",
+      "status": "verified completed",
+      "code_cells": 13,
+      "rank_rows": 30,
+      "baseline_epochs": 12,
+      "ft_candidates": 3,
+      "ft_epochs": 31,
+      "csv_files": 18,
+      "png_files": 3,
+      "checkpoint_files": 6,
+      "test_records": [
+        {
+          "model": "Baseline",
+          "fc1_rank": "-",
+          "fc2_rank": "-",
+          "parameters": 535818,
+          "test_loss": 0.3290240287780762,
+          "test_acc": 0.8819,
+          "delta_test_acc": 0,
+          "delta_test_loss": 0
+        },
+        {
+          "model": "Final (compressed + FT)",
+          "fc1_rank": 32,
+          "fc2_rank": 16,
+          "parameters": 57098,
+          "test_loss": 0.33377576768398287,
+          "test_acc": 0.8853,
+          "delta_test_acc": 0.0033999999999999586,
+          "delta_test_loss": 0.004751738905906688
+        }
+      ],
+      "median_ms": {
+        "baseline": 0.1374077500004205,
+        "final": 0.1978795999984868
+      }
+    },
+    {
+      "notebook": "notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun.ipynb",
+      "status": "verified completed",
+      "code_cells": 23,
+      "rank_rows": 14,
+      "baseline_epochs": 15,
+      "ft_candidates": 3,
+      "ft_epochs": 12,
+      "csv_files": 17,
+      "png_files": 3,
+      "checkpoint_files": 6,
+      "test_records": [
+        {
+          "model": "Baseline",
+          "fc1_rank": "-",
+          "parameters": 421642,
+          "test_loss": 0.23826273543834686,
+          "test_acc": 0.9128,
+          "delta_test_acc": 0,
+          "delta_test_loss": 0
+        },
+        {
+          "model": "Final (compressed + FT)",
+          "fc1_rank": 28,
+          "parameters": 111626,
+          "test_loss": 0.23469258646965027,
+          "test_acc": 0.9149,
+          "delta_test_acc": 0.002100000000000102,
+          "delta_test_loss": -0.0035701489686965904
+        }
+      ],
+      "median_ms": {
+        "baseline": 0.3462541000008059,
+        "final": 0.3385857499997655
+      }
+    },
+    {
+      "notebook": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb",
+      "status": "verified completed",
+      "code_cells": 23,
+      "rank_rows": 10,
+      "baseline_epochs": 15,
+      "ft_candidates": 3,
+      "ft_epochs": 18,
+      "csv_files": 17,
+      "png_files": 3,
+      "checkpoint_files": 6,
+      "test_records": [
+        {
+          "model": "Baseline",
+          "conv2_rank": "-",
+          "parameters": 421642,
+          "test_loss": 0.23826273543834686,
+          "test_acc": 0.9128,
+          "delta_test_acc": 0,
+          "delta_test_loss": 0
+        },
+        {
+          "model": "Final (compressed + FT)",
+          "conv2_rank": 28,
+          "parameters": 413066,
+          "test_loss": 0.23222631120681764,
+          "test_acc": 0.9175,
+          "delta_test_acc": 0.0047000000000000375,
+          "delta_test_loss": -0.006036424231529225
+        }
+      ],
+      "median_ms": {
+        "baseline": 0.3442712500000198,
+        "final": 0.3536249500011763
+      }
+    },
+    {
+      "notebook": "notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun.ipynb",
+      "status": "verified completed",
+      "code_cells": 20,
+      "rank_rows": 1,
+      "baseline_epochs": 15,
+      "ft_candidates": 1,
+      "ft_epochs": 4,
+      "csv_files": 11,
+      "png_files": 3,
+      "checkpoint_files": 4,
+      "test_records": [
+        {
+          "model": "Baseline",
+          "conv2_rank": "-",
+          "fc1_rank": "-",
+          "parameters": 421642,
+          "macs": 4241152,
+          "test_loss": 0.23826273543834686,
+          "test_acc": 0.9128,
+          "delta_test_acc_pp": 0,
+          "delta_test_loss": 0
+        },
+        {
+          "model": "Conv2 + fc1 SVD + FT",
+          "conv2_rank": 28,
+          "fc1_rank": 24,
+          "parameters": 89994,
+          "macs": 2237184,
+          "test_loss": 0.2412421983242035,
+          "test_acc": 0.9133,
+          "delta_test_acc_pp": 0.050000000000005596,
+          "delta_test_loss": 0.0029794628858566263
+        }
+      ],
+      "median_ms": {
+        "baseline": 0.3464442000004055,
+        "final": 0.3838606499994057
+      }
+    }
+  ],
+  "checkpoint_reload_check": {
+    "models_checked": 10,
+    "samples_per_model": 10000,
+    "all_test_metrics_match": true
+  },
+  "totals": {
+    "executed_code_cells": 88,
+    "rank_sweep_candidates": 70,
+    "fixed_rank_configurations": 1,
+    "baseline_epochs": 62,
+    "fine_tuning_candidates": 10,
+    "fine_tuning_epochs": 65,
+    "raw_csv_files": 68,
+    "png_files": 13,
+    "checkpoint_files": 25,
+    "preserved_historical_artifacts_checked": 76
+  },
+  "checks": {
+    "all_code_cells_executed_no_errors": true,
+    "original_notebooks_unchanged": true,
+    "original_explanations_and_learning_evaluation_ast_preserved": true,
+    "display_math_blocks_paired": true,
+    "artifact_and_configuration_hashes_valid": true,
+    "early_stopping_recomputed": true,
+    "parameter_macs_reduction_arithmetic_valid": true,
+    "pareto_prefilter_and_final_rank_selection_valid": true,
+    "final_checkpoints_match_native_selected_weights": true,
+    "markdown_and_wiki_links_resolve": true,
+    "git_diff_check_passed": true,
+    "new_text_file_diff_checks_passed": true
+  },
+  "not_executed": [
+    "test suite",
+    "notebooks outside the five fresh runs",
+    "CIFAR-10/Tucker training"
+  ],
+  "commit": false,
+  "push": false,
+  "git_and_link_verification": {
+    "resolved_links": 78,
+    "new_text_files_checked": 86,
+    "new_files": [
+      "models/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/baseline_same_run.pt",
+      "models/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/final_same_run.pt",
+      "models/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/selected_from_validation.pt",
+      "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/baseline_same_run.pt",
+      "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/final_same_run.pt",
+      "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-16_r2-16_aggressive_finetuned.pt",
+      "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-16_balanced_finetuned.pt",
+      "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-16_final.pt",
+      "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-32_conservative_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/baseline_same_run.pt",
+      "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/final_same_run.pt",
+      "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/r1-20_aggressive_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/r1-24_balanced_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/r1-28_conservative_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/r1-28_final.pt",
+      "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/baseline_same_run.pt",
+      "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/final_same_run.pt",
+      "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-20_aggressive_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-24_balanced_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-28_conservative_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-28_final.pt",
+      "models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/baseline_same_run.pt",
+      "models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/conv2-rank-28_fc1-rank-24_finetuned.pt",
+      "models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/conv2-rank-28_fc1-rank-24_svd_direct.pt",
+      "models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/final_same_run.pt",
+      "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb",
+      "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb",
+      "notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun.ipynb",
+      "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb",
+      "notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun.ipynb",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/baseline_history.csv",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/configuration_snapshot.json",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/final_model_benchmark.csv",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/fit_summary.csv",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/rank_accuracy_tradeoff_validation.png",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/rank_sweep_validation.csv",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/run_manifest.json",
+      "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/test_comparison.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/all_fine_tuning_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/baseline_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/configuration_snapshot.json",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fc1_rank-16_fc2_rank-16_ft_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fc1_rank-32_fc2_rank-16_ft_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fc1_rank-32_fc2_rank-32_ft_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/final_model_benchmark.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_after.png",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_delta.png",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_fit_summary.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_result.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fit_summary.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/model_comparison.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/parameters_vs_validation_loss_normalize.png",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/pareto_frontier.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-16_r2-16_ft_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-16_ft_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-32_ft_history.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/rank_sweep_results.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/run_manifest.json",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/selected_final_model.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/selected_rank_neighbors.csv",
+      "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/test_comparison.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/all_fine_tuning_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/baseline_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/configuration_snapshot.json",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fc1_rank-20_ft_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fc1_rank-24_ft_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fc1_rank-28_ft_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/final_model_benchmark.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fine_tuning_after.png",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fine_tuning_delta.png",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fine_tuning_result.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fit_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fit_loss_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/fit_summary.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/model_comparison.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/parameters_vs_validation_loss_normalize.png",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/pareto_frontier.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/rank_sweep_results.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/run_manifest.json",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/selected_final_model.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/selected_rank.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/selected_rank_neighbors.csv",
+      "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/test_comparison.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/all_fine_tuning_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/baseline_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/configuration_snapshot.json",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/conv2_rank-20_ft_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/conv2_rank-24_ft_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/conv2_rank-28_ft_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/final_model_benchmark.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fine_tuning_after.png",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fine_tuning_delta.png",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fine_tuning_result.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fit_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fit_loss_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fit_summary.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/model_comparison.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/parameters_vs_validation_loss_normalize.png",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/pareto_frontier.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/rank_sweep_results.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/run_manifest.json",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/selected_final_model.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/selected_rank.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/selected_rank_neighbors.csv",
+      "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/test_comparison.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/all_fine_tuning_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/baseline_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/compression_reduction.png",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/compression_summary.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/configuration_snapshot.json",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/final_model_benchmark.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fine_tuning_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fine_tuning_history.png",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fine_tuning_summary.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fit_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fit_loss_history.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fit_summary.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/metadata.json",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/run_manifest.json",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/test_comparison.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/validation_comparison.csv",
+      "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/validation_delta.png",
+      "results/10_svd/rerun_20260912T074153Z/README.md",
+      "results/10_svd/rerun_20260912T074153Z/run_validation.json"
+    ],
+    "tracked_diffstat_includes_preexisting_changes": " docs/.obsidian/workspace.json                      | 36 ++++-----\n .../02_Tucker2_Convとrank_sweepの確認結果.md       |  8 ++\n docs/07_src設計/05_Core_API_v1/README.md           | 56 ++++++++++++-\n .../compression/sweep_conv2d_ranks.md              |  3 +-\n .../compression/sweep_conv_svd_ranks.md            |  3 +-\n .../compression/sweep_layer_ranks.md               |  1 +\n .../07_src設計/05_Core_API_v1/metrics/agreement.md |  1 +\n .../05_Core_API_v1/metrics/benchmark_inference.md  |  1 +\n .../metrics/benchmark_inference_print.md           |  3 +-\n .../metrics/collect_compression_metrics.md         |  1 +\n .../05_Core_API_v1/metrics/estimate_cnn_macs.md    | 35 ++++++++\n .../05_Core_API_v1/metrics/logits_rmse.md          |  4 +-\n .../07_src設計/05_Core_API_v1/training/evaluate.md |  1 +\n .../training/fit_with_early_stopping.md            |  1 +\n .../05_Core_API_v1/training/train_one_epoch.md     |  1 +\n docs/10_MNIST_MLP_SVD/04_MNISTでの実験結果.md      |  8 +-\n .../04_Fashion-MNISTでの実験結果.md                | 21 ++++-\n docs/30_CIFAR10_CNN/01_CIFAR10_SVD実験.md          | 22 +++--\n docs/30_CIFAR10_CNN/README.md                      |  6 +-\n .../00_fundamentals/00_pytorch_linear_svd.ipynb    | 78 ++++--------------\n .../02_rank_accuracy_tradeoff_corrected.ipynb      | 13 ++-\n ...03_mlp_svd_finetuning_using_src_corrected.ipynb | 39 ++++++++-\n .../03_cnn_linear_svd_finetuning.ipynb             | 14 +++-\n .../04_cnn_conv_svd_corrected.ipynb                | 14 +++-\n .../05_cnn_conv_linear_svd_corrected.ipynb         | 14 +++-\n ...vd_global_compression_using_src_corrected.ipynb | 43 +++++++++-\n .../20_tucker/10_cifar10_cnn/02_rank_sweep.ipynb   | 94 +++++++++++++++++++++-\n .../20_tucker/10_cifar10_cnn/03_finetuning.ipynb   | 12 ++-\n 28 files changed, 413 insertions(+), 120 deletions(-)\n",
+    "notes": "Working tree was already dirty before this rerun. Original 5 notebooks and historical artifacts were preserved; tracked modifications other than the two result docs predate this turn.",
+    "git_status_before_path_rename": " M docs/.obsidian/workspace.json\n M docs/06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果.md\n M docs/07_src設計/05_Core_API_v1/README.md\n M docs/07_src設計/05_Core_API_v1/compression/sweep_conv2d_ranks.md\n M docs/07_src設計/05_Core_API_v1/compression/sweep_conv_svd_ranks.md\n M docs/07_src設計/05_Core_API_v1/compression/sweep_layer_ranks.md\n M docs/07_src設計/05_Core_API_v1/metrics/agreement.md\n M docs/07_src設計/05_Core_API_v1/metrics/benchmark_inference.md\n M docs/07_src設計/05_Core_API_v1/metrics/benchmark_inference_print.md\n M docs/07_src設計/05_Core_API_v1/metrics/collect_compression_metrics.md\n M docs/07_src設計/05_Core_API_v1/metrics/estimate_cnn_macs.md\n M docs/07_src設計/05_Core_API_v1/metrics/logits_rmse.md\n M docs/07_src設計/05_Core_API_v1/training/evaluate.md\n M docs/07_src設計/05_Core_API_v1/training/fit_with_early_stopping.md\n M docs/07_src設計/05_Core_API_v1/training/train_one_epoch.md\n M docs/10_MNIST_MLP_SVD/04_MNISTでの実験結果.md\n M docs/20_FashionMNIST/04_Fashion-MNISTでの実験結果.md\n M docs/30_CIFAR10_CNN/01_CIFAR10_SVD実験.md\n M docs/30_CIFAR10_CNN/README.md\n M notebooks/10_svd/00_fundamentals/00_pytorch_linear_svd.ipynb\n M notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb\n M notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb\n M notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning.ipynb\n M notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb\n M notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb\n M notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb\n M notebooks/20_tucker/10_cifar10_cnn/02_rank_sweep.ipynb\n M notebooks/20_tucker/10_cifar10_cnn/03_finetuning.ipynb\n?? docs/07_src設計/05_Core_API_v1/Internal_API.md\n?? models/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun_20260912T074153Z/\n?? models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z/\n?? models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun_20260912T074153Z/\n?? models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z/\n?? models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun_20260912T074153Z/\n?? notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun_20260912T074153Z.ipynb\n?? notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z.ipynb\n?? notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun_20260912T074153Z.ipynb\n?? notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z.ipynb\n?? notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun_20260912T074153Z.ipynb\n?? notebooks/30_tt_mps/00_fundamentals/05_right_orthogonalization.ipynb\n?? results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/artifact_provenance.json\n?? results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun_20260912T074153Z/\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/artifact_provenance.json\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/baseline_history_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/fine_tuning_fit_summary_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/pareto_frontier_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/rank_sweep_saved_log.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/selected_rank_neighbors_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/test_comparison_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z/\n?? results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning/artifact_provenance.json\n?? results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun_20260912T074153Z/\n?? results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/artifact_provenance.json\n?? results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z/\n?? results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected/artifact_provenance.json\n?? results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun_20260912T074153Z/\n?? results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/artifact_provenance.json\n?? results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/final_model_benchmark_20260912.csv\n?? results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/final_model_benchmark_20260912.json\n?? results/10_svd/rerun_20260912T074153Z/\n?? results/20_tucker/10_cifar10_cnn/02_rank_sweep/artifact_provenance.json\n?? results/20_tucker/10_cifar10_cnn/03_finetuning/artifact_provenance.json\n?? tests/test_core_api_v1_docs_sync.py\n"
+  },
+  "rename_verification": {
+    "notebooks_renamed": 5,
+    "results_directories_renamed": 5,
+    "models_directories_renamed": 5,
+    "raw_artifacts_byte_identical": {
+      ".csv": 68,
+      ".png": 13,
+      ".pt": 25
+    },
+    "code_cell_execution_records_unchanged": 88,
+    "unrelated_files_byte_identical": 45,
+    "docs_numerical_text_unchanged": true,
+    "active_old_path_references": 0,
+    "historical_output_paths_and_rename_provenance_preserved": true,
+    "save_path_construction_unchanged": true,
+    "training_and_evaluation_repeated": false,
+    "resolved_wiki_and_markdown_links": 78,
+    "display_math_blocks_paired": true,
+    "git_diff_check_exit_code": 0,
+    "new_text_files_diff_checked": 86,
+    "git_status": " M docs/.obsidian/workspace.json\n M docs/06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果.md\n M docs/07_src設計/05_Core_API_v1/README.md\n M docs/07_src設計/05_Core_API_v1/compression/sweep_conv2d_ranks.md\n M docs/07_src設計/05_Core_API_v1/compression/sweep_conv_svd_ranks.md\n M docs/07_src設計/05_Core_API_v1/compression/sweep_layer_ranks.md\n M docs/07_src設計/05_Core_API_v1/metrics/agreement.md\n M docs/07_src設計/05_Core_API_v1/metrics/benchmark_inference.md\n M docs/07_src設計/05_Core_API_v1/metrics/benchmark_inference_print.md\n M docs/07_src設計/05_Core_API_v1/metrics/collect_compression_metrics.md\n M docs/07_src設計/05_Core_API_v1/metrics/estimate_cnn_macs.md\n M docs/07_src設計/05_Core_API_v1/metrics/logits_rmse.md\n M docs/07_src設計/05_Core_API_v1/training/evaluate.md\n M docs/07_src設計/05_Core_API_v1/training/fit_with_early_stopping.md\n M docs/07_src設計/05_Core_API_v1/training/train_one_epoch.md\n M docs/10_MNIST_MLP_SVD/04_MNISTでの実験結果.md\n M docs/20_FashionMNIST/04_Fashion-MNISTでの実験結果.md\n M docs/30_CIFAR10_CNN/01_CIFAR10_SVD実験.md\n M docs/30_CIFAR10_CNN/README.md\n M notebooks/10_svd/00_fundamentals/00_pytorch_linear_svd.ipynb\n M notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb\n M notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb\n M notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning.ipynb\n M notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb\n M notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb\n M notebooks/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected.ipynb\n M notebooks/20_tucker/10_cifar10_cnn/02_rank_sweep.ipynb\n M notebooks/20_tucker/10_cifar10_cnn/03_finetuning.ipynb\n?? docs/07_src設計/05_Core_API_v1/Internal_API.md\n?? models/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/\n?? models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/\n?? models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/\n?? models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/\n?? models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/\n?? notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb\n?? notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb\n?? notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun.ipynb\n?? notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb\n?? notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun.ipynb\n?? notebooks/30_tt_mps/00_fundamentals/05_right_orthogonalization_right_block.ipynb\n?? results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/artifact_provenance.json\n?? results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/artifact_provenance.json\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/baseline_history_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/fine_tuning_fit_summary_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/pareto_frontier_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/rank_sweep_saved_log.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/selected_rank_neighbors_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/test_comparison_saved_output.csv\n?? results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/\n?? results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning/artifact_provenance.json\n?? results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun/\n?? results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected/artifact_provenance.json\n?? results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/\n?? results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected/artifact_provenance.json\n?? results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/\n?? results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/artifact_provenance.json\n?? results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/final_model_benchmark_20260912.csv\n?? results/10_svd/40_cifar10_cnn/02_svd_global_compression_using_src_corrected/final_model_benchmark_20260912.json\n?? results/10_svd/rerun_20260912T074153Z/\n?? results/20_tucker/10_cifar10_cnn/02_rank_sweep/artifact_provenance.json\n?? results/20_tucker/10_cifar10_cnn/03_finetuning/artifact_provenance.json\n?? tests/test_core_api_v1_docs_sync.py\n",
+    "checks_scope": "Post-rename read-only verification; original full-run execution retained. No training or test-set evaluation repeated."
+  },
+  "path_rename": {
+    "renamed_at_utc": "2026-09-12T12:44:14.116447+00:00",
+    "moves": [
+      {
+        "from": "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun_20260912T074153Z.ipynb",
+        "to": "notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb"
+      },
+      {
+        "from": "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun_20260912T074153Z",
+        "to": "results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun"
+      },
+      {
+        "from": "models/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun_20260912T074153Z",
+        "to": "models/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun"
+      },
+      {
+        "from": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z.ipynb",
+        "to": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb"
+      },
+      {
+        "from": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z",
+        "to": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun"
+      },
+      {
+        "from": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z",
+        "to": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun"
+      },
+      {
+        "from": "notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun_20260912T074153Z.ipynb",
+        "to": "notebooks/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun.ipynb"
+      },
+      {
+        "from": "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun_20260912T074153Z",
+        "to": "results/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun"
+      },
+      {
+        "from": "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun_20260912T074153Z",
+        "to": "models/10_svd/30_fashion_mnist_cnn/03_cnn_linear_svd_finetuning_rerun"
+      },
+      {
+        "from": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z.ipynb",
+        "to": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb"
+      },
+      {
+        "from": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z",
+        "to": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun"
+      },
+      {
+        "from": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z",
+        "to": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun"
+      },
+      {
+        "from": "notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun_20260912T074153Z.ipynb",
+        "to": "notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun.ipynb"
+      },
+      {
+        "from": "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun_20260912T074153Z",
+        "to": "results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun"
+      },
+      {
+        "from": "models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun_20260912T074153Z",
+        "to": "models/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun"
+      }
+    ],
+    "execution_outputs_preserved": true,
+    "training_and_evaluation_repeated": false,
+    "notes": "Historical execution checks retained; post-rename checks recorded separately. Numerical docs updates deferred."
+  }
+}

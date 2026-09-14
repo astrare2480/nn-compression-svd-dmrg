@@ -118,6 +118,7 @@ flowchart TD
 - `train_eval_loader`指定時は`reevaluate_train=True`が必要。
 - best stateは参照ではなく`deepcopy`で保持する。
 - scalar validationはHOOI/benchmarkほど全面統一されていない既知制約。
+- modelと、Parameter / bufferを持つcriterionは[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従い、呼び出し前に指定deviceへ配置する。
 
 ## 関連API
 

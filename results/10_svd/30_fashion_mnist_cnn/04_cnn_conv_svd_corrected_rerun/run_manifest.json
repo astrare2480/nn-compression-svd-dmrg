@@ -1,0 +1,254 @@
+{
+  "run_id": "rerun_20260912T074153Z",
+  "experiment": "04_cnn_conv_svd_corrected_rerun",
+  "source_notebook": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected.ipynb",
+  "executed_notebook": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb",
+  "status": "completed fresh run; NOT reconstruction of historical missing artifacts",
+  "completed_at_utc": "2026-09-12T07:55:48.393572+00:00",
+  "code_source_sha256": "746eabed30362dd6d3f2094d9bd63e3967bb4a07ef2a6ce971c5e3423275a93d",
+  "source_snapshot_sha256": "a66f05337c4a8aab777a6d3c201cdd034a9c6fa348e06525f233df345929b943",
+  "csv_precision": "direct pandas export of in-memory values; no display rounding",
+  "seed": 0,
+  "split_lengths": [
+    50000,
+    5000
+  ],
+  "fit_summary": [
+    {
+      "stage": "baseline",
+      "best_epoch": 12,
+      "best_validation_loss": 0.21605256562232972,
+      "epochs_ran": 15
+    },
+    {
+      "stage": "fine_tuning",
+      "conv2_rank": 20,
+      "best_epoch": 3,
+      "best_validation_loss": 0.2183339916944504,
+      "epochs_ran": 6
+    },
+    {
+      "stage": "fine_tuning",
+      "conv2_rank": 24,
+      "best_epoch": 3,
+      "best_validation_loss": 0.21709312672615053,
+      "epochs_ran": 6
+    },
+    {
+      "stage": "fine_tuning",
+      "conv2_rank": 28,
+      "best_epoch": 3,
+      "best_validation_loss": 0.2154267121553421,
+      "epochs_ran": 6
+    }
+  ],
+  "test_records": [
+    {
+      "model": "Baseline",
+      "conv2_rank": "-",
+      "parameters": 421642,
+      "test_loss": 0.23826273543834686,
+      "test_acc": 0.9128,
+      "delta_test_acc": 0.0,
+      "delta_test_loss": 0.0
+    },
+    {
+      "model": "Final (compressed + FT)",
+      "conv2_rank": 28,
+      "parameters": 413066,
+      "test_loss": 0.23222631120681764,
+      "test_acc": 0.9175,
+      "delta_test_acc": 0.0047000000000000375,
+      "delta_test_loss": -0.006036424231529225
+    }
+  ],
+  "benchmark": {
+    "warmup": 20,
+    "repeats": 2000,
+    "trials": 3,
+    "input_sha256": "6e92e42968e6557af944672ee00306232d2d1d0750d8e6f885a1714a4595fa23",
+    "input_shape": [
+      256,
+      1,
+      28,
+      28
+    ],
+    "definition": "mean forward ms/batch per trial; eval/no_grad; H2D excluded; CUDA synchronized",
+    "median_ms": {
+      "baseline": 0.3442712500000198,
+      "final": 0.35362495000117633
+    }
+  },
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti",
+    "cudnn": 91900,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "matmul_tf32": false,
+    "cudnn_tf32": true,
+    "cpu_threads": 8
+  },
+  "artifacts": [
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/all_fine_tuning_history.csv",
+      "sha256": "c0f0bc5761bb751db6463e0dadef37a15751cbe94dab46d936d253de2ba53a01",
+      "bytes": 1145
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/baseline_history.csv",
+      "sha256": "8257a11d2a4adb88c31185ed4ec74e096ebf467023e343955cb0d724fd09ef34",
+      "bytes": 909
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/conv2_rank-20_ft_history.csv",
+      "sha256": "41bb460052a3f62b4f801c057b321d29515b9a6b0a04c35c058245779248e652",
+      "bytes": 397
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/conv2_rank-24_ft_history.csv",
+      "sha256": "9d1cf8748bdb21c70d1aa3c789839146668f24843ed12c36fb55c36cd89f1a74",
+      "bytes": 399
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/conv2_rank-28_ft_history.csv",
+      "sha256": "e4b5b020fe27cdc3821ff8970b2cb5178f681d6c9845f1aabf118db698544808",
+      "bytes": 402
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/final_model_benchmark.csv",
+      "sha256": "0cb12e78fc0279c35ceb75470748e01d447c0f95cf62b3ce1c999669af800c7c",
+      "bytes": 1024
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fine_tuning_after.png",
+      "sha256": "580cc02b28e931562039aea267b0c524cfb4aa3e2f6b3a44c8a3579dcda2ce5d",
+      "bytes": 85775
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fine_tuning_delta.png",
+      "sha256": "9a237c0152a4df18af333d9c025653de31d44d29f8976cd061472eb863517a70",
+      "bytes": 70751
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fine_tuning_result.csv",
+      "sha256": "cf606e253262ba136bf235fbfd9ef0f3ae17f8aaeed4f283fe98a64637660192",
+      "bytes": 418
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fit_history.csv",
+      "sha256": "8257a11d2a4adb88c31185ed4ec74e096ebf467023e343955cb0d724fd09ef34",
+      "bytes": 909
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fit_loss_history.csv",
+      "sha256": "d13af7d0c18c9546605e324216e19164cb893afb0c0ee6432c65a2e24293cf98",
+      "bytes": 669
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/fit_summary.csv",
+      "sha256": "585630a598df3341147b3ee1fae904a5cc81144ea7111fe806d067b65b277fc8",
+      "bytes": 222
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/model_comparison.csv",
+      "sha256": "c7f8ebe7b7ca40002543dceaa5605070030230ebb82b91e7cee8aafcf84c4b01",
+      "bytes": 366
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/parameters_vs_validation_loss_normalize.png",
+      "sha256": "a60d3bc0960eb347b52fa8539cadf6a82d254c47890e4cf4edf5d81b431baf1c",
+      "bytes": 56350
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/pareto_frontier.csv",
+      "sha256": "9f55e7bc9fc57ff75be3887044bb88449e1be902c80219b48c45f717385f92c3",
+      "bytes": 2515
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/rank_sweep_results.csv",
+      "sha256": "8bc966c533758d5f16b49bc64e42256da3708eed94088c46cbf1a5bfcb1e3bec",
+      "bytes": 3458
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/selected_final_model.csv",
+      "sha256": "96b00e981add7c3cdaa7b0fd65b69e903fd434963a4df19c4ddcdf6621104bcd",
+      "bytes": 161
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/selected_rank.csv",
+      "sha256": "d1c3afb1ff09c47eab302a5ac36422389d7cf5f7d71403538e204e8cda8b32ff",
+      "bytes": 571
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/selected_rank_neighbors.csv",
+      "sha256": "ee70bd11fedab5589773455a43fc4e27c1a4d8bdaa6ade516c075b7730c639e7",
+      "bytes": 1060
+    },
+    {
+      "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/test_comparison.csv",
+      "sha256": "522d0ab008b510fa4b2de038d3521917afdf38a70a39d4b7489477f2591a87ef",
+      "bytes": 239
+    }
+  ],
+  "checkpoints": [
+    {
+      "path": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/baseline_same_run.pt",
+      "sha256": "0ea5f9f56efb2d1aa1d6f2e6afebda3f0734276ca53f2ba8310b9d917803eb22",
+      "bytes": 1690457
+    },
+    {
+      "path": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/final_same_run.pt",
+      "sha256": "b5d2798e9646657b7525b24c6332737fefa5e47a839f379f0d1e6920ddda11f5",
+      "bytes": 1656434
+    },
+    {
+      "path": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-20_aggressive_finetuned.pt",
+      "sha256": "2d13e7693dfaa857db4e4f3c4a5268e0c19f59e63837cafd01b684e6b4fcbfa6",
+      "bytes": 1645414
+    },
+    {
+      "path": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-24_balanced_finetuned.pt",
+      "sha256": "29be656832eea808e5f22adedb906ed4c2b9ae6c2c9d01247da4a5e562350acf",
+      "bytes": 1651016
+    },
+    {
+      "path": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-28_conservative_finetuned.pt",
+      "sha256": "76868f66d54331dac238dd6c4a3967456eda11245f7d6ba04cd84ef35a3e69a1",
+      "bytes": 1656708
+    },
+    {
+      "path": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/r1-28_final.pt",
+      "sha256": "da1feb1a09f54d6d4e5a8102a55699b620ba4cf42d9b99a688ca76007517b6f3",
+      "bytes": 1656389
+    }
+  ],
+  "configuration_snapshot": {
+    "path": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun/configuration_snapshot.json",
+    "sha256": "4882f1a2263a5555db5604b7f00ba83c2e590a1527aa1912dc879a8a3d7f0d35"
+  },
+  "splits": {
+    "train": 50000,
+    "early_stopping_validation": 5000,
+    "rank_or_final_validation": 5000,
+    "test": 10000
+  },
+  "current_code_source_sha256": "f6b22bac3d078025cad63ed53f17e888fe9717feca3d90de107334b3fa99804f",
+  "code_source_sha256_scope": "Source at original execution before path-only rename; current_code_source_sha256 identifies current Notebook source. No execution repeated.",
+  "path_rename": {
+    "renamed_at_utc": "2026-09-12T12:44:14.116447+00:00",
+    "executed_notebook_before_rename": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z.ipynb",
+    "current_notebook": "notebooks/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun.ipynb",
+    "executed_code_source_sha256": "746eabed30362dd6d3f2094d9bd63e3967bb4a07ef2a6ce971c5e3423275a93d",
+    "execution_outputs_preserved": true,
+    "training_and_evaluation_repeated": false,
+    "experiment_before_rename": "04_cnn_conv_svd_corrected_rerun_20260912T074153Z",
+    "current_experiment": "04_cnn_conv_svd_corrected_rerun",
+    "results_directory_before_rename": "results/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z",
+    "models_directory_before_rename": "models/10_svd/30_fashion_mnist_cnn/04_cnn_conv_svd_corrected_rerun_20260912T074153Z",
+    "notebook_file_sha256_before_rename": "eadb5fb8251fb20c9d872969ff51df18ff45bef725661099b91c717cc1a22b87",
+    "manifest_sha256_before_rename": "df7ef58617de1bc3b800001c9ae2b3fa2b62d59f3ee82a8b7a12f9455eaaba6c"
+  }
+}

@@ -64,6 +64,7 @@ baseline modelの通常学習、SVD/Tucker圧縮後のFine-tuning。
 - `len(loader)`を仮定しないため、長さを持たないIterableDatasetでも実走査できる。
 - 実走査後に0 sampleなら明示的`ValueError`。
 - 学習APIなので呼出し後modelはtrain modeになる。
+- modelと、Parameter / bufferを持つcriterionは[[07_src設計/05_Core_API_v1/README#共通device contract|共通device contract]]に従い、呼び出し前に指定deviceへ配置する。
 
 ## 関連API
 

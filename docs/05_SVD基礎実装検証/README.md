@@ -32,7 +32,7 @@ SVDの式を途中から確認する場合は、次をcanonicalな導出とし�
 - [[30_CIFAR10_CNN/README]]
 - [[SVD実験まとめ]]
 
-正式な数値を引用するときは、原則として `*_corrected.ipynb` と対応するcorrected resultsを優先する。original / using_src / historical Notebookは学習履歴として残す。
+正式な数値は各実験章のcanonical出典を使う。MNIST / Fashion-MNISTは2026-09-12の完全保存rerunを優先し、[Notebook・CSV・重み・manifestの対応](../../results/10_svd/rerun_20260912T074153Z/README.md) から追跡する。CIFAR-10は既存corrected学習結果と、保存済み最終FT後重みの別計測runを区別する。original / using_src / historical Notebookは学習履歴として残す。
 
 ## この章で確認する主なcontract
 

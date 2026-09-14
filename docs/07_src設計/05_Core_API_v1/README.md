@@ -2,7 +2,7 @@
 
 ## 目的
 
-`src/nn_compression/` のPublic APIを、**1関数または1クラスにつき1ファイル**で確認できるようにする。
+`src/nn_compression/` のPublic APIを、**原則として1関数または1クラスにつき1ファイル**で確認できるようにする。
 
 各ファイルは原則として次を共通項目として持つ。
 
@@ -18,6 +18,14 @@ Signature
 関連API
 ```
 
+## 文書化対象と分割単位
+
+- 各subpackageの`__all__`をCore API v1のPublic API境界とする。
+- Primary APIとExperiment Support APIは、原則として1関数または1クラスにつき1ファイルへ分ける。
+- historical Notebook向けのalias / wrapperは、[[07_src設計/05_Core_API_v1/Compatibility_API]]へ集約してよい。
+- `forward()`のようなPyTorch標準methodはclass仕様内で扱う。class固有の利用手順を持つ重要methodは、`FashionMNISTCNN.inspect_shapes`のように個別仕様へ分けてよい。
+- `__all__`へ公開しないvalidation・rank変換等の共通helperは個別Public API仕様を作らず、[[07_src設計/05_Core_API_v1/Internal_API]]で境界と所有componentを管理する。
+
 ## 引数・戻り値の記述ルール
 
 - identifier・型・shapeはコードと対応させるが、**型やshapeだけで終わらせず、その値が何を意味し、処理のどこで使われるかを日本語で説明する**。
@@ -29,6 +37,18 @@ Signature
 - scalar指標は式だけで終わらせず、値が大きい/小さい/正/負のとき何を意味するかを必要に応じて書く。
 - class constructorの戻り値は単に`nn.Module instance`とせず、どの入力を何へ変換するbaseline modelか、安定して参照するnamed layerは何かを書く。
 - 引数が無いAPIは`なし`と明記し、固定architectureやdefault semanticsがある場合はその意味を補足する。
+
+## 共通device contract
+
+`device`を受け取るCore APIは、DataLoaderや`input_batch`から得た入力Tensorを指定deviceへ移す。一方、modelやcriterionに対して`model.to(device)`、`criterion.to(device)`を暗黙には実行しない。
+
+したがって呼び出し側は、次を満たしてからAPIを呼ぶ。
+
+- modelのParameter / bufferを指定deviceへ配置する。
+- criterionがParameter / bufferを持つ場合は、criterionも同じdeviceへ配置する。
+- baseline modelとcompressed modelを比較する場合は、両modelを同じdeviceへ配置する。
+
+この境界により、API内部でmodelの配置を勝手に変更せず、呼び出し側がCPU/GPU構成とmodelの寿命を管理する。
 
 ## 処理説明の記述ルール
 
@@ -99,11 +119,37 @@ Signature
 | `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
 | `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
 | `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
+| `estimate_cnn_macs` | フローチャート | legacy指定の正規化とConv/Linear集計分岐 |
 | `MNISTMLP` | 構造図 | layerとfeature dimension |
 | `FashionMNISTCNN` | 構造図 | Conv/Pool/Linear構造 |
 | `CIFAR10CNN` | 構造図 | Conv/GAP/Linear構造 |
 
 逆に、単純な数式計算、1回の委譲だけのwrapper、短い一本道utilityにはMermaid図を付けない。
+
+## package-levelコンポーネント図
+
+個別APIの処理図より上位の視点として、`src/nn_compression/`内のsubpackage間importを示す。矢印は「矢印の始点が終点をimportする」方向であり、現行構成にpackage間の循環依存はない。
+
+```mermaid
+flowchart LR
+    Compression["compression<br/>SVD / Tucker / TT / rank sweep"]
+    Metrics["metrics<br/>accuracy / latency / MACs"]
+    Training["training<br/>train / evaluate / early stopping"]
+    Tensor["tensor<br/>unfold / fold / mode_dot"]
+    Utils["utils<br/>named module / path / seed"]
+    Datasets["datasets<br/>dataset / split / loader"]
+    Models["models<br/>baseline architecture"]
+    Selection["selection<br/>Pareto / knee"]
+
+    Compression -->|imports| Metrics
+    Compression -->|imports| Tensor
+    Compression -->|imports| Utils
+    Metrics -->|imports| Training
+    Metrics -->|imports| Utils
+    Datasets -->|imports| Utils
+```
+
+`models`と`selection`は、この図の範囲では他の`nn_compression` subpackageをimportしない。Public APIから利用する内部validation層の詳細は[[07_src設計/05_Core_API_v1/Internal_API]]に分ける。
 
 ### Stability
 
@@ -234,6 +280,10 @@ Signature
 
 - [[07_src設計/05_Core_API_v1/Compatibility_API]]
 
+## Internal helper
+
+- [[07_src設計/05_Core_API_v1/Internal_API]]
+
 ---
 
 ## 更新ルール
@@ -245,8 +295,10 @@ src実装
 → __all__
 → contract test
 → 対応する関数別md
+→ docs同期test
 → 引数 / 戻り値の意味を日本語で確認
 → 図が本当に必要か・図種が適切か判断
+→ internal helperなら公開境界と所有componentを確認
 → 必要なら設計本文
 ```
 

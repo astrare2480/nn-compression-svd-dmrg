@@ -205,6 +205,54 @@ second_layer.bias   ← 元layer.bias
 
 ## 3. biasを後段だけへ置く理由
 
+### forwardをbatchの要素から再構成重みまでつなぐ
+
+この節の $A\in\mathbb R^{r\times D_{\mathrm{in}}}$、
+$B\in\mathbb R^{D_{\mathrm{out}}\times r}$ を用いる。
+第1層にbiasを持たせない場合
+
+$$
+H_{n,j}=\sum_{i=1}^{D_{\mathrm{in}}}X_{n,i}A_{j,i},
+$$
+
+$$
+\begin{aligned}
+(Y_r)_{n,o}
+&=\sum_{j=1}^{r}H_{n,j}B_{o,j}+b_o\\
+&=\sum_{j=1}^{r}
+\left(\sum_iX_{n,i}A_{j,i}\right)B_{o,j}+b_o\\
+&=\sum_iX_{n,i}\left(\sum_jB_{o,j}A_{j,i}\right)+b_o\\
+&=\sum_iX_{n,i}(BA)_{o,i}+b_o.
+\end{aligned}
+$$
+
+従って行列式は
+
+$$
+\begin{aligned}
+H&=XA^{\mathsf T},\\
+Y_r&=HB^{\mathsf T}+\mathbf 1_Nb^{\mathsf T}\\
+&=XA^{\mathsf T}B^{\mathsf T}+\mathbf 1_Nb^{\mathsf T}\\
+&=X(BA)^{\mathsf T}+\mathbf 1_Nb^{\mathsf T}\\
+&=XW_r^{\mathsf T}+\mathbf 1_Nb^{\mathsf T}.
+\end{aligned}
+$$
+
+$\mathbf 1_Nb^{\mathsf T}$ が実装のbias broadcastである。
+第1層にbias $c$、第2層にbias $d$ を入れる場合は
+
+$$
+\begin{aligned}
+Y_r
+&=(XA^{\mathsf T}+\mathbf 1_Nc^{\mathsf T})B^{\mathsf T}
++\mathbf 1_Nd^{\mathsf T}\\
+&=X(BA)^{\mathsf T}+\mathbf 1_N(Bc+d)^{\mathsf T}.
+\end{aligned}
+$$
+
+元biasを保つには $Bc+d=b$ が必要となる。
+$c=0,d=b$ は、この調整を不要にする選択である。
+
 元の計算は、
 
 $$

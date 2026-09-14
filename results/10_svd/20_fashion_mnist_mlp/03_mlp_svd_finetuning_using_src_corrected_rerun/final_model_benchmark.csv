@@ -1,0 +1,7 @@
+trial,model,time_ms,parameters,batch_size,input_shape,warmup,repeats,stage,input_sha256
+1,baseline,0.1374077500004205,535818,64,"(64, 1, 28, 28)",20,2000,final_after_finetuning,be5b182ce1504847f44de6a1be685c5cf4bf06dcacefe8c7b8ece1765bbd9917
+1,final,0.2025096500001382,57098,64,"(64, 1, 28, 28)",20,2000,final_after_finetuning,be5b182ce1504847f44de6a1be685c5cf4bf06dcacefe8c7b8ece1765bbd9917
+2,final,0.19479705000048853,57098,64,"(64, 1, 28, 28)",20,2000,final_after_finetuning,be5b182ce1504847f44de6a1be685c5cf4bf06dcacefe8c7b8ece1765bbd9917
+2,baseline,0.12690345000009984,535818,64,"(64, 1, 28, 28)",20,2000,final_after_finetuning,be5b182ce1504847f44de6a1be685c5cf4bf06dcacefe8c7b8ece1765bbd9917
+3,baseline,0.1406728000001749,535818,64,"(64, 1, 28, 28)",20,2000,final_after_finetuning,be5b182ce1504847f44de6a1be685c5cf4bf06dcacefe8c7b8ece1765bbd9917
+3,final,0.1978795999984868,57098,64,"(64, 1, 28, 28)",20,2000,final_after_finetuning,be5b182ce1504847f44de6a1be685c5cf4bf06dcacefe8c7b8ece1765bbd9917

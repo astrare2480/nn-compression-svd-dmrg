@@ -90,13 +90,16 @@ CNN実験には次のNotebookがある。
 |---|---|---|
 | `01_cnn_baseline.ipynb` | CNN構造・Baseline確認 | 学習用Baseline run |
 | `02_cnn_linear_svd.ipynb` | `fc1` rank sweep | 有効な独立run |
-| `03_cnn_linear_svd_finetuning.ipynb` | `fc1` Fine-tuning | 有効な独立run |
+| `03_cnn_linear_svd_finetuning.ipynb` | 旧`fc1` Fine-tuning | historical（旧共有train評価処理） |
+| `03_cnn_linear_svd_finetuning_rerun.ipynb` | 現行`fc1` Fine-tuning | **canonical、最終rank=28** |
 | `04_cnn_conv_svd.ipynb` | 旧Conv-only | historical。latency条件に問題あり |
-| `04_cnn_conv_svd_corrected.ipynb` | Conv-only corrected | **canonical** |
+| `04_cnn_conv_svd_corrected.ipynb` | Conv-only corrected | 従来corrected run（保存） |
+| `04_cnn_conv_svd_corrected_rerun.ipynb` | Conv-only corrected rerun | **canonical** |
 | `05_cnn_conv_linear_svd.ipynb` | 旧Conv+Linear | historical。latency条件に問題あり |
-| `05_cnn_conv_linear_svd_corrected.ipynb` | Conv+Linear corrected | **canonical** |
+| `05_cnn_conv_linear_svd_corrected.ipynb` | Conv+Linear corrected | 従来corrected run（保存） |
+| `05_cnn_conv_linear_svd_corrected_rerun.ipynb` | Conv+Linear corrected rerun | **canonical** |
 
-`02/03` とcorrected `04/05` はBaselineを別々に学習したrunなので、absolute accuracyを同一runとして混ぜない。
+現在の数値は2026-09-12の独立rerunを出典とする。元02/03・corrected 04/05も残す。各rerunでbaselineを学習・保存し、値が一致しても同一runのcheckpointとして流用しない。出典は [[20_FashionMNIST/11_CNNでの実験結果]] を参照。
 
 ---
 
@@ -124,7 +127,7 @@ Parameters          = 421,642
 
 ---
 
-# 4. Linear-only 02 / 03
+# 4. Linear-only 03 rerun
 
 CNN後段の、
 
@@ -142,14 +145,14 @@ Linear(r → 128, bias=True)
 rank sweepとFine-tuningの結果、
 
 ```text
-fc1 rank = 24
-Parameters 421,642 → 98,570
-Test acc   0.9175  → 0.9187
+fc1 rank = 28
+Parameters 421,642 → 111,626
+Test acc   0.9128  → 0.9149
 ```
 
 となった。
 
-レビューでは、02/03のlatency benchmarkはBaseline / compressedで `warmup=20, repeats=2000` が揃っており、03のcandidate比較も同じseedへ戻していたため、04/05のようなcorrectedコピーは作っていない。
+direct sweepのkneeは24、FT候補は20/24/28。FT後の最小rank-selection validation lossにより最終rank=28となった。旧02/03のrank=24と性能値はhistoricalとして残す。
 
 詳細：[[20_FashionMNIST/08_CNNのLinear SVD]]
 
@@ -188,14 +191,14 @@ parameter削減は小さいが、ConvのMACs削減へ大きく効く。
 
 # 6. Conv + Linear 05 corrected
 
-単独実験で採用した、
+従来の単独実験で採用した固定条件、
 
 ```text
 conv2 rank = 28
 fc1 rank   = 24
 ```
 
-を同時に適用した。
+を同時に適用した。新Linear-onlyの最終fc1=28へ変更せず、元の固定fc1=24を維持した。
 
 これは `conv2 rank × fc1 rank` の全組合せ探索ではない。
 
@@ -247,20 +250,20 @@ repeats = 2000
 
 へ統一した。
 
-結果：
+以下は最終FT後と同一run baselineの3 trial平均時間の中央値であり、FT前sweep時間とは区別する。
 
 ### Conv-only
 
 ```text
-Baseline   ≈ 0.367 ms/batch
-Compressed ≈ 0.370 ms/batch
+Baseline   ≈ 0.344271 ms/batch
+Final FT   ≈ 0.353625 ms/batch
 ```
 
 ### Conv + Linear
 
 ```text
-Baseline   ≈ 0.378 ms/batch
-Compressed ≈ 0.399 ms/batch
+Baseline   ≈ 0.346444 ms/batch
+Final FT   ≈ 0.383861 ms/batch
 ```
 
 理論MACsは減ったが、実測latencyは短縮しなかった。

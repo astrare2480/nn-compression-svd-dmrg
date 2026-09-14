@@ -329,6 +329,12 @@ $$
 
 ## 4. 複合添字とは何か
 
+複数の添字を一つの番号へまとめるのは、線形代数で扱うベクトルの成分番号を作るためである。
+例えば左側のサイト1・2の全配置を一列に並べれば、その左空間の次元は $n_1n_2$ になる。
+この次元は全配置の数であり、状態を表すために必要な独立チャネル数 $r_2$ とは別である。
+行が多くても、その行列の列が小さい部分空間に収まっていればrankは小さい。
+したがって、複合添字の通り数を数えるだけではTT-rankは決まらない。
+
 $(i_1,i_2)$ は新しい物理添字ではない。複数の添字を「行列の1個の行番号」としてまとめて読むための記法である。
 
 例えば
@@ -358,6 +364,61 @@ $$
 複合添字を1個の整数へflattenする具体的規則は実装のメモリ順に依存する。数学上重要なのは、**元の複数添字と行列の行・列の対応を一貫して固定すること**である。PyTorchの具体的なreshape順は [[29_TT_cutとPyTorchのreshape_Kronecker順序]] で扱う。
 
 ---
+
+### 元資料の $2\times3\times4$ Tensorを全要素でunfoldする
+
+元資料 `TT_MPS基礎理論.md` の9803〜9891行付近には、$n_1=2,n_2=3,n_3=4$ の例がある。
+2階の表にまとめた行番号は $p=(i_1-1)3+i_2$ であり、順序は
+
+$$
+\begin{array}{c|cccccc}
+p&1&2&3&4&5&6\\ \hline
+(i_1,i_2)&(1,1)&(1,2)&(1,3)&(2,1)&(2,2)&(2,3)
+\end{array}
+$$
+
+となる。この例の第2cutは、24個の値を
+
+$$
+X^{\langle2\rangle}=
+\begin{pmatrix}
+X_{1,1,1}&X_{1,1,2}&X_{1,1,3}&X_{1,1,4}\\
+X_{1,2,1}&X_{1,2,2}&X_{1,2,3}&X_{1,2,4}\\
+X_{1,3,1}&X_{1,3,2}&X_{1,3,3}&X_{1,3,4}\\
+X_{2,1,1}&X_{2,1,2}&X_{2,1,3}&X_{2,1,4}\\
+X_{2,2,1}&X_{2,2,2}&X_{2,2,3}&X_{2,2,4}\\
+X_{2,3,1}&X_{2,3,2}&X_{2,3,3}&X_{2,3,4}
+\end{pmatrix}
+\in\mathbb R^{6\times4}
+$$
+
+へ並べた行列である。例えば行5・列3は $X_{2,2,3}$ であり、
+
+$$
+p(2,2)=(2-1)3+2=5,\qquad
+X^{\langle2\rangle}_{5,3}=X_{2,2,3}.
+$$
+
+複合添字 $(i_1,i_2)$ は、この規則で一つの行位置を表す。二つの情報を新しい物理modeへ変えているわけではない。
+第2cutでは左空間が6次元、右空間が4次元になるので、行数6そのものがrankではなく $r_2\le4$ である。
+
+同じ24要素について、第1cutの列を $q=(i_2-1)4+i_3$ とすれば、
+
+$$
+X^{\langle1\rangle}=
+\begin{pmatrix}
+X_{1,1,1}&X_{1,1,2}&X_{1,1,3}&X_{1,1,4}&
+X_{1,2,1}&X_{1,2,2}&X_{1,2,3}&X_{1,2,4}&
+X_{1,3,1}&X_{1,3,2}&X_{1,3,3}&X_{1,3,4}\\
+X_{2,1,1}&X_{2,1,2}&X_{2,1,3}&X_{2,1,4}&
+X_{2,2,1}&X_{2,2,2}&X_{2,2,3}&X_{2,2,4}&
+X_{2,3,1}&X_{2,3,2}&X_{2,3,3}&X_{2,3,4}
+\end{pmatrix}
+\in\mathbb R^{2\times12}
+$$
+
+となる。元資料の第2cut例へ第1cutも対応付けた補足であり、両cutとも要素数は24、値は不変である。
+変わるのは左・右へまとめる配置番号と行列shapeであり、$r_1\le2$ と $r_2\le4$ は別のrank条件である。
 
 ## 5. $r_k$ は左右を結ぶ独立チャネル数
 
@@ -397,6 +458,61 @@ r_k
 $$
 
 と読むことができる。
+
+### なぜcut rankが最小のbond次元なのか
+
+任意のTT表現の第 $k$ bond次元を、最小かどうかを仮定せず $s_k$ とする。左と右の部分縮約を
+
+$$
+\begin{aligned}
+L_{I_L,\alpha_k}
+&=\sum_{\alpha_1,\ldots,\alpha_{k-1}}
+G^{(1)}_{1,i_1,\alpha_1}\cdots
+G^{(k)}_{\alpha_{k-1},i_k,\alpha_k},\\
+R_{\alpha_k,I_R}
+&=\sum_{\alpha_{k+1},\ldots,\alpha_{d-1}}
+G^{(k+1)}_{\alpha_k,i_{k+1},\alpha_{k+1}}\cdots
+G^{(d)}_{\alpha_{d-1},i_d,1}
+\end{aligned}
+$$
+
+と置く。両側をbondでつなぐと、
+
+$$
+X^{\langle k\rangle}_{I_L,I_R}
+=\sum_{\alpha_k=1}^{s_k}L_{I_L,\alpha_k}R_{\alpha_k,I_R},
+\qquad
+X^{\langle k\rangle}=LR.
+$$
+
+したがって、
+
+$$
+\operatorname{rank}(X^{\langle k\rangle})
+=\operatorname{rank}(LR)
+\le\min(\operatorname{rank}(L),\operatorname{rank}(R))
+\le s_k.
+$$
+
+逆に、第 $k$ cutのrank-sized SVDから
+
+$$
+X^{\langle k\rangle}=U_k\Sigma_kV_k^T,
+\qquad
+L=U_k,
+\qquad
+R=\Sigma_kV_k^T
+$$
+
+と取れば、二つの部分をつなぐ添字の本数は
+
+$$
+r_k=\operatorname{rank}(X^{\langle k\rangle})
+$$
+
+で足りる。逐次SVDでこれをすべてのcutに対して達成するのがexact TT-SVDであり、途中の座標系がrankを保存する理由は [[34_基底変換とTT-rank不変性]] で導く。
+
+以上より、$r_k$ は**exact表現に必要な最小bond次元**である。冗長な列を持つ任意のTTのbond次元まで、無条件にcut rankと等しいわけではない。圧縮後にも、指定したbond次元はその表現のcut rankの上限である。
 
 ---
 
@@ -498,7 +614,63 @@ $$
 
 この完全な途中式と、$U\otimes I$ が出る理由は [[34_基底変換とTT-rank不変性]] で導出する。
 
+rank一致の二つの不等式は、この節でも省略せず書いておく。
+$L:=U\otimes I_{n_2}$ とすれば
+
+$$
+\begin{aligned}
+L^TX^{\langle2\rangle}
+&=L^TLB_{\mathrm{cut2}}
+=B_{\mathrm{cut2}},\\
+\operatorname{rank}(X^{\langle2\rangle})
+&=\operatorname{rank}(LB_{\mathrm{cut2}})
+\le\operatorname{rank}(B_{\mathrm{cut2}}),\\
+\operatorname{rank}(B_{\mathrm{cut2}})
+&=\operatorname{rank}(L^TX^{\langle2\rangle})
+\le\operatorname{rank}(X^{\langle2\rangle}).
+\end{aligned}
+$$
+
+両方向から挟むので等号が成立する。列直交性が逆写像 $L^T$ を与える点が重要である。
+
 ---
+
+### 補足例：TT cutとTucker modeのrankは異なり得る
+
+行列の配置が違うだけでなく、rankまで違うことを全要素で確認する。この例の添字は0始まりとする。
+
+$$
+X_{0,:,:}=\begin{pmatrix}1&0\\0&0\end{pmatrix},
+\qquad
+X_{1,:,:}=\begin{pmatrix}0&1\\0&0\end{pmatrix}.
+$$
+
+第1cut・第2cut・中央modeを行にするunfoldingは、それぞれ
+
+$$
+X^{\langle1\rangle}
+=\begin{pmatrix}1&0&0&0\\0&1&0&0\end{pmatrix},
+\qquad
+X^{\langle2\rangle}
+=\begin{pmatrix}1&0\\0&0\\0&1\\0&0\end{pmatrix},
+$$
+
+$$
+X^{\mathrm{mode}\text{-}2}
+=\begin{pmatrix}1&0&0&1\\0&0&0&0\end{pmatrix}.
+$$
+
+列側は各々 $(i_2,i_3)$、$i_3$、$(i_1,i_3)$ を辞書順に並べている。最初の二つでは標準基底の独立な2本が現れるが、中央mode unfoldingは第2行が0で第1行だけが非ゼロなので、
+
+$$
+\operatorname{rank}(X^{\langle1\rangle})=2,
+\qquad
+\operatorname{rank}(X^{\langle2\rangle})=2,
+\qquad
+\operatorname{rank}(X^{\mathrm{mode}\text{-}2})=1.
+$$
+
+つまりTT-rankは $(2,2)$ である一方、中央modeのTucker rankは1である。「どのunfoldingでも同じrankが出る」とは考えない。
 
 ## 8. 数学的rankと数値rank
 

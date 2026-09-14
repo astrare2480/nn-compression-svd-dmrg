@@ -22,13 +22,36 @@ Fashion-MNIST用MLP `784 → 512 → 256 → 10` の `fc1` / `fc2` をSVD低rank
 現在の正式結果は、
 
 ```text
-notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb
-results/20_fashion_mnist/03_mlp_svd_finetuning_using_src_corrected/
+notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb
+results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/
 ```
 
 を基準とする。
 
+run ID: `rerun_20260912T074153Z`（2026-09-12）。現在の数値は独立した新runを出典とし、旧runの欠落値の復元ではない。途中表は本文で丸めているが、元CSVの値は変更していない。
+
+出典：[実行済みNotebook](../../notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb)、[Test比較](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/test_comparison.csv)、[学習・FTの要約](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fit_summary.csv)、[最終benchmark](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/final_model_benchmark.csv)、[manifest](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/run_manifest.json)。
+
 旧Notebook / 旧docsはhistorical recordとして残す。
+
+### 保存成果物の監査対応（2026-09-12）
+
+複製元corrected Notebookの保存出力から、次の不足CSVを復元した。再学習・再評価の結果ではなく、表示で丸められた保存値である。
+
+- `rank_sweep_saved_log.csv`：全30候補のログ。loss / accuracy / agreementは表示の4桁、parameter / MAC数は整数値。
+- `pareto_frontier_saved_output.csv`：Pareto全8点の表示列のみ。
+- `selected_rank_neighbors_saved_output.csv`：knee近傍3候補の保存表。
+- `baseline_history_saved_output.csv`：baselineの12 epoch分の保存表。
+- `fine_tuning_fit_summary_saved_output.csv`：3候補のbest epoch / best validation loss要約。
+- `test_comparison_saved_output.csv`：test比較の保存表。
+
+出典セル・表示精度・既存成果物のhashは [複製元runのartifact_provenance.json](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected/artifact_provenance.json) に記録した。未表示のrank指標・丸め前のloss・FTのepoch別履歴・同一runのbaseline重みは復元していない。historicalな別Notebookのbaselineをこのrunへ代用しない。
+
+今後の実行で不足を再発させないため、corrected Notebookへbaseline checkpoint、丸め前の全rank/Pareto/test/学習履歴とbenchmark batch条件の保存処理を追加した。追加した学習・保存経路は初回監査時には未実行であり、既存結果を新しいRun Allの結果とは扱わない。
+
+### 承認後の独立した再実行（2026-09-12）
+
+MLPとCNNのLinear・Conv・同時圧縮を、それぞれ `_rerun` 付きの別名Notebookで全セル実行した。同一runのbaseline/最終重み・丸め前の全指標・baseline/全FT候補のepoch履歴・測定条件を新規ディレクトリへ保存し、保存重みからのtest再評価も一致した。従来runのNotebook・CSV・重みは保存したまま、本ページとCNNの正式結果を新runへ切り替えた。MLPの最終rank・Test値・候補FTの性能値は従来correctedと一致する。新しい記録は [完全保存runの一覧と検証](../../results/10_svd/rerun_20260912T074153Z/README.md) に分けた。CNN Linear単独では今回fc1=28が選ばれたが、同時圧縮は元の固定条件conv2=28・fc1=24を維持した。過去runの欠落値を埋めたものではない。
 
 ---
 
@@ -68,6 +91,12 @@ fc2 rank = 16
 ```
 
 のBalanced。
+
+![Fashion-MNIST MLPのFine-tuning後の候補比較](assets/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_after.png)
+
+掲載画像はdocs内表示用の複製で、[出典runの元画像](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/) とバイト同一。旧runの画像は上書きしていない。
+
+図：上記rerunのFT後のRank-Selection Validation accuracy（左）とloss（右）。候補は順に `(16,16)` / `(32,16)` / `(32,32)`。Balanced `(32,16)` のlossが最小で、最終採用した。[元データ](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_result.csv) は上表と同じであり、Test値ではない。
 
 ---
 
@@ -125,6 +154,10 @@ Conservative 0.8694 → 0.8856
 
 ただしFine-tuningが常に改善を保証するわけではない。
 
+![Fashion-MNIST MLPのFine-tuning前後のvalidation差分](assets/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_delta.png)
+
+図：上記rerunの3候補について、FT後 − SVD直後のRank-Selection Validation accuracy（左）とloss（右）を表示する。[元データ](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_result.csv) の `delta_acc` は0〜1尺度の差であり、percentage pointへ換算する場合は100倍する。候補を結ぶ線はepoch別の学習履歴ではない。
+
 ---
 
 # 4. corrected benchmark
@@ -138,22 +171,22 @@ warmup      = 20
 repeats     = 2000
 ```
 
-baselineと各compressed candidateへ**同じ `input_batch`**を渡した。
+baselineと各compressed candidateへ**同じ `input_batch`**を渡した。計測は `eval()` / `no_grad()`、CUDA同期あり、host→device転送を除外した。
 
-最終rank `32 / 16` のSVD直後モデルでは、rank sweep時の実測値が、
+最終rank `32 / 16` のFT後モデルと同一runのbaselineを3 trialで計測し、各trialの平均時間の中央値は、
 
 ```text
-Baseline   ≈ 0.247535 ms/batch
-Compressed ≈ 0.333352 ms/batch
+Baseline   ≈ 0.137408 ms/batch
+Final FT   ≈ 0.197880 ms/batch
 ```
 
-だった。
+だった。FT前rank sweepの単回値は `0.141979 → 0.177278 ms/batch` であり、最終FT後の3 trial中央値とは区別する。
 
 一方で理論MACsは大きく減っている。
 
 ```text
 MACs reduction ≈ 89.47%
-Latency        0.248 → 0.333 ms/batch
+Latency        0.137408 → 0.197880 ms/batch（最終FT後・3 trial中央値）
 ```
 
 したがってこの小型MLPでも、
@@ -243,6 +276,10 @@ Rank選択はaccuracyだけを最大化する問題ではない。
 そのため、Validation loss・accuracy・parametersなどを合わせて折衷点を選ぶ。
 
 今回の `32 / 16` も「全ての目的に対する唯一の最適解」ではなく、今回の候補集合と選択規則に対する最終採用点である。
+
+![Fashion-MNIST MLPのSVD直後のPareto frontier](assets/03_mlp_svd_finetuning_using_src_corrected_rerun/parameters_vs_validation_loss_normalize.png)
+
+図：上記rerunのFT前rank sweepから抽出したPareto frontier。左はモデル全体のparametersとRank-Selection Validation loss、右はfrontier内で両列をそれぞれ0〜1へ正規化した表示。[元データ](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/pareto_frontier.csv) はFT前の候補絞り込み用であり、FT後の最終選択結果とは区別する。
 
 ---
 

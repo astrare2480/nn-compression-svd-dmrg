@@ -60,6 +60,41 @@ estimate_cnn_macs(
 6. **`1 - compressed/baseline`で削減率を求める。**
 7. **必要なら表示し、3要素tupleを返す。**
 
+### フローチャート
+
+```mermaid
+flowchart TD
+    A["入力を受け取る"] --> B{"conv_output_hw指定?"}
+    B -- No --> C["Fashion-MNIST既定値を使用"]
+    B -- Yes --> D["指定値を使用"]
+    C --> E{"conv_ranks指定?"}
+    D --> E
+    E -- No --> F["conv2_rankを辞書へ正規化"]
+    E -- Yes --> G["conv_ranksを使用"]
+    F --> H{"linear_ranks指定?"}
+    G --> H
+    H -- No --> I["fc1_rankを辞書へ正規化"]
+    H -- Yes --> J["linear_ranksを使用"]
+    I --> K["Conv層を反復"]
+    J --> K
+    K --> L{"対象Convにrank指定?"}
+    L -- Yes --> M["圧縮Conv MACsを加算"]
+    L -- No --> N["baseline Conv MACsを加算"]
+    M --> O{"次のConvがある?"}
+    N --> O
+    O -- Yes --> K
+    O -- No --> P["Linear層を反復"]
+    P --> Q{"対象Linearにrank指定?"}
+    Q -- Yes --> R["圧縮Linear MACsを加算"]
+    Q -- No --> S["baseline Linear MACsを加算"]
+    R --> T{"次のLinearがある?"}
+    S --> T
+    T -- Yes --> P
+    T -- No --> U["reductionを計算して返す"]
+```
+
+この図は、legacy引数の正規化と、各層を圧縮MACsまたはbaseline MACsのどちらで集計するかという分岐に絞って示す。各MACs式の詳細は関連API側で扱う。
+
 ## 主なcontract / 注意事項
 
 default値はFashion-MNIST historical実験互換。CIFAR-10等では`conv_ranks`, `conv_output_hw`, `linear_ranks`を明示して使う。

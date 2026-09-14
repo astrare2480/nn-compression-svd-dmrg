@@ -1,0 +1,264 @@
+{
+  "run_id": "rerun_20260912T074153Z",
+  "experiment": "03_mlp_svd_finetuning_using_src_corrected_rerun",
+  "source_notebook": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected.ipynb",
+  "executed_notebook": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb",
+  "status": "completed fresh run; NOT reconstruction of historical missing artifacts",
+  "completed_at_utc": "2026-09-12T07:50:10.851002+00:00",
+  "code_source_sha256": "f667283fade1ed542a55a8a6f6ec648b82b157148d249bbe31343d3ec3038beb",
+  "source_snapshot_sha256": "083d872bf2cb7423cb5625ddc82a163f27c651ac371f9fd942818f32991c9994",
+  "csv_precision": "direct pandas export of in-memory values; no display rounding",
+  "seed": 0,
+  "split_lengths": [
+    50000,
+    5000
+  ],
+  "fit_summary": [
+    {
+      "stage": "baseline",
+      "best_epoch": 7,
+      "best_validation_loss": 0.29988527626991274,
+      "epochs_ran": 12
+    },
+    {
+      "stage": "fine_tuning",
+      "fc1_rank": 16,
+      "fc2_rank": 16,
+      "best_epoch": 5,
+      "best_validation_loss": 0.3201580042362213,
+      "epochs_ran": 10
+    },
+    {
+      "stage": "fine_tuning",
+      "fc1_rank": 32,
+      "fc2_rank": 16,
+      "best_epoch": 7,
+      "best_validation_loss": 0.3049732960700989,
+      "epochs_ran": 12
+    },
+    {
+      "stage": "fine_tuning",
+      "fc1_rank": 32,
+      "fc2_rank": 32,
+      "best_epoch": 4,
+      "best_validation_loss": 0.31309863495826723,
+      "epochs_ran": 9
+    }
+  ],
+  "test_records": [
+    {
+      "model": "Baseline",
+      "fc1_rank": "-",
+      "fc2_rank": "-",
+      "parameters": 535818,
+      "test_loss": 0.3290240287780762,
+      "test_acc": 0.8819,
+      "delta_test_acc": 0.0,
+      "delta_test_loss": 0.0
+    },
+    {
+      "model": "Final (compressed + FT)",
+      "fc1_rank": 32,
+      "fc2_rank": 16,
+      "parameters": 57098,
+      "test_loss": 0.33377576768398287,
+      "test_acc": 0.8853,
+      "delta_test_acc": 0.0033999999999999586,
+      "delta_test_loss": 0.004751738905906688
+    }
+  ],
+  "benchmark": {
+    "warmup": 20,
+    "repeats": 2000,
+    "trials": 3,
+    "input_sha256": "be5b182ce1504847f44de6a1be685c5cf4bf06dcacefe8c7b8ece1765bbd9917",
+    "input_shape": [
+      64,
+      1,
+      28,
+      28
+    ],
+    "definition": "mean forward ms/batch per trial; eval/no_grad; H2D excluded; CUDA synchronized",
+    "median_ms": {
+      "baseline": 0.1374077500004205,
+      "final": 0.1978795999984868
+    }
+  },
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti",
+    "cudnn": 91900,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "matmul_tf32": false,
+    "cudnn_tf32": true,
+    "cpu_threads": 8
+  },
+  "artifacts": [
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/all_fine_tuning_history.csv",
+      "sha256": "9f538c4c0f5d873965c81b4a133209a62eda5ef5680e49888db3afbac68153d0",
+      "bytes": 2022
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/baseline_history.csv",
+      "sha256": "90621fb6f2ef0e1e23000476223a7444cc1b4147ea47b3f3e2d9814bc46d0a59",
+      "bytes": 746
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fc1_rank-16_fc2_rank-16_ft_history.csv",
+      "sha256": "31d6276b4c907809c3e8b86c0e5b1d6c93df0ca25e013962f3f5e83ca6afe465",
+      "bytes": 627
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fc1_rank-32_fc2_rank-16_ft_history.csv",
+      "sha256": "1d376be865bbc147482dbf873d8d0c24f429c986c6544ac3d5c4e278f686456a",
+      "bytes": 740
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fc1_rank-32_fc2_rank-32_ft_history.csv",
+      "sha256": "acb3c553c722e4c8d60dad78874e32fa5300016e41b65a1677030775c79199e2",
+      "bytes": 569
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/final_model_benchmark.csv",
+      "sha256": "fb6c4de1ca32f92d7c379f1e31bb0d6a678ba57c98f6c74a6058e77ede1b5d9a",
+      "bytes": 1009
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_after.png",
+      "sha256": "6fb16eccdb51b96844da7e19c0ef1825c1abf7103c7c0f4107374f7ba5a07634",
+      "bytes": 89608
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_delta.png",
+      "sha256": "058b0833ce01851c5ff9fbd45b0d9802d6bff2c17fe1872b7f47677876839e7a",
+      "bytes": 64640
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_fit_summary.csv",
+      "sha256": "75432fe6c056fb949d117c4d5232209e8a69ddf46b660a0fc9c8cc591bbe4495",
+      "bytes": 136
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fine_tuning_result.csv",
+      "sha256": "b380bc64e72fa11558526599835e502de9d6abcfd8e00e937ced57c79b41571d",
+      "bytes": 418
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/fit_summary.csv",
+      "sha256": "e21a379b0b5b8bd274ab22f075f51fe0838289cf8edacf3bf904553292153ef9",
+      "bytes": 246
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/model_comparison.csv",
+      "sha256": "17b43b23667c6395d5a0dc6049e812be3da51659d05517f100acb7a93499ae51",
+      "bytes": 375
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/parameters_vs_validation_loss_normalize.png",
+      "sha256": "856329874d9b14a4c6b4a738ea7d812223e2483a5f34eb60e3031d5dffb41174",
+      "bytes": 52169
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/pareto_frontier.csv",
+      "sha256": "f314b14cae1c4d14f4faa7dd80035b7533a70596091b4205992fa945a5fac5e7",
+      "bytes": 2525
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-16_r2-16_ft_history.csv",
+      "sha256": "31d6276b4c907809c3e8b86c0e5b1d6c93df0ca25e013962f3f5e83ca6afe465",
+      "bytes": 627
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-16_ft_history.csv",
+      "sha256": "1d376be865bbc147482dbf873d8d0c24f429c986c6544ac3d5c4e278f686456a",
+      "bytes": 740
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-32_ft_history.csv",
+      "sha256": "acb3c553c722e4c8d60dad78874e32fa5300016e41b65a1677030775c79199e2",
+      "bytes": 569
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/rank_sweep_results.csv",
+      "sha256": "a960cb970e20ee1650bc58fffc2e4a4f3bb19b42691a610701fc2723cb17905c",
+      "bytes": 10194
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/selected_final_model.csv",
+      "sha256": "5af491afb7d077d310649d4da40fcbf5614e713262d54b6c9685e8378eacc8c4",
+      "bytes": 165
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/selected_rank_neighbors.csv",
+      "sha256": "1ae0d12729baa3768fc7ef2ad4afce0f8a0363acd46c39acced0c06ffa161b9c",
+      "bytes": 1163
+    },
+    {
+      "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/test_comparison.csv",
+      "sha256": "c63ec65ddedf80bd1960bfaa3e735653854adc45a97e6041b963778bca2c4973",
+      "bytes": 248
+    }
+  ],
+  "checkpoints": [
+    {
+      "path": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/baseline_same_run.pt",
+      "sha256": "65eb7ac4cff3535573eb887d86f7a053eb3ea2d2a6541cfcc982f14631b4c62f",
+      "bytes": 2146445
+    },
+    {
+      "path": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/final_same_run.pt",
+      "sha256": "03ce92da284728a4e6e42776d8e1c9a26f07b8e23e7d5f65a317a203435ce671",
+      "bytes": 232175
+    },
+    {
+      "path": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-16_r2-16_aggressive_finetuned.pt",
+      "sha256": "962abdd614288a777c5f5efe3fc33fe9ee84c7580b2e9094f591aa1d9fa58744",
+      "bytes": 149611
+    },
+    {
+      "path": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-16_balanced_finetuned.pt",
+      "sha256": "537583cdabe2384ceaf8ed7b0bf399476f3fa0a1456777ec9a826ef9a3afc049",
+      "bytes": 232463
+    },
+    {
+      "path": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-16_final.pt",
+      "sha256": "37d090cde7a1557f4d5c5c49532f2a6da48fcd6a7f7a4a1ef2a3be82f7b39bd8",
+      "bytes": 232217
+    },
+    {
+      "path": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/r1-32_r2-32_conservative_finetuned.pt",
+      "sha256": "a134909e3c88831d1321d819e92fb853dc383458b27caaf3072fafab2b663d8a",
+      "bytes": 281799
+    }
+  ],
+  "configuration_snapshot": {
+    "path": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/configuration_snapshot.json",
+    "sha256": "327f8bf6e0bef0e7f0890c636aa92eba5e67599304f7ef23e29c17ede3cd6db0"
+  },
+  "splits": {
+    "train": 50000,
+    "early_stopping_validation": 5000,
+    "rank_or_final_validation": 5000,
+    "test": 10000
+  },
+  "current_code_source_sha256": "82dbbb325590056a6f4c9ace2cfeb12ad4cc9226d9078c2a633bcae13c4e22e1",
+  "code_source_sha256_scope": "Source at original execution before path-only rename; current_code_source_sha256 identifies current Notebook source. No execution repeated.",
+  "path_rename": {
+    "renamed_at_utc": "2026-09-12T12:44:14.116447+00:00",
+    "executed_notebook_before_rename": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z.ipynb",
+    "current_notebook": "notebooks/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun.ipynb",
+    "executed_code_source_sha256": "f667283fade1ed542a55a8a6f6ec648b82b157148d249bbe31343d3ec3038beb",
+    "execution_outputs_preserved": true,
+    "training_and_evaluation_repeated": false,
+    "experiment_before_rename": "03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z",
+    "current_experiment": "03_mlp_svd_finetuning_using_src_corrected_rerun",
+    "results_directory_before_rename": "results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z",
+    "models_directory_before_rename": "models/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun_20260912T074153Z",
+    "notebook_file_sha256_before_rename": "a6ed9c1eb67b48fcec52fbee2134f93937b5ec6ac921070a04fe8eb8dc4931db",
+    "manifest_sha256_before_rename": "4cdd5d702eab076e036d8d2673a5a0331ec27a3c1ad253c0ff6d486c72b3d252"
+  }
+}

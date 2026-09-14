@@ -104,6 +104,21 @@ $$
 
 厳密TT-SVDなら
 
+ここで下に書くshapeは、非零特異値だけを残したrank-sized SVDのshapeである。
+PyTorchのreduced SVDそのものは、零特異値も含めて次のサイズになる。
+返り値の1次元ベクトル $S$ を対角行列にしたものを $\Sigma_{\mathrm{red}}^{(1)}$ と表記すると
+
+$$
+q_1=\min(n_1,n_2n_3),\qquad
+U_{\mathrm{red}}^{(1)}\in\mathbb R^{n_1\times q_1},\qquad
+\Sigma_{\mathrm{red}}^{(1)}\in\mathbb R^{q_1\times q_1},\qquad
+V_{\mathrm{red}}^{(1)T}\in\mathbb R^{q_1\times(n_2n_3)}
+$$
+
+となる。exact rank $r_1<q_1$ のときは、その非零成分を選んでから以下の $r_1$ を使う。
+零成分を残して厳密再構成してもよいが、その保存bond dimensionと最小TT-rankは区別する。
+浮動小数点で非零を判定するときには数値rankの許容誤差が別途必要である。
+
 $$
 r_1
 =
@@ -179,6 +194,24 @@ $$
 
 ## 4. 右へ渡すremainder
 
+第1コアへ $U^{(1)}$ だけを置くのは、左側の基底を正規直交にしておくためである。
+特異値は各基底に沿う係数の大きさ、$V^{(1)T}$ は右側の配置ごとの係数の形を表す。
+両方を次へ渡さなければ、元のテンソルの振幅を復元できない。
+
+一つの保持チャネル $\alpha_1$ に注目すると
+
+$$
+X_{i_1,i_2,i_3}
+=\sum_{\alpha_1}
+\underbrace{U^{(1)}_{i_1,\alpha_1}}_{\text{左基底}}
+\underbrace{\sigma_{\alpha_1}^{(1)}
+V^{(1)T}_{\alpha_1,(i_2,i_3)}}_{\text{右へ渡す振幅付き係数}}.
+$$
+
+特異値を落として $V^{(1)T}$ だけを渡すと、各チャネルの重みを勝手に1へ変えることになり、保持した特異値が全て1という特殊な場合を除いて別のTensorになる。
+ここでのremainderは「捨てた誤差」ではなく、**これから分解する保持済みの係数**である。
+打ち切りで捨てる残差とは意味が違う。
+
 第1 SVDでまだ使っていない部分を
 
 $$
@@ -226,9 +259,49 @@ $$
 
 ここで $i_1$ が消えているように見えるが、サイト1側の情報は完全に捨てられたのではない。$U^{(1)}$ の列で張られる基底へ座標変換され、そのチャネル番号が $\alpha_1$ になっている。
 
+### remainderの行列積と逆の座標変換
+
+列位置を $\mu(i_2,i_3):=(i_2-1)n_3+i_3$ とすると
+
+$$
+\begin{aligned}
+\mathcal B^{(1)}_{\alpha_1,i_2,i_3}
+&=\sum_{\beta_1=1}^{r_1}
+\Sigma^{(1)}_{\alpha_1,\beta_1}
+V^{(1)T}_{\beta_1,\mu(i_2,i_3)}\\
+&=\sum_{\beta_1=1}^{r_1}
+\sigma_{\alpha_1}^{(1)}\delta_{\alpha_1,\beta_1}
+V^{(1)}_{\mu(i_2,i_3),\beta_1}\\
+&=\sigma_{\alpha_1}^{(1)}
+V^{(1)}_{\mu(i_2,i_3),\alpha_1}.
+\end{aligned}
+$$
+
+第1 SVDがexactで $U^{(1)T}U^{(1)}=I$ なら
+
+$$
+\begin{aligned}
+U^{(1)T}M^{(1)}
+&=U^{(1)T}U^{(1)}\Sigma^{(1)}V^{(1)T}\\
+&=\Sigma^{(1)}V^{(1)T}\\
+&=B^{(1)},\\
+X_{i_1,i_2,i_3}
+&=\sum_{\alpha_1=1}^{r_1}
+U^{(1)}_{i_1,\alpha_1}\mathcal B^{(1)}_{\alpha_1,i_2,i_3}.
+\end{aligned}
+$$
+
+変換後の座標を $U^{(1)}$ で元空間へ戻す式まで、この節で確認できる。
+打ち切る場合、最後の式の対象は元の $X$ ではなくその段階の近似となる。
+
 ---
 
 ## 5. 第2 SVDの準備
+
+第1サイトは消滅したのではなく、既に $U^{(1)}$ の基底番号 $\alpha_1$ で表されている。
+第2cutの左側はサイト1・2なので、その基底番号に第2サイトの元番号 $i_2$ を加えて左側の成分番号を作る。
+右側はまだ未処理の第3サイトの $i_3$ である。
+ここで $i_2$ だけを行にしてSVDすると、「サイト1も含む左側」と「右側」の分割を扱っていないため、TT-SVDの第2段階ではなくなる。
 
 次は
 
@@ -358,6 +431,53 @@ $$
 ---
 
 ## 8. 3サイトTTの完成
+
+### 二つのSVDを成分へ代入して3コアまで進む
+
+第1・第2SVDの行列積を成分でつなぐと、
+
+$$
+\begin{aligned}
+X_{i_1i_2i_3}
+&=\sum_{\alpha_1=1}^{r_1}
+U^{(1)}_{i_1,\alpha_1}
+\mathcal B^{(1)}_{\alpha_1,i_2,i_3}\\
+\mathcal B^{(1)}_{\alpha_1,i_2,i_3}
+&=M^{(2)}_{(\alpha_1,i_2),i_3}\\
+&=\sum_{\alpha_2=1}^{r_2}
+\sum_{\beta_2=1}^{r_2}
+U^{(2)}_{(\alpha_1,i_2),\alpha_2}
+\Sigma^{(2)}_{\alpha_2,\beta_2}
+(V^{(2)T})_{\beta_2,i_3}\\
+&=\sum_{\alpha_2=1}^{r_2}
+U^{(2)}_{(\alpha_1,i_2),\alpha_2}
+\sigma^{(2)}_{\alpha_2}V^{(2)}_{i_3,\alpha_2}\\
+&=\sum_{\alpha_2=1}^{r_2}
+G^{(2)}_{\alpha_1,i_2,\alpha_2}
+G^{(3)}_{\alpha_2,i_3,1}.
+\end{aligned}
+$$
+
+第2SVDの対角性により $\beta_2$ の和を消し、最後のremainderを第3コアへ移している。これを第1行へ戻すと、
+
+$$
+\begin{aligned}
+X_{i_1i_2i_3}
+&=\sum_{\alpha_1=1}^{r_1}
+U^{(1)}_{i_1,\alpha_1}
+\left(
+\sum_{\alpha_2=1}^{r_2}
+G^{(2)}_{\alpha_1,i_2,\alpha_2}
+G^{(3)}_{\alpha_2,i_3,1}
+\right)\\
+&=\sum_{\alpha_1=1}^{r_1}\sum_{\alpha_2=1}^{r_2}
+G^{(1)}_{1,i_1,\alpha_1}
+G^{(2)}_{\alpha_1,i_2,\alpha_2}
+G^{(3)}_{\alpha_2,i_3,1}.
+\end{aligned}
+$$
+
+二つの和は、二つの内部bondの縮約に対応する。reshapeだけでこの積が生まれるのではなく、SVDによる二段階の因子化を代入して得られる。
 
 最終的に
 
@@ -533,6 +653,52 @@ G^{(1)}_{1,1,1}
 \frac{1}{\sqrt{2}}.
 $$
 
+上の数値SVDで特異値がどこから来たかも確認できる。第1行列のGram行列は
+
+$$
+\begin{aligned}
+M^{(1)}M^{(1)T}
+&=\begin{pmatrix}1&1&-1&-1\\1&1&-1&-1\end{pmatrix}
+\begin{pmatrix}1&1\\1&1\\-1&-1\\-1&-1\end{pmatrix}\\
+&=\begin{pmatrix}
+1^2+1^2+(-1)^2+(-1)^2&1+1+1+1\\
+1+1+1+1&1^2+1^2+(-1)^2+(-1)^2
+\end{pmatrix}\\
+&=\begin{pmatrix}4&4\\4&4\end{pmatrix}.
+\end{aligned}
+$$
+
+特性方程式と固有ベクトルは
+
+$$
+\det\begin{pmatrix}4-\lambda&4\\4&4-\lambda\end{pmatrix}
+=(4-\lambda)^2-16
+=\lambda(\lambda-8)=0,
+$$
+
+$$
+\begin{pmatrix}4&4\\4&4\end{pmatrix}
+\frac{1}{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix}
+=8\frac{1}{\sqrt2}\begin{pmatrix}1\\1\end{pmatrix},
+\qquad
+\begin{pmatrix}4&4\\4&4\end{pmatrix}
+\frac{1}{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix}
+=\begin{pmatrix}0\\0\end{pmatrix}.
+$$
+
+よって非ゼロ特異値は $\sqrt8=2\sqrt2$ であり、右特異ベクトルは
+
+$$
+\begin{aligned}
+V^{(1)T}
+&=\frac{1}{2\sqrt2}U^{(1)T}M^{(1)}\\
+&=\frac{1}{2\sqrt2}\frac{1}{\sqrt2}
+\begin{pmatrix}1&1\end{pmatrix}
+\begin{pmatrix}1&1&-1&-1\\1&1&-1&-1\end{pmatrix}\\
+&=\frac12\begin{pmatrix}1&1&-1&-1\end{pmatrix}.
+\end{aligned}
+$$
+
 #### remainderと第2 SVD
 
 第1段階のremainderは
@@ -671,6 +837,33 @@ G^{(3)}_{1,0,1}=2,
 \qquad
 G^{(3)}_{1,1,1}=2.
 $$
+
+同じ計算を第2行列へ適用すると、
+
+$$
+\begin{aligned}
+M^{(2)}M^{(2)T}
+&=\begin{pmatrix}\sqrt2&\sqrt2\\-\sqrt2&-\sqrt2\end{pmatrix}
+\begin{pmatrix}\sqrt2&-\sqrt2\\\sqrt2&-\sqrt2\end{pmatrix}\\
+&=\begin{pmatrix}4&-4\\-4&4\end{pmatrix},
+\end{aligned}
+$$
+
+$$
+\det\begin{pmatrix}4-\lambda&-4\\-4&4-\lambda\end{pmatrix}
+=\lambda(\lambda-8)=0,
+\qquad
+u^{(2)}_1=\frac1{\sqrt2}\begin{pmatrix}1\\-1\end{pmatrix},
+$$
+
+$$
+V^{(2)T}
+=\frac{1}{2\sqrt2}u^{(2)T}_1M^{(2)}
+=\frac{1}{2\sqrt2}\begin{pmatrix}2&2\end{pmatrix}
+=\frac1{\sqrt2}\begin{pmatrix}1&1\end{pmatrix}.
+$$
+
+したがって、第1・第2SVDの因子は単に提示されたものではなく、それぞれのGram行列の固有対から計算できる。
 
 #### 3コアから8要素を再構成する
 

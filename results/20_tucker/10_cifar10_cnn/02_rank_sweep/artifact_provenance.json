@@ -1,0 +1,30 @@
+{
+  "audit_date": "2026-09-12",
+  "notebook": "notebooks/20_tucker/10_cifar10_cnn/02_rank_sweep.ipynb",
+  "notebook_before_fix_sha256": "67847a4cc5d63e6ed2f14213240a7892bf8a7d4581b75c524eb03edcfebd69fc",
+  "artifact_status": "preserved historical saved records; not a fresh Run All of current source",
+  "preserved_artifacts": [
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/02_rank_sweep/pareto_frontier.csv",
+      "sha256": "3c23375ff67bb1e6239ee9fa453b5b9a426f8064ab489900f49fea97cacfe1f0"
+    },
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/02_rank_sweep/rank_sweep_results.csv",
+      "sha256": "6d839099499e689687908bd8a3a7e7e94ab4706abf80a7f11276b15758b4f6c0"
+    },
+    {
+      "path": "results/20_tucker/10_cifar10_cnn/02_rank_sweep/selected_rank_settings.csv",
+      "sha256": "3ecb5598d7b9e985ef2ef7cfec0ed16cb231e3b6a0112270a062fa70bc2e13ea"
+    }
+  ],
+  "training_rerun": false,
+  "limited_verification": {
+    "pareto_points": 8,
+    "knee_rank_out": 32,
+    "knee_rank_in": 16,
+    "knee_distance": 0.2102222304982732,
+    "csv_match": true,
+    "scope": "saved CSV + current src Pareto/knee; appended verification cell executed; original training/save cells not executed",
+    "source_code_sha256": "f15bf09315066b0a162ff3a6a0e97ccdb156c0923303f5c216e5d386c72b2e7f"
+  }
+}

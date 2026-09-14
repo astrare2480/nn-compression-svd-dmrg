@@ -247,20 +247,20 @@ corrected Fashion CNN / CIFAR-10では、主要比較を `warmup=20, repeats=200
 
 ## 結果への影響
 
-公平な条件で再測定すると、parameterやMACsが減ってもGPU latencyが短くなるとは限らなかった。
+公平な条件で最終モデルを再測定しても、parameter / MACs削減率とGPU latency短縮率は一致しなかった。以下の正式な速度値は2026-09-12の3 trial平均時間の中央値。Fashion-MNISTは新しい学習run、CIFAR-10は既存保存重みの再計測runであり、FT前sweep時間へ転用しない。詳細条件は各実験章を参照する。
 
 Fashion-MNIST Conv+Linear corrected：
 
 ```text
 MACs      4,241,152 → 2,237,184  (-47.25%)
-latency   約0.378 ms → 約0.399 ms
+latency   約0.346444 ms → 約0.383861 ms（最終FT後・3 trial中央値）
 ```
 
 CIFAR-10 corrected：
 
 ```text
 MACs      10,357,248 → 5,625,344 (-45.69%)
-latency   約0.531 ms → 約0.537 ms
+latency   約0.574813 ms → 約0.551291 ms（保存済み最終FT後重みの再計測・3 trial中央値）
 ```
 
 したがって、このプロジェクトでは

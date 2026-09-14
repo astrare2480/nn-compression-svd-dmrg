@@ -15,7 +15,7 @@ tags:
 
 ## サマリー
 
-最新02 / 03 Notebookに永続化されたrank sweep結果を全件収録する。
+旧02 / 03 Notebookに永続化されたrank sweep結果を全件収録するhistorical note。表の値は当時の記録として変更しない。現在の正式値は [[20_FashionMNIST/04_Fashion-MNISTでの実験結果]] と [現行corrected rerun全30候補CSV](../../results/10_svd/20_fashion_mnist_mlp/03_mlp_svd_finetuning_using_src_corrected_rerun/rank_sweep_results.csv) を参照。
 
 > [!important]
 > 02と03は独立run。数値を同一runのように混ぜない。

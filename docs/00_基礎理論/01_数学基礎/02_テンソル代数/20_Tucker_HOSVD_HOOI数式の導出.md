@@ -402,6 +402,24 @@ $$
 
 factorが固定されたとき、元Tensorを各factor列空間へ射影してcoreを得る。
 
+ここでは3階Tensorの各射影を途中配列まで書く。要素添字は1始まりとする。
+
+$$
+\begin{aligned}
+H_{\alpha_0,i_1,i_2}
+&=\sum_{i_0=1}^{I_0}U^{(0)}_{i_0,\alpha_0}X_{i_0,i_1,i_2},\\
+J_{\alpha_0,\alpha_1,i_2}
+&=\sum_{i_1=1}^{I_1}U^{(1)}_{i_1,\alpha_1}H_{\alpha_0,i_1,i_2},\\
+G_{\alpha_0,\alpha_1,\alpha_2}
+&=\sum_{i_2=1}^{I_2}U^{(2)}_{i_2,\alpha_2}J_{\alpha_0,\alpha_1,i_2}\\
+&=\sum_{i_0,i_1,i_2}
+U^{(0)}_{i_0,\alpha_0}U^{(1)}_{i_1,\alpha_1}
+U^{(2)}_{i_2,\alpha_2}X_{i_0,i_1,i_2}.
+\end{aligned}
+$$
+
+各stageで物理添字を一つずつrank添字へ移している。同じ転置で全modeをまとめて置き換えるだけの記号操作ではない。
+
 $$
 \boxed{
 \mathcal G
@@ -1161,6 +1179,56 @@ HOOIはrankを固定したままfactorを1 modeずつ更新するため、各更
 
 ## 13. 誤差最小化とcore norm最大化
 
+### 残差と再構成が直交する理由も成分から確認する
+
+以下の直交性は、coreが固定factorへの射影であることを前提とする。
+3階の場合、factorの展開を $\mathcal A$、転置による圧縮を $\mathcal A^*$ と書くと
+
+$$
+[\mathcal A(C)]_{i_0,i_1,i_2}
+=\sum_{\alpha_0,\alpha_1,\alpha_2}
+U^{(0)}_{i_0,\alpha_0}U^{(1)}_{i_1,\alpha_1}U^{(2)}_{i_2,\alpha_2}
+C_{\alpha_0,\alpha_1,\alpha_2}.
+$$
+
+内積の有限和を入れ替えて
+
+$$
+\begin{aligned}
+\langle R,\mathcal A(C)\rangle_F
+&=\sum_{i_0,i_1,i_2}R_{i_0,i_1,i_2}
+\sum_{\alpha_0,\alpha_1,\alpha_2}
+U^{(0)}_{i_0,\alpha_0}U^{(1)}_{i_1,\alpha_1}U^{(2)}_{i_2,\alpha_2}
+C_{\alpha_0,\alpha_1,\alpha_2}\\
+&=\sum_{\alpha_0,\alpha_1,\alpha_2}
+\left(\sum_{i_0,i_1,i_2}
+U^{(0)}_{i_0,\alpha_0}U^{(1)}_{i_1,\alpha_1}U^{(2)}_{i_2,\alpha_2}
+R_{i_0,i_1,i_2}\right)C_{\alpha_0,\alpha_1,\alpha_2}\\
+&=\langle\mathcal A^*(R),C\rangle_F.
+\end{aligned}
+$$
+
+列直交性により各modeで $U^{(n)\mathsf T}U^{(n)}=I$ が消えるので
+
+$$
+\mathcal A^*\mathcal A(C)=C.
+$$
+
+$G:=\mathcal A^*(X)$、$\hat X:=\mathcal A(G)$ とすると
+
+$$
+\begin{aligned}
+\mathcal A^*(X-\hat X)
+&=\mathcal A^*X-\mathcal A^*\mathcal A(G)=G-G=0,\\
+\langle X-\hat X,\hat X\rangle_F
+&=\langle\mathcal A^*(X-\hat X),G\rangle_F
+=\langle0,G\rangle_F=0.
+\end{aligned}
+$$
+
+これが以下で使う交差項0の根拠である。
+Partial Tuckerでも、非圧縮modeには恒等写像を使えば同じ計算になる。
+
 ここからは**補足導出**。
 
 現在の直交factorで再構成したTensorを
@@ -1431,6 +1499,44 @@ $$
 である。
 
 Rayleigh–Ritz / Ky Fanの最大化原理から、$R_n$ 次元直交部分空間でtraceを最大にするには、最大の $R_n$ 個の固有値に対応する固有ベクトルを選べばよい。
+
+その最大化原理を、ここでも途中式まで展開する。$d=I_n$、$R=R_n$ とし、完全な固有基底を $\bar Q=(q_1,\ldots,q_d)$、固有値を $\lambda_i=\sigma_i^2$ とする。reduced SVDで返らない方向は零固有値として補う。
+
+$$
+H=\bar Q^{\mathsf T}U,\qquad
+H^{\mathsf T}H=I_R,\qquad
+w_i=\sum_{a=1}^{R}H_{i,a}^2=q_i^{\mathsf T}UU^{\mathsf T}q_i.
+$$
+
+射影の重みなので
+
+$$
+0\le w_i\le1,\qquad
+\sum_{i=1}^{d}w_i=\operatorname{tr}(H^{\mathsf T}H)=R
+$$
+
+であり、
+
+$$
+\operatorname{tr}(U^{\mathsf T}ZZ^{\mathsf T}U)
+=\operatorname{tr}(H^{\mathsf T}\operatorname{diag}(\lambda_i)H)
+=\sum_{i=1}^{d}\lambda_iw_i.
+$$
+
+$1\le R<d$ について、降順性を使うと、
+
+$$
+\begin{aligned}
+\sum_{i=1}^{d}\lambda_iw_i
+&\le\sum_{i=1}^{R}\lambda_iw_i
++\lambda_R\sum_{i=R+1}^{d}w_i\\
+&=R\lambda_R+\sum_{i=1}^{R}(\lambda_i-\lambda_R)w_i\\
+&\le R\lambda_R+\sum_{i=1}^{R}(\lambda_i-\lambda_R)\\
+&=\sum_{i=1}^{R}\lambda_i.
+\end{aligned}
+$$
+
+上位 $R$ 本を取ると $w_i=1$（$i\le R$）、$w_i=0$（$i>R$）になり、この上界を達成する。$R=d$ は全空間で同じ結論になる。したがって、「上位左特異ベクトル」は、traceを固有基底の成分和に直して解いた結果である。
 
 よって、
 

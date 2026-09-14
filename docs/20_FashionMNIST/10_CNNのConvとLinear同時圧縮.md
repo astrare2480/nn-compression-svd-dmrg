@@ -17,7 +17,7 @@ tags:
 
 ## サマリー
 
-Fashion-MNIST CNNでは、単独実験で採用した、
+Fashion-MNIST CNNでは、従来の単独実験で採用した固定条件、
 
 ```text
 conv2 rank = 28
@@ -29,11 +29,15 @@ fc1 rank   = 24
 正式結果は、
 
 ```text
-notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected.ipynb
-results/20_fashion_mnist/05_cnn_conv_linear_svd_corrected/
+notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun.ipynb
+results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/
 ```
 
 を基準とする。
+
+run ID: `rerun_20260912T074153Z`（2026-09-12）。現在の数値は独立した新runを出典とし、旧runの欠落値の復元ではない。途中表は本文で丸めているが、元CSVの値は変更していない。
+
+出典：[実行済みNotebook](../../notebooks/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun.ipynb)、[Test比較](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/test_comparison.csv)、[学習・FTの要約](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fit_summary.csv)、[最終benchmark](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/final_model_benchmark.csv)、[manifest](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/run_manifest.json)。
 
 ```text
 conv2:
@@ -93,6 +97,12 @@ conv2 SVD
 | Parameter reduction | — | **78.66%** |
 | MACs | 4,241,152 | **2,237,184** |
 | MAC reduction | — | **47.25%** |
+
+![Fashion-MNIST CNNの同時圧縮によるparametersとMACsの削減率](assets/05_cnn_conv_linear_svd_corrected_rerun/compression_reduction.png)
+
+掲載画像はdocs内表示用の複製で、[出典runの元画像](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/) とバイト同一。旧runの画像は上書きしていない。
+
+図：上記rerunの固定構成 `conv2=28, fc1=24` によるCNN全体の削減率。[元データ](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/compression_summary.csv) はparameters `78.66%`、理論MACs `47.25%` で、図中は小数1桁表示。FTで構造・個数は変わらず、実測latencyの削減率を示すものではない。
 
 ### MACs内訳
 
@@ -187,6 +197,14 @@ Fine-tuningにより、SVD直後のaccuracy低下を大きく回復した。
 
 ただしbaseline validationを完全には上回っていない。
 
+![Fashion-MNIST CNNの同時圧縮のbaselineからのvalidation差分](assets/05_cnn_conv_linear_svd_corrected_rerun/validation_delta.png)
+
+図：上記rerunの同じRank-Selection Validationで、Baseline / SVD direct / SVD + FTを比較した。[元データ](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/validation_comparison.csv) のaccuracy差（左）はbaseline比 `-0.98 → -0.26 percentage point`、loss差（右）は各stage − baseline。Test値ではない。
+
+![Fashion-MNIST CNNの同時圧縮のFine-tuning履歴](assets/05_cnn_conv_linear_svd_corrected_rerun/fine_tuning_history.png)
+
+図：同じrunのFT全4 epochのtrainとEarly-Stopping Validationのloss（左）・accuracy（右）。[元データ](../../results/10_svd/30_fashion_mnist_cnn/05_cnn_conv_linear_svd_corrected_rerun/fine_tuning_history.csv) から、Early-Stopping Validation loss最小のepoch1のcheckpointを採用した。学習曲線のvalidationは上表のRank-Selection Validationとは別集合であり、最終epoch4の値を最終評価値として使わない。
+
 ---
 
 # 5. 最終Test
@@ -225,7 +243,7 @@ conv2=28
 fc1=24
 ```
 
-を単独実験から持ってきて固定した。
+を従来の単独実験から持ってきて固定した。今回のLinear-only rerunで採用されたfc1=28へ置き換えず、同時圧縮は元の実験条件fc1=24を維持して再実行した。
 
 ```text
 conv2 rank × fc1 rank
@@ -274,6 +292,7 @@ batch size = 256
 same input_batch
 warmup = 20
 repeats = 2000
+3 trials（最終FT後モデルと同一run baselineの平均時間の中央値）
 ```
 
 へ統一した。
@@ -281,9 +300,11 @@ repeats = 2000
 結果：
 
 ```text
-Baseline   ≈ 0.378 ms/batch
-Compressed ≈ 0.399 ms/batch
+Baseline   ≈ 0.346444 ms/batch
+Final FT   ≈ 0.383861 ms/batch
 ```
+
+今回は最終FT後の中央値が約10.80%増えた。計測は `eval()` / `no_grad()`、CUDA同期あり、host→device転送を除外。FT前の `compression_summary.csv` 単回時間を最終FT後へ転用しない。
 
 一方、理論MACsは約47.25%減っている。
 
@@ -292,7 +313,7 @@ MACs
 4,241,152 → 2,237,184
 
 latency
-0.378 → 0.399 ms/batch
+0.346444 → 0.383861 ms/batch（最終FT後・3 trial中央値）
 ```
 
 したがって、今回の実装・GPU・batchでは、

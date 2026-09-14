@@ -333,6 +333,75 @@ forward
 
 と対応する。`backward()`は勾配を計算する処理であり、実際に重みを変更するのは`optimizer.step()`である。
 
+### 元資料の $y = 2x,\ z = y+3$ で計算グラフを確認する
+
+元資料の最初のNN・SVD対話では、次の2段の計算で「計算履歴を記録する」とは何かを説明している。
+
+$$
+y = 2x,
+\qquad
+z = y+3.
+$$
+
+値を求める向きは $x \to y \to z$ である。勾配を求めるときには、記録された演算を逆向きにたどり、連鎖律によって
+
+$$
+\begin{aligned}
+\frac{\partial y}{\partial x} &= 2,\\
+\frac{\partial z}{\partial y} &= 1,\\
+\frac{\partial z}{\partial x}
+&=
+\frac{\partial z}{\partial y}
+\frac{\partial y}{\partial x}\\
+&= 1\cdot 2\\
+&= 2
+\end{aligned}
+$$
+
+を得る。計算グラフは値そのもののコピーではなく、勾配を計算するための演算のつながりである。元資料の式に、確認用の値 $x=4$ を代入すると $y=8,\ z=11$ となる。以下の $x=4$ と後半の係数 $w=3$ は、本書で追加した動作確認用の値である。
+
+```python
+import torch
+
+# 元資料の y = 2*x, z = y+3 に対して、勾配だけを確認する。
+x = torch.tensor(4.0, requires_grad=True)
+y = 2 * x
+z = y + 3
+z.backward()
+assert x.item() == 4.0   # backwardだけではxの値を更新しない。
+assert x.grad.item() == 2.0
+
+# detachはこの経路の勾配を切るが、他の学習対象の勾配まで禁止しない。
+x.grad = None
+w = torch.tensor(3.0, requires_grad=True)
+q = w * y.detach()
+q.backward()
+assert x.grad is None
+assert w.grad.item() == 8.0
+
+# no_gradはブロック内の通常の演算の履歴を作らない。
+with torch.no_grad():
+    frozen = 2 * x + 3
+assert not frozen.requires_grad
+assert x.requires_grad  # 元のTensorのrequires_gradは変更されない。
+```
+
+`detach()` した $y$ も値は $8$ のままであり、$x$ から計算された値であるという数値上の関係は変わらない。ただし、$q$ から $x$ へ逆伝播する経路は切れる。一方、$q=w\,y_{\mathrm{detach}}$ では
+
+$$
+\frac{\partial q}{\partial w}
+=
+y_{\mathrm{detach}}
+=
+8
+$$
+
+なので、別の学習対象 $w$ には勾配が得られる。「`detach()` を使うと常に `backward()` できなくなる」という意味ではない。
+
+`no_grad()` はそのブロック内の演算、`detach()` は指定したTensorから先の経路に対して、勾配記録の境界を作る。`detach()` は独立したデータの深いコピーを作る操作でもない。SVDの入力を `layer.weight.detach()` にする理由と、`clone()` を併用した保存・コピーは [[08_Linear層のSVD実装]]、分解済みの値をParameterへ `copy_()` する際の境界は [[26_Tucker_HOOIのPyTorch実装]] を参照する。
+
+通常の `optimizer.step()` や `no_grad()` 内の手動更新は、次の反復のために重みを変える処理であり、勾配を求める計算グラフの外で行う。グラフの外だから「学習ではない」のではなく、勾配計算と重み更新を分けた学習サイクルの後半である。
+
 1 epochは「学習データを1回すべて見た」という単位であり、学習完了の意味ではない。
 複数epochでは、更新後の重みで同じデータを再び学習し、誤差を段階的に減らす。
 
@@ -541,6 +610,45 @@ state = copy.deepcopy(model.state_dict())
 
 - モデルdeepcopy：独立したモデルオブジェクトを作る
 - state_dict deepcopy：ある時点のparameter値を保存する
+
+### 元資料の入れ子listで、代入・shallow copy・deep copyを区別する
+
+添付 `CNNとMLP (1).md` の5849–5939行は、独立なコピーの意味を
+`[[1, 2], [3, 4]]` で確認している。`b = a` はコピーでなく別名であり、
+`copy.copy(a)` は外側のlistだけを作り直して内側のlistを共有する。
+`copy.deepcopy(a)` はこの例では内側まで複製する。
+
+```python
+import copy
+
+# 元資料の最初の例。内側の値を変えても元のlistには伝わらない。
+a = [[1, 2], [3, 4]]
+b = copy.deepcopy(a)
+b[0][0] = 999
+assert a == [[1, 2], [3, 4]]
+assert b == [[999, 2], [3, 4]]
+
+# 元資料の比較例は、元の値へ戻してから三種類を作る。
+a = [[1, 2], [3, 4]]
+alias = a
+shallow = copy.copy(a)
+deep = copy.deepcopy(a)
+assert alias is a
+assert shallow is not a and shallow[0] is a[0]
+assert deep is not a and deep[0] is not a[0]
+
+alias[0][0] = 10
+assert a[0][0] == 10
+shallow[0][0] = 20
+assert a[0][0] == 20
+deep[0][0] = 30
+assert a[0][0] == 20 and deep[0][0] == 30
+```
+
+元資料の `b[^43_0][^43_0]` 等は、引用マーカーが添字へ混入した表記なので
+`b[0][0]` へ直した。同じ意味で `original_model = model` は元モデルの別名にすぎず、
+それだけでは圧縮やfine-tuningの変更から保護できない。
+モデル本体のdeep copyと、ある時点のstate_dictのdeep copyも引き続き区別する。
 
 ---
 
@@ -871,6 +979,72 @@ Accuracyが高いモデル
 
 である。
 モデル選択規則では、どちらを主指標にするかを事前に決める。
+
+### 同じ予測クラスでもlossが変わる途中式
+
+class indexは0始まりとし、logitを $z=(z_0,\ldots,z_{C-1})$、正解classを $y$ とする。
+以下はhard label、class weightなし、label smoothingなしの1 sampleのCross Entropyである。
+logitはまだ確率ではなく、softmaxで正規化して初めて確率 $p_c$ になる。
+
+$$
+p_c=\frac{\exp(z_c)}{\sum_{j=0}^{C-1}\exp(z_j)},\qquad
+\widehat y=\operatorname*{arg\,max}_{c}z_c
+=\operatorname*{arg\,max}_{c}p_c.
+$$
+
+$$
+\begin{aligned}
+\ell(z,y)
+&=-\log p_y\\
+&=-\log\frac{\exp(z_y)}{\sum_j\exp(z_j)}\\
+&=-z_y+\log\left(\sum_j\exp(z_j)\right).
+\end{aligned}
+$$
+
+Accuracyへ寄与する値は $\mathbf 1\{\widehat y=y\}$ の0または1だけだが、lossは $p_y$ の大きさを区別する。
+本節独自の2 class例として、正解を $y=0$、二つのlogitを $z^{(A)}=(2,0)$、$z^{(B)}=(4,0)$ とする。
+どちらも最大logitはclass 0なので、両sampleとも予測は正解であり、Accuracyへの寄与は1である。
+
+$$
+\begin{aligned}
+p_0^{(A)}
+&=\frac{\exp(2)}{\exp(2)+\exp(0)}
+=\frac1{1+\exp(-2)}
+\approx0.880797,\\
+\ell_A
+&=-2+\log(\exp(2)+1)\\
+&=-2+\log\left(\exp(2)(1+\exp(-2))\right)\\
+&=\log(1+\exp(-2))
+\approx0.126928.
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+p_0^{(B)}
+&=\frac{\exp(4)}{\exp(4)+1}
+=\frac1{1+\exp(-4)}
+\approx0.982014,\\
+\ell_B
+&=-4+\log\left(\exp(4)(1+\exp(-4))\right)\\
+&=\log(1+\exp(-4))
+\approx0.018150.
+\end{aligned}
+$$
+
+class判定は同じでも、正解classへ割り当てた確率が異なるためlossは異なる。
+反対に、誤分類sampleに強い確信を置くとそのsampleのlossが大きくなり、dataset全体ではAccuracyと平均lossの順位が一致しない場合がある。
+datasetの指標は、評価対象 $N$ sampleについてそれぞれ
+
+$$
+\operatorname{Accuracy}
+=\frac1N\sum_{s=1}^{N}\mathbf 1\{\widehat y^{(s)}=y^{(s)}\},\qquad
+\overline\ell=\frac1N\sum_{s=1}^{N}\ell(z^{(s)},y^{(s)})
+$$
+
+と集計する。ここでのloss平均はsample平均であり、class数でさらに割る平均ではない。
+PyTorchの `CrossEntropyLoss` はlogitを入力としてこの処理を行うので、通常はその直前にsoftmaxを追加しない。
+実装上の安定なlog-softmax計算と全体評価の集計は [[06_誤差評価]] と [[10_SVD圧縮モデルの評価設計]] へ接続する。
 
 ---
 

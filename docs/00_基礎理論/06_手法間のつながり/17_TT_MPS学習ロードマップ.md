@@ -14,6 +14,8 @@ tags:
 
 # TT・MPS学習ロードマップ
 
+> 2026-09-12追補：第1・11節の「現在」「次はgauge」は、TT-SVD基礎00〜03を整理した時点の記録である。新しい左右QRの添付資料に対応する理論ノートと次の区切りは第12節に追加した。以前の学習方針や基礎Notebookの実装境界は保持する。
+
 ## サマリー
 
 このプロジェクトでは、TT/MPSを「Fashion-MNISTの圧縮を早く動かすためだけの手法」として学ぶのではなく、
@@ -498,5 +500,48 @@ gauge freedom
 → ALS / one-site
 → two-site DMRG
 ```
+
+---
+
+## 12. 左右QRの資料を反映した学習の接続
+
+新しい添付資料では、Gauge変換、左QR、第2コアまでの左直交化、左ブロック直交性、右端QRと右ブロックまでを扱っている。対応する読み順は
+
+1. [[36_TT_MPSのGauge自由度と左QR直交化]]
+2. [[37_TT_MPSの左ブロックと直交性の導出]]
+3. [[38_TT_MPSの右QR直交化と右ブロック]]
+4. [[39_TT_MPSの混合正準形への導入]]
+
+とする。最後の混合正準形は、同じ元TTから $G_2^{[C]}=T_1G_2T_3^T$ を作る導入までである。資料中の実行報告と、教材の掲載・独立した小行列の検証は区別し、未実施のNotebook全体を検証済みとは扱わない。
+
+その次に、中心の意味 → 中心移動 → TT-rounding → TT/MPS演算 → TT-matrix/MPO → NN実験 → 局所最適化へ進む。これは学習順であって、全てを最初の重み近似の必須依存関係にするものではない。
+
+### CNNへ適用する際の二段階
+
+Fashion-MNIST MLPに加え、添付ではCNNのConv2d重みへのTT近似も候補になっている。第5部のMLPの方針を取り消すのではなく、追加の適用先として分ける。
+
+通常の重み順を
+
+$$
+W\in\mathbb R^{C_{\mathrm{out}}\times C_{\mathrm{in}}\times k_h\times k_w}
+$$
+
+とすると、例えば $32\times16\times3\times3$ の4階テンソルをそのままTT-SVDできる。内部bondを $(r_1,r_2,r_3)=(4,4,2)$ に選ぶと、biasを除く格納要素数は
+
+$$
+\begin{aligned}
+P_{\mathrm{dense}}&=32\cdot16\cdot3\cdot3=4608,\\
+P_{\mathrm{TT}}&=1\cdot32\cdot4+4\cdot16\cdot4+4\cdot3\cdot2+2\cdot3\cdot1\\
+&=128+256+24+6=414.
+\end{aligned}
+$$
+
+これは指定rankでの**表現の格納量**の例であり、重み誤差・accuracy・速度を保証する数値ではない。mode順を変えるとcut rankや適切なrank設定も変わり得る。
+
+段階AではTTコアから $\widehat W$ をdenseへ再構成し、元と同じConv2dで重み誤差、層出力誤差、accuracyを測る。ただし、denseの $\widehat W$ を通常の `nn.Conv2d` へ戻すだけでは、実行時の重み要素数や通常の畳み込みの理論MACsは減らない。「TTで少なく格納できる」と「圧縮層としてforwardする」は区別する。
+
+段階BではTTコアを保持した因子化層・直接縮約を設計し、実際のparameter数、理論MACs、latency、peak memory、fine-tuningによる回復を別に測る。4階重みの任意のTT表現が、そのまま直列の小さなConv2dに置換できるとは限らない。
+
+最初のdense重みからTTへの分解はTT-SVDであり、既存TTのrankを下げるTT-roundingとは異なる。初回の重み近似にtwo-site DMRGやTT-roundingを必須とはしない。二段階の具体的なCNN実装・実験結果は、この資料にはまだないため後続テーマとする。
 
 へ進む。

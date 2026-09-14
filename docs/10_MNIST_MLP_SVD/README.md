@@ -14,11 +14,11 @@ MNIST用MLPで、Linear SVDの基本、rank sweep、精度・圧縮率・MACs・
 正式なrank sweep結果は、
 
 ```text
-notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected.ipynb
-results/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected/
+notebooks/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun.ipynb
+results/10_svd/10_mnist_mlp/02_rank_accuracy_tradeoff_corrected_rerun/
 ```
 
-を優先する。
+を優先する。2026-09-12の完全保存runを現行出典とし、複製元correctedの記録も残す。
 
 ```text
 Selected rank: fc1=128, fc2=128
@@ -38,7 +38,7 @@ corrected版ではrankをvalidationで選び、testは最終選択した1構成�
 
 01〜03には初期実装・旧Notebookの数値や訂正履歴も含まれる。
 
-それらは学習履歴として有用だが、最終rank・accuracyを引用するときは04のcorrected結果を使う。
+それらは学習履歴として有用だが、最終rank・accuracyを引用するときは04のcorrected rerun結果を使う。
 
 ## 画像
 
