@@ -33,5 +33,18 @@ tests.zip
 
 # Training checkpoints at repo root only (keep local copies; do not delete)
 
+# Secrets / credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+
+# Obsidian local workspace state
+docs/.obsidian/workspace.json
+docs/.obsidian/workspace-mobile.json
 
 # Research records (CSV / figures) stay tracked. Do not ignore results/.
