@@ -161,8 +161,7 @@ $$
 $$
 
 
-元資料 `01_SVDとは.md` の157–177行で図示した特異値の対角部分を、
-本章のreduced SVDの記号へ対応させて残す。
+特異値が並ぶ対角部分を、本章のreduced SVDの記号で表示する。
 
 $$
 \Sigma_k=\begin{pmatrix}
@@ -175,12 +174,10 @@ $$
 
 完全SVDの $\Sigma$ は一般に $m\times n$ の長方形なので、
 この $k\times k$ の対角部分に、必要な零行・零列を補ったものになる。
-元資料の図を、完全SVDの長方形全体が必ず正方対角行列であるという意味には読まない。
+完全SVDの長方形の特異値行列全体が、正方対角行列であるとは限らない。
 PyTorchの
 
-```python
-torch.linalg.svd(W, full_matrices=False)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/00_SVD理論のPyTorch確認コード#PyTorch確認-001]]
 
 はこの形に対応し、`S` は特異値の1次元Tensor、`Vh` は $V_k^{\mathsf T}$ を返す。
 
@@ -420,9 +417,9 @@ reduced SVDの $V^{\mathsf T}$ が一般入力の長さまで保つという意�
 
 ---
 
-### 元教材の「単位円が楕円へ移る」を式で追う
+### 単位円が楕円へ移る過程を式で追う
 
-元教材 `01_SVDとは.md` の単位円の図は、入力方向・出力方向・拡大率を区別する説明である。ここでは $m=n=2$ の完全SVDを使い、図の内容に途中式を補う。右特異ベクトルは正規直交なので、
+単位円への作用を使って、入力方向・出力方向・拡大率を区別する。ここでは $m=n=2$ の完全SVDで途中式を追う。右特異ベクトルは正規直交なので、
 
 $$
 x(\theta)
@@ -500,7 +497,7 @@ $$
 \quad(\sigma_1,\sigma_2>0)
 $$
 
-となり、楕円の式になる。軸の向きは $u_1,u_2$、対応する入力方向は $v_1,v_2$、**半軸長**は $\sigma_1,\sigma_2$ である。端から端までの軸長なら $2\sigma_i$ なので、元教材の「主軸の長さ」を半軸長として明確化する。$\sigma_2=0$ なら線分、両方0なら一点へ退化し、零の特異値で割った楕円式は使わない。
+となり、楕円の式になる。軸の向きは $u_1,u_2$、対応する入力方向は $v_1,v_2$、**半軸長**は $\sigma_1,\sigma_2$ である。端から端までの軸長は $2\sigma_i$ なので、半軸長と区別する。$\sigma_2=0$ なら線分、両方0なら一点へ退化し、零の特異値で割った楕円式は使わない。
 
 ## 6. 固有値分解との関係
 
@@ -583,13 +580,13 @@ $$
 
 ---
 
-### 元教材の固有値分解との違いと、数値計算上の注意
+### 固有値分解との違いと、数値計算上の注意
 
-元教材では、固有値分解とSVDを同じ分解として扱わないことも説明している。固有値分解 $A=P\Lambda P^{-1}$ は正方行列に対する表現であり、行列によってはこの形に対角化できない。固有値は負や複素数にもなり、固有ベクトルも一般には正規直交でない。一方、実行列のSVDは長方形行列にも存在し、入力側 $V$ と出力側 $U$ を分け、特異値は非負になる。
+固有値分解とSVDは同じ分解ではない。固有値分解 $A=P\Lambda P^{-1}$ は正方行列に対する表現であり、行列によってはこの形に対角化できない。固有値は負や複素数にもなり、固有ベクトルも一般には正規直交でない。一方、実行列のSVDは長方形行列にも存在し、入力側 $V$ と出力側 $U$ を分け、特異値は非負になる。
 
-ここで $\sigma_i=\sqrt{\lambda_i}$ とした $\lambda_i$ は、$W$ 自身の固有値ではなく、半正定値行列 $W^{\mathsf T}W$ または $WW^{\mathsf T}$ の対応する固有値である。元教材の比較で重要なのは、この対象の違いである。
+ここで $\sigma_i=\sqrt{\lambda_i}$ とした $\lambda_i$ は、$W$ 自身の固有値ではなく、半正定値行列 $W^{\mathsf T}W$ または $WW^{\mathsf T}$ の対応する固有値である。固有値を求める対象を区別する。
 
-また、上の固有値との関係は理論を理解するための式であり、SVDを求める際に必ず $W^{\mathsf T}W$ を明示的に作るという実装手順ではない。元教材の数値誤差の注意を補うため、$m\ge n$ かつ $W$ が列full rankの場合を考える。$\sigma_n>0$ とすると、2-normでの条件数は
+また、上の固有値との関係は理論を理解するための式であり、SVDを求める際に必ず $W^{\mathsf T}W$ を明示的に作るという実装手順ではない。数値計算上の影響を見るため、$m\ge n$ かつ $W$ が列full rankの場合を考える。$\sigma_n>0$ とすると、2-normでの条件数は
 
 $$
 \begin{aligned}
@@ -611,7 +608,7 @@ $$
 \end{aligned}
 $$
 
-となる。元から特異値の大小差が大きいと、二乗によって条件がさらに悪化する。ここでの条件数の途中式は元教材の注意を本書で補ったものであり、実装ではライブラリのSVD関数を直接使う。rank欠損なら最小固有値が0なので、この有限な条件数の式をそのまま使わない。
+となる。特異値の大小差が大きいと、二乗によって条件がさらに悪化する。実装ではライブラリのSVD関数を直接使う。rank欠損なら最小固有値が0なので、この有限な条件数の式をそのまま使わない。
 
 ## 7. rankと特異値
 
@@ -658,9 +655,9 @@ $$
 
 ---
 
-### 元教材の特異値 $(8,3,0,0)$ をそのまま数える
+### 特異値 $(8,3,0,0)$ からrankを数える
 
-元教材のrank確認例は
+rankを確認する具体例として、
 
 $$
 (\sigma_1,\sigma_2,\sigma_3,\sigma_4)
@@ -921,7 +918,7 @@ $$
 
 $W_r$ のspectral残差は捨てた特異値の最大値 $\sigma_{r+1}$ なので、こちらも下界を達成する。
 $r=0$ では候補は零行列だけ、$r\ge k$ では $W$ 自体を候補にして誤差0を達成できる。
-この証明は元資料の最良近似という結論を補うもので、task accuracyの最適性を主張しない。
+この証明が示すのは行列ノルムでの最良近似であり、task accuracyの最適性ではない。
 
 ---
 
@@ -1288,9 +1285,9 @@ energy保持率とclassification accuracy保持率は別物である。
 
 ---
 
-### 元MDの特異値例を、energyと残差まで追う
+### 特異値の具体例を、energyと残差まで追う
 
-元資料の
+特異値を
 
 $$
 (\sigma_1,\sigma_2,\sigma_3,\sigma_4)=(10,4,1,0.5)
@@ -1328,7 +1325,7 @@ $$
 
 energyを約98.93%保持しても、相対Frobenius誤差は約10.33%である。energyの損失率と、平方根を取ったnormの相対誤差は同じ数値ではない。
 
-元教材 `03_SVDによる低ランク近似.md` の同じ特異値例では、spectral誤差も確認している。捨てた成分は $1$ と $0.5$ なので、
+同じ特異値例でspectral誤差も確認する。捨てた成分は $1$ と $0.5$ なので、
 
 $$
 \|W-W_2\|_2
@@ -1338,6 +1335,86 @@ $$
 $$
 
 となる。Frobenius誤差 $\sqrt{1.25}$ と最大成分だけを見るspectral誤差 $1$ は異なる。
+
+---
+
+### 特異値の和・二乗和と、信号や波動関数の二乗を区別する
+
+特異値の単純和と二乗和は、異なる量を定義する。本書のFrobenius energyには $\sum_i\sigma_i^2$ を使う。
+特異値は非負だが、二乗する理由は符号を消すためではない。
+第11節で導いた内積・直交性により、行列の全要素の二乗和が特異値の二乗和と一致するためである。
+
+一方、特異値の和は**核ノルム** $\|W\|_*=\sum_i\sigma_i$ を定める。
+具体例 $\sigma=(6,2,1)$ では、rank 1の二つの比率は
+
+$$
+\begin{aligned}
+R_*(1)&=\frac{6}{6+2+1}=\frac{2}{3}\approx0.6667,\\
+E(1)&=\frac{6^2}{6^2+2^2+1^2}=\frac{36}{41}\approx0.8780.
+\end{aligned}
+$$
+
+rank 2でも $R_*(2)=8/9\approx0.8889$ に対し $E(2)=40/41\approx0.9756$ となる。
+同じ「95%保持」でも核ノルム基準ではrank 3、Frobenius energy基準ではrank 2である。
+相対Frobenius誤差と対応するのは $\sqrt{1-E(r)}$ であって $\sqrt{1-R_*(r)}$ ではない。
+要素の絶対値和 $\sum_{a,b}|W_{a,b}|$ と、核ノルム $\sum_i\sigma_i$ も一般には異なる。
+
+信号処理との接続は、同じ二乗ノルムを別の基底で計算するという数学に対応する。
+離散信号 $x=(x_0,\ldots,x_{N-1})^{\mathsf T}$ を、unitaryなDFT行列
+
+$$
+F_{k,n}=\frac{1}{\sqrt N}e^{-2\pi\mathrm{i}kn/N},
+\qquad
+F^\dagger F=I_N,
+\qquad
+\hat x=Fx
+$$
+
+で変換すると、Parsevalの関係を途中から計算できる。
+
+$$
+\begin{aligned}
+\sum_k|\hat x_k|^2
+&=\hat x^\dagger\hat x\\
+&=x^\dagger F^\dagger Fx\\
+&=x^\dagger x\\
+&=\sum_n|x_n|^2.
+\end{aligned}
+$$
+
+$N=2,\ x=(1,2)^{\mathsf T}$ なら
+
+$$
+F=\frac{1}{\sqrt2}\begin{pmatrix}1&1\\1&-1\end{pmatrix},
+\qquad
+\hat x=\frac{1}{\sqrt2}\begin{pmatrix}3\\-1\end{pmatrix},
+\qquad
+1^2+2^2=\frac{3^2+(-1)^2}{2}=5.
+$$
+
+この有限列のenergyは $5$、sample当たりの平均二乗値は $5/2$ であり、
+energyの総和とpowerの平均を混同しない。
+通常の非正規化DFTなら $\sum_n|x_n|^2=(1/N)\sum_k|X_k|^2$ となる。
+連続Fourier変換も規約に依存し、$X(f)=\int x(t)e^{-2\pi\mathrm{i}ft}\,dt$ の規約なら
+$\int|x(t)|^2\,dt=\int|X(f)|^2\,df$ である。
+物理単位を持つ電気信号の実エネルギーには、時間刻みや抵抗などの条件が別途必要となる。
+
+量子力学では、規格化された波動関数にBorn則を適用して
+
+$$
+\int_{-\infty}^{\infty}|\psi(x,t)|^2\,dx=1,
+\qquad
+P(a\le x\le b)=\int_a^b|\psi(x,t)|^2\,dx
+$$
+
+と読む。$|\psi|^2$ は確率**密度**であり、区間で積分して初めて確率になる。
+二乗する理由を「複素数だから符号を消す」だけで説明しない。実数の波動関数にも同じBorn則を用いる。
+量子系の物理的なエネルギーは $\langle\psi|H|\psi\rangle$ であり、
+規格化ノルム $\langle\psi|\psi\rangle=1$ とは別の量である。
+NN weightのFrobenius energyも、そのまま量子確率やハミルトニアンのエネルギーを意味しない。
+Schmidt係数を規格化状態の確率へ接続する導出は
+[[16_TT_MPSの物理解釈_縮約密度行列と局所写像#2. Schmidt分解から縮約密度行列へ]] を参照し、
+ここではDMRGの計算手順を追加しない。
 
 ---
 
@@ -1412,15 +1489,11 @@ $$
 
 NumPy：
 
-```python
-U, S, Vh = np.linalg.svd(W, full_matrices=False)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/00_SVD理論のPyTorch確認コード#PyTorch確認-002]]
 
 PyTorch：
 
-```python
-U, S, Vh = torch.linalg.svd(W, full_matrices=False)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/00_SVD理論のPyTorch確認コード#PyTorch確認-003]]
 
 ここで
 
@@ -1434,20 +1507,15 @@ Vh : (k, n)
 
 rank$r$なら
 
-```python
-U_r = U[:, :r]
-S_r = S[:r]
-Vh_r = Vh[:r, :]
-W_r = (U_r * S_r) @ Vh_r
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/00_SVD理論のPyTorch確認コード#PyTorch確認-004]]
 
 と書ける。
 
 ---
 
-### 元教材の $5\times3$ の再構成例を手順ごとに確認する
+### $5\times3$ の再構成例を手順ごとに確認する
 
-元教材 `01_SVDとは.md` には、乱数で作った $5\times3$ 行列に対して、shape表示、対角行列の生成、再構成、許容誤差付き比較を順に行う例がある。呼び出し1行だけでなく、その確認手順も残す。
+乱数で作った $5\times3$ 行列に対して、shape表示、対角行列の生成、再構成、許容誤差付き比較を順に行う。
 
 $$
 m=5,\quad n=3,\quad k=\min(5,3)=3,
@@ -1474,44 +1542,15 @@ W_{\mathrm{restored}}
 U\,\operatorname{diag}(S)\,Vh
 $$
 
-と対応させる。元教材のNumPy側のshape・seed・乱数生成法を保持した確認コードは次のとおりである。
+と対応させる。NumPyでshape・seed・乱数生成法を固定した確認コードは次のとおりである。
 
-```python
-import numpy as np
+PyTorchの確認コード：[[05_SVD基礎実装検証/00_SVD理論のPyTorch確認コード#PyTorch確認-005]]
 
-# 元教材の5×3の行列。seedと生成法を固定して再構成を確認する。
-rng = np.random.default_rng(seed=0)
-W = rng.standard_normal((5, 3))
-U, S, Vh = np.linalg.svd(W, full_matrices=False)
+PyTorchでも同じshapeを確認する。両ライブラリでseedを0にしても、乱数生成器が異なるので行列の値まで同一になるという意味ではない。ここではそれぞれの入力が、それぞれのSVDから復元されるかを確認する。
 
-print("W :", W.shape)
-print("U :", U.shape)
-print("S :", S.shape)
-print("Vh:", Vh.shape)
-Sigma = np.diag(S)
-W_restored = U @ Sigma @ Vh
-assert np.allclose(W, W_restored, rtol=1e-10, atol=1e-10)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/00_SVD理論のPyTorch確認コード#PyTorch確認-006]]
 
-元教材のPyTorch側も同じshapeを確認する。両ライブラリでseedを0にしても、乱数生成器が異なるので行列の値まで同一になるという意味ではない。ここではそれぞれの入力が、それぞれのSVDから復元されるかを確認する。
-
-```python
-import torch
-
-# 元教材のPyTorch例。全成分を残すreduced SVDは打ち切り近似ではない。
-torch.manual_seed(0)
-W = torch.randn(5, 3, dtype=torch.float64)
-U, S, Vh = torch.linalg.svd(W, full_matrices=False)
-
-print("W :", tuple(W.shape))
-print("U :", tuple(U.shape))
-print("S :", tuple(S.shape))
-print("Vh:", tuple(Vh.shape))
-W_restored = U @ torch.diag(S) @ Vh
-assert torch.allclose(W, W_restored, rtol=1e-10, atol=1e-10)
-```
-
-元教材の `truncated_svd` という名前の関数は、復元済みの密行列 $W_r$ を返す例も含む。一方、[[07_PyTorch実装#3. 実装全体]] の同名関数は `(U_r, S_r, Vh_r)` の3因子を返す。名前が同じでも戻り値が異なるため、密行列を使いたいときは因子から `(U_r * S_r) @ Vh_r` と再構成する。具体的な列broadcastの要素対応は [[08_Linear層のSVD実装#対角行列積と列broadcastの要素を対応させる]] にまとめる。
+[[07_PyTorch実装#3. 実装全体]] の `truncated_svd` は `(U_r, S_r, Vh_r)` の3因子を返す。復元済みの密行列 $W_r$ が必要なら、因子から `(U_r * S_r) @ Vh_r` と再構成する。具体的な列broadcastの要素対応は [[08_Linear層のSVD実装#対角行列積と列broadcastの要素を対応させる]] にまとめる。
 
 ## 16. よくある誤解
 
@@ -1569,6 +1608,7 @@ parameters / MACsが減っても、kernel起動やハードウェア利用効率
 
 ## 18. 次に読むノート
 
+- PyTorchでのSVDと因子の扱い：[[05_SVD基礎実装検証/08_Linear層のSVD実装]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/02_SVD数式の導出]]
 - [[00_基礎理論/02_ニューラルネットワーク基礎/02_nn.Linearとは]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/03_SVDによる低ランク近似]]

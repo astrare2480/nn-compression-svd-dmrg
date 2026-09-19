@@ -44,6 +44,36 @@ best stateを復元
 
 ## 1. DatasetとDataLoader
 
+### Kerasの配列とPyTorch Datasetを区別する
+
+Kerasの `fashion_mnist.load_data()` はNumPy配列をまとめて返す。
+
+```text
+(x_train, y_train), (x_test, y_test)
+x_train: uint8 NumPy配列 (60000, 28, 28)
+y_train: uint8 NumPy配列 (60000,)
+x_test:  uint8 NumPy配列 (10000, 28, 28)
+y_test:  uint8 NumPy配列 (10000,)
+```
+
+`astype("float32") / 255.0` はdtypeと値域を変えるが、channel軸は追加しない。CNNへ渡すshapeは、Kerasのchannels-lastでは `(N, 28, 28, 1)`、PyTorchのConv2dでは `(N, 1, 28, 28)` である。
+
+一方、`datasets.FashionMNIST(...)` はDataset instanceを作る。`dataset[index]` で1画像とlabelを取得し、`ToTensor()` 後の画像は `(1, 28, 28)`、default collate後は `(B, 1, 28, 28)` になる。全配列を一括で返すAPIと、indexごとに変換・取得するAPIを混同しない。
+
+```python
+from torchvision import datasets
+from torchvision.datasets import FashionMNIST
+
+# Datasetは生成せず、二つの名前が同じclassを指すことだけ確認する。
+assert datasets.FashionMNIST is FashionMNIST
+```
+
+前者では `datasets.FashionMNIST(...)`、後者では `FashionMNIST(...)` と書く。transformは `from torchvision import transforms` で別に読み込む。
+
+[Keras Fashion-MNIST loader](https://www.tensorflow.org/api_docs/python/tf/keras/datasets/fashion_mnist/load_data)
+
+[torchvision FashionMNIST](https://docs.pytorch.org/vision/stable/generated/torchvision.datasets.FashionMNIST.html)
+
 `Dataset` は、サンプルとラベルを保持・取得するための入れ物である。
 `DataLoader` はDatasetからサンプルをまとめて取り出し、mini-batchとして学習ループへ渡す。
 
@@ -249,6 +279,32 @@ nn.BatchNorm2d
 
 ## 3. mini-batchと1 epoch
 
+### 60,000枚とbatch 64を、余りまで計算する
+
+通常のmap-style Datasetを1 epochに1回ずつ使い、1batchにつき1回updateする場合、
+
+$$
+60000=937\cdot64+32.
+$$
+
+`drop_last=False` なら937個のfull batchと32件の最終batchがあり、updateは1 epochに938回、10 epochなら $10\cdot938=9380$ 回である。`drop_last=True` なら1 epochは937回、使用件数は
+
+$$
+937\cdot64=59968
+$$
+
+で、32件を落とす。10 epochのupdateは9370回になる。
+
+60,000枚をtrain 55,000・validation 5,000へ分けた場合、train loaderでは
+
+$$
+55000=859\cdot64+24,
+\qquad
+\left\lceil\frac{55000}{64}\right\rceil=860.
+$$
+
+最終batchは24件、1 epochのupdateは860回であり、938回ではない。validationは通常optimizer updateに含めない。gradient accumulation、replacement sampling、途中終了、独自batch samplerを使う場合は、この単純なbatch数と実際のupdate数を分けて記録する。
+
 学習データ数を $N$、batch sizeを $B$ とすると、1 epochのbatch数はおおよそ、
 
 $$
@@ -333,9 +389,9 @@ forward
 
 と対応する。`backward()`は勾配を計算する処理であり、実際に重みを変更するのは`optimizer.step()`である。
 
-### 元資料の $y = 2x,\ z = y+3$ で計算グラフを確認する
+### $y = 2x,\ z = y+3$ で計算グラフを確認する
 
-元資料の最初のNN・SVD対話では、次の2段の計算で「計算履歴を記録する」とは何かを説明している。
+次の2段の計算で「計算履歴を記録する」とは何かを確認する。
 
 $$
 y = 2x,
@@ -358,12 +414,12 @@ $$
 \end{aligned}
 $$
 
-を得る。計算グラフは値そのもののコピーではなく、勾配を計算するための演算のつながりである。元資料の式に、確認用の値 $x=4$ を代入すると $y=8,\ z=11$ となる。以下の $x=4$ と後半の係数 $w=3$ は、本書で追加した動作確認用の値である。
+を得る。計算グラフは値そのもののコピーではなく、勾配を計算するための演算のつながりである。確認用の値 $x=4$ を代入すると $y=8,\ z=11$ となる。以下では $x=4$ と、後半の係数 $w=3$ を使って動作を確認する。
 
 ```python
 import torch
 
-# 元資料の y = 2*x, z = y+3 に対して、勾配だけを確認する。
+# y = 2*x, z = y+3 に対して、勾配だけを確認する。
 x = torch.tensor(4.0, requires_grad=True)
 y = 2 * x
 z = y + 3
@@ -406,6 +462,69 @@ $$
 複数epochでは、更新後の重みで同じデータを再び学習し、誤差を段階的に減らす。
 
 ---
+
+### 自分で書いたforwardと、train・evalの切替は矛盾しない
+
+`forward`を自分で定義していても、
+`train()` がforwardのコードを書き換えるのではなく、Moduleの `training` flagを切り替えるということである。
+登録済みの子Moduleにも切替が伝わり、DropoutやBatchNormなどがそのflagを読んで動作を選ぶ。
+自作forwardも `self.training` を明示的に読める。
+
+次は実際のDropoutではなく、切替を決定的に観察するための最小例である。
+
+$$
+f(x)=
+\begin{cases}
+2wx,&\text{training=True},\\
+wx,&\text{training=False}.
+\end{cases}
+$$
+
+$$
+w=3,\ x=2
+\quad\Longrightarrow\quad
+f_{\mathrm{train}}(x)=12,\qquad f_{\mathrm{eval}}(x)=6.
+$$
+
+```python
+import torch
+from torch import nn
+
+
+class ModeFlagExample(nn.Module):
+    """同じforwardがtraining flagを読むことだけを確認する。"""
+    def __init__(self):
+        super().__init__()
+        self.weight = nn.Parameter(torch.tensor(3.0))
+
+    def forward(self, x):
+        # 切替時もこのコード自体は同じであり、読むflagだけが変わる。
+        scale = 2.0 if self.training else 1.0
+        return scale * self.weight * x
+
+
+model = ModeFlagExample()
+x = torch.tensor(2.0)
+model.train()
+assert model(x).item() == 12.0
+model.eval()
+y = model(x)
+assert y.item() == 6.0
+# evalでもautogradは止まらず、∂(wx)/∂w = x = 2を計算できる。
+assert torch.autograd.grad(y, model.weight)[0].item() == 2.0
+with torch.no_grad():
+    inference_value = model(x)
+assert not inference_value.requires_grad
+assert model.weight.requires_grad
+```
+
+通常のLinear/ReLUだけのMLPでは、forwardがこのflagを読まないため、
+同じ重み・入力ならtrain/evalの数値は変わらない。それでも推論時に `eval()` を明示する。
+`eval()` と `no_grad()` は別の制御であり、後者だけではDropoutやBatchNormを評価動作にしない。
+標準のTensor演算を使うforwardでは、各演算の微分をPyTorchがつなぐので、
+Moduleの `backward()` を自分で実装する必要はない。
+独自の `torch.autograd.Function` を定義する場合は別であるが、この例では使わない。
+[Moduleのtrain仕様](https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.train)。
 
 ## 4. epochを増やす理由と過学習
 
@@ -556,6 +675,14 @@ fc2.bias
 `state_dict` を別構造のモデルへそのままloadすることはできない。
 keyとshapeが対応する必要がある。
 
+### 凍結parameterも含むが、学習再開の全状態ではない
+
+`state_dict()` は `requires_grad=True` のparameterだけを保存するものではない。登録済みparameterはfreeze中も含まれ、persistent bufferも含まれる。BatchNormでは、設定に応じてweight・biasに加え、running mean、running variance、`num_batches_tracked` が入る。一方、`persistent=False` のbufferは含まれない。
+
+辞書単体にはclass定義、ネットワーク構築コード、optimizer内部状態、learning rate設定、epoch、Early Stoppingのcounter、loss履歴が全て入るわけではない。重みの復元と、中断した学習を完全に再開するcheckpointは別である。
+
+[Moduleとstate_dictの公式仕様](https://docs.pytorch.org/docs/stable/generated/torch.nn.Module.html)
+
 ---
 
 ## 9. `copy.deepcopy(model.state_dict())`
@@ -590,6 +717,41 @@ load_state_dict = 器へparameterを読み戻す
 
 `model = copy.deepcopy(best_model_state)` では、辞書をモデル変数へ入れるだけなのでモデル復元にならない。
 
+### 最良圧縮状態を戻してから、独立backupを作る
+
+`model.load_state_dict(best_state)` は、既に作ったモデルへ保存値を読み戻す。その直後の `copy.deepcopy(model.state_dict())` は、読み戻した値を後の更新から独立させる。変数名だけではFT前かFT後かを判定できないため、どの段階で保存した辞書をloadしたかを記録する。
+
+```python
+import copy
+
+import torch
+
+# 学習せず、load→snapshot→値変更→restoreだけを確認する。
+model = torch.nn.Linear(2, 1, bias=False, dtype=torch.float64)
+with torch.no_grad():
+    model.weight.copy_(torch.tensor([[2.0, 3.0]], dtype=torch.float64))
+
+best_state = copy.deepcopy(model.state_dict())
+with torch.no_grad():
+    model.weight.fill_(-1)
+
+model.load_state_dict(best_state)
+before_update = copy.deepcopy(model.state_dict())
+
+with torch.no_grad():
+    model.weight.add_(10)
+
+torch.testing.assert_close(
+    before_update["weight"],
+    torch.tensor([[2.0, 3.0]], dtype=torch.float64),
+)
+
+model.load_state_dict(before_update)
+torch.testing.assert_close(model.weight, before_update["weight"])
+```
+
+defaultの `load_state_dict(..., assign=False)` は既存parameterへ値をcopyする。単なるPython変数の再代入ではなく、別shape・別keyの構造へ万能に読み込めるものでもない。
+
 ---
 
 ## 11. モデル本体をコピーする場合
@@ -611,24 +773,23 @@ state = copy.deepcopy(model.state_dict())
 - モデルdeepcopy：独立したモデルオブジェクトを作る
 - state_dict deepcopy：ある時点のparameter値を保存する
 
-### 元資料の入れ子listで、代入・shallow copy・deep copyを区別する
+### 入れ子listで、代入・shallow copy・deep copyを区別する
 
-添付 `CNNとMLP (1).md` の5849–5939行は、独立なコピーの意味を
-`[[1, 2], [3, 4]]` で確認している。`b = a` はコピーでなく別名であり、
+独立なコピーの意味を `[[1, 2], [3, 4]]` で確認する。`b = a` はコピーでなく別名であり、
 `copy.copy(a)` は外側のlistだけを作り直して内側のlistを共有する。
 `copy.deepcopy(a)` はこの例では内側まで複製する。
 
 ```python
 import copy
 
-# 元資料の最初の例。内側の値を変えても元のlistには伝わらない。
+# deep copyなら、内側の値を変えても元のlistには伝わらない。
 a = [[1, 2], [3, 4]]
 b = copy.deepcopy(a)
 b[0][0] = 999
 assert a == [[1, 2], [3, 4]]
 assert b == [[999, 2], [3, 4]]
 
-# 元資料の比較例は、元の値へ戻してから三種類を作る。
+# 元の値へ戻してから、三種類の参照・コピーを作る。
 a = [[1, 2], [3, 4]]
 alias = a
 shallow = copy.copy(a)
@@ -645,8 +806,7 @@ deep[0][0] = 30
 assert a[0][0] == 20 and deep[0][0] == 30
 ```
 
-元資料の `b[^43_0][^43_0]` 等は、引用マーカーが添字へ混入した表記なので
-`b[0][0]` へ直した。同じ意味で `original_model = model` は元モデルの別名にすぎず、
+同じ意味で `original_model = model` は元モデルの別名にすぎず、
 それだけでは圧縮やfine-tuningの変更から保護できない。
 モデル本体のdeep copyと、ある時点のstate_dictのdeep copyも引き続き区別する。
 
@@ -723,6 +883,48 @@ optimizerは継承しない
 と覚えると分かりやすい。
 
 同じParameterを保ったまま構造を変えない学習フェーズなら、optimizerを再利用できる場合もある。ただしlearning rateやoptimizer stateを新しいphaseとしてリセットしたい場合は作り直す。
+
+### 因子化すると、同じlearning rateでもdenseと同じ更新にはならない
+
+因子を学習する場合、現在の積が同じでもparameter化によって更新則が変わる。scalar例として
+
+$$
+w=ab,
+\qquad
+\ell(w)=\frac12(w-t)^2,
+\qquad
+e=w-t
+$$
+
+とする。連鎖律から
+
+$$
+\frac{\partial\ell}{\partial w}=e,
+\qquad
+\frac{\partial\ell}{\partial a}=be,
+\qquad
+\frac{\partial\ell}{\partial b}=ae.
+$$
+
+同じ更新前の $a,b$ で両勾配を計算するSGDでは、
+
+$$
+\begin{aligned}
+a'&=a-\eta be,
+&b'&=b-\eta ae,\\
+w'=a'b'
+&=(a-\eta be)(b-\eta ae)\\
+&=ab-\eta(a^2+b^2)e+\eta^2ab e^2.
+\end{aligned}
+$$
+
+dense parameterを直接更新する $w'=w-\eta e$ とは一般に一致しない。$a=b=1$、$t=0$、$\eta=0.1$ なら、denseは $1-0.1=0.9$ だが、因子は $a'=b'=0.9$ なので
+
+$$
+w'=0.9\cdot0.9=0.81.
+$$
+
+このSGDの導出を、そのままAdamの更新式とは扱わない。因子化の効果と追加epochの効果を区別する比較は [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計#FTによる回復は、性能上限やrank不足の証明ではない]] を参照する。
 
 ### 新しいfine-tuningと中断した学習の再開は別
 
@@ -1046,6 +1248,25 @@ $$
 PyTorchの `CrossEntropyLoss` はlogitを入力としてこの処理を行うので、通常はその直前にsoftmaxを追加しない。
 実装上の安定なlog-softmax計算と全体評価の集計は [[06_誤差評価]] と [[10_SVD圧縮モデルの評価設計]] へ接続する。
 
+#### 正解確率0.51と0.99を同じ式へ代入する
+
+正解class 3の確率が0.51と0.99で、それぞれが最大確率なら、どちらもclass 3を予測してaccuracyへの寄与は1になる。しかしhard labelのCross Entropyは
+
+$$
+\begin{aligned}
+\ell_A
+&=-\sum_c\mathbf1\{c=3\}\log p_c
+=-\log0.51
+\approx0.673345,\\
+\ell_B
+&=-\sum_c\mathbf1\{c=3\}\log p_c
+=-\log0.99
+\approx0.010050.
+\end{aligned}
+$$
+
+同じ正解でもconfidenceを区別する。反対にconfidenceが大きい誤りには大きなlossが出るため、全体accuracyの順位と平均lossの順位も常に一致するとは限らない。
+
 ---
 
 ## 17. 実験コードの役割分担
@@ -1067,7 +1288,7 @@ GPUへの転送やkernel起動のoverheadの方が大きくなりうる。
 ## 18. 関連ノート
 
 - [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
-- [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]]
+- [[05_SVD基礎実装検証/09_Linear層の2層置換_実装]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
 - [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
 - [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]

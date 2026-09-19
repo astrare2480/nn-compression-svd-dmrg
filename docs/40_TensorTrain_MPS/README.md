@@ -2,7 +2,7 @@
 
 このディレクトリは、SVD → Tucker / HOSVD / HOOIの次に進む **Tensor Train（TT）/ Matrix Product State（MPS）** 学習用。
 
-現時点では独立したTT/MPS実装・実験はまだ未着手で、次の学習フェーズとして準備している。
+TT/MPS基礎の理論と小さいTensorでのPyTorch確認を進めている。NN重みのTT圧縮・学習実験は、ここで完了したとは扱わない。
 
 ## 前提として完了した内容
 
@@ -68,7 +68,9 @@ src
 
 とする。
 
-理論ノートを追加する場合も、[[00_基礎理論/00_数式導出監査]] と同じ基準で、reshape / unfolding / SVD / truncate / core / reconstruction / errorを途中式から残す。
+理論ノートでは、reshape / unfolding / SVD / truncate / core / reconstruction / errorを途中式から確認する。
+
+直交中心の移動は [[00_基礎理論/01_数学基礎/02_テンソル代数/41_TT_MPSの直交中心の移動]]、ブロック状態としての意味は [[00_基礎理論/07_物理基礎/42_MPS正準形と直交中心の物理的意味]]、PyTorchでのshape・QR・収縮の確認は [[40_TensorTrain_MPS/01_直交中心移動のPyTorch確認]] を参照する。中心だけの摂動と等長性を検証する場合は [[40_TensorTrain_MPS/02_混合正準形の中心摂動と等長性のPyTorch確認]] へ進む。既存の学習NotebookのTODOはこの実装ノートでは変更しない。
 
 ## 先に読む
 

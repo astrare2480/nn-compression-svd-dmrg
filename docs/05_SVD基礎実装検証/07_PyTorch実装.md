@@ -189,7 +189,7 @@ Vh_r : (64, 784)
 
 ## 3. 実装全体
 
-以下のコードは、この章で使う機能を1つのモジュールとしてまとめたものである。
+以下のコードは、この章で使う機能を1つのモジュールとしてまとめた教材用の例である。現行リポジトリの `src/nn_compression/` と同一の公開APIを示すものではない。実際の共通関数の入出力・制約は [[07_src設計/05_Core_API_v1]] を参照する。
 
 たとえば、
 
@@ -1721,9 +1721,9 @@ print(metrics)
 
 ---
 
-### 元教材のコサイン類似度平均を別の指標として補う
+### コサイン類似度平均を別の指標として計算する
 
-元教材の `06_誤差評価.md` では、`TensorErrorMetrics` に `cosine_similarity_mean` も含めていた。本書の第3節のデータクラスにはこのfieldがないため、上の `compare_tensors` の結果にコサイン類似度平均が含まれると解釈してはいけない。既存のデータクラスを変更せず、元教材の「最後の軸を特徴量として、非零ベクトル同士だけ平均する」処理を別に補う。
+本書の第3節の `TensorErrorMetrics` には `cosine_similarity_mean` のfieldがないため、上の `compare_tensors` の結果にコサイン類似度平均が含まれると解釈してはいけない。最後の軸を特徴量として、非零ベクトル同士だけ平均する処理を別に定義する。
 
 入力shapeを $(N_1,\ldots,N_s,D)$ とすれば、最後の軸以外をまとめたベクトル数は $M=N_1\cdots N_s$ である。`reshape(-1, D)` 後の行 $m$ を $y_m,\widehat y_m$ とし、両方のノルムが正の行の集合を
 
@@ -1767,7 +1767,7 @@ def cosine_similarity_mean(
     reference: torch.Tensor,
     approximation: torch.Tensor,
 ) -> float | None:
-    """元教材の非零ベクトルだけを平均する処理を、別指標として計算する。"""
+    """非零ベクトル同士のコサイン類似度を、別指標として平均する。"""
     if reference.shape != approximation.shape:
         raise ValueError("tensor shapes must match.")
     if reference.numel() == 0:
@@ -1791,7 +1791,7 @@ def cosine_similarity_mean(
     if not bool(valid.any()):
         return None
 
-    # 元教材と同様にPyTorchの安定化されたコサイン計算を使う。
+    # PyTorchの安定化されたコサイン計算を使う。
     similarities = F.cosine_similarity(
         reference_rows[valid],
         approximation_rows[valid],
@@ -1802,7 +1802,7 @@ def cosine_similarity_mean(
 
 このコードは同一deviceの有限な実数の浮動小数点Tensorを比較する教材用の処理である。数学的な非零判定と、`F.cosine_similarity` が極小ノルムに対して使うepsilonによる安定化は別であり、極小ベクトルでは上の数学的な比と実装値が一致するとは限らない。
 
-要素を追うため、本書で追加した次の小さい例を使う。元教材にあった数値例ではなく、零行を除く理由の確認用である。
+要素を追うため、次の小さい例で零行を除く理由を確認する。
 
 $$
 Y=
@@ -1858,7 +1858,7 @@ assert cosine_similarity_mean(reference, approximation) == 0.5
 assert cosine_similarity_mean(torch.zeros(2, 3), torch.ones(2, 3)) is None
 ```
 
-同様に、元教材の `WeightErrorMetrics.weight_mse` と `weight_rmse` は、本書のデータクラスでは `mse` と `rmse` という名前である。計算する指標は同じでもfield名まで同一ではないことを、原資料との対応では区別する。
+重み誤差を `weight_mse` と `weight_rmse` と呼ぶこともあるが、本書の `WeightErrorMetrics` のfield名は `mse` と `rmse` である。表示上の指標名と、コードで参照するfield名を区別する。
 
 ## 16. 重み誤差
 
@@ -2521,13 +2521,13 @@ for rank in ranks:
 
 ---
 
-### 元教材の1回のSVDを共有したrank評価と、全特異値の扱い
+### 1回のSVDを共有したrank評価と、全特異値の扱い
 
-元教材 `03_SVDによる低ランク近似.md` の `evaluate_weight_ranks` は、元重みへSVDを1回行い、同じ因子を切り出して複数rankを比較している。上の各rankで層を作る比較と目的は共通だが、元教材の「同じ分解の尾部を再利用する」という計算手順も残す。
+元重みへSVDを1回行い、同じ因子を切り出して複数rankを比較する方法もある。上の各rankで層を作る比較と目的は共通だが、同じ分解の尾部を再利用すれば、rankごとにSVDをやり直す必要がない。
 
-元教材の `LowRankFactors.singular_values` は、保持した `S_r` だけでなく全特異値 `S` を返す例である。一方、本書の `factor_weights` の第3戻り値は `S_r` である。`S_r` の二乗和を分母にも使うと保持率が常に1になり、捨てた成分を評価できない。energyと尾部誤差には、元重みの全特異値 `S` を保存するか、`torch.linalg.svdvals(weight)` で取得する。
+全特異値 `S` と、保持した部分 `S_r` は異なる。本書の `factor_weights` の第3戻り値は `S_r` である。`S_r` の二乗和を分母にも使うと保持率が常に1になり、捨てた成分を評価できない。energyと尾部誤差には、元重みの全特異値 `S` を保存するか、`torch.linalg.svdvals(weight)` で取得する。
 
-具体的には、元教材の $W:(6,4)$、$r=3$ の因子確認例なら、
+具体的には、$W:(6,4)$、$r=3$ の因子確認例なら、
 
 $$
 A:(3,4),\qquad B:(6,3),\qquad
@@ -2537,7 +2537,7 @@ $$
 
 である。再構成後のshapeが元と同じでも、rank 3では第4特異成分を捨てている。全成分を戻す確認は $r=k=\min(6,4)=4$ で別に行い、丸め誤差を許容して比較する。
 
-以下は元教材の手順・出力指標を本書の記号へ合わせたものである。元教材で零行列に対する比率をそのまま計算していた部分は、数学的に未定義なので `None` として区別する。これは第3節の `retained_energy` が零行列に1を返す実装上の規約とは別である。
+以下の関数で、1回のSVDから複数rankの指標を計算する。零行列に対するenergyの比率は数学的に未定義なので `None` として区別する。これは第3節の `retained_energy` が零行列に1を返す実装上の規約とは別である。
 
 ```python
 import torch
@@ -2547,7 +2547,7 @@ def evaluate_svd_weight_ranks(
     weight: torch.Tensor,
     ranks: list[int],
 ) -> list[dict[str, float | int | None]]:
-    """元教材と同様、1回のSVDから複数rankの重み誤差を比較する。"""
+    """1回のSVDから複数rankの重み誤差を比較する。"""
     if weight.ndim != 2 or weight.numel() == 0:
         raise ValueError("weight must be a nonempty 2D tensor.")
 
@@ -2584,12 +2584,12 @@ def evaluate_svd_weight_ranks(
     return rows
 ```
 
-元教材の理論誤差確認に使った $8\times5$ 行列とrank 2を、この同じ関数で確認できる。表はpandasへ渡し、重み誤差・保持率だけの評価と分かる名前にする。
+$8\times5$ 行列とrank 2で理論誤差を確認する。表はpandasへ渡し、重み誤差・保持率だけの評価と分かる名前にする。
 
 ```python
 import pandas as pd
 
-# 元教材の8×5・rank 2・seed 0の条件。モデル精度を測る実験ではない。
+# 8×5・rank 2・seed 0の条件。モデル精度を測る実験ではない。
 torch.manual_seed(0)
 weight = torch.randn(8, 5, dtype=torch.float64)
 weight_rank_metrics = pd.DataFrame(
@@ -2597,13 +2597,13 @@ weight_rank_metrics = pd.DataFrame(
 )
 print(weight_rank_metrics)
 
-# 元教材の特異値列による確認。rank選択のkeyword名は正本に合わせる。
+# 特異値列から保持率と最小rankを確認する。
 singular_values = torch.tensor([10.0, 4.0, 1.0, 0.5], dtype=torch.float64)
 assert abs(retained_energy(singular_values, rank=2) - 116 / 117.25) < 1e-12
 assert rank_for_energy(singular_values, target_energy=0.98) == 2
 ```
 
-元教材の `rank_for_energy(..., target=...)` は、正本では `target_energy=...` というkeyword名である。計算する最小rankは同じでも、名前まで同じだと考えて呼び出さない。ここでは重みだけを比較しており、層出力・logits・loss・accuracyやfine-tuning後性能は別に測る。
+`rank_for_energy` のkeyword名は `target_energy` である。呼び出しでは関数定義の名前へ合わせる。ここでは重みだけを比較しており、層出力・logits・loss・accuracyやfine-tuning後性能は別に測る。
 
 ## 36. rankごとの層出力評価
 
@@ -3136,7 +3136,7 @@ pytestを使う場合は、各関数を `test_` で始めたファイルへ保�
 
 ## 46. 最初の推奨ファイル構成
 
-実験が大きくなったら、次のように分ける。
+次は、学習用の小規模な実験を分割する場合の構成例である。現行リポジトリのディレクトリ構成を表すものではない。
 
 ```text
 nn-svd-experiment/
@@ -3382,11 +3382,11 @@ flowchart TD
 このノートは、再利用可能なPyTorch実装の全体設計を扱う。関数ごとの疑問、shape、テスト、実測手順は次へ分離した。
 
 - [[README_実装編]]
-- [[00_基礎理論/05_PyTorch実装/08_Linear層のSVD実装]]
-- [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]]
+- [[05_SVD基礎実装検証/08_Linear層のSVD実装]]
+- [[05_SVD基礎実装検証/09_Linear層の2層置換_実装]]
 - [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
 - [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
 
 特に、`detach()` と `torch.no_grad()` の使い分け、`model.fc1` をSequentialへ置換したときのModule登録、optimizerの再生成は実装詳細編で扱う。
 
-コード本体はMarkdownと分け、`code/` 以下へ保存する。
+この教材のコードを独立した演習として保存する場合は、Markdownと分けて管理する。現行プロジェクトの再利用可能な実装は `src/nn_compression/` にある。

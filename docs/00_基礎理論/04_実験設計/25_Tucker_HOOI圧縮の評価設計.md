@@ -182,9 +182,7 @@ TensorLyは、可能な限り同じrank、SVD初期化、最大iteration、停�
 
 GPUでは演算が非同期なので、時間計測の前後で必要に応じて
 
-```python
-torch.cuda.synchronize()
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/25_評価設計のPyTorchコード#PyTorch確認-001]]
 
 を入れる。
 
@@ -301,6 +299,149 @@ $$
 を明示的に区別する。
 
 この評価枠組みは次のTT/MPSでも引き継ぐ。
+
+### weight誤差以外の目的を、全要素で区別する
+
+weight relative errorはweightの全要素を同じ重みで比較する。しかし、実データを通した後の振る舞いを評価・学習するときは比較対象が変わる。代表的なfeature-map損失は
+
+$$
+\mathcal L_{\mathrm{feature}}
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\left\|
+F_{\mathrm{baseline}}(x_n)
+-F_{\mathrm{compressed}}(x_n)
+\right\|_F^2
+$$
+
+である。1sampleの小さい例として
+
+$$
+F_{\mathrm{baseline}}
+=
+\begin{pmatrix}
+1&2\\
+0&-1
+\end{pmatrix},
+\qquad
+F_{\mathrm{compressed}}
+=
+\begin{pmatrix}
+1&1\\
+1&-1
+\end{pmatrix}
+$$
+
+なら、差と二乗和は
+
+$$
+\begin{aligned}
+F_{\mathrm{baseline}}-F_{\mathrm{compressed}}
+&=
+\begin{pmatrix}
+0&1\\
+-1&0
+\end{pmatrix},\\
+\left\|
+F_{\mathrm{baseline}}-F_{\mathrm{compressed}}
+\right\|_F^2
+&=0^2+1^2+(-1)^2+0^2=2.
+\end{aligned}
+$$
+
+$N=1$ なら $\mathcal L_{\mathrm{feature}}=2$ である。要素平均を使う実装では、さらに要素数4で割って0.5になるため、`sum` か `mean` かも固定する。
+
+最終logitを比較するなら、
+
+$$
+\mathcal L_{\mathrm{logit}}
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\left\|
+z_{\mathrm{baseline}}(x_n)
+-z_{\mathrm{compressed}}(x_n)
+\right\|_2^2.
+$$
+
+例えば
+
+$$
+z_{\mathrm{baseline}}
+=
+\begin{pmatrix}
+2\\
+0
+\end{pmatrix},
+\qquad
+z_{\mathrm{compressed}}
+=
+\begin{pmatrix}
+1.5\\
+0.5
+\end{pmatrix}
+$$
+
+なら、
+
+$$
+\left\|
+z_{\mathrm{baseline}}-z_{\mathrm{compressed}}
+\right\|_2^2
+=(2-1.5)^2+(0-0.5)^2
+=0.5.
+$$
+
+両方とも第1成分が最大なので予測classは同じである。accuracyだけではこの差を0として扱うが、logit損失は出力値の変化を捉える。
+
+温度 $T$ を使うknowledge distillationなら、baselineをteacherとして
+
+$$
+\mathcal L_{\mathrm{KD}}
+=
+T^2
+\operatorname{KL}
+\left(
+\operatorname{softmax}
+\left(
+\frac{z_{\mathrm{baseline}}}{T}
+\right)
+\,\middle\|\,
+\operatorname{softmax}
+\left(
+\frac{z_{\mathrm{compressed}}}{T}
+\right)
+\right)
+$$
+
+を使える。正解labelを直接使うtask損失は
+
+$$
+\mathcal L_{\mathrm{task}}
+=
+\frac{1}{N}
+\sum_{n=1}^{N}
+\operatorname{CE}
+\left(
+y_n,
+f_{\mathrm{compressed}}(x_n)
+\right)
+$$
+
+である。目的に応じて、
+
+$$
+\mathcal L
+=
+\mathcal L_{\mathrm{task}}
++\lambda_{\mathrm{feature}}\mathcal L_{\mathrm{feature}}
++\lambda_{\mathrm{logit}}\mathcal L_{\mathrm{logit}}
+$$
+
+のように組み合わせる。
+
+標準HOOIで上位左特異ベクトルを選べるのは、直交射影に対するweight Frobenius誤差を目的にしているからである。feature-map、logit、KD、Cross Entropyには入力データや後段の非線形処理が入り、同じSVDの閉形式更新へ単純には置き換えられない。HOSVDまたはHOOIでfactor/coreを初期化し、3層Convへ置換した後にbackpropagationでこれらの損失を最適化する、という役割分担になる。
 
 ---
 

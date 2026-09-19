@@ -287,13 +287,7 @@ $$
 
 元のLinear層を、
 
-```python
-nn.Linear(
-    in_features=D_in,
-    out_features=D_out,
-    bias=True,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-001]]
 
 とする。
 
@@ -372,21 +366,9 @@ $$
 
 圧縮後を次の2層とする。
 
-```python
-nn.Linear(
-    D_in,
-    rank,
-    bias=False,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-002]]
 
-```python
-nn.Linear(
-    rank,
-    D_out,
-    bias=True,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-003]]
 
 ### 前段重み
 
@@ -1034,12 +1016,7 @@ flowchart TD
 
 MNIST MLPの第1層を考える。
 
-```python
-nn.Linear(
-    in_features=784,
-    out_features=512,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-004]]
 
 重み形状は、
 
@@ -1265,12 +1242,7 @@ $$
 
 MNISTの出力層を考える。
 
-```python
-nn.Linear(
-    in_features=512,
-    out_features=10,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-005]]
 
 元の重み数は、
 
@@ -1469,12 +1441,7 @@ $$
 
 たとえば、
 
-```python
-nn.Linear(
-    16,
-    8,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-006]]
 
 の元重み数は、
 
@@ -2159,9 +2126,7 @@ flowchart TD
 
 GPUでは非同期実行のため、計測前後に、
 
-```python
-torch.cuda.synchronize()
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-007]]
 
 が必要になる。
 
@@ -2339,6 +2304,63 @@ $$
 エネルギー保持率はrank候補を絞るための指標であり、最終判断にはタスク評価が必要である。
 
 ---
+
+### 二乗特異値分布から定義する有効rank
+
+NN重みの特異値の集中度を、有効rankで要約する。これはDMRGの更新アルゴリズムではなく、NN重みの補助指標である。
+非零行列の特異値について
+
+$$
+p_i=\frac{\sigma_i^2}{\sum_j\sigma_j^2},\qquad
+H=-\sum_{i:p_i>0}p_i\log p_i,\qquad
+r_{\mathrm{eff},\sigma^2}=\exp(H)
+$$
+
+と定義する。$\log$ は自然対数であり、零成分は
+$\lim_{p\to0^+}p\log p=0$ として扱う。
+ここで使う定義は、**二乗特異値を正規化する一例**である。
+「effective rank」という名称だけでは一意に決まらず、
+$\sigma_i/\sum_j\sigma_j$ を使う定義などと数値が異なるので、
+実験では使った $p_i$ の式を併記する。
+
+検算用の数値例を一つ示す。
+
+$$
+W=\begin{pmatrix}\sqrt3&0\\0&1\end{pmatrix},\qquad
+\sigma_1=\sqrt3,\quad\sigma_2=1.
+$$
+
+$$
+\begin{aligned}
+\sum_j\sigma_j^2&=(\sqrt3)^2+1^2=4,\\
+p_1&=\frac34,\qquad p_2=\frac14,\\
+H&=-\frac34\log\frac34-\frac14\log\frac14
+\simeq0.562335,\\
+r_{\mathrm{eff},\sigma^2}&=\exp(0.562335\ldots)\simeq1.754765.
+\end{aligned}
+$$
+
+この行列のexact rankは2だが、集中度指標は約1.755であって整数ではない。
+この値をそのまま圧縮rankに丸める規則や、accuracyの保証はない。
+一般に非零特異値が $q$ 本なら
+
+$$
+0\le H\le\log q,\qquad
+1\le r_{\mathrm{eff},\sigma^2}\le q.
+$$
+
+1本だけなら $p_1=1,\ H=0,\ r_{\mathrm{eff},\sigma^2}=1$、
+$q$ 本が等しいなら
+
+$$
+H=-q\frac1q\log\frac1q=\log q,\qquad
+r_{\mathrm{eff},\sigma^2}=\exp(\log q)=q
+$$
+
+となる。零行列では分母が0でこの定義は未定義であり、
+exact rank 0と、有効rankの規約を区別する。
+これはNN重みの特異値分布の集中度であり、
+量子状態を定義していない重みへ物理的エンタングルメントを付与する説明ではない。
 
 ## 40. rankの選び方：固定候補
 
@@ -2898,6 +2920,62 @@ $$
 
 ---
 
+### 5候補を、正規化と距離まで数値で追う
+
+説明用の候補を
+
+$$
+\begin{pmatrix}
+r&L_{\mathrm{val}}\\
+4&0.80\\
+8&0.55\\
+16&0.40\\
+32&0.36\\
+64&0.35
+\end{pmatrix}.
+$$
+
+ここでは一つの層だけを変え、他のparameterが固定で、
+$P(r)=P_0+Cr$、$C>0$ と仮定する。このときparameter数のMin-Max値はrankのMin-Max値と一致する。
+多層rankの組合せならこの仮定は一般に成立せず、実際の全parameter数を横軸にする。
+
+$$
+x_r=\frac{r-4}{64-4}=\frac{r-4}{60},
+\qquad
+y_r=\frac{L_{\mathrm{val}}(r)-0.35}{0.80-0.35}
+=\frac{L_{\mathrm{val}}(r)-0.35}{0.45}.
+$$
+
+全候補は
+
+$$
+\begin{pmatrix}
+r&x_r&y_r\\
+4&0&1\\
+8&1/15&4/9\\
+16&1/5&1/9\\
+32&7/15&1/45\\
+64&1&0
+\end{pmatrix}.
+$$
+
+端点 $(0,1),(1,0)$ を結ぶ直線は $x+y-1=0$ なので
+
+$$
+\begin{aligned}
+d_4&=|0+1-1|/\sqrt2=0,\\
+d_8&=|1/15+4/9-1|/\sqrt2=22/(45\sqrt2)\approx0.34570,\\
+d_{16}&=|1/5+1/9-1|/\sqrt2=31/(45\sqrt2)\approx0.48712,\\
+d_{32}&=|7/15+1/45-1|/\sqrt2=23/(45\sqrt2)\approx0.36141,\\
+d_{64}&=|1+0-1|/\sqrt2=0.
+\end{aligned}
+$$
+
+最大距離のrank 16を、この定義のknee候補とする。
+最良lossのrank 64、最小parameterのrank 4とは選ぶ目的が違う。
+rank 16が最大距離になることは、この軸・正規化・端点の下で確認できる。
+距離の実装とDataFrameの行取得は [[13_PandasとPython実装メモ]] に分けて扱う。
+
 ## 50.5 global kneeは唯一の最適解ではない
 
 knee pointはヒューリスティックであり、唯一の数学的最適解ではない。
@@ -3110,7 +3188,144 @@ $$
 \end{aligned}
 $$
 
-添付資料の途中段階には、$s_r$または全rankで最大の標準偏差を許容幅にする経験則もあった。これは実務的な候補選択規則としては使えるが、**正式な1-SE ruleでは標準偏差そのものではなく、最良モデルの平均に対する標準誤差を使う**。両者を混同しない。
+$s_r$または全rankで最大の標準偏差を許容幅にする経験則も考えられる。これは候補選択規則の一つだが、**正式な1-SE ruleでは標準偏差そのものではなく、最良モデルの平均に対する標準誤差を使う**。両者を混同しない。
+
+しかし、
+
+```text
+Baselineを1回だけ学習
+↓
+重みを固定
+↓
+rankだけ変えて決定論的にSVD
+```
+
+という実験では、各rankに対して通常1つのvalidation値しか得られない。
+この条件で、学習手続きのばらつきを表す通常の1-SE ruleを中心手法にするのは適切ではない。
+
+1-SEを本格的に使うなら、複数seedで、
+
+```text
+学習 → SVD → 評価
+```
+
+を繰り返し、rankごとの平均とSEを求める。
+単一学習済みモデルに対するrank sweepでは、Pareto frontier、knee、validation loss、パラメータ数、特異値エネルギーを組み合わせる方が素直である。
+
+---
+
+### SD許容幅を、全候補の数値まで計算する
+
+SDによる経験則とSEを使う1-SE ruleは、別の計算として扱う。途中のSD案を単に1-SEと呼び直してはいけない。以下は説明用の仮の値であり、このrepoの実測ではない。
+
+まず固定許容幅にも絶対幅と相対幅がある。最良lossが0.40なら
+
+$$
+0.40+0.01=0.41
+\quad\text{（絶対幅0.01）},
+\qquad
+0.40(1+0.01)=0.404
+\quad\text{（相対幅1\%）}.
+$$
+
+同じ「0.01」でも候補集合は変わり得る。割合の分母と単位を明記する。
+
+rank 16の3 runを $(0.41,0.39,0.40)$ とすると、全途中式は
+
+$$
+\begin{aligned}
+\mu_{16}
+&=\frac{0.41+0.39+0.40}{3}=\frac{1.20}{3}=0.40,\\
+(L_1-\mu_{16},L_2-\mu_{16},L_3-\mu_{16})
+&=(0.01,-0.01,0),\\
+\sum_{k=1}^3(L_k-\mu_{16})^2
+&=0.01^2+(-0.01)^2+0^2\\
+&=0.0001+0.0001+0=0.0002,\\
+s_{16}
+&=\sqrt{\frac{0.0002}{3-1}}
+=\sqrt{0.0001}=0.01,\\
+\operatorname{SE}_{16}
+&=\frac{0.01}{\sqrt3}\approx0.005774.
+\end{aligned}
+$$
+
+次に、候補ごとの要約値を全体として並べる。rank 8・32の個別runは仮定せず、表示した要約値だけを使う。
+
+$$
+\begin{pmatrix}
+r&\mu_r&s_r\\
+8&0.42&0.015\\
+16&0.40&0.010\\
+32&0.39&0.009
+\end{pmatrix},
+\qquad
+\mu_{\min}=0.39.
+$$
+
+候補自身のSDを幅にする案では、各候補の閾値が異なる。
+
+$$
+\begin{aligned}
+T_8&=0.39+0.015=0.405,
+&0.42&>0.405\quad\text{（不可）},\\
+T_{16}&=0.39+0.010=0.400,
+&0.40&\le0.400\quad\text{（可）},\\
+T_{32}&=0.39+0.009=0.399,
+&0.39&\le0.399\quad\text{（可）}.
+\end{aligned}
+$$
+
+$$
+\mathcal R_{\mathrm{allow}}^{\mathrm{candidate\text{-}SD}}
+=\{16,32\},
+\qquad
+r^*=\min\{16,32\}=16.
+$$
+
+共通の最大SDを使う案では
+
+$$
+\varepsilon=\max(0.015,0.010,0.009)=0.015,
+\qquad
+T=0.39+0.015=0.405,
+$$
+
+$$
+0.42>0.405,\qquad0.40\le0.405,\qquad0.39\le0.405,
+\qquad
+\mathcal R_{\mathrm{allow}}^{\mathrm{max\text{-}SD}}=\{16,32\}.
+$$
+
+この例ではどちらもrank 16を選ぶが、一般に同じ候補集合とは限らない。
+候補自身のSDを幅にすると、ばらつきが大きい候補ほど許容条件が緩くなる。
+最大SDを共通にすると、一つの不安定な候補が全候補の許容幅を広げる。
+どちらも選択上の経験則であり、「差が有意でない」という検定結果ではない。
+
+同じ要約値について各候補が独立な3 runを持つと**追加で仮定**し、
+最良rank 32のSEを使えば
+
+$$
+T_{\mathrm{1\text{-}SE}}
+=0.39+\frac{0.009}{\sqrt3}
+\approx0.395196.
+$$
+
+$$
+0.42>0.395196,\qquad
+0.40>0.395196,\qquad
+0.39\le0.395196,
+\qquad
+\mathcal R_{\mathrm{allow}}^{\mathrm{1\text{-}SE}}=\{32\}.
+$$
+
+SD案とは選ぶrankが異なる。倍率 $c$ を使うなら閾値は $\mu_{\min}+c\,\operatorname{SE}_{r_{\min}}$ であり、
+$c=1$・2・0のどれも普遍的な正解ではない。
+上の「統計的に同程度」は1-SEの選択上の呼び方であって、
+正式な同等性検定や、全候補を探索した後の信頼区間を自動的に与えるものではない。
+paired seedで圧縮候補の差を検討する場合も、各seed内では同じbaselineを共有して差を計算する。
+単一baselineの異なるrank値を「独立run」としてSD/SEを計算しない。
+
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-008]]
 
 しかし、
 
@@ -3159,408 +3374,9 @@ fine-tuning後の各候補について再び、
 
 > [!note] Fashion-MNISTでの実適用は [[20_FashionMNIST/02_Fashion-MNISTのRank選択]] と [[20_FashionMNIST/03_Fashion-MNISTのFine-tuning]] を参照する。
 
-## 51. 圧縮指標を計算するPython関数
+## PyTorch・Python操作：51. 圧縮指標を計算するPython関数 〜 57. rankと保持率を可視化する
 
-この節までに導出した式は、実装では `compression_stats` にまとめられる。関数は
-
-```text
-in_features, out_features, rank
-→ 元の重みパラメータ数
-→ 低ランク重みパラメータ数
-→ 保持率・削減率・圧縮倍率
-→ 損益分岐rank・圧縮可能な最大整数rank
-```
-
-を一度に計算する。
-
-完成した `CompressionStats` と `compression_stats` の実装は [[00_基礎理論/05_PyTorch実装/07_PyTorch実装#6. `compression_stats`]] を正本とする。ここでは、各出力が本ノートのどの式に対応するかを確認する。
-
----
-
-## 52. 使用例
-
-```python
-# 実装の正本は07_PyTorch実装を参照する。
-stats = compression_stats(
-    in_features=784,
-    out_features=512,
-    rank=64,
-)
-
-print(stats)
-```
-
-個別に表示する。
-
-```python
-print(
-    "original:",
-    stats.original_weight_parameters,
-)
-
-print(
-    "low rank:",
-    stats.low_rank_weight_parameters,
-)
-
-print(
-    "keep ratio:",
-    stats.parameter_keep_ratio,
-)
-
-print(
-    "reduction ratio:",
-    stats.parameter_reduction_ratio,
-)
-
-print(
-    "compression factor:",
-    stats.compression_factor,
-)
-
-print(
-    "maximum compressing rank:",
-    stats.maximum_compressing_rank,
-)
-```
-
----
-
-### 元教材と現行のfield名を対応させて実行する
-
-上の個別表示コードは、元教材 `05_圧縮率とRank.md` のfield名を残した例である。正本 [[07_PyTorch実装#3. 実装全体]] の `CompressionStats` は重みだけの数とbias込みの総数を区別するため、次のfield名になっている。
-
-- 元教材の `low_rank_weight_parameters` に対応するのは `compressed_weight_parameters`。
-- `parameter_keep_ratio` に対応するのは `weight_keep_ratio`。
-- `parameter_reduction_ratio` に対応するのは `weight_reduction_ratio`。
-- `compression_factor` に対応するのは `weight_compression_factor`。
-- `original_weight_parameters` と `maximum_compressing_rank` は同名。
-- bias込みの比率は `total_keep_ratio`、`total_reduction_ratio`、`total_compression_factor`。
-
-元教材の関数は重みだけを数えるので、旧 `parameter_keep_ratio` を `total_keep_ratio` と対応付けてはいけない。正本の関数を使う場合は、旧field名の上の表示ブロックではなく、次を使う。後続の表・グラフで旧field名を使う箇所も、同じ対応で読み替える。
-
-```python
-# 07の実装全体にあるcompression_statsを定義済みとして使用する。
-stats = compression_stats(in_features=784, out_features=512, rank=64)
-print("original:", stats.original_weight_parameters)
-print("low rank:", stats.compressed_weight_parameters)
-print("keep ratio:", stats.weight_keep_ratio)
-print("reduction ratio:", stats.weight_reduction_ratio)
-print("compression factor:", stats.weight_compression_factor)
-print("maximum compressing rank:", stats.maximum_compressing_rank)
-```
-
-元教材の次元・rankを変更せずに代入すると、
-
-$$
-\begin{aligned}
-P_{\mathrm{original,weight}}
-&=784\cdot512=401408,\\
-P_{\mathrm{lowrank,weight}}
-&=64(784+512)=64\cdot1296=82944,\\
-q_{\mathrm{weight}}
-&=\frac{82944}{401408}
-=\frac{81}{392}
-\approx0.206633,\\
-1-q_{\mathrm{weight}}
-&=\frac{311}{392}
-\approx0.793367,\\
-c_{\mathrm{weight}}
-&=\frac{401408}{82944}
-=\frac{392}{81}
-\approx4.839506,\\
-r_{\mathrm{break}}
-&=\frac{401408}{1296}
-=\frac{25088}{81}
-\approx309.728395,\\
-r_{\mathrm{max,compress}}
-&=\left\lceil\frac{25088}{81}\right\rceil-1\\
-&=310-1=309
-\end{aligned}
-$$
-
-となる。元biasを後段に残す場合は両方へ $512$ を加え、$P_{\mathrm{original,total}}=401920$、$P_{\mathrm{lowrank,total}}=83456$ となる。重み保持率と総数保持率 $83456/401920$ は別であり、biasを含めるかをそろえて比較する。
-
-## 53. bias込みのパラメータ数
-
-```python
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
-class TotalParameterStats:
-    original_total: int
-    low_rank_total: int
-    keep_ratio: float
-    reduction_ratio: float
-    compression_factor: float
-
-
-def total_parameter_stats(
-    in_features: int,
-    out_features: int,
-    rank: int,
-    bias: bool,
-) -> TotalParameterStats:
-    original_weight = (
-        in_features
-        * out_features
-    )
-
-    low_rank_weight = (
-        rank
-        * (
-            in_features
-            +
-            out_features
-        )
-    )
-
-    bias_parameters = (
-        out_features
-        if bias
-        else 0
-    )
-
-    original_total = (
-        original_weight
-        +
-        bias_parameters
-    )
-
-    low_rank_total = (
-        low_rank_weight
-        +
-        bias_parameters
-    )
-
-    keep_ratio = (
-        low_rank_total
-        /
-        original_total
-    )
-
-    return TotalParameterStats(
-        original_total=original_total,
-        low_rank_total=low_rank_total,
-        keep_ratio=keep_ratio,
-        reduction_ratio=1.0 - keep_ratio,
-        compression_factor=(
-            original_total
-            / low_rank_total
-        ),
-    )
-```
-
-biasは大きなLinear層では割合が小さいが、小さい層では無視できない場合がある。
-
----
-
-## 54. rank候補表を作る
-
-```python
-from __future__ import annotations
-
-
-def build_rank_table(
-    in_features: int,
-    out_features: int,
-    ranks: list[int],
-) -> list[dict[str, float | int | bool]]:
-    rows: list[
-        dict[str, float | int | bool]
-    ] = []
-
-    for rank in ranks:
-        stats = compression_stats(
-            in_features=in_features,
-            out_features=out_features,
-            rank=rank,
-        )
-
-        rows.append(
-            {
-                "rank": rank,
-                "original_parameters": (
-                    stats.original_weight_parameters
-                ),
-                "low_rank_parameters": (
-                    stats.low_rank_weight_parameters
-                ),
-                "keep_ratio": (
-                    stats.parameter_keep_ratio
-                ),
-                "reduction_ratio": (
-                    stats.parameter_reduction_ratio
-                ),
-                "compression_factor": (
-                    stats.compression_factor
-                ),
-                "is_compression": (
-                    stats.low_rank_weight_parameters
-                    <
-                    stats.original_weight_parameters
-                ),
-            }
-        )
-
-    return rows
-```
-
-### 使用例
-
-```python
-ranks = [
-    8,
-    16,
-    32,
-    64,
-    128,
-    256,
-    309,
-    310,
-]
-
-rows = build_rank_table(
-    in_features=784,
-    out_features=512,
-    ranks=ranks,
-)
-
-for row in rows:
-    print(row)
-```
-
----
-
-## 55. pandasで表にする
-
-```python
-import pandas as pd
-
-table = pd.DataFrame(
-    rows
-)
-
-table["keep_percent"] = (
-    100
-    * table["keep_ratio"]
-)
-
-table["reduction_percent"] = (
-    100
-    * table["reduction_ratio"]
-)
-
-print(table)
-```
-
-CSVへ保存する。
-
-```python
-table.to_csv(
-    "rank_compression_table.csv",
-    index=False,
-)
-```
-
-実験結果と同じrank表を使うと、圧縮率と精度を結び付けて管理しやすい。
-
----
-
-## 56. rankとパラメータ数を可視化する
-
-```python
-import matplotlib.pyplot as plt
-
-ranks = list(
-    range(
-        1,
-        min(784, 512) + 1,
-    )
-)
-
-low_rank_parameters = [
-    rank
-    * (
-        784
-        +
-        512
-    )
-    for rank in ranks
-]
-
-original_parameters = (
-    784
-    *
-    512
-)
-
-plt.figure()
-plt.plot(
-    ranks,
-    low_rank_parameters,
-    label="Low-rank parameters",
-)
-plt.axhline(
-    original_parameters,
-    linestyle="--",
-    label="Original parameters",
-)
-plt.xlabel("Rank")
-plt.ylabel("Weight parameter count")
-plt.title("Rank and Parameter Count")
-plt.grid(True)
-plt.legend()
-plt.show()
-```
-
-元パラメータ数との交点付近が損益分岐rankである。
-
----
-
-## 57. rankと保持率を可視化する
-
-```python
-import matplotlib.pyplot as plt
-
-keep_ratios = [
-    (
-        rank
-        * (
-            784
-            +
-            512
-        )
-        /
-        (
-            784
-            *
-            512
-        )
-    )
-    for rank in ranks
-]
-
-plt.figure()
-plt.plot(
-    ranks,
-    keep_ratios,
-)
-plt.axhline(
-    1.0,
-    linestyle="--",
-)
-plt.xlabel("Rank")
-plt.ylabel("Parameter keep ratio")
-plt.title("Rank and Parameter Keep Ratio")
-plt.grid(True)
-plt.show()
-```
-
-保持率が1未満ならパラメータ数は減っている。
+コードと操作手順は [[05_SVD基礎実装検証/05_rank指標のPython集計と可視化]] にまとめた。数式や評価の考え方は本ノートで続ける。
 
 ---
 
@@ -3588,78 +3404,9 @@ plt.show()
 
 ---
 
-## 59. rankと精度のグラフ
+## PyTorch・Python操作：59. rankと精度のグラフ 〜 60. パラメータ数と精度のグラフ
 
-```python
-import matplotlib.pyplot as plt
-
-ranks = [
-    8,
-    16,
-    32,
-    64,
-    128,
-    256,
-]
-
-accuracies = [
-    # 実験結果を入力する
-]
-
-plt.figure()
-plt.plot(
-    ranks,
-    accuracies,
-    marker="o",
-)
-plt.xlabel("Rank")
-plt.ylabel("Test accuracy")
-plt.title("Rank and Test Accuracy")
-plt.grid(True)
-plt.show()
-```
-
-圧縮率を横軸にする方法もある。
-
-```python
-keep_ratios = [
-    compression_stats(
-        784,
-        512,
-        rank,
-    ).parameter_keep_ratio
-    for rank in ranks
-]
-```
-
----
-
-## 60. パラメータ数と精度のグラフ
-
-rank自体より、実際のパラメータ数を横軸にすると、異なる層や異なる手法と比較しやすい。
-
-```python
-parameter_counts = [
-    compression_stats(
-        784,
-        512,
-        rank,
-    ).low_rank_weight_parameters
-    for rank in ranks
-]
-
-plt.figure()
-plt.plot(
-    parameter_counts,
-    accuracies,
-    marker="o",
-)
-plt.xlabel("Weight parameter count")
-plt.ylabel("Test accuracy")
-plt.title("Parameter Count and Accuracy")
-plt.grid(True)
-plt.show()
-```
+コードと操作手順は [[05_SVD基礎実装検証/05_rank指標のPython集計と可視化]] にまとめた。数式や評価の考え方は本ノートで続ける。
 
 ---
 
@@ -3686,12 +3433,7 @@ plt.show()
 
 MNIST第1層
 
-```python
-nn.Linear(
-    784,
-    512,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/05_rank指標のPython集計と可視化#PyTorch確認-009]]
 
 なら、最初の候補として次を使いやすい。
 
@@ -4118,10 +3860,11 @@ MNIST実験では、rankごとに、
 
 次は、圧縮前後の差を数値で評価する方法を整理する。
 
+- rank sweepと集計表のPython・pandas操作：[[05_SVD基礎実装検証/13_PandasとPython実装メモ]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/01_SVDとは]]
 - [[00_基礎理論/02_ニューラルネットワーク基礎/02_nn.Linearとは]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/03_SVDによる低ランク近似]]
 - [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
-- [[00_基礎理論/05_PyTorch実装/07_PyTorch実装]]
+- [[05_SVD基礎実装検証/07_PyTorch実装]]
 - [[10_MNIST_MLP_SVD/01_MNIST実験]]

@@ -47,7 +47,7 @@ mode 3 = K_w
 とする。
 
 > [!important]
-> `CNN CIFAR-10→Tuckerを考える.md` に現れるTucker/HOSVD/HOOIの式・考察を基礎にし、元資料で途中変形が省略されている箇所は数学的補足として展開している。特に直交射影からcore norm最大化への変形、HOOIの局所更新が上位左特異ベクトルになる導出は**補足導出**であり、元添付からの直接引用ではない。
+> 直交射影からcore norm最大化への変形、HOOIの局所更新が上位左特異ベクトルになる理由を、途中式で確認する。各更新の最適性と、Tucker近似全体のglobal optimumは区別する。
 
 ---
 
@@ -625,9 +625,7 @@ $$
 
 Pythonの0始まりsliceでは
 
-```python
-U_n = Q_n[:, :R_n]
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード#PyTorch確認-001]]
 
 となる。
 
@@ -1566,9 +1564,7 @@ $$
 
 Pythonなら
 
-```python
-U_new = Q[:, :R_n]
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード#PyTorch確認-002]]
 
 である。
 

@@ -14,7 +14,7 @@ tags:
 
 # TT・MPS学習ロードマップ
 
-> 2026-09-12追補：第1・11節の「現在」「次はgauge」は、TT-SVD基礎00〜03を整理した時点の記録である。新しい左右QRの添付資料に対応する理論ノートと次の区切りは第12節に追加した。以前の学習方針や基礎Notebookの実装境界は保持する。
+> 第1・11節はTT-SVD基礎00〜03に加え、現在存在するGauge・左右QR・混合正準形・中心移動のNotebook 04〜07までの位置を示す。Notebookの存在と保存済み出力を、最新のRun Allや理解の完了と混同しない。
 
 ## サマリー
 
@@ -67,9 +67,9 @@ Fashion-MNISTのために理論を急いで消化するのではなく、各節�
 
 である。
 
-理論docsは [[30_TT_MPSの定義]] 〜 [[34_基底変換とTT-rank不変性]]、実装は [[27_TT_MPS基礎のPyTorch実装]] と [[28_TT_MPS実装で使うPyTorch_Python操作メモ]] に分けている。
+TT-SVDの基礎は [[30_TT_MPSの定義]] 〜 [[34_基底変換とTT-rank不変性]]、対応するPyTorch操作は [[27_TT_MPS基礎のPyTorch実装]] と [[28_TT_MPS実装で使うPyTorch_Python操作メモ]] に分けている。後続のGauge・左右QR・混合正準形・中心移動は [[36_TT_MPSのGauge自由度と左QR直交化]] 〜 [[41_TT_MPSの直交中心の移動]] と、基礎Notebook 04〜07に進んでいる。
 
-次の理論は **gauge freedom** である。
+次はこれらの物理的意味を [[00_基礎理論/07_物理基礎/16_TT_MPSの物理解釈_縮約密度行列と局所写像]]、[[00_基礎理論/07_物理基礎/42_MPS正準形と直交中心の物理的意味]] で対応付け、TT-roundingと直接収縮へ進む。04〜07の保存済み出力は確認できるが、この更新時点でNotebook全体を新たに実行したという意味ではない。
 
 ---
 
@@ -462,7 +462,7 @@ $$
 
 ## 11. 現在から次へ
 
-現在は
+資料とNotebookの現在地は
 
 ```text
 TT定義
@@ -473,28 +473,29 @@ TT定義
 → U ⊗ I / rank invariance
 → 小実装 00〜03
 → src化・回帰テスト
+→ Gauge・左右QRのNotebook 04〜05
+→ Mixed-canonicalのNotebook 06
+→ 中心移動のNotebook 07
 ```
 
-まで完了している。
+である。04〜07には実装と保存済み出力があるが、ここでは最新のRun Allや本人の理解の完了までは判定しない。
 
-次は
+次の学習上の接続は
 
 $$
 \boxed{
-\text{gauge freedom}
+\text{直交中心の物理解釈} \longrightarrow \text{TT-rounding}
 }
 $$
 
-から始める。
+である。Gauge自由度へ戻って最初からやり直すという意味ではない。
 
 そこから
 
 ```text
-gauge freedom
-→ QR orthogonalization
-→ canonical form
+ブロック基底・Schmidt係数・縮約密度行列
 → TT-rounding
-→ TT/MPS operations
+→ TT/MPSの直接収縮・内積・ノルム
 → TT-matrix / MPO
 → Fashion-MNIST
 → ALS / one-site
@@ -503,22 +504,24 @@ gauge freedom
 
 ---
 
-## 12. 左右QRの資料を反映した学習の接続
+## 12. 左右QRから混合正準形へ進む学習の接続
 
-新しい添付資料では、Gauge変換、左QR、第2コアまでの左直交化、左ブロック直交性、右端QRと右ブロックまでを扱っている。対応する読み順は
+Gauge変換、左QR、第2コアまでの左直交化、左ブロック直交性、右端QRと右ブロックの読み順は
 
 1. [[36_TT_MPSのGauge自由度と左QR直交化]]
 2. [[37_TT_MPSの左ブロックと直交性の導出]]
 3. [[38_TT_MPSの右QR直交化と右ブロック]]
 4. [[39_TT_MPSの混合正準形への導入]]
+5. [[40_TT_MPSの中心ノルムと内積の導出]]
+6. [[41_TT_MPSの直交中心の移動]]
 
-とする。最後の混合正準形は、同じ元TTから $G_2^{[C]}=T_1G_2T_3^T$ を作る導入までである。資料中の実行報告と、教材の掲載・独立した小行列の検証は区別し、未実施のNotebook全体を検証済みとは扱わない。
+とする。39の混合正準形は、同じ元TTから $G_2^{[C]}=T_1G_2T_3^T$ を作る導入、40は中心のノルム・内積、41は中心移動の数学的導出である。物理的解釈は [[00_基礎理論/07_物理基礎/16_TT_MPSの物理解釈_縮約密度行列と局所写像]] と [[00_基礎理論/07_物理基礎/42_MPS正準形と直交中心の物理的意味]] に分ける。小行列で式を確認することと、Notebook全体を実行して検証することは区別する。
 
-その次に、中心の意味 → 中心移動 → TT-rounding → TT/MPS演算 → TT-matrix/MPO → NN実験 → 局所最適化へ進む。これは学習順であって、全てを最初の重み近似の必須依存関係にするものではない。
+その次に、TT-rounding → TT/MPSの直接収縮 → TT-matrix/MPO → NN実験 → 局所最適化へ進む。これは学習順であって、全てを最初の重み近似の必須依存関係にするものではない。
 
 ### CNNへ適用する際の二段階
 
-Fashion-MNIST MLPに加え、添付ではCNNのConv2d重みへのTT近似も候補になっている。第5部のMLPの方針を取り消すのではなく、追加の適用先として分ける。
+Fashion-MNIST MLPに加え、CNNのConv2d重みへのTT近似も候補になる。第5部のMLPとは別の適用先として分ける。
 
 通常の重み順を
 
@@ -542,6 +545,404 @@ $$
 
 段階BではTTコアを保持した因子化層・直接縮約を設計し、実際のparameter数、理論MACs、latency、peak memory、fine-tuningによる回復を別に測る。4階重みの任意のTT表現が、そのまま直列の小さなConv2dに置換できるとは限らない。
 
-最初のdense重みからTTへの分解はTT-SVDであり、既存TTのrankを下げるTT-roundingとは異なる。初回の重み近似にtwo-site DMRGやTT-roundingを必須とはしない。二段階の具体的なCNN実装・実験結果は、この資料にはまだないため後続テーマとする。
+最初のdense重みからTTへの分解はTT-SVDであり、既存TTのrankを下げるTT-roundingとは異なる。初回の重み近似にtwo-site DMRGやTT-roundingを必須とはしない。二段階の具体的なCNN実装・実験は後続テーマとする。
+
+### 64×32×3×3を、三つのtensorization順とcutまで追う
+
+Conv2d重みのtensorization候補を具体的に比較する。
+前の $32\times16\times3\times3$ の保存量の例とは別に、$64\times32\times3\times3$ の重みで対応を追う。
+重みを
+
+$$
+W\in\mathbb R^{64\times32\times3\times3},
+\qquad 64=8\cdot8,
+\qquad 32=4\cdot8
+$$
+
+とする。この節だけ添字を0始まりにし、
+$0\le o_1,o_2,i_2<8$、$0\le i_1<4$、$0\le h,w<3$ と置く。
+元の出力・入力channelは、それぞれ
+
+$$
+o=8o_1+o_2,
+\qquad i=8i_1+i_2
+$$
+
+である。最初の `reshape(8, 8, 4, 8, 3, 3)` は、
+出力channelを二つ、入力channelを二つに分けるだけで、
+出力と入力の脚をまだ交互には並べていない。
+
+$$
+T^A_{o_1,o_2,i_1,i_2,h,w}
+=W_{8o_1+o_2,\,8i_1+i_2,\,h,w},
+\qquad
+\operatorname{shape}(T^A)=(8,8,4,8,3,3).
+$$
+
+残り二候補は、同じ $T^A$ の軸を並べ替えたものとして定義する。
+
+$$
+\begin{aligned}
+T^B_{o_1,i_1,o_2,i_2,h,w}
+&=T^A_{o_1,o_2,i_1,i_2,h,w},
+&\operatorname{shape}(T^B)&=(8,4,8,8,3,3),\\
+T^C_{o_1,h,o_2,w,i_1,i_2}
+&=T^A_{o_1,o_2,i_1,i_2,h,w},
+&\operatorname{shape}(T^C)&=(8,3,8,3,4,8).
+\end{aligned}
+$$
+
+PyTorchでは、$T^B$ は `T_A.permute(0, 2, 1, 3, 4, 5)`、
+$T^C$ は `T_A.permute(0, 4, 1, 5, 2, 3)` に対応する。
+最初から別のshapeへ `reshape` するだけでは、この成分対応にはならない。
+同じサイズ8の軸も、$o_1,o_2,i_2$ のどれなのかを区別する。
+
+全要素数は、どの順でも
+
+$$
+\begin{aligned}
+64\cdot32\cdot3\cdot3&=18432,\\
+8\cdot8\cdot4\cdot8\cdot3\cdot3&=18432,\\
+8\cdot4\cdot8\cdot8\cdot3\cdot3&=18432,\\
+8\cdot3\cdot8\cdot3\cdot4\cdot8&=18432
+\end{aligned}
+$$
+
+で変わらない。ただし、`permute` 後のstrideは変わり得て、
+後続の `reshape` がコピーを必要とする場合がある。
+値・要素数の保存と、物理的なstorage配置の保存は同じ主張ではない。
+詳細は [[28_TT_MPS実装で使うPyTorch_Python操作メモ]] に置く。
+
+#### 第2cutで左へまとめる元の添字が異なる
+
+三つとも「先頭2軸でcutする」と言っても、左へまとめる物理的な添字は異なる。
+
+$$
+\begin{aligned}
+T^A &: (o_1,o_2)\mid(i_1,i_2,h,w),
+&T^A_{\mathrm{cut2}}&\in\mathbb R^{64\times288},\\
+T^B &: (o_1,i_1)\mid(o_2,i_2,h,w),
+&T^B_{\mathrm{cut2}}&\in\mathbb R^{32\times576},\\
+T^C &: (o_1,h)\mid(o_2,w,i_1,i_2),
+&T^C_{\mathrm{cut2}}&\in\mathbb R^{24\times768}.
+\end{aligned}
+$$
+
+末尾の添字が最も速く進む順で行位置・列位置を書き下すと、
+各行列の全成分は次の式で定まる。
+
+$$
+\begin{aligned}
+(T^A_{\mathrm{cut2}})_{8o_1+o_2,\,72i_1+9i_2+3h+w}
+&=W_{8o_1+o_2,\,8i_1+i_2,\,h,w},\\
+(T^B_{\mathrm{cut2}})_{4o_1+i_1,\,72o_2+9i_2+3h+w}
+&=W_{8o_1+o_2,\,8i_1+i_2,\,h,w},\\
+(T^C_{\mathrm{cut2}})_{3o_1+h,\,96o_2+32w+8i_1+i_2}
+&=W_{8o_1+o_2,\,8i_1+i_2,\,h,w}.
+\end{aligned}
+$$
+
+例えば $(o_1,o_2,i_1,i_2,h,w)=(1,2,3,4,1,2)$ は、
+元の `W[10, 28, 1, 2]` であり、三つのcut行列では
+
+$$
+(T^A_{\mathrm{cut2}})_{10,257}
+=(T^B_{\mathrm{cut2}})_{7,185}
+=(T^C_{\mathrm{cut2}})_{4,284}
+=W_{10,28,1,2}
+$$
+
+へ対応する。
+行位置だけでなく列位置も変わり、そもそも左右に分ける添字集合が変わっている。
+これは [[29_TT_cutとPyTorchのreshape_Kronecker順序]] にある、
+**同じcut内**の行・列の並べ替えによるrank保存とは別である。
+第2cutの数学的rank上限も、それぞれ64・32・24で異なる。
+実際のrankが必ず異なるという意味ではなく、各候補でcutの特異値と近似誤差を確認する。
+
+#### 添字確認用の人工値で、行列の小さい領域を全要素表示する
+
+ここからの値は学習済み重みではなく、上の対応を確認する人工値である。
+
+$$
+W_{o,i,h,w}=288o+9i+3h+w.
+$$
+
+これは `arange(18432).reshape(64, 32, 3, 3)` に対応する。
+先ほどの成分は $288\cdot10+9\cdot28+3\cdot1+2=3137$ になる。
+各cut行列の先頭2行・先頭3列だけを取り出すと、全6成分は
+
+$$
+\begin{aligned}
+(T^A_{\mathrm{cut2}})_{0:2,\,0:3}
+&=\begin{pmatrix}0&1&2\\288&289&290\end{pmatrix},\\
+(T^B_{\mathrm{cut2}})_{0:2,\,0:3}
+&=\begin{pmatrix}0&1&2\\72&73&74\end{pmatrix},\\
+(T^C_{\mathrm{cut2}})_{0:2,\,0:3}
+&=\begin{pmatrix}0&9&18\\3&12&21\end{pmatrix}
+\end{aligned}
+$$
+
+となる。$0:2$、$0:3$ はPythonと同じ終端を含まないsliceであり、
+これらの $2\times3$ は全cut行列のサイズではない。
+$T^A$ の第2行は出力channelを一つ進めるため288増え、
+$T^B$ の第2行は $i_1$ を一つ進めて入力channelが8増えるため $9\cdot8=72$ 増える。
+$T^C$ では列を進めると $i_2$ が変わって9増え、行を進めると $h$ が変わって3増える。
+
+元の重み順へ戻すときは、$T^B$ に `permute(0, 2, 1, 3, 4, 5)`、
+$T^C$ に `permute(0, 2, 4, 5, 1, 3)` を適用して $T^A$ の順へ戻し、
+その後で `reshape(64, 32, 3, 3)` を行う。
+この人工値による一致は添字・逆操作の検証であり、最良tensorizationやaccuracy維持の実験結果ではない。
 
 へ進む。
+
+## 13. 512×256のTT-matrix候補を、3サイトの添字と格納量まで確認する
+
+ここでは input 256からoutput 512への独立した重み行列
+
+$$
+W\in\mathbb R^{512\times256}
+$$
+
+を扱う。MLP `784 → 512 → 256 → 10` の中間層は、PyTorchの `weight=(out_features, in_features)` では $256\times512$ なので、この $512\times256$ 例をそのまま中間層のshapeとして流用しない。
+
+因数分解を
+
+$$
+512=8\cdot8\cdot8,
+\qquad
+256=4\cdot8\cdot8,
+$$
+
+$$
+(m_1,m_2,m_3)=(8,8,8),
+\qquad
+(n_1,n_2,n_3)=(4,8,8)
+$$
+
+とする。この節ではphysical添字を0始まりとし、元の行・列との対応を
+
+$$
+o=64o_1+8o_2+o_3,
+\qquad
+i=64i_1+8i_2+i_3,
+$$
+
+$$
+W_{o,i}
+=\mathcal W_{o_1,o_2,o_3,i_1,i_2,i_3}
+$$
+
+とする。例えば
+
+$$
+(o_1,o_2,o_3)=(1,2,3),
+\qquad
+(i_1,i_2,i_3)=(2,4,5)
+$$
+
+なら、
+
+$$
+o=64+16+3=83,
+\qquad
+i=128+32+5=165
+$$
+
+なので、対応要素は `W[83, 165]` である。
+
+TT-matrixでは同じサイトの入出力脚を隣にするため、
+
+$$
+(o_1,o_2,o_3,i_1,i_2,i_3)
+\longrightarrow
+(o_1,i_1,o_2,i_2,o_3,i_3)
+$$
+
+へ並べ替え、サイトごとのsizeを $(32,64,64)$ としてTT-SVDへ渡す。PyTorchでは `reshape(8, 8, 8, 4, 8, 8)` の後に `permute(0, 3, 1, 4, 2, 5)` を行う。復元時は `permute(0, 2, 4, 1, 3, 5)` で元のgrouped順へ戻してから $512\times256$ へreshapeする。
+
+境界bondを $\chi_0=\chi_3=1$ とすると、4階coreのshapeは
+
+$$
+\begin{aligned}
+G^{[1]}&:(1,8,4,\chi_1),\\
+G^{[2]}&:(\chi_1,8,8,\chi_2),\\
+G^{[3]}&:(\chi_2,8,8,1).
+\end{aligned}
+$$
+
+各要素は二つのbond和によって
+
+$$
+\begin{aligned}
+&W_{64o_1+8o_2+o_3,\,64i_1+8i_2+i_3}\\
+&\qquad\approx
+\sum_{\alpha_1=1}^{\chi_1}
+\sum_{\alpha_2=1}^{\chi_2}
+G^{[1]}_{1,o_1,i_1,\alpha_1}
+G^{[2]}_{\alpha_1,o_2,i_2,\alpha_2}
+G^{[3]}_{\alpha_2,o_3,i_3,1}
+\end{aligned}
+$$
+
+と書ける。打ち切らなければ等号、打ち切れば近似であり、biasはこの積とは別に出力へ加える。
+
+重みだけの格納量は
+
+$$
+\begin{aligned}
+P_{\mathrm{dense}}
+&=512\cdot256=131072,\\
+P_{\mathrm{TT}}
+&=1\cdot8\cdot4\cdot\chi_1
++\chi_1\cdot8\cdot8\cdot\chi_2
++\chi_2\cdot8\cdot8\cdot1\\
+&=32\chi_1+64\chi_1\chi_2+64\chi_2.
+\end{aligned}
+$$
+
+$\chi_1=\chi_2=8$ なら、
+
+$$
+\begin{aligned}
+P_{\mathrm{TT}}
+&=256+4096+512=4864,\\
+\mathrm{CR}_{\mathrm{weight}}
+&=\frac{131072}{4864}
+=\frac{512}{19}
+\approx26.95.
+\end{aligned}
+$$
+
+出力bias 512個を双方に残すなら、比較する比は $(131072+512)/(4864+512)$ である。これはshapeから求めた保存量であり、このbondでexactに表せること、accuracy維持、速度向上を示す実験結果ではない。rank候補を比べる際は、設定した最大rankだけでなく、実際の全bond・全core shape・再構成誤差を記録する。
+
+## 14. 512×784のMPO候補を、4サイトの添字と格納量まで確認する
+
+MPOまたはTT-matrixでは、行列の出力添字と入力添字をそれぞれ複数の添字へ分け、
+同じサイトに属する入出力脚を一つのコアへ持たせる。ここではMPO層やsweepを実装せず、
+後続実装で固定すべきshape、添字順、格納量、比較条件を明確にする。
+
+### 16行16列の小行列：reshapeだけではpaired順にならない
+
+$W\in\mathbb R^{16\times16}$ と $16=2\cdot2\cdot2\cdot2$ を考える。
+0始まりの行・列を
+
+$$
+o=8o_1+4o_2+2o_3+o_4,
+\qquad
+i=8i_1+4i_2+2i_3+i_4,
+\qquad
+o_k,i_k\in\{0,1\}
+$$
+
+とすると、最初のreshapeの添字順は
+
+$$
+W(o,i)
+=\mathcal W_{\mathrm{grouped}}
+(o_1,o_2,o_3,o_4,i_1,i_2,i_3,i_4)
+$$
+
+である。各サイトで出力と入力を組にするには、次の並べ替えが必要になる。
+
+$$
+\mathcal W_{\mathrm{paired}}
+(o_1,i_1,o_2,i_2,o_3,i_3,o_4,i_4)
+=\mathcal W_{\mathrm{grouped}}
+(o_1,o_2,o_3,o_4,i_1,i_2,i_3,i_4).
+$$
+
+PyTorchでは
+`grouped = W.reshape(2, 2, 2, 2, 2, 2, 2, 2)` の後に
+`paired = grouped.permute(0, 4, 1, 5, 2, 6, 3, 7)` とする。
+例えば $o=10=(1,0,1,0)_2$、$i=5=(0,1,0,1)_2$ なら
+
+$$
+\begin{aligned}
+W(10,5)
+&=\mathcal W_{\mathrm{grouped}}(1,0,1,0,0,1,0,1)\\
+&=\mathcal W_{\mathrm{paired}}(1,0,0,1,1,0,0,1).
+\end{aligned}
+$$
+
+4個のpaired modeをそれぞれsize $2\cdot2=4$ としてTT分解した後、
+各コアを $(\chi_{k-1},2,2,\chi_k)$ へ戻す。復元後は逆permuteで
+grouped順へ戻してから $(16,16)$ へreshapeする。値と要素数は変わらないが、
+添字の並べ方は変わり、`permute` 後の `reshape` がコピーを要する場合もある。
+strideの説明は [[28_TT_MPS実装で使うPyTorch_Python操作メモ]]、
+cut順の違いは [[29_TT_cutとPyTorchのreshape_Kronecker順序]] で扱う。
+
+### 512行784列を、4サイトへそろえる
+
+入力784から出力512への重み行列を
+
+$$
+W\in\mathbb R^{512\times784}
+$$
+
+とし、次のように分ける。
+
+$$
+512=8\cdot8\cdot8\cdot1,
+\qquad
+784=7\cdot7\cdot4\cdot4,
+$$
+
+$$
+(m_k,n_k)=(8,7),(8,7),(8,4),(1,4).
+$$
+
+size 1の因子は、入出力のサイト数をそろえるための軸であり、要素を増やさない。
+開放境界 $\chi_0=\chi_4=1$ とすると、全コアのshapeは
+
+$$
+\begin{aligned}
+G^{[1]}&:(1,8,7,\chi_1),\\
+G^{[2]}&:(\chi_1,8,7,\chi_2),\\
+G^{[3]}&:(\chi_2,8,4,\chi_3),\\
+G^{[4]}&:(\chi_3,1,4,1).
+\end{aligned}
+$$
+
+従って、biasを除く格納要素数は
+
+$$
+\begin{aligned}
+P_{\mathrm{MPO}}
+&=\sum_{k=1}^{4}\chi_{k-1}m_kn_k\chi_k\\
+&=1\cdot8\cdot7\cdot\chi_1
++\chi_1\cdot8\cdot7\cdot\chi_2
++\chi_2\cdot8\cdot4\cdot\chi_3
++\chi_3\cdot1\cdot4\cdot1\\
+&=56\chi_1+56\chi_1\chi_2+32\chi_2\chi_3+4\chi_3.
+\end{aligned}
+$$
+
+「bond dimension 8」とだけ記録せず、全mode、全bond、全コアshapeを記録する。
+通常のbias $b\in\mathbb R^{512}$ を残すなら、総数には512を加える。
+入力を $(7,7,4,4)$ にtensorizeしてコアを縮約し、$(8,8,8,1)$ の出力を
+512次元へ戻してbiasを加える。この4階コアは、通常のTT tensorが持つ3階コアと異なり、
+各サイトに入力脚と出力脚を一つずつ持つ。
+
+tensorizationの候補には通常のflatten順、画像の行・列を分ける順、小ブロック、
+bit分解、space-filling curveがある。どれが最良かは事前には確定しない。
+同じ行列でもmodeの分け方・順序が変わると、cutの特異値や必要bondが変わり得る。
+
+### 初期化・学習・比較を混同しない
+
+初期化には、学習済みdense重みを分解する方法、最初からランダムなMPOコアを
+学習する方法、初期dense重みを一度作って分解してからMPOとして学習する方法がある。
+このロードマップでは最初に学習後圧縮を扱う。
+
+MPOコアを `nn.Parameter` / `nn.ParameterList` へ登録し、全コアを通常の勾配降下で
+fine-tuningすること自体はDMRGではない。forwardはdense重みを復元する版と、
+コアを直接縮約する版を分け、後者では入力・出力添字と中間shapeを確認する。
+MPOのbiasは通常の出力vectorとして残せるため、必ずMPO化する必要はない。
+
+比較は同じparameter予算でaccuracyを見るか、同じaccuracy条件で必要parameter数を見る。
+圧縮直後とfine-tuning後、fine-tuning epoch、seed、tensorization、全bond、学習時間、
+推論時間を併記する。0.1または0.5 percentage pointなどの許容低下は設定値であり、
+達成結果ではない。複雑な表現が単純な行列SVDを必ず上回るとは限らない。
+多段構造や入力構造に合うtensorizationによって、同じparameter数でMPOがより高い
+accuracyを保てる可能性は研究仮説であり、tensorization依存性とともに実験で確かめる。
+また、重み格納量が少なくてもreshape、transpose、小演算、中間Tensor、kernel起動により
+latencyが悪化する場合がある。この節ではDMRG、局所sweep、two-site更新の手順は扱わない。

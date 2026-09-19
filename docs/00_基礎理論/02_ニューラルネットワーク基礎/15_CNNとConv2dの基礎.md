@@ -79,9 +79,7 @@ src/nn_compression/models/cnn.py
 
 公開クラス：
 
-```python
-from nn_compression.models import FashionMNISTCNN
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/15_CNNのPyTorch確認コード#PyTorch確認-001]]
 
 Conv-SVDそのものは次のノートで扱う。
 
@@ -189,6 +187,51 @@ $$
 $$
 
 個のweightを持つ。
+
+### filterを、添字と全9要素で見る
+
+出力channel $o$ と入力channel $c$ を1つずつ固定すると、対応する $3\times3$ kernelは
+
+$$
+W_{o,c,:,:}
+=
+\begin{pmatrix}
+W_{o,c,0,0} & W_{o,c,0,1} & W_{o,c,0,2}\\
+W_{o,c,1,0} & W_{o,c,1,1} & W_{o,c,1,2}\\
+W_{o,c,2,0} & W_{o,c,2,1} & W_{o,c,2,2}
+\end{pmatrix}.
+$$
+
+入力側の対応する局所領域を
+
+$$
+X_{n,c,p:p+3,q:q+3}
+=
+\begin{pmatrix}
+X_{n,c,p,q} & X_{n,c,p,q+1} & X_{n,c,p,q+2}\\
+X_{n,c,p+1,q} & X_{n,c,p+1,q+1} & X_{n,c,p+1,q+2}\\
+X_{n,c,p+2,q} & X_{n,c,p+2,q+1} & X_{n,c,p+2,q+2}
+\end{pmatrix}
+$$
+
+とすると、この入力channelから出力位置 $(p,q)$ への寄与は、全9要素を同じ位置どうしで掛けて
+
+$$
+\begin{aligned}
+s_{n,o,c,p,q}
+={}&W_{o,c,0,0}X_{n,c,p,q}
++W_{o,c,0,1}X_{n,c,p,q+1}
++W_{o,c,0,2}X_{n,c,p,q+2}\\
+&+W_{o,c,1,0}X_{n,c,p+1,q}
++W_{o,c,1,1}X_{n,c,p+1,q+1}
++W_{o,c,1,2}X_{n,c,p+1,q+2}\\
+&+W_{o,c,2,0}X_{n,c,p+2,q}
++W_{o,c,2,1}X_{n,c,p+2,q+1}
++W_{o,c,2,2}X_{n,c,p+2,q+2}
+\end{aligned}
+$$
+
+となる。1つのfilter $W_o$ は、この $3\times3$ kernelを全入力channel $c$ について持つ。したがって `conv2` では、上の9要素が32組あり、合計は $9\times32=288$ 要素である。
 
 ---
 
@@ -446,7 +489,7 @@ $$
 
 ### strideで割り切れない具体例
 
-添付資料で確認した
+例えば、
 
 $$
 H=28,
@@ -554,9 +597,7 @@ $$
 
 今回の
 
-```python
-nn.MaxPool2d(kernel_size=2, stride=2)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/15_CNNのPyTorch確認コード#PyTorch確認-002]]
 
 では
 
@@ -610,6 +651,26 @@ Input
 (N, 10)
 ```
 
+### 「特徴マップ数」と「scalarの個数」
+
+shape `(N, 64, 14, 14)` の `64` は、1sample当たりの**特徴マップ数**である。各特徴マップは $14\times14$ 個のscalarを持つため、1sample当たりのscalar数は
+
+$$
+64\times14\times14
+=64\times196
+=12544
+$$
+
+である。2回目のPooling後も特徴マップ数は64のままだが、各特徴マップは $7\times7$ になるので、scalar数は
+
+$$
+64\times7\times7
+=64\times49
+=3136
+$$
+
+まで減る。batch全体のscalar数を数える場合だけ、さらに $N$ を掛ける。したがって「特徴量が64個」という表現はchannel数を指すのか、全scalar数を指すのかを区別する必要がある。
+
 ---
 
 ## 9. Conv2dのパラメータ数
@@ -661,10 +722,7 @@ $$
 
 ViTのpatch embeddingをConvで実装し
 
-```python
-kernel_size=patch_size
-stride=patch_size
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/15_CNNのPyTorch確認コード#PyTorch確認-003]]
 
 とすればpatchは重ならない。`stride < patch_size` なら重なる。
 

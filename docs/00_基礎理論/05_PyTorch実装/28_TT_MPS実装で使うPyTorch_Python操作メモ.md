@@ -653,9 +653,9 @@ I_r = torch.eye(r, dtype=U.dtype, device=U.device)
 
 を使う。
 
-### 元資料のeyeの出力を全要素で確認する
+### eyeの出力を全要素で確認する
 
-添付 `TT_MPS基礎理論.md` の25603–25673行の出力は
+`torch.eye(3)` の出力を全要素で書くと
 
 $$
 \operatorname{eye}(3)=
@@ -666,7 +666,7 @@ $$
 
 後者は単位行列 $I_4$ ではなく、2行4列の主対角部分へ1を置いた行列である。
 全要素は整数値でも、Tensorのdtypeは呼び出しで指定した型になる。
-元資料の `dtype=torch.int64` は整数型の例、
+`dtype=torch.int64` は整数型の例、
 `dtype=torch.float64` は倍精度の例である。
 計算相手 `X` へ合わせるときは、既存のコードどおりdtypeとdeviceの両方を渡す。
 
@@ -702,9 +702,9 @@ torch.eye(r)
 
 は対角成分が全部1の単位行列であり、特異値行列ではない。
 
-### 元資料の特異値5・2・1を、diagの全成分へ対応させる
+### 特異値5・2・1を、diagの全成分へ対応させる
 
-同じ添付の25689–25714行では、`S = torch.tensor([5.0, 2.0, 1.0])` を使う。
+`S = torch.tensor([5.0, 2.0, 1.0])` を使う。
 
 $$
 \Sigma=\operatorname{diag}(5,2,1)
@@ -766,10 +766,10 @@ SVDのUは必ずnon-contiguous
 
 とは限らない。
 
-### 元資料の0〜5を、転置とcontiguousのメモリ位置まで追う
+### 0〜5の値を、転置とcontiguousのメモリ位置まで追う
 
-同じ添付の28118–28328行は、値が変わらないことと格納順が変わることを
-小さい実際の配列で区別している。その6要素を表示すると
+値が変わらないことと格納順が変わることを、小さい配列で区別する。
+6要素を表示すると
 
 $$
 A=\begin{pmatrix}0&1&2\\3&4&5\end{pmatrix},\qquad
@@ -792,7 +792,7 @@ $$
 ```python
 import torch
 
-# 元資料と同じ6個の値を用い、すべて2階Tensorとして比較する。
+# 6個の値を用い、すべて2階Tensorとして比較する。
 A = torch.tensor([[0, 1, 2], [3, 4, 5]])
 B = A.T
 C = B.contiguous()
@@ -809,7 +809,7 @@ assert C.view(-1).tolist() == [0, 3, 1, 4, 2, 5]
 この例の `B.view(-1)` はstrideを保った1次元viewとして表せず失敗する。
 `B.reshape(-1)` は必要ならコピーし、同じ論理順 `[0, 3, 1, 4, 2, 5]` を作れる。
 一方、すでに連続なTensorへの `contiguous()` は通常追加コピーをしない。
-「別の角度から見る」という元資料の比喩は、添字からstorageの位置への読み方を変えることを指す。
+転置で「別の角度から見る」とは、添字からstorageの位置への読み方を変えることを指す。
 このメモリlayoutの話と、[[29_TT_cutとPyTorchのreshape_Kronecker順序]] の
 physical/bondの複合添字を入れ替える話は、別の確認として扱う。
 
@@ -840,7 +840,7 @@ memory layout
 
 ## 23. layoutを強制的に実体化する補助策
 
-資料の実行環境では、truncated SVD後の細い `U_hat` と `torch.kron` の組み合わせでstride/layout由来の `RuntimeError` が出るケースがあった。
+truncated SVD後の細い `U_hat` と `torch.kron` の組み合わせでは、環境によってstride/layout由来の `RuntimeError` が出る場合がある。
 
 まず
 
@@ -869,6 +869,91 @@ assert U_hat_safe.is_contiguous()
 とする。
 
 これは数学的な $U$ を変える操作ではなく、storage/layoutだけを標準化する回避策である。
+
+---
+
+### 細い1列の例を、`flatten` → `clone` → `view` の各段階で追う
+
+layoutを実体化する操作を、一段階ずつ確認する。
+以下は**1列sliceのlayout**を再現する人工例である。
+
+$$
+T=\begin{pmatrix}1/3&2/3&2/3\\4&5&6\end{pmatrix},\qquad
+U_{\mathrm{hat}}=T^T[:,0:1]
+=\begin{pmatrix}1/3\\2/3\\2/3\end{pmatrix},\qquad
+U_{\mathrm{hat}}^TU_{\mathrm{hat}}
+=\begin{pmatrix}1/9+4/9+4/9\end{pmatrix}
+=\begin{pmatrix}1\end{pmatrix}.
+$$
+
+`T` のstrideは $(3,1)$、`T.T` は $(1,3)$ である。
+この1列sliceのshapeは $(3,1)$、strideは $(1,3)$ になる。
+サイズ1の列軸には隣の列が存在せず、そのstrideが3でも `is_contiguous()` は `True` になる。
+そのため `contiguous()` が同じTensorを返してstride $(1,3)$ が残ることがある。
+「連続と判定された」と「全strideが期待する標準値である」は完全には同じではない。
+
+実体化の各段階は
+
+$$
+\begin{aligned}
+U_{\mathrm{hat}}&:(3,1),\quad \operatorname{stride}=(1,3),\\
+f=\operatorname{flatten}(U_{\mathrm{hat}})
+&=\begin{pmatrix}1/3&2/3&2/3\end{pmatrix}\quad\text{（1次元・3要素）},\\
+c=\operatorname{clone}(f)&\quad\text{（同じ3値・新しいstorage）},\\
+U_{\mathrm{safe}}=\operatorname{view}(c,3,1)
+&=\begin{pmatrix}1/3\\2/3\\2/3\end{pmatrix},\quad
+\operatorname{stride}=(1,1).
+\end{aligned}
+$$
+
+flattenは論理順で1次元化し、必要ならコピーする。cloneは新しいstorageを明示的に作り、
+最後のviewはその連続な3値を元shapeへ戻す。
+新しいstorageを作るコストはあるが、値・shape・dtype・deviceは保持する。
+この行列でのKronecker積も、数学上は実体化の前後で同じである。
+
+$$
+U_{\mathrm{safe}}\otimes I_2
+=\begin{pmatrix}
+1/3&0\\0&1/3\\2/3&0\\0&2/3\\2/3&0\\0&2/3
+\end{pmatrix},\qquad
+(U_{\mathrm{safe}}\otimes I_2)^T(U_{\mathrm{safe}}\otimes I_2)
+=(1/9+4/9+4/9)I_2=I_2.
+$$
+
+```python
+import torch
+
+# SVDとは独立に、転置後の1列sliceを用意する。
+T = torch.tensor([[1 / 3, 2 / 3, 2 / 3], [4.0, 5.0, 6.0]], dtype=torch.float64)
+U_hat = T.T[:, :1]
+flat = U_hat.flatten()
+copied = flat.clone()
+U_safe = copied.view(U_hat.shape)
+assert U_hat.stride() == (1, 3) and U_hat.is_contiguous()
+assert U_hat.contiguous() is U_hat
+assert U_safe.stride() == (1, 1) and U_safe.is_contiguous()
+assert torch.equal(U_safe, U_hat)
+assert U_safe.dtype == U_hat.dtype and U_safe.device == U_hat.device
+assert U_safe.untyped_storage().data_ptr() != U_hat.untyped_storage().data_ptr()
+I2 = torch.eye(2, dtype=U_hat.dtype, device=U_hat.device)
+
+# 直接kronの成否は環境依存なので、失敗自体を必須条件にはしない。
+try:
+    L_direct = torch.kron(U_hat, I2)
+except RuntimeError as error:
+    print("direct kron:", str(error))
+else:
+    assert torch.equal(L_direct, torch.kron(U_safe, I2))
+L_safe = torch.kron(U_safe, I2)
+assert torch.allclose(U_safe.T @ U_safe, torch.ones(1, 1, dtype=U_hat.dtype))
+assert torch.allclose(L_safe.T @ L_safe, I2)
+```
+
+直接kronの成否はversion/deviceに依存する。エラーが出ること自体を、この例の成功条件にはしない。
+通常はまずshape・stride・値を確認し、必要な場合だけこの補助策を使う。
+`contiguous` の同一Tensor返却とview/copyの扱いは
+[PyTorch公式contiguous](https://docs.pytorch.org/docs/stable/generated/torch.Tensor.contiguous.html) と
+[Tensor Views](https://docs.pytorch.org/docs/stable/tensor_view.html) を参照する。
 
 ---
 
@@ -929,6 +1014,42 @@ U @ U.T
 ```
 
 という違いを持つ。
+
+QRの $Q$ が $(m,r)$ で $r<m$ なら、`Q @ Q.T` は $(m,m)$ だが単位行列とは限らない。表示された各要素が0・1でなくても、列が正規直交なら射影として正しい。shapeだけで判断せず、対称性・冪等性・traceを分けて確認する。
+
+```python
+import torch
+
+# 4次元の中の2次元部分空間を、reduced QRの列で表す。
+A = torch.tensor(
+    [[1.0, 1.0], [0.0, 1.0], [1.0, -1.0], [0.0, 0.0]],
+    dtype=torch.float64,
+)
+Q, _ = torch.linalg.qr(A, mode="reduced")
+P = Q @ Q.T
+I_cols = torch.eye(Q.shape[1], dtype=Q.dtype, device=Q.device)
+
+assert torch.allclose(Q.T @ Q, I_cols)
+assert torch.allclose(P.T, P)
+assert torch.allclose(P @ P, P)
+assert torch.allclose(torch.trace(P), torch.tensor(2.0, dtype=P.dtype))
+print(P)
+```
+
+この入力では $A$ の二列が互いに直交し、長さの二乗が2と3なので、QRで各列の符号が変わっても $P$ の全要素は
+
+$$
+P=\begin{pmatrix}
+5/6&1/3&1/6&0\\
+1/3&1/3&-1/3&0\\
+1/6&-1/3&5/6&0\\
+0&0&0&0
+\end{pmatrix}.
+$$
+
+対角和は $5/6+1/3+5/6+0=2$ である。対角成分が0または1だけでなく、非対角成分が非零でも、4次元空間の中の2次元部分空間への射影として正しい。
+
+`torch.trace(P)` が列数2に近いことは射影先の次元の確認であり、それだけで射影と判定する条件ではない。$Q^TQ=I$ を満たすことと $P^2=P$ も確認する。理論上の理由、非正規化列を使った反例、全要素の計算は [[35_TT_MPSの等長写像と射影]] に置く。
 
 ---
 
@@ -1005,7 +1126,7 @@ core_ranks = [core.shape[2] for core in cores[:-1]]
 
 ## 27. QRの追補：入力の行・列と新しい基底
 
-以下は左右QRの添付資料に対応する操作メモである。既存のTT-SVD public APIへ新しいQR APIが追加されたという意味ではない。
+以下は左右QRで使う操作メモである。既存のTT-SVD public APIへ新しいQR APIが追加されたという意味ではない。
 
 `Q, R_qr = torch.linalg.qr(A, mode="reduced")` で、入力が `(m,n)` なら `q=min(m,n)`、`Q.shape==(m,q)`、`R_qr.shape==(q,n)` となる。本追補の `R_qr` は理論docs [[36_TT_MPSのGauge自由度と左QR直交化]] の三角因子 $T$ に対応する。
 
@@ -1016,6 +1137,49 @@ $$
 行 $a$ は `Q`、列 $b$ は `R_qr` に残り、$\gamma$ は新しい基底である。QR後の列を元のボンド添字と同一視しない。また、`mode="reduced"` だけでnumerical rankを選ぶわけではない。rank欠損入力の数値挙動・微分には注意が必要である。
 
 左ではコアを `(r_left*n_mode, r_right)` に、右では `(r_left, n_mode*r_right)` に行列化してから**その転置**をQRする。元のボンドサイズが維持できる次元条件と、横長のときの更新後shapeは理論章を参照する。出力を常に古いrankのままreshapeしてはいけない。
+
+### `reduced`・`complete`・`r` の出力を要素まで比べる
+
+入力が $(m,n)$、$q=\min(m,n)$ のとき、`reduced` は $Q:(m,q)$、$R_{\mathrm{qr}}:(q,n)$、`complete` は $Q:(m,m)$、$R_{\mathrm{qr}}:(m,n)$ を返す。`r` は $Q$ が空で、$R_{\mathrm{qr}}:(q,n)$ だけを計算する。第1コアを $Q$ へ置き換える演習に `r` は使えない。
+
+$m=3,n=2$ の小例を
+
+$$
+A=\begin{pmatrix}1&0\\0&1\\0&0\end{pmatrix}
+$$
+
+とする。符号の選び方を一つ固定すれば、reduced QRとcomplete QRはそれぞれ
+
+$$
+\begin{aligned}
+Q_{\mathrm{red}}&=\begin{pmatrix}1&0\\0&1\\0&0\end{pmatrix},
+&R_{\mathrm{red}}&=\begin{pmatrix}1&0\\0&1\end{pmatrix},
+&Q_{\mathrm{red}}R_{\mathrm{red}}&=A,\\
+Q_{\mathrm{full}}&=\begin{pmatrix}1&0&0\\0&1&0\\0&0&1\end{pmatrix},
+&R_{\mathrm{full}}&=\begin{pmatrix}1&0\\0&1\\0&0\end{pmatrix},
+&Q_{\mathrm{full}}R_{\mathrm{full}}&=A.
+\end{aligned}
+$$
+
+completeの第3列は入力の二つの列を表すのに不要な補完方向である。$(1,3,2)$ の第1TTコアへ戻すには6要素の $Q_{\mathrm{red}}$ がそのまま対応し、9要素の $Q_{\mathrm{full}}$ はそのままreshapeできない。なおPyTorchのQRは列符号が異なる正しい組を返すことがあるため、手書きの $Q$ との値の一致ではなくshape、$QR=A$、Gramを検査する。横長の $m\le n$ ではreducedとcompleteのshapeは一致する。
+
+```python
+import torch
+
+# 3行2列の入力で三つのmodeのshapeと再構成を比べる。
+A = torch.tensor([[1., 0.], [0., 1.], [0., 0.]], dtype=torch.float64)
+Q_red, R_red = torch.linalg.qr(A, mode="reduced")
+Q_full, R_full = torch.linalg.qr(A, mode="complete")
+Q_empty, R_only = torch.linalg.qr(A, mode="r")
+
+assert Q_red.shape == (3, 2) and R_red.shape == (2, 2)
+assert Q_full.shape == (3, 3) and R_full.shape == (3, 2)
+assert Q_empty.numel() == 0 and R_only.shape == (2, 2)
+assert torch.allclose(Q_red @ R_red, A)
+assert torch.allclose(Q_full @ R_full, A)
+assert torch.allclose(Q_red.T @ Q_red, torch.eye(2, dtype=A.dtype))
+assert Q_red.reshape(1, 3, 2).shape == (1, 3, 2)
+```
 
 ## 28. `unsqueeze` は転置の代わりではない
 
@@ -1070,6 +1234,45 @@ assert torch.equal(updated[0, 0], torch.tensor([2., 1.], dtype=G2.dtype))
 
 理論上の全要素計算と全テンソル不変性は [[38_TT_MPSの右QR直交化と右ブロック]] に置く。
 
+### Gauge変換の二つの `einsum` を対で確認する
+
+左コアだけへ可逆行列 $M$ を掛けると全体は変わる。右隣へ $M^{-1}$ を同時に掛ける必要がある。コードの文字 `b` は古いbond、`c` は新しいbondと読む。
+
+$$
+\begin{aligned}
+G_1'(a,i,c)&=\sum_bG_1(a,i,b)M(b,c),\\
+G_2'(c,j,d)&=\sum_bM^{-1}(c,b)G_2(b,j,d),\\
+\sum_cG_1'(a,i,c)G_2'(c,j,d)
+&=\sum_bG_1(a,i,b)G_2(b,j,d).
+\end{aligned}
+$$
+
+`G_1'` と `G_2'` の値は変わるが、縮約後の全要素は変わらない。次の例は [[36_TT_MPSのGauge自由度と左QR直交化]] の手計算とは別の小行列を使う。
+
+```python
+import torch
+
+# 境界軸を保った2サイトの全要素を指定する。
+G1 = torch.tensor([[[1., 0.], [2., 1.]]], dtype=torch.float64)
+G2 = torch.tensor([[[1.], [0.]], [[0.], [1.]]], dtype=G1.dtype)
+M = torch.tensor([[1., 2.], [0., 1.]], dtype=G1.dtype)
+M_inverse = torch.linalg.inv(M)
+
+# bを古いbond、cを新しいbondとして、隣接二コアを対で更新する。
+G1_new = torch.einsum("aib,bc->aic", G1, M)
+G2_new = torch.einsum("cb,bjd->cjd", M_inverse, G2)
+before = torch.einsum("aib,bjd->aijd", G1, G2)
+after = torch.einsum("aic,cjd->aijd", G1_new, G2_new)
+
+assert G1_new.shape == G1.shape and G2_new.shape == G2.shape
+assert not torch.equal(G1_new, G1)
+assert torch.allclose(after, before)
+assert torch.equal(
+    before[0, :, :, 0],
+    torch.tensor([[1., 0.], [2., 1.]], dtype=G1.dtype),
+)
+```
+
 ## 30. 左右ブロックの配列・行列・Gramを区別する
 
 `torch.einsum("aib,bjc->ijc", G1_left, G2_left)` では、内部bond `b` とsize 1の左境界 `a` を消し、`(i1,i2,alpha2)` が残る。次に `reshape(n1*n2,r2)` で $(i_1,i_2)$ を行にする。実数の左Gramは `L2_block.T @ L2_block` である。
@@ -1095,6 +1298,7 @@ QRの列符号は非一意なので、手計算と `Q,R_qr` の符号が違っ�
 ## 参考資料：QR追補
 
 - [PyTorch：torch.linalg.qr](https://docs.pytorch.org/docs/stable/generated/torch.linalg.qr.html)
+- [PyTorch：torch.einsum](https://docs.pytorch.org/docs/stable/generated/torch.functional.einsum.html)
 - [PyTorch：torch.tensordot](https://docs.pytorch.org/docs/stable/generated/torch.tensordot.html)
 - [PyTorch：torch.unsqueeze](https://docs.pytorch.org/docs/stable/generated/torch.unsqueeze.html)
 - [PyTorch：torch.squeeze](https://docs.pytorch.org/docs/stable/generated/torch.squeeze.html)

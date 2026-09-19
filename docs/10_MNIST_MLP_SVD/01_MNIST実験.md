@@ -184,7 +184,7 @@ from torchvision import datasets
 from torchvision import transforms
 ```
 
-[[00_基礎理論/05_PyTorch実装/07_PyTorch実装]] のコードを `svd_compression.py` として保存した場合は、次もimportする。
+[[05_SVD基礎実装検証/07_PyTorch実装]] のコードを `svd_compression.py` として保存した場合は、次もimportする。
 
 ```python
 from svd_compression import (
@@ -1815,7 +1815,7 @@ $$
 - [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
-- [[00_基礎理論/05_PyTorch実装/07_PyTorch実装]]
+- [[05_SVD基礎実装検証/07_PyTorch実装]]
 - [[50_DMRG/01_SVDからDMRGへのつながり]]
 
 ---

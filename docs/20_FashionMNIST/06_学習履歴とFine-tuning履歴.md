@@ -137,7 +137,7 @@ Best epoch: 12
 Best validation loss: 0.2997
 ```
 
-02はBaseline全epochをNotebook出力へ表として残していないため、添付ファイルから復元可能なsummaryだけを掲載する。
+02はBaseline全epochをNotebook出力へ表として残していないため、保存済みの出力から確認できるsummaryだけを掲載する。
 
 ---
 

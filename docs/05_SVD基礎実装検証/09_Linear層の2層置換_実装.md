@@ -18,6 +18,8 @@ tags:
 
 このノートでは、学習済みの1つの `nn.Linear` を、SVD因子から作る2つの小さい `nn.Linear` へ置き換える。
 
+2層化の数式、rank上限、パラメータ削減条件は [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]] にまとめる。ここでは、そのPyTorch操作を扱う。
+
 元の層を、
 
 $$
@@ -167,6 +169,76 @@ nn.Linear(r, D_out, bias=True)
 ```
 
 のweight shapeと一致する。
+
+---
+
+### shapeの0番目をin_featuresへ渡すと逆になる
+
+`original` がPyTorchのweightであるとき、`Linear(original.shape[0], r)` とすると入力・出力の読み方が逆になる。
+shape $(D_{\mathrm{out}},D_{\mathrm{in}})$ なので、
+`D_out, D_in = original.shape` と取り出し、前段は `Linear(D_in, r)` にする。
+
+小さい例として、biasなしの `Linear(3, 2)` を考える。
+
+$$
+W=\begin{pmatrix}9&0&0\\0&4&0\end{pmatrix},
+\qquad
+U=I_2,\quad
+\Sigma=\begin{pmatrix}9&0\\0&4\end{pmatrix},\quad
+V_h=\begin{pmatrix}1&0&0\\0&1&0\end{pmatrix}.
+$$
+
+rank 1では
+
+$$
+A=V_{h,1}=\begin{pmatrix}1&0&0\end{pmatrix},
+\qquad
+B=U_1\Sigma_1=\begin{pmatrix}9\\0\end{pmatrix},
+\qquad
+BA=\begin{pmatrix}9&0&0\\0&0&0\end{pmatrix}.
+$$
+
+入力 $x=(x_1,x_2,x_3)^{\mathsf T}$ に対して
+
+$$
+h=Ax=x_1,\qquad
+y=Bh=\begin{pmatrix}9x_1\\0\end{pmatrix}.
+$$
+
+中間次元は1だが、出力次元は元の2のままである。
+**出力が2クラスだからrankも2固定、とはならない。**
+MNISTの最終 `Linear(256, 10)` も、SVD初期化で選べる正のrankは1〜10であり、
+最終出力は常に10次元へ戻す。ただし小さいrankで精度を保てるかは別に評価する。
+rank 10も、ゼロ特異値があれば実際の行列rankが10とは限らない。
+
+```python
+import torch
+from torch import nn
+
+# モデルの学習ではなく、shapeの向きとrank 1のfactorコピーを確認する。
+original = torch.tensor([[9.0, 0.0, 0.0], [0.0, 4.0, 0.0]], dtype=torch.float64)
+D_out, D_in = original.shape
+rank = 1
+U, S, Vh = torch.linalg.svd(original, full_matrices=False)
+first = nn.Linear(D_in, rank, bias=False, dtype=original.dtype)
+second = nn.Linear(rank, D_out, bias=False, dtype=original.dtype)
+# Linearの生成時には初期値が入る。shapeを決めるだけの空箱ではない。
+with torch.no_grad():
+    first.weight.copy_(Vh[:rank, :])
+    second.weight.copy_(U[:, :rank] * S[:rank].unsqueeze(0))
+factors = nn.Sequential(first, second)
+X = torch.tensor([[2.0, 3.0, 5.0]], dtype=original.dtype)
+torch.testing.assert_close(factors(X), torch.tensor([[18.0, 0.0]], dtype=original.dtype))
+assert first.weight.shape == (1, 3)
+assert second.weight.shape == (2, 1)
+```
+
+逆に `Linear(original.shape[0], rank)` を作るとweightは $(1,2)$ となり、
+$A$ の $(1,3)$ と一致しない。
+SVDの上限を超えるsliceは指定数の列・行を増やしてくれるわけでもないため、
+前段を作る前に `rank <= min(D_out, D_in)` を検査する。
+関数を `divide_two_layer(layer, rank)` と定義したなら、呼び出しは `divide_two_layer(layer, 10)` または `divide_two_layer(layer, rank=10)` とし、定義にないkeywordは渡さない。
+行列rankの上限とパラメータ削減の損益分岐は [[05_圧縮率とRank]] で分けて計算する。
 
 ---
 
@@ -390,7 +462,7 @@ SVD入力として元重みを読む
 └── with torch.no_grad(): copy_()
 ```
 
-詳細は [[00_基礎理論/05_PyTorch実装/08_Linear層のSVD実装]] を参照する。
+詳細は [[05_SVD基礎実装検証/08_Linear層のSVD実装]] を参照する。
 
 ---
 
@@ -874,7 +946,7 @@ lowrank_output
 
 ## Pythonクラス記法の補足
 
-`self`、`__init__()`、`super().__init__()`、`model(images)` と `forward(images)` の違いは、Linear層の置換だけに固有の話ではない。一般的なPython・PyTorchクラス記法として [[00_基礎理論/05_PyTorch実装/13_PandasとPython実装メモ#23. PyTorchモデルを読むためのクラス記法]] に集約する。
+`self`、`__init__()`、`super().__init__()`、`model(images)` と `forward(images)` の違いは、Linear層の置換だけに固有の話ではない。一般的なPython・PyTorchクラス記法として [[05_SVD基礎実装検証/13_PandasとPython実装メモ#23. PyTorchモデルを読むためのクラス記法]] に集約する。
 
 このノートでは、`self.first` と `self.second` が子Moduleとして登録され、`model(images)` から2層が順に呼ばれることを押さえればよい。
 
@@ -940,4 +1012,4 @@ baseline比較ができなくなる。
 
 - [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
-- [[00_基礎理論/05_PyTorch実装/07_PyTorch実装]]
+- [[05_SVD基礎実装検証/07_PyTorch実装]]

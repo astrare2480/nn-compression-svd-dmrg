@@ -43,6 +43,8 @@ Tensor近似誤差
 
 学習Notebookは自作実装を残し、再利用用srcは汎用APIとして整理する。
 
+数式・アルゴリズムは [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]、Conv2dへの適用とrank・誤差の考え方は [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]] に戻って確認できる。
+
 ---
 
 ## 1. Tensor演算
@@ -205,6 +207,45 @@ ranks = {0: rank_out, 1: rank_in}
 なら4階Conv weightのmode 0 / 1だけを更新するpartial HOOIになる。
 
 入力 `factors` はcloneし、破壊的に変更しない。1 sweep内では先に更新したfactorを後続mode更新に使うGauss-Seidel型である。
+
+#### 作業用辞書の再代入とTensorのin-place更新を区別する
+
+`dict(factors)` は辞書だけを新しくし、値のTensorは元辞書と共有する。一方、dictionary comprehensionで各Tensorを `clone()` すれば、値のstorageも独立する。
+
+```python
+import torch
+
+factors = {
+    0: torch.tensor([[1.0, 0.0], [0.0, 1.0]]),
+    1: torch.tensor([[2.0], [3.0]]),
+}
+
+# 辞書は別でも、各値は同じTensorを参照している。
+shallow = dict(factors)
+assert shallow is not factors
+assert shallow[0].data_ptr() == factors[0].data_ptr()
+
+# HOOIの作業用factorは、値のTensorも独立にする。
+factors_work = {
+    mode: factor.clone()
+    for mode, factor in factors.items()
+}
+assert factors_work[0].data_ptr() != factors[0].data_ptr()
+assert factors_work[1].data_ptr() != factors[1].data_ptr()
+
+updated_u0 = torch.tensor([[0.0, 1.0], [1.0, 0.0]])
+
+# 再代入は作業用辞書のmode 0が指すTensorだけを差し替える。
+factors_work[0] = updated_u0
+assert torch.equal(
+    factors[0],
+    torch.tensor([[1.0, 0.0], [0.0, 1.0]]),
+)
+```
+
+`factors_work[0] = updated_u0` は辞書の参照先を差し替える操作であり、元Tensorの要素は書き換えない。これに対して `factors_work[0].copy_(updated_u0)` は、左辺Tensorのstorageへ値をin-placeでコピーする。shallow copyした辞書に後者を行うと、元の `factors[0]` まで変わり得る。
+
+入口で全factorをcloneしておけば、現在は辞書への再代入だけであっても、将来の途中処理がin-placeへ変わったときに呼出し元を壊しにくい。更新対象mode自身の古いfactorはprojected Tensorへ掛けず、他modeの作業用factorだけを使う。
 
 ### HOOI入力validation
 
@@ -384,11 +425,10 @@ print("logits RMSE:", float(logits_rmse))
 
 `effective_weight` の一致は層の再構成に関する確認であり、`logits_rmse` は実データを通したモデル出力の確認である。この2つを分けることで、weight近似誤差とtask上の影響を混同しない。
 
-### 元資料のdummy入力と、forward確認で分かる範囲
+### dummy入力と、forward確認で分かる範囲
 
-添付 `CNN CIFAR-10→Tuckerを考える (1).md` の1991–2236行では、
-`copy.deepcopy(model)`、`conv2` の差し替え、dummy入力、forwardを一行ずつ説明している。
-直前のコードのモデルを使う場合、元資料と同じ入力のサイズは
+`copy.deepcopy(model)`、`conv2` の差し替え、dummy入力、forwardの関係を確認する。
+直前のコードのモデルを使う場合、入力のサイズは
 
 $$
 \operatorname{shape}(\mathrm{dummy})=(N,C,H,W)=(4,3,32,32)
@@ -397,8 +437,7 @@ $$
 である。4は独立な画像入力を4枚束ねたbatch、3は各画像のRGB channel、
 二つの32は高さと幅である。第1軸だけを選ぶ `dummy[0]` は
 shape `(3, 32, 32)` の1枚分になる。
-元資料の `dummy[^18_0]` は引用マーカーが添字へ混入した表記なので、
-コードの添字を `[0]` として読み直す。
+`dummy[0]` の `[0]` はbatchの先頭sampleを選ぶ添字である。
 
 ```python
 # 前の節で作ったコピー側を使い、元モデルやDataLoaderは変更しない。
@@ -433,7 +472,6 @@ deepcopyできるかを個別に確認する必要がある。
 
 同じdummyをbaselineにも渡してlogits差を測ることはできるが、
 ランダム入力での差は実データ上のloss / accuracyの代わりにはならない。
-元資料がモデル全体のlogits差を「元のconv2の出力近似」と説明した箇所は、
 測定対象を分けて読む。後続層も通したlogits差と、Conv2単体のactivation差は別の量である。
 `no_grad()` は評価modeへ変更しないため、DropoutやBatchNormを評価動作にする
 `eval()` と併用する。
@@ -482,10 +520,9 @@ optimizer.step()
 
 置換後の3層Parameterはleafであり、元ConvのParameter storageを共有しない。
 
-### 元資料のleaf・in-placeエラーを、初期化と微分可能な計算に分ける
+### leaf・in-placeエラーを、初期化と微分可能な計算に分ける
 
-同じ添付の799–1052行で繰り返し説明した理由は、
-「学習対象のParameterをコピーで書き換える操作」と「その後のfine-tuning」を分けることにある。
+「学習対象のParameterをコピーで書き換える操作」と「その後のfine-tuning」を分ける。
 `nn.Parameter(..., requires_grad=True)` は通常leafであり、
 `weight.copy_(...)` は値をその場で書き換えるin-place操作である。
 勾配追跡が有効なまま、そのleafへコピーすると、通常は
@@ -506,7 +543,7 @@ a leaf Variable that requires grad is being used in an in-place operation
 一方、SVD/HOSVDを含む変換自体を微分したい別の目的では、
 新しいleaf Parameterへの初期値コピーと同じ構成にせず、Tensor-levelの計算として
 graphを保持するかを設計する。
-元資料の「履歴をコピーしない」は、本章ではこの初期化の境界を指す。
+この初期化では代入処理を微分の履歴へ含めず、その後のforwardからgraphを構築する。
 
 ### effective weight評価
 
@@ -640,6 +677,45 @@ relative_error_tl = (
     / tl.norm(weight, 2)
 )
 ```
+
+### `partial_tucker` の返り値は入れ子で受ける
+
+TensorLy 0.9.0の `partial_tucker` は
+
+```python
+return (core, factors), rec_errors
+```
+
+という構造を返す。従って、返り値は
+
+```text
+partial_tucker(...)
+├── 1番目: (core, factors)
+│   ├── core
+│   └── factors
+└── 2番目: rec_errors
+```
+
+であり、正しい受け取り方は
+
+```python
+(core_tl, factors_tl), reported_errors = partial_tucker(...)
+```
+
+となる。誤差履歴を使わない場合だけ `reported_errors` を `_` に替えられる。
+
+```python
+core_tl, factors_tl = partial_tucker(...)
+```
+
+と書いても、外側の要素がちょうど2個なので、その代入時点では例外にならない。しかし実際には
+
+```text
+core_tl    <- (core, factors)
+factors_tl <- rec_errors
+```
+
+となり、`core_tl.shape` やfactorごとの処理で初めて不整合が表面化する。返り値の個数だけでなく、入れ子の構造まで確認する必要がある。
 
 全4 modeをfactorへ分解する通常のTucker分解なら、`tucker()`と`tucker_to_tensor()`を組み合わせる。
 

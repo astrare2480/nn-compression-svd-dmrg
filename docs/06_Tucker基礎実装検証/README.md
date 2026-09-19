@@ -13,7 +13,7 @@ tags:
 
 # Tucker基礎実装検証
 
-`05_SVD基礎実装検証` はSVD編の確認結果に限定しているため、Tucker / HOSVD / HOOIは別章としてここへまとめる。
+`05_SVD基礎実装検証` はSVD編のPyTorch操作と確認結果に限定しているため、Tucker / HOSVD / HOOIのPyTorch操作と確認結果は別章としてここへまとめる。評価の理論は `00_基礎理論` に残す。
 
 この章の目的は、Notebookを開かなくても、
 
@@ -29,7 +29,17 @@ tags:
 
 を追跡できる状態にすること。
 
-## ノート
+## PyTorch操作
+
+- [[06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約]]
+- [[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード]]
+- [[06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード]]
+- [[06_Tucker基礎実装検証/25_評価設計のPyTorchコード]]
+- [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
+
+数式の導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]、評価設計は [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]、現行の共通関数の契約は [[07_src設計/05_Core_API_v1]] を参照する。
+
+## 実装・実験の確認結果
 
 1. [[06_Tucker基礎実装検証/01_Tucker_HOSVD基礎実装の確認結果]]
 2. [[06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果]]
@@ -61,14 +71,11 @@ notebooks/20_tucker/10_cifar10_cnn/
 
 数式を途中から追う場合は、まず次を読む。
 
-- [[00_基礎理論/00_数式導出監査]]
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/21_テンソルとmode演算]]
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/22_Tucker分解とHOSVD]]
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
 - [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
-- [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
-- [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]
 
 `20_Tucker_HOSVD_HOOI数式の導出` では、unfold / fold / mode productから、HOSVD、Tucker-2の3層forward、HOOIの局所最適化・sweep・収束まで途中式をまとめている。
 

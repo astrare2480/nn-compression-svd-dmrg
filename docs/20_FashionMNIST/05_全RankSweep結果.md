@@ -197,14 +197,14 @@ validation_loss_normalize = 0.11875058138389116
 
 ---
 
-## 3. 添付Notebookに永続化されていない値
+## 3. Notebookに永続化されていない値
 
 rank sweepコードでは30条件すべてについて `logits_rmse` とretained energyも計算する。
-ただし進行ログには出しておらず、添付Notebook内で全30条件の値が表示されていない。
+ただし進行ログには出しておらず、保存済みNotebook内で全30条件の値が表示されていない。
 
 - 02 retained energyは別表で全rankが表示されているので掲載できる。
 - 02 / 03 knee ±1は全列表示されているので `logits_rmse` / energyまで掲載できる。
-- 03全30条件の `logits_rmse` / retained energyは、添付されたNotebook出力だけから正確に復元できないので推測しない。
+- 03全30条件の `logits_rmse` / retained energyは、保存済みNotebook出力だけから正確に復元できないので推測しない。
 
 ---
 

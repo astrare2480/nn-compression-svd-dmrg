@@ -81,14 +81,7 @@ src/nn_compression/compression/conv_svd.py
 
 主要関数：
 
-```python
-from nn_compression.compression import (
-    conv2d_weight_matrix,
-    retained_energy,
-    retained_energy_from_matrix,
-    truncated_svd,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-001]]
 
 役割：
 
@@ -199,11 +192,10 @@ W_mat.shape
 
 ---
 
-### 元資料の64filterの行表示を残す
+### 64filterを行へ並べて全成分の対応を示す
 
-添付 `CNNとMLP (1).md` の4170–4200行は、
-各filterをcolumn vector $\widetilde w_o\in\mathbb R^{288}$ と見たとき、
-その転置を行へ積んでいる。元資料と同じ0始まりのfilter番号で書けば
+各filterをcolumn vector $\widetilde w_o\in\mathbb R^{288}$ と見て、
+その転置を行へ積む。0始まりのfilter番号で書けば
 
 $$
 W_{\mathrm{mat}}=
@@ -235,20 +227,11 @@ $$
 
 ## 3. PyTorchでは1行で行列化できる
 
-```python
-W_mat = conv.weight.detach().flatten(
-    start_dim=1,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-002]]
 
 または、
 
-```python
-W_mat = conv.weight.detach().reshape(
-    conv.weight.shape[0],
-    -1,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-003]]
 
 でよい。
 
@@ -277,25 +260,7 @@ axis 1以降を全部flattenする
 
 `flatten(start_dim=1)` が各出力filterを同じ行順で積むことは、連番Tensorで確認できる。
 
-```python
-import torch
-
-# Conv weightと同じ4階Tensorを、値の追跡ができる連番で作る。
-weight = torch.arange(64 * 32 * 3 * 3).reshape(64, 32, 3, 3)
-
-# 各出力filterを1行へflattenし、第0軸へ順番に積む。
-rows = []
-for out_channel in range(weight.shape[0]):
-    row = weight[out_channel].flatten()
-    rows.append(row)
-
-weight_matrix_loop = torch.stack(rows, dim=0)
-weight_matrix_direct = weight.flatten(start_dim=1)
-
-# 値・行順・shapeが1行で行列化した結果と一致する。
-assert torch.equal(weight_matrix_loop, weight_matrix_direct)
-assert weight_matrix_direct.shape == (64, 288)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-004]]
 
 `torch.stack(rows, dim=0)` は各1次元Tensorを新しい第0軸へ積むため、`weight[out_channel]` がそのまま第 `out_channel` 行になる。
 
@@ -303,15 +268,11 @@ assert weight_matrix_direct.shape == (64, 288)
 
 ## 4. `shape` とTensorを混同しない
 
-```python
-conv.weight.shape
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-005]]
 
 はshape情報であり、値そのものではない。
 
-```python
-conv.weight
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-006]]
 
 はweight Tensor / Parameterである。
 
@@ -329,9 +290,7 @@ weight Tensor
 
 である。
 
-```python
-W_mat = conv.weight.detach().flatten(start_dim=1)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-007]]
 
 の結果 `W_mat` も1つの `torch.Tensor` である。
 
@@ -499,12 +458,7 @@ $$
 
 PyTorchでは、
 
-```python
-U, S, Vh = torch.linalg.svd(
-    W_mat,
-    full_matrices=False,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-008]]
 
 とする。
 
@@ -534,11 +488,7 @@ $$
 
 上位 $r$ 個だけ残す。
 
-```python
-U_r = U[:, :rank]
-S_r = S[:rank]
-Vh_r = Vh[:rank, :]
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-009]]
 
 shapeは、
 
@@ -618,7 +568,7 @@ second factor : (64, r)
 
 である。
 
-別資料では、これらを `A` / `B` と逆の名前で呼んだり、$\Sigma^{1/2}$ を両側へ分配したりすることがある。
+因子を `A` / `B` と逆の名前で呼ぶ記法や、$\Sigma^{1/2}$ を両側へ分配する因子化もある。
 
 > [!important]
 > `A` / `B` という変数名そのものに意味を固定しない。  
@@ -628,11 +578,7 @@ second factor : (64, r)
 
 ## 10. denseに復元するとshapeは元へ戻る
 
-```python
-W_approx_mat = (
-    U_r @ torch.diag(S_r) @ Vh_r
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-010]]
 
 とすれば、
 
@@ -646,14 +592,7 @@ W_approx_mat.shape
 
 さらに、
 
-```python
-W_approx_4d = W_approx_mat.reshape(
-    64,
-    32,
-    3,
-    3,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-011]]
 
 とすれば、
 
@@ -741,11 +680,7 @@ SVDが最適化しているのはweight行列の近似であって、分類loss�
 
 Conv weightへ、
 
-```python
-torch.linalg.svdvals(
-    conv.weight,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-012]]
 
 を4次元のまま適用してはいけない。
 
@@ -765,24 +700,13 @@ torch.linalg.svdvals(
 
 その場合、
 
-```python
-singular_values[:rank]
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-013]]
 
 の先頭軸も「特異値rank」だけを表さず、意図したretained energyにならない。
 
 したがって、必ず、
 
-```python
-weight_matrix = conv.weight.detach().reshape(
-    conv.weight.shape[0],
-    -1,
-)
-
-singular_values = torch.linalg.svdvals(
-    weight_matrix,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界#PyTorch確認-014]]
 
 とする。
 
@@ -790,36 +714,9 @@ singular_values = torch.linalg.svdvals(
 
 ---
 
-## 14. `detach()` と `torch.no_grad()`
+## PyTorch・Python操作：14. `detach()` と `torch.no_grad()`
 
-### `detach()`
-
-SVDへ渡す元weightを、元のautograd graphから切り離す。
-
-```python
-W_mat = conv.weight.detach().flatten(
-    start_dim=1,
-)
-```
-
-### `torch.no_grad()`
-
-新しく作った層へSVD因子を `copy_()` するときに、重み代入をautogradで追跡しないために使う。
-
-```python
-with torch.no_grad():
-    new_layer.weight.copy_(...)
-```
-
-役割は異なる。
-
-```text
-detach
-→ SVDへ渡すTensorを計算graphから切る
-
-no_grad
-→ 新しいParameterへの代入を追跡しない
-```
+コードと操作手順は [[05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界]] にまとめた。数式や評価の考え方は本ノートで続ける。
 
 ---
 

@@ -390,6 +390,151 @@ R_out → C_out
 
 形状に合わせて機械的に転置するのではなく、**今いる空間から次に必要な空間への写像方向**で決める。
 
+### 2入力・2出力の全要素で写像方向を確認する
+
+channel方向だけを追えるように、空間kernelを $1\times1$、biasを0とし、
+
+$$
+C_{\mathrm{in}}
+=C_{\mathrm{out}}
+=R_{\mathrm{in}}
+=R_{\mathrm{out}}
+=2
+$$
+
+とする。factor、core、ある空間位置の入力を
+
+$$
+U_{\mathrm{in}}
+=
+\begin{pmatrix}
+u_{11} & u_{12}\\
+u_{21} & u_{22}
+\end{pmatrix},
+\qquad
+G
+=
+\begin{pmatrix}
+g_{11} & g_{12}\\
+g_{21} & g_{22}
+\end{pmatrix},
+$$
+
+$$
+U_{\mathrm{out}}
+=
+\begin{pmatrix}
+v_{11} & v_{12}\\
+v_{21} & v_{22}
+\end{pmatrix},
+\qquad
+x
+=
+\begin{pmatrix}
+x_1\\
+x_2
+\end{pmatrix}
+$$
+
+と書く。最初の $1\times1$ Convは、元の入力channel $i$ を縮約してrank添字 $\beta$ を残すので、
+
+$$
+z
+=U_{\mathrm{in}}^{\mathsf T}x
+=
+\begin{pmatrix}
+u_{11} & u_{21}\\
+u_{12} & u_{22}
+\end{pmatrix}
+\begin{pmatrix}
+x_1\\
+x_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+u_{11}x_1+u_{21}x_2\\
+u_{12}x_1+u_{22}x_2
+\end{pmatrix}.
+$$
+
+ここで第1行は $\beta=1$、第2行は $\beta=2$ に対応する。次にcore convolutionは
+
+$$
+t
+=Gz
+=
+\begin{pmatrix}
+g_{11}z_1+g_{12}z_2\\
+g_{21}z_1+g_{22}z_2
+\end{pmatrix}
+$$
+
+であり、$z_1,z_2$ を代入すると
+
+$$
+\begin{aligned}
+t_1
+&=g_{11}(u_{11}x_1+u_{21}x_2)
++g_{12}(u_{12}x_1+u_{22}x_2),\\
+t_2
+&=g_{21}(u_{11}x_1+u_{21}x_2)
++g_{22}(u_{12}x_1+u_{22}x_2).
+\end{aligned}
+$$
+
+最後の $1\times1$ Convはrank添字 $\alpha$ を縮約して元の出力channel $o$ を作るので、
+
+$$
+y
+=U_{\mathrm{out}}t
+=
+\begin{pmatrix}
+v_{11}t_1+v_{12}t_2\\
+v_{21}t_1+v_{22}t_2
+\end{pmatrix}.
+$$
+
+したがって、全3段をまとめたeffective weightは
+
+$$
+W_{\mathrm{eff}}
+=U_{\mathrm{out}}GU_{\mathrm{in}}^{\mathsf T}
+=
+\begin{pmatrix}
+w_{11} & w_{12}\\
+w_{21} & w_{22}
+\end{pmatrix},
+$$
+
+各要素は
+
+$$
+\begin{aligned}
+w_{11}
+&=v_{11}(g_{11}u_{11}+g_{12}u_{12})
++v_{12}(g_{21}u_{11}+g_{22}u_{12}),\\
+w_{12}
+&=v_{11}(g_{11}u_{21}+g_{12}u_{22})
++v_{12}(g_{21}u_{21}+g_{22}u_{22}),\\
+w_{21}
+&=v_{21}(g_{11}u_{11}+g_{12}u_{12})
++v_{22}(g_{21}u_{11}+g_{22}u_{12}),\\
+w_{22}
+&=v_{21}(g_{11}u_{21}+g_{12}u_{22})
++v_{22}(g_{21}u_{21}+g_{22}u_{22})
+\end{aligned}
+$$
+
+となる。$W_{\mathrm{eff}}$ の行 $o$ は出力channel、列 $i$ は入力channelに対応し、
+
+$$
+y_1=w_{11}x_1+w_{12}x_2,
+\qquad
+y_2=w_{21}x_1+w_{22}x_2
+$$
+
+である。入力側だけを転置する理由は、この展開で $U_{\mathrm{in}}$ の**行が元入力channel、列がrank成分**になっていることからも確認できる。一般の $K_h\times K_w$ では、同じchannel方向の積を空間offset $(a,b)$ ごとのcore $G_{:,:,a,b}$ に対して行う。
+
 ---
 
 ## 5. `[:, :, None, None]` の意味
@@ -410,17 +555,13 @@ $$
 
 が必要なので、
 
-```python
-u_in.T[:, :, None, None]
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約#PyTorch確認-001]]
 
 でsize 1の空間軸を2つ追加する。
 
 同様に
 
-```python
-u_out[:, :, None, None]
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約#PyTorch確認-002]]
 
 は
 
@@ -658,48 +799,9 @@ R_in / R_outが小さくなる
 
 ---
 
-## 10. PyTorch実装上の契約
+## PyTorch・Python操作：10. PyTorch実装上の契約
 
-今回のsrcでは、元Convの意味を保つため次を維持する。
-
-- `groups=1` の通常Conv2dのみ対応
-- 中央core Convが元の `stride / padding / dilation / padding_mode` を継承
-- 前後1x1 Convはstride 1 / padding 0 / dilation 1
-- device / dtypeを維持
-- 元weight / biasの `requires_grad` を維持
-- 元biasは最後の1x1へコピー
-- 元Conv自体を破壊せず、置換後Parameterとstorageを共有しない
-- `rank_out / rank_in` はboolを拒否し、`1 <= rank_out <= C_out`, `1 <= rank_in <= C_in`
-- 現行HOSVD/HOOI経路は実数dtype限定で、複素Tensorは明示的に拒否
-
-重みコピーは学習演算ではなく初期化なので、
-
-```python
-with torch.no_grad():
-    parameter.copy_(value)
-```
-
-を使う。
-
-`no_grad()` はコピー操作の履歴を記録しないだけで、コピー後のParameterを学習不能にするものではない。
-
-### autograd境界はAPI層で分ける
-
-すべてのTucker分解で入力weightを一律 `detach()` するわけではない。
-
-```text
-tucker2_hooi(weight, ...)
-→ Tensor-level decomposition
-→ 入力weightをdetachしない
-
-build_tucker2_conv(conv, ...)
-→ Module構築・初期化
-→ conv.weightをdetachして分解し、新しいleaf Parameterへcopy
-```
-
-この分離により、低レベルTensor APIでは必要以上にautograd graphを切らず、Module置換時には元モデルと新しいParameterを独立させる。
-
-`tucker2_effective_weight()` は評価用helperなので、3層のweightをdetachして等価な4階weightを再構成する。
+コードと操作手順は [[06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約]] にまとめた。数式や評価の考え方は本ノートで続ける。
 
 ---
 

@@ -397,9 +397,7 @@ $$
 
 Pythonの0始まりsliceなら
 
-```python
-U_n = Q_n[:, :R_n]
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード#PyTorch確認-003]]
 
 となる。
 
@@ -984,7 +982,7 @@ HOOI
 ```
 
 > [!note] 補足一般理論
-> この節の「global optimumではない」という区別は標準的なTucker理論による補足であり、添付資料の実験値から導いた主張ではない。今回の実験では実際にHOOIがHOSVDよりFrobenius errorを下げたことを、別の検証ノートで確認している。
+> HOSVDが一般にglobal optimumを保証しないことは、Tucker近似の理論上の性質である。HOOIによるFrobenius errorの変化は、理論上の保証と実験での観察を区別して評価する。
 
 ---
 

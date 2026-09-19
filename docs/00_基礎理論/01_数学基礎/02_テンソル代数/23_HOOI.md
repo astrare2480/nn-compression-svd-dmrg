@@ -608,9 +608,7 @@ $$
 
 Pythonの0始まりsliceで書けば、
 
-```python
-U_new = Q[:, :R_n]
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード#PyTorch確認-004]]
 
 である。
 
@@ -1267,7 +1265,7 @@ classification accuracy
 
 と考える必要がある。
 
-添付で検討したtask-awareな発展としては、例えば次の目的がある。
+task-awareな発展としては、例えば次の目的がある。
 
 | 目的 | 代表的な誤差 |
 | --- | --- |
@@ -1323,19 +1321,17 @@ src/nn_compression/compression/hooi.py
 
 `ranks` のkeyが「圧縮・更新対象mode」を表すため、
 
-```python
-ranks = {0: r0, 1: r1, 2: r2}
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード#PyTorch確認-005]]
 
 なら通常の3-mode HOOI、
 
-```python
-ranks = {0: rank_out, 1: rank_in}
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード#PyTorch確認-006]]
 
 なら4階Conv weightに対するpartial HOOI / Tucker-2として同じ実装を再利用できる。
 
 より長い途中導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]] にも残す。
+
+PyTorchでの汎用HOOIとConv2d Tucker-2の実装は [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]] を参照する。
 
 検証結果：
 

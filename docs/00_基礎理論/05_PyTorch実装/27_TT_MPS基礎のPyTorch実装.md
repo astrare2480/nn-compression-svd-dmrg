@@ -261,6 +261,78 @@ $$
 
 TT-SVDで必要なのは最終的にrank $r\le q$ の列だけなので、full SVDの不要な基底を保持しないreduced SVDが自然である。
 
+### full SVDでは、特異値行列を長方形へ戻して掛ける
+
+同じ $A\in\mathbb R^{m\times n}$ に `full_matrices=True` を指定すると、返り値は
+
+$$
+U_{\mathrm{full}}\in\mathbb R^{m\times m},
+\qquad
+S\in\mathbb R^q,
+\qquad
+V_{h,\mathrm{full}}\in\mathbb R^{n\times n},
+\qquad
+q=\min(m,n)
+$$
+
+となる。$S$ だけは長さ $q$ のままであり、$m\times n$ の行列ではない。fullの因子をそのまま使うなら、$S$ を長方形の特異値行列へ配置する。
+
+$$
+(\Sigma_{\mathrm{full}})_{ij}
+=
+\begin{cases}
+\sigma_i,&i=j\le q,\\
+0,&\text{それ以外},
+\end{cases}
+\qquad
+\Sigma_{\mathrm{full}}\in\mathbb R^{m\times n},
+$$
+
+$$
+A
+=U_{\mathrm{full}}
+\Sigma_{\mathrm{full}}
+V_{h,\mathrm{full}}.
+$$
+
+第1cutが $2\times12$ の場合、全要素は
+
+$$
+\Sigma_{\mathrm{full}}
+=
+\begin{pmatrix}
+\sigma_1&0&0&0&0&0&0&0&0&0&0&0\\
+0&\sigma_2&0&0&0&0&0&0&0&0&0&0
+\end{pmatrix}.
+$$
+
+fullの場合の積のshapeは
+
+$$
+(2\times2)(2\times12)(12\times12)=2\times12
+$$
+
+である。一方、reducedの場合は
+
+$$
+(2\times2)(2\times2)(2\times12)=2\times12
+$$
+
+となる。`torch.diag(S)` は $2\times2$ なので、fullの $V_h$ に直接掛けると内側の次元2と12が一致しない。同じfull分解から必要な部分だけを使えば、
+
+$$
+A
+=U_{\mathrm{full}}[:,1:q]\,
+\operatorname{diag}(\sigma_1,\ldots,\sigma_q)\,
+V_{h,\mathrm{full}}[1:q,:]
+$$
+
+と書ける。数式の番号は1始まりで端点を含み、Pythonでは `[:, :q]` と `[:q, :]` に対応する。別々にSVDを呼ぶと特異ベクトルの符号や縮退部分の基底が異なり得るため、配列そのものの完全一致は要求しない。
+
+reducedの $q$ 本に零特異値の方向が含まれる場合もある。非零方向だけの数学的rank、reduced出力の本数 $q$、圧縮で保持する本数を区別する。
+
+[PyTorch公式SVD](https://docs.pytorch.org/docs/stable/generated/torch.linalg.svd.html)
+
 ---
 
 ## 6. `tt_unfold`: TT cutのreshape
@@ -393,6 +465,72 @@ for mode in range(d - 1):
 ```
 
 である。
+
+### 一般 $d$ 階でも、最後のbond軸の位置だけが一つずつ進む
+
+一般の
+
+$$
+X\in\mathbb R^{n_1\times n_2\times\cdots\times n_d}
+$$
+
+では、$r_0=1$ とし、第 $k$ 段階の開始時点でremainderが
+
+$$
+R^{(k-1)}
+\in
+\mathbb R^{r_{k-1}\times n_k\times n_{k+1}\times\cdots\times n_d}
+$$
+
+というshapeを持つ。これを
+
+$$
+M_k
+\in
+\mathbb R^{(r_{k-1}n_k)\times(n_{k+1}\cdots n_d)}
+$$
+
+へreshapeしてSVDし、保持rankを $r_k$ とする。左特異ベクトルは
+
+$$
+U_k
+\in
+\mathbb R^{(r_{k-1}n_k)\times r_k}
+$$
+
+なので、第 $k$ coreは
+
+$$
+G^{(k)}
+=\operatorname{reshape}(U_k,r_{k-1},n_k,r_k)
+$$
+
+となる。新しいremainderは
+
+$$
+R^{(k)}
+=\operatorname{reshape}
+\left(
+\Sigma_kV_k^{\mathsf T},
+r_k,n_{k+1},\ldots,n_d
+\right).
+$$
+
+従って各loopで物理軸 $n_k$ が一つcore側へ移り、残りの先頭bondだけが $r_{k-1}$ から $r_k$ へ更新される。最後に残る
+
+$$
+R^{(d-1)}\in\mathbb R^{r_{d-1}\times n_d}
+$$
+
+へ右境界軸を加え、
+
+$$
+G^{(d)}
+\in
+\mathbb R^{r_{d-1}\times n_d\times1}
+$$
+
+とする。これは `shape[mode + 1:]` がloopごとに1物理軸ずつ短くなる理由であり、元Tensorのcut unfoldingを毎回作り直す処理ではない。
 
 ---
 
@@ -745,7 +883,15 @@ X_hat = torch.einsum("aib,bjc,ckd->ijk", G1, G2, G3)
 | `k` | $i_3$ | 第3physical index |
 | `d` | $r_3=1$ | 右境界bond |
 
-入力側で繰り返し現れ、出力 `ijk` に残らない `a,b,c,d` が縮約される。
+出力 `ijk` に残らない `a,b,c,d` は和で消える。内部bondの `b,c` は隣接する二つの入力に現れる。一方、境界の `a,d` は各一つの入力だけに現れるが、出力に書かないため和で消え、サイズ1なので各1項だけである。途中の2コア収縮を明示すると、
+
+$$
+\mathrm{pair}(a,i,j,c)=\sum_bG_1(a,i,b)G_2(b,j,c),
+\qquad
+X(i,j,k)=\sum_{a,c,d}\mathrm{pair}(a,i,j,c)G_3(c,k,d).
+$$
+
+`torch.einsum("aib,bjc->aijc", G1, G2)` で `pair` のshape $(1,n_1,n_2,r_2)$ を確認してから、元の3コア式と照合できる。
 
 学習用00 Notebookでは途中shapeが見える `tensordot` を優先し、数式との対応が固まった後なら `einsum` で簡潔に書ける。
 
@@ -783,7 +929,7 @@ X_cut2 ≈ L2 @ B_cut2
 
 を直接確認できる。
 
-資料中では途中で $I\otimes U$ のblock順も検討した。最終整理は次の通り。
+$I\otimes U$ のblock順と比較すると、次の通りである。
 
 ```text
 PyTorch reshape順に合わせる
@@ -842,11 +988,11 @@ L2 = torch.kron(U.contiguous(), I_n2)
 
 と理解する。
 
-資料の環境では、SVD由来の細いTensorで `torch.kron` がlayout/stride由来のRuntimeErrorになる場合があり、そのときは「値を変えず標準contiguous layoutへ実体化する」回避を採った。これは理論上の $U\otimes I$ とは別の実装上の問題である。
+環境によっては、SVD由来の細いTensorで `torch.kron` がlayout/stride由来のRuntimeErrorになる場合がある。その場合は、値を変えず標準contiguous layoutへ実体化する方法を試す。これは理論上の $U\otimes I$ とは別の実装上の問題である。
 
 ### `contiguous()` でも環境依存エラーが残る場合
 
-資料の検証環境では、truncated SVD後の細い `U_hat` を `torch.kron` へ直接渡すとstride/layout由来の `RuntimeError` が出るケースがあった。
+truncated SVD後の細い `U_hat` を `torch.kron` へ直接渡すと、環境によってはstride/layout由来の `RuntimeError` が出る場合がある。
 
 通常は
 
@@ -981,6 +1127,46 @@ finally:
 
 通常の明確なrankを持つ検証例では一致を確認し、`tt_svd_exact` の「exact」はnumerical rankを打ち切らないという意味に限定する。
 
+### 同じdtype・同じ関数でも、default閾値が同じとは限らない
+
+`torch.linalg.matrix_rank` のdefault判定は、最大特異値を $\sigma_1$ として
+
+$$
+\tau
+=\max
+\left(
+\mathrm{atol},
+\sigma_1\mathrm{rtol}
+\right),
+\qquad
+\mathrm{rtol}
+=\max(m,n)\varepsilon
+$$
+
+を使う。ここで $\varepsilon$ はdtypeのmachine epsilonである。従って、同じdtype・同じ非零特異値でも、行列shape $(m,n)$ が違えばdefault閾値も変わる。
+
+例えばfloat32で、非零特異値が $(1,10^{-6})$ の2行2列行列と、それを2行100列へ零埋めした行列を比べる。
+
+```python
+import torch
+
+small = torch.diag(torch.tensor([1.0, 1.0e-6], dtype=torch.float32))
+wide = torch.zeros(2, 100, dtype=torch.float32)
+wide[:, :2] = small
+
+eps = torch.finfo(torch.float32).eps
+threshold_small = 2 * eps
+threshold_wide = 100 * eps
+
+assert threshold_small < 1.0e-6 < threshold_wide
+assert torch.linalg.matrix_rank(small).item() == 2
+assert torch.linalg.matrix_rank(wide).item() == 1
+```
+
+これは矛盾ではなく、default `rtol` がshapeを含むためである。理論上のrankを比較したい人工例では特異値を閾値から十分離す。特定の数値rank規約をcontractにする場合は `atol` と `rtol` を明示する。
+
+[PyTorch公式matrix_rank](https://docs.pytorch.org/docs/stable/generated/torch.linalg.matrix_rank.html)
+
 ---
 
 ## 22. 00〜03で確認したこと
@@ -1075,6 +1261,95 @@ relation_error = torch.linalg.matrix_norm(
 ```
 
 のようにFrobenius normで数値化した方が読みやすい。
+
+### relation残差・Tensor全体の近似誤差・保持本数の境界を分ける
+
+三つの確認は別の問いへ答える。
+
+1. `relation_error`
+
+$$
+\left\|
+\widehat X^{\langle2\rangle}
+-\widehat L_2\widehat B_{\mathrm{cut2}}
+\right\|_F
+$$
+
+は、同じ近似Tensorを二つの座標表現で書いた関係が実装どおりかを調べる。正しく組み立てていれば、truncation誤差ではなく浮動小数点の丸め程度になる。
+
+2. Tensor全体の近似誤差
+
+$$
+\frac{\|X-\widehat X\|_F}{\|X\|_F}
+$$
+
+は、元Tensorからどれだけ情報を捨てたかを測る。relation残差が小さくても、この値が小さいとは限らない。
+
+3. rankの比較
+
+$$
+\operatorname{rank}
+\left(
+\widehat X^{\langle2\rangle}
+\right)
+=
+\operatorname{rank}
+\left(
+\widehat B_{\mathrm{cut2}}
+\right)
+$$
+
+は、$\widehat L_2$ が列等長であることによる近似後のrank保存を確認する。一方、元の $X^{\langle2\rangle}$ と $\widehat X^{\langle2\rangle}$ のrank差はtruncationの効果である。
+
+数値判定では、relation残差と相対近似誤差に同じ閾値を機械的に使わない。前者は代数関係の実装誤差、後者は意図した圧縮誤差だからである。rankも別の特異値閾値に依存するため、誤差の合否とrankの合否を一つのbooleanへ混ぜない。
+
+### 捨てる特異値を指定した検証候補
+
+ランダムTensorだけでなく、局所打ち切り誤差を手計算できる例も持つ。例えば $X\in\mathbb R^{3\times3\times2}$ の第1cutを
+
+$$
+A=X^{\langle1\rangle}
+=
+\begin{pmatrix}
+10&0&0&0&0&0\\
+0&1&0&0&0&0\\
+0&0&0.1&0&0&0
+\end{pmatrix}
+$$
+
+と定義する。特異値は $(10,1,0.1)$、数学的rankは3である。rank 1の第1段階近似は
+
+$$
+\widetilde A
+=
+\begin{pmatrix}
+10&0&0&0&0&0\\
+0&0&0&0&0&0\\
+0&0&0&0&0&0
+\end{pmatrix},
+$$
+
+$$
+\delta_1^2
+=\|A-\widetilde A\|_F^2
+=1^2+0.1^2
+=1.01,
+\qquad
+\delta_1=\sqrt{1.01}.
+$$
+
+以後の段階をexactに分解・復元するなら、Tensor全体の相対誤差は
+
+$$
+\frac{\|X-\widehat X\|_F}{\|X\|_F}
+=\sqrt{\frac{1^2+0.1^2}{10^2+1^2+0.1^2}}
+=\sqrt{\frac{1.01}{101.01}}
+\approx0.099995.
+$$
+
+後段でも打ち切る場合は、各段の局所誤差を [[00_基礎理論/01_数学基礎/02_テンソル代数/33_TT-SVDの打ち切りと誤差]] の全体誤差式へ加える。ランダムな $4\times4\times4\times4$ ではcut rankが大きくなりやすく、高rankのTTがdenseより多く保存する場合もあるため、誤差を制御した例と任意データの圧縮結果を分ける。
+
+rank sweepには `max_rank`、実際の `bond_ranks`、`tt_params`、`compression_ratio`、`relative_error` を記録する。`bond_ranks` は最後の境界1を除く各コアの右bondから読み、全てを設定値 `max_rank` で置き換えない。圧縮率がdense/TTかTT/denseかも明記する。
 
 ---
 

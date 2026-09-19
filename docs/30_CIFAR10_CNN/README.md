@@ -51,7 +51,7 @@ Test（公式test）            10,000
 
 へ分ける。
 
-PerplexityでDataset / Subset / Generatorを学んだ際の `45,000 / 5,000` は基礎説明用の単純例であり、**canonical SVD実験条件は40,000 / 5,000 / 5,000**。
+Dataset / Subset / Generatorの基礎説明で使う `45,000 / 5,000` は単純例であり、**canonical SVD実験条件は40,000 / 5,000 / 5,000**。
 
 データ取得が極端に遅い場合の `download=False`、展開先、MD5確認などの実務メモも [[30_CIFAR10_CNN/00_CIFAR10基礎/18_CIFAR10の前処理とDataLoader]] に残している。
 
@@ -230,5 +230,4 @@ original / using_src / before_srcはhistorical recordとして残し、別runの
 
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 - [[06_Tucker基礎実装検証/README]]
-- [[00_基礎理論/00_数式導出監査]]
 - [[README_実装編]]

@@ -133,10 +133,9 @@ $$
 
 複数channelの場合も、channel間を混ぜず、この計算を各$(n,c)$の特徴マップへ独立に行う。
 
-### 元資料の数値例もそのまま計算する
+### 別の特徴マップの平均を全要素で計算する
 
-元資料 `CNN CIFAR-10→SVD_まず、CIFAR-10とは？ (1).md` の3978〜4002行付近の数値例は、直前の例とは値が異なる。
-原資料の例を一般式だけで代替せず、1 channelの特徴マップ
+値を変えた例も確認する。1 channelの特徴マップ
 
 $$
 X_{\mathrm{source}}=\begin{pmatrix}1&3\\5&7\end{pmatrix}
@@ -154,36 +153,13 @@ $$
 $$
 
 と全要素を対応付ける。batchとchannelを固定して空間4要素だけを平均するので、他channelの値はこの和には入らない。
-直前の $(1,2;3,4)$ の平均2.5は教育的な別例であり、元資料の値を回収した例ではなかった。
+直前の $(1,2;3,4)$ では平均2.5となる。平均する位置は同じでも、値が異なれば結果も変わる。
 
 ## PyTorchでは`AdaptiveAvgPool2d(1)`を使う
 
 PyTorchでは、入力の$H,W$に依存せず出力を$1\times1$にする `nn.AdaptiveAvgPool2d(1)` でGAPを表せる。
 
-```python
-import torch
-from torch import nn
-
-# shape: (N, C, H, W) = (1, 1, 2, 2)
-x = torch.tensor([
-    [
-        [
-            [1.0, 2.0],
-            [3.0, 4.0],
-        ],
-    ],
-])
-
-gap = nn.AdaptiveAvgPool2d(output_size=1)
-pooled = gap(x)
-
-print(pooled.shape)  # torch.Size([1, 1, 1, 1])
-print(pooled)        # tensor([[[[2.5000]]]])
-
-# batch軸を残し、C個のchannel値を1次元の特徴へ並べる。
-features = torch.flatten(pooled, start_dim=1)
-print(features.shape)  # torch.Size([1, 1])
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード#PyTorch確認-001]]
 
 一般のshape対応は
 
@@ -270,11 +246,7 @@ fc2   =  2,560
 
 現在の `CIFAR10CNN` は、
 
-```python
-conv_channels = (32, 64, 128)
-hidden_dim = 256
-dropout = 0.5
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード#PyTorch確認-002]]
 
 を既定値とする。
 
@@ -440,29 +412,7 @@ $$
 
 `nn.Dropout`はTensorの要素ごとにmaskを適用する。一方、CNN特徴マップに使う `nn.Dropout2d` は、各sampleのchannelを単位として選び、そのchannelの$H\times W$全体を0にする。
 
-```python
-import torch
-from torch import nn
-
-torch.manual_seed(0)
-
-# 1 sample、2 channel、各channelが2 x 2の特徴マップ。
-x = torch.ones(1, 2, 2, 2)
-
-dropout2d = nn.Dropout2d(p=0.5)
-dropout2d.train()
-y = dropout2d(x)
-
-print(y.shape)  # torch.Size([1, 2, 2, 2])
-
-# 各channelは全位置が0か、全位置が同じ倍率で残る。
-for channel in range(y.shape[1]):
-    channel_map = y[0, channel]
-    assert (
-        torch.all(channel_map == 0)
-        or torch.all(channel_map != 0)
-    )
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード#PyTorch確認-003]]
 
 例えば1個のchannelが選ばれた場合、maskの概念形は
 
@@ -573,20 +523,20 @@ $$
 biasは位置に依存しないスコアの定数項として分離した。
 今回のCIFAR-10モデルはGAPの後が fc1 → ReLU → Dropout → fc2 なので、
 fc2の分類重みをそのままConv channelのCAM重みにすることはできない。
-元資料の直接CAMの説明を、この非線形classifierへ無条件には適用しない。
+直接CAMの説明を、この非線形classifierへ無条件には適用しない。
 
-### 元資料の3チャネル重みを、全位置のCAMへ対応させる
+### 3チャネル重みを、全位置のCAMへ対応させる
 
-元資料S04の4251–4285行には、猫クラスの重みを $w_1^{\mathrm{cat}}=1.2$、$w_2^{\mathrm{cat}}=2.0$、$w_3^{\mathrm{cat}}=0.8$ とする例がある。この値を一般式へ代入すると
+猫クラスの重みを $w_1^{\mathrm{cat}}=1.2$、$w_2^{\mathrm{cat}}=2.0$、$w_3^{\mathrm{cat}}=0.8$ とする。この値を一般式へ代入すると
 
 $$
 M_{\mathrm{cat}}(i,j)
 =1.2A^1_{i,j}+2.0A^2_{i,j}+0.8A^3_{i,j}.
 $$
 
-元資料の「毛並み・耳・四足」のようなチャネルの名前は直感のための例であり、学習した各チャネルが必ず一つの人間的な概念に対応する保証ではない。GAPは全位置を平均へ含めるため、最大の1位置だけを採るGlobal Max Poolingとは異なる。ただし平均が大きいだけで、反応が物体全体へ広がっているとは断定しない。
+「毛並み・耳・四足」のようなチャネルの名前は直感のための例であり、学習した各チャネルが必ず一つの人間的な概念に対応する保証ではない。GAPは全位置を平均へ含めるため、最大の1位置だけを採るGlobal Max Poolingとは異なる。ただし平均が大きいだけで、反応が物体全体へ広がっているとは断定しない。
 
-次の特徴マップの値とbiasは、元資料には表示されていない**独自の補足**である。元資料の3つの重みは変えず、$H=W=2$、$Z=4$ として全要素を計算する。
+次の特徴マップの値とbiasを例として、$H=W=2$、$Z=4$ で全要素を計算する。上の3つの重みをそのまま使う。
 
 $$
 A^1=\begin{pmatrix}1&0\\0&1\end{pmatrix},\qquad
@@ -631,42 +581,9 @@ $$
 
 となる。biasを空間位置ごとに足してCAMへ混ぜるのでなく、スコアの定数項として分離している。
 
-元資料のCAM関数の縮約も、この例と対応させる。元のexport中の `feature_maps[^27_0]` は脚注記号が混入したコードなので、1 sampleを取り出す `feature_maps[0]` として記述する。以下は**GAPの直後が1個のLinear**という構造に限った関数であり、今回の非線形classifierへそのまま適用するものではない。
+CAM関数の縮約も、この例と対応させる。`feature_maps[0]` は1 sampleを取り出す。以下は**GAPの直後が1個のLinear**という構造に限った関数であり、上の非線形classifierへそのまま適用するものではない。
 
-```python
-import torch
-
-
-def make_cam(
-    feature_maps: torch.Tensor,
-    classifier_weight: torch.Tensor,
-    class_index: int,
-) -> torch.Tensor:
-    """元資料と同じく、正のクラス寄与を残したCAMを返す。"""
-    # 1 sampleを取り出し、チャネルKだけを縮約する。
-    weights = classifier_weight[class_index]
-    raw_cam = torch.einsum("k,khw->hw", weights, feature_maps[0])
-    return torch.relu(raw_cam)
-
-
-# 特徴マップとbiasは上の補足例。クラス番号0を例の猫クラスとする。
-feature_maps = torch.tensor(
-    [[[[1., 0.], [0., 1.]],
-      [[0., 2.], [1., 0.]],
-      [[1., 1.], [0., 2.]]]],
-    dtype=torch.float64,
-)
-classifier_weight = torch.tensor([[1.2, 2.0, 0.8]], dtype=torch.float64)
-cam = make_cam(feature_maps, classifier_weight, class_index=0)
-expected = torch.tensor([[2.0, 4.8], [2.0, 2.8]], dtype=torch.float64)
-assert torch.allclose(cam, expected)
-
-# この例では全CAM要素が正なので、ReLU前後が同じになる。
-pooled = feature_maps.mean(dim=(-2, -1))
-score = (pooled @ classifier_weight.T)[0, 0] + 0.5
-assert torch.allclose(score, cam.mean() + 0.5)
-assert abs(score.item() - 3.4) < 1e-12
-```
+PyTorchの確認コード：[[06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード#PyTorch確認-004]]
 
 入力shapeは `(1, K, H, W)`、重みshapeは `(C, K)`、クラス番号は $0\le c<C$ を前提とする。一般にはraw CAMに負の要素もあり、正の寄与だけを見るReLU後のヒートマップの平均から元スコアをそのまま復元できない。スコアとの厳密な等式はReLU前の $M_c$ に対するものである。
 

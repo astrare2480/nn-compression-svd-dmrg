@@ -158,7 +158,9 @@ flowchart TD
 
 ---
 
-# 3. 基礎理論
+# 3. 基礎理論と実装教材への入口
+
+数式・導出・評価の考え方は `00_基礎理論`、PyTorch・Pythonでの実行方法と実装確認結果はSVDを `05_SVD基礎実装検証`、Tucker / HOOIを `06_Tucker基礎実装検証` に置く。
 
 基礎理論は `00_基礎理論` にまとめる。
 
@@ -170,16 +172,16 @@ flowchart TD
 4. [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]]
 5. [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
 6. [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]
-7. [[00_基礎理論/05_PyTorch実装/07_PyTorch実装]]
-8. [[00_基礎理論/05_PyTorch実装/08_Linear層のSVD実装]]
-9. [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]]
+7. [[05_SVD基礎実装検証/07_PyTorch実装]]
+8. [[05_SVD基礎実装検証/08_Linear層のSVD実装]]
+9. [[05_SVD基礎実装検証/09_Linear層の2層置換_実装]]
 
 ## 評価・実験設計
 
 10. [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
 11. [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
-12. [[00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎]]
-13. [[00_基礎理論/05_PyTorch実装/13_PandasとPython実装メモ]]
+12. [[05_SVD基礎実装検証/12_PyTorch学習と評価の基礎]]
+13. [[05_SVD基礎実装検証/13_PandasとPython実装メモ]]
 
 ## CNN / Conv2d
 
@@ -200,7 +202,7 @@ flowchart TD
 23. [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
 24. [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
 25. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
-26. [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]
+26. [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
 
 ## Tensor Networkへの橋渡し
 
@@ -522,7 +524,7 @@ contract review baseline `49836bc` のローカル全pytestでは、
 - [[07_src設計/05_Core_API_v1]]
 - [[07_src設計/06_テスト設計]]
 
-Tucker/HOOIの実装詳細は [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]、実装寄り索引は [[README_実装編]] を参照。
+Tucker/HOOIの実装詳細は [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]、実装寄り索引は [[README_実装編]] を参照。
 
 ---
 
@@ -626,7 +628,7 @@ taskにとって最適なlow-rank weight
 3. [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
 4. [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
 5. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
-6. [[00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装]]
+6. [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
 7. [[06_Tucker基礎実装検証/README]]
 8. [[07_src設計/README]]
 

@@ -426,14 +426,14 @@ indices = torch.randperm(
 
 ## 単純な45,000 / 5,000例
 
-Perplexityで前処理を学んだ段階では、公式trainを、
+前処理の単純な例として、公式trainを、
 
 ```text
 45,000 train
 5,000 validation
 ```
 
-へ分ける単純な例を使った。
+へ分ける。
 
 ```python
 train_indices = indices[:45_000]
@@ -601,7 +601,7 @@ Test
 
 # 14. CIFAR-10のデータ取得で詰まったとき
 
-Perplexityで実際に確認したデータ取得時の要点も、再現用メモとして残す。
+データ取得時に確認する要点を、再現用メモとして整理する。
 
 ## 一度取得できたら`download=False`
 
@@ -654,7 +654,7 @@ data_dir/
 
 Notebookからの自動取得が長時間進まない場合は、コードを待ち続けるより、ブラウザ等でPython版アーカイブを手動取得して配置する方法もある。信頼できるmirrorから取得した場合も、ファイル内容が公式版と同一かをhashで確認する。
 
-取得した `cifar-10-python.tar.gz` が正しいか確認するMD5は、Perplexityで確認した値では、
+取得した `cifar-10-python.tar.gz` の整合性を確認するMD5は、
 
 ```text
 c58f30108f718f92721af3b95e74349a

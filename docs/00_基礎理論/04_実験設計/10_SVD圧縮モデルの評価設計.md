@@ -137,13 +137,7 @@ Pareto / kneeの数式処理は `selection` へ置き、**どのrank候補を使
 
 ### 学習可能パラメータ数
 
-```python
-sum(
-    p.numel()
-    for p in model.parameters()
-    if p.requires_grad
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/10_評価設計のPyTorchコード#PyTorch確認-001]]
 
 ### モデル全体と対象層を分ける
 
@@ -537,28 +531,17 @@ cross-entropy lossは、正解クラスへの確信度も反映する。
 
 MNISTでは、
 
-```python
-predicted = torch.argmax(
-    outputs,
-    dim=1,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/10_評価設計のPyTorchコード#PyTorch確認-002]]
 
 で予測クラスを得る。
 
 正解数は、
 
-```python
-correct += (
-    predicted == labels
-).sum().item()
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/10_評価設計のPyTorchコード#PyTorch確認-003]]
 
 全サンプル数は、
 
-```python
-total += labels.size(0)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/10_評価設計のPyTorchコード#PyTorch確認-004]]
 
 で積算する。
 
@@ -576,9 +559,7 @@ $$
 
 `CrossEntropyLoss` がバッチ平均を返す場合、
 
-```python
-total_loss += loss.item() * images.size(0)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/10_評価設計のPyTorchコード#PyTorch確認-005]]
 
 としてサンプル数を掛け、最後に全サンプル数で割る。
 
@@ -646,6 +627,71 @@ Fine-tuningはrankを変えず、低ランク因子の値だけを更新する�
 
 ---
 
+### 回復量をpercentage pointで計算する
+
+dense・SVD直後・FT後を、説明用の値で比較する。
+同じ評価集合・同じ評価手順で得たaccuracyを $A_{\mathrm{dense}},A_{\mathrm{svd}},A_{\mathrm{ft}}$ とすると
+
+$$
+\begin{aligned}
+D&=A_{\mathrm{dense}}-A_{\mathrm{svd}}
+&&\text{（圧縮直後の低下）},\\
+R&=A_{\mathrm{ft}}-A_{\mathrm{svd}}
+&&\text{（FTによる回復）},\\
+G&=A_{\mathrm{dense}}-A_{\mathrm{ft}}
+&&\text{（FT後にも残る差）},\\
+D&=R+G.
+\end{aligned}
+$$
+
+$90\%\to84\%\to89.2\%$ なら
+
+$$
+\begin{aligned}
+D&=90.0-84.0=6.0\ \text{percentage points},\\
+R&=89.2-84.0=5.2\ \text{percentage points},\\
+G&=90.0-89.2=0.8\ \text{percentage points},\\
+R/D&=5.2/6.0\approx0.8667.
+\end{aligned}
+$$
+
+「6.0%減」ではなく6.0ポイント減であり、相対低下率は $6.0/90.0\approx6.67\%$ になる。
+同様に $95\%\to85\%\to93\%$ は低下10、回復8、残る差2ポイントである。
+どちらも説明用の仮の値で、repoの新しい実測値として報告しない。
+FT後がdenseより良ければ $G<0$ となり、FT後が圧縮直後より悪ければ $R<0$ もあり得る。
+$D=0$ の場合に回復比 $R/D$ は定義しない。
+
+### FTによる回復は、性能上限やrank不足の証明ではない
+
+低ランク因子を更新しても、その内部次元として設定したrank上限とparameter数は同じである。
+因子の列・行が従属すれば積のexact rankは設定rankより小さくなるので、
+「rank固定」は常にexact rankがその値だという意味ではない。
+
+FTで回復した結果は「この構造で、その学習手順により、その評価性能を実現できた」という証拠である。
+その構造の到達可能な**性能上限**を測ったわけではない。
+反対に回復しなかった結果だけでも、rank不足を証明できない。
+optimizer・learning rate・学習予算・初期値・Early Stopping・汎化のばらつきなどが影響するからである。
+上の $G=0.8$ ポイントを全て「rank不足による不可避な損失」と帰属させない。
+
+SVDが最適化するweightのFrobenius誤差と、FTが最適化する分類lossは違う。
+低ランクという制約が汎化へ良く働く可能性や、初期値・parameter化が学習経路を変える可能性はあるが、
+「正則化が効いた」「冗長なparameterだけ除いた」と原因を断定するには追加比較が必要である。
+同じlearning rateでもdense weightと因子の更新が一致しないことは
+[[12_PyTorch学習と評価の基礎]] で途中式を確認する。
+
+改善が大きい場合は、まず同じ評価data・前処理・評価件数・分母・
+`eval()`/`no_grad()`・最良stateの復元・baselineの独立性を確認する。
+FT前後をtestで何度も見てrankやepochを選び直さず、選択にはtrain/validationを使う。
+全候補を固定した後の最終test比較と、途中のvalidationによる選択を分ける。
+
+因子化自体の効果と「さらに学習した」効果を区別したいなら、
+denseにも同程度の追加学習予算を与える対照実験が必要になる。
+本節はその比較設計の説明であり、追加学習や再実験は実行していない。
+複数seedでも各seed内では同じbaselineを共有する。
+FTを省略して圧縮直後のrankをvalidationで選ぶ実験も有効だが、
+「後からFTした場合の性能」とは分けて報告する。
+保存したparameter比0.3は残存30%・削減70%であり、削減30%とは書かない。
+
 ## 14. optimizerと候補モデルを独立させる
 
 圧縮層へ置換した後に、新しいoptimizerを作る。
@@ -673,9 +719,7 @@ fine-tuning
 
 モデル本体は、元候補を直接更新せず、
 
-```python
-pareto_model = copy.deepcopy(source_model)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/10_評価設計のPyTorchコード#PyTorch確認-006]]
 
 のように独立コピーしてから学習する。
 
@@ -704,7 +748,7 @@ rank 16のfine-tuning結果を、rank 32の初期値に使わない。
 
 ## 16. validationとtestの役割
 
-### 元資料のvalidation lossをrank候補の添字付きで書く
+### validation lossをrank候補の添字付きで書く
 
 rank候補 $r$ のモデルを $f_r$、1 sampleのlossを $\ell$ とすると
 
@@ -932,6 +976,8 @@ Pareto frontierは候補集合を与えるが、常に1モデルへ絞れると�
 
 ## 次に読むノート
 
+- 学習・評価ループのPyTorch操作：[[05_SVD基礎実装検証/12_PyTorch学習と評価の基礎]]
+- 集計表のPython・pandas操作：[[05_SVD基礎実装検証/13_PandasとPython実装メモ]]
 - [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank]]
 - [[00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価]]

@@ -48,7 +48,7 @@ $$
 \left(\sigma_\alpha^{(k)}\right)^2.
 $$
 
-資料の最終整理では、TT-SVDの誤差についてまず安全に覚える式を
+TT-SVDの誤差について、まず覚える式を
 
 $$
 \boxed{
@@ -798,7 +798,7 @@ TT-SVDでは、途中remainderの座標系で生じた局所残差を、前段�
 
 ## 12. 入れ子の直交射影としての整理
 
-資料では、TT-SVDの誤差構造を理解するために、左から右への保持部分を入れ子の直交射影として整理した。
+TT-SVDの誤差構造を理解するために、左から右への保持部分を入れ子の直交射影として整理する。
 
 第 $k$ 段階までの左interfaceの列空間への射影を
 
@@ -960,13 +960,13 @@ $$
 
 ## 14. $E_k\perp E_\ell$ をどう読むか
 
-資料では一度、
+例えば、
 
 $$
 E_1\perp E_2
 $$
 
-を直感的に述べた後、より慎重に整理し直した。
+を述べるには、二つの残差が同じテンソル空間に埋め込まれていることと、その直交性を確認する必要がある。
 
 重要なのは、
 
@@ -1083,6 +1083,118 @@ $$
 $$
 
 この等式の前提は、各段階がexactなtruncated SVDであり、残差を左直交interfaceで元空間へ戻している標準的な左から右へのTT-SVDである。浮動小数点の直交性・SVD・縮約誤差まで厳密にこの等式へ含めるわけではない。
+
+---
+
+### 3サイトで、第1cutの同じ行列へ戻して内積を計算する
+
+誤差の直交性を、3サイトの行列で確認する。
+上の一般の射影証明を、remainderの具体的なshapeへ対応させるための補足である。
+実係数として、保持した第1 SVDの左特異ベクトルと射影を
+
+$$
+Q:=U^{(1)}_{:,1:\widetilde r_1}
+\in\mathbb R^{n_1\times\widetilde r_1},\qquad
+Q^TQ=I_{\widetilde r_1},\qquad P_1:=QQ^T
+$$
+
+とする。第1cut行列 $C:=X^{\langle1\rangle}$ のshapeは $n_1\times(n_2n_3)$ である。
+第1段階で残す部分と、その右側座標は
+
+$$
+\begin{aligned}
+B^{(1)}&:=Q^TC
+\in\mathbb R^{\widetilde r_1\times(n_2n_3)},\\
+X_1^{\langle1\rangle}&=QB^{(1)}=QQ^TC=P_1C,\\
+E_1^{\langle1\rangle}&=C-X_1^{\langle1\rangle}
+=(I_{n_1}-P_1)C.
+\end{aligned}
+$$
+
+第2 SVDを行うのは元の $C$ ではなく、
+
+$$
+\begin{aligned}
+\mathcal B^{(1)}
+&:=\operatorname{reshape}(B^{(1)},\widetilde r_1,n_2,n_3),\\
+M^{(2)}
+&:=\operatorname{reshape}(\mathcal B^{(1)},\widetilde r_1n_2,n_3).
+\end{aligned}
+$$
+
+である。そのtruncated SVDで得た行列近似を $\widehat M^{(2)}$ とし、
+第1cutに対応する座標の並びへ戻して
+
+$$
+\begin{aligned}
+\widehat B^{(1)}
+&:=\operatorname{reshape}(\widehat M^{(2)},\widetilde r_1,n_2n_3),\\
+\Delta B^{(1)}&:=B^{(1)}-\widehat B^{(1)},\\
+\widehat X^{\langle1\rangle}&=Q\widehat B^{(1)},\\
+E_2^{\langle1\rangle}
+&=X_1^{\langle1\rangle}-\widehat X^{\langle1\rangle}\\
+&=QB^{(1)}-Q\widehat B^{(1)}\\
+&=Q\Delta B^{(1)}.
+\end{aligned}
+$$
+
+と定義する。$\Delta B^{(1)}$ と $E_1^{\langle1\rangle}$ はshapeが異なるため、
+そのまま内積を取らない。$Q$ を掛けた $E_2^{\langle1\rangle}$ は
+$E_1^{\langle1\rangle}$ と同じ $n_1\times(n_2n_3)$ 行列になっている。
+
+射影の対称性 $P_1^T=P_1$ と、保持した列の正規直交性から
+
+$$
+\begin{aligned}
+P_1Q&=QQ^TQ=Q(Q^TQ)=Q,\\
+(I_{n_1}-P_1)Q&=Q-P_1Q=Q-Q=0.
+\end{aligned}
+$$
+
+を得る。したがって、Frobenius内積は途中の積まで書けば
+
+$$
+\begin{aligned}
+\langle E_1,E_2\rangle_F
+&=\operatorname{tr}\left[
+(E_1^{\langle1\rangle})^TE_2^{\langle1\rangle}\right]\\
+&=\operatorname{tr}\left[
+\bigl((I_{n_1}-P_1)C\bigr)^TQ\Delta B^{(1)}\right]\\
+&=\operatorname{tr}\left[
+C^T(I_{n_1}-P_1)^TQ\Delta B^{(1)}\right]\\
+&=\operatorname{tr}\left[
+C^T(I_{n_1}-P_1)Q\Delta B^{(1)}\right]\\
+&=\operatorname{tr}\left[C^T0\Delta B^{(1)}\right]=0.
+\end{aligned}
+$$
+
+となる。第2段階で捨てた成分も、元空間では $Q$ の列空間の内部にあり、
+第1段階で捨てた直交補空間の成分を復活させない。
+これが「異なるcore同士の直交」ではなく「元空間へ戻した誤差同士の直交」という意味である。
+
+局所誤差 $\delta_2:=\|M^{(2)}-\widehat M^{(2)}\|_F$ はreshapeで変わらず、
+$Q$ による埋め込みでも
+
+$$
+\begin{aligned}
+\|E_2\|_F^2
+&=\operatorname{tr}\left[(\Delta B^{(1)})^TQ^TQ\Delta B^{(1)}\right]\\
+&=\operatorname{tr}\left[(\Delta B^{(1)})^T\Delta B^{(1)}\right]\\
+&=\|\Delta B^{(1)}\|_F^2=\delta_2^2.
+\end{aligned}
+$$
+
+となる。$\delta_1:=\|E_1\|_F$ と置けば、$X-\widehat X=E_1+E_2$ なので
+
+$$
+\begin{aligned}
+\|X-\widehat X\|_F^2
+&=\|E_1\|_F^2+2\langle E_1,E_2\rangle_F+\|E_2\|_F^2\\
+&=\delta_1^2+0+\delta_2^2.
+\end{aligned}
+$$
+
+を得る。この3サイトの計算も、上の標準的な左から右へのTT-SVD・exact arithmeticの前提で読む。
 
 ---
 
@@ -1238,7 +1350,7 @@ $$
 \|X-Y\|_F.
 $$
 
-資料では最適TT近似誤差を
+最適TT近似誤差を
 
 $$
 E_{\mathrm{best}}

@@ -459,6 +459,89 @@ with torch.no_grad():
 
 ---
 
+### detachした入力からSVDする、という順番を実際の値で確認する
+
+出力の $U,S,V_h$ を後からdetachするのではない。 `weight.detach()` を先に作り、それをSVDへ入力する。
+元のParameterの値・`requires_grad` は変更せず、その入力経路から元重みへ勾配を戻さない。
+値の依存関係と、微分の経路を区別する。
+
+重みと独立backupを
+
+$$
+W=\begin{pmatrix}4&0\\0&1\end{pmatrix},
+\qquad
+W_{\mathrm{backup}}=W
+$$
+
+とする。最初のSVDの特異値は $(4,1)$ である。
+detachしたTensorの $(1,1)$ 成分を $7$ へ書き換えると、
+元の $W$ も $\operatorname{diag}(7,1)$ になり、独立backupだけが $\operatorname{diag}(4,1)$ のまま残る。
+すでに計算した最初のSVD結果は、自動的に再計算されない。
+
+```python
+import torch
+from torch import nn
+
+# detachはstorageを共有する。独立した数値の保存にはcloneも必要である。
+weight = nn.Parameter(torch.tensor([[4.0, 0.0], [0.0, 1.0]], dtype=torch.float64))
+shared = weight.detach()
+backup = shared.clone()
+U, S, Vh = torch.linalg.svd(shared, full_matrices=False)
+assert weight.requires_grad and not shared.requires_grad
+assert all(not factor.requires_grad for factor in (U, S, Vh))
+torch.testing.assert_close((U * S.unsqueeze(0)) @ Vh, backup)
+
+# backward待ちのグラフがない段階で、共有を確認するためだけに変更する。
+with torch.no_grad():
+    shared[0, 0] = 7.0
+assert weight[0, 0].item() == 7.0
+assert backup[0, 0].item() == 4.0
+torch.testing.assert_close(S, torch.tensor([4.0, 1.0], dtype=torch.float64))
+new_S = torch.linalg.svdvals(weight.detach())
+torch.testing.assert_close(new_S, torch.tensor([7.0, 1.0], dtype=torch.float64))
+
+# 分解済みの数値を新しいParameterへcopyしても、新Parameterは学習可能。
+target = nn.Parameter(torch.zeros_like(weight))
+with torch.no_grad():
+    target.copy_((U * S.unsqueeze(0)) @ Vh)
+loss = target.square().sum()
+gradient = torch.autograd.grad(loss, target)[0]
+torch.testing.assert_close(gradient, 2 * backup)
+assert target.requires_grad and target.grad is None
+```
+
+最後の `autograd.grad` は $\partial L/\partial W_{\mathrm{target}}=2W_{\mathrm{target}}$ を確認するだけで、
+重み更新やfine-tuningは行っていない。
+`no_grad()` 内のcopyは「元重みへのSVD経由の勾配」を切るが、
+後のforwardから**新しいParameterへ**勾配を求めることまで禁止しない。
+逆に、勾配追跡が有効なまま `torch.linalg.svd(weight)` を実行すれば、
+元重みへつながるグラフが作られ得る。解析・初期化だけならその記録を省く。
+勾配をSVD経由で求める別目的では、重複特異値などの微分の安定性も別途確認する。
+[detachのstorage共有と変更検出](https://docs.pytorch.org/docs/stable/generated/torch.Tensor.detach.html)。
+
+---
+
+### no_gradでも、backwardが必要とする値の途中変更は安全にならない
+
+`no_grad()` は新しい演算を記録しない制御であり、既存グラフの必要な値を変更してよいという許可ではない。
+例えば $w=2,\ q=w^2$ をforwardで作ったなら、元のforwardに対応する微分は
+
+$$
+\left.\frac{\partial q}{\partial w}\right|_{w=2}=2\cdot2=4.
+$$
+
+逆伝播の前に `no_grad()` で $w=3$ へ書き換えると、
+PyTorchは保存した値のversionとの不一致を検出し、通常はエラーにする。
+`detach()` を通じた共有storageの変更も検出対象になる。
+一方、`.data` の変更はこの検出を迂回して、変更後の $2\cdot3=6$ を誤って使うなどの事故を起こし得る。
+このため、`.data` をdetachと同じ安全な読み書き窓口とは扱わない。
+SVD初期化・copyは評価グラフを作る前に済ませ、
+学習中の通常の更新は、そのforwardに対するbackwardを終えてから行う。
+[公式の.dataとdetachの変更検出例](https://pytorch.org/blog/pytorch-0_4_0-migration-guide/)、
+[autogradのin-place変更検査](https://docs.pytorch.org/docs/stable/notes/autograd.html#in-place-correctness-checks)。
+
+---
+
 ## 6. なぜSVD全体を `no_grad()` で囲まないのか
 
 SVD因子を作るだけなら、次のどちらも可能である。
@@ -490,6 +573,43 @@ with torch.no_grad():
 ためである。
 
 `no_grad()` が誤りなのではない。今回の関数分割では、SVD入力に `detach()`、パラメータ代入に `no_grad()` とする方が意図が明確である。
+
+---
+
+### 後で学習に使う値なら、inference_modeへ一律に置き換えない
+
+`inference_mode()` は、純粋な推論でview追跡やversion管理の負担も省く選択肢である。
+ただし `no_grad()` の出力と、inference Tensorでは後のautograd利用の制約が異なる。
+以下はSVDや学習を実行する例ではなく、$q=wh$ の勾配に必要な定数 $h$ を保存できるかの確認である。
+
+```python
+import torch
+
+x = torch.tensor(2.0)
+w = torch.tensor(3.0, requires_grad=True)
+with torch.no_grad():
+    h = 2 * x
+# hへの勾配は不要でも、∂(w*h)/∂wを計算するためhの値を保存する。
+assert torch.autograd.grad(w * h, w)[0].item() == 4.0
+
+with torch.inference_mode():
+    inference_h = 2 * x
+assert torch.is_inference(inference_h)
+try:
+    q = w * inference_h
+except RuntimeError as error:
+    # この積では、inference Tensorをbackward用に保存できない。
+    assert "inference" in str(error).lower()
+else:
+    raise AssertionError("この積はinference Tensorの保存エラーになるはず。")
+```
+
+「inference Tensorは、後でどんな演算にも一切使えない」という意味ではないが、
+autogradがその値を保存する計算へ無条件に渡せるわけではない。
+学習用因子の初期化や後で学習へ渡す特徴の生成は `no_grad()` を基本にし、
+完全に推論専用の評価・benchmarkでは `inference_mode()` を候補にする。
+どちらも `model.eval()` を代行せず、速度差の大きさも実測なしには保証しない。
+[inference_modeの制約とevalとの独立性](https://docs.pytorch.org/docs/stable/generated/torch.autograd.grad_mode.inference_mode.html)。
 
 ---
 
@@ -759,7 +879,7 @@ weightがCUDA → SVDもCUDA
 
 したがって、因子 `U_r`、`S_r`、`Vh_r` も元重みと同じdeviceにある。
 
-新しい `nn.Linear` は何も指定しなければCPUに作られるため、2層置換時には元層と同じdeviceへ移す必要がある。この処理は [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]] で扱う。
+新しい `nn.Linear` は何も指定しなければCPUに作られるため、2層置換時には元層と同じdeviceへ移す必要がある。この処理は [[05_SVD基礎実装検証/09_Linear層の2層置換_実装]] で扱う。
 
 ---
 
@@ -894,6 +1014,6 @@ SVD因子を計算しただけではモデル構造は変わらない。2つの�
 
 SVD因子を2つのLinear層へ設定し、元の層と置き換える。
 
-- [[00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装]]
+- [[05_SVD基礎実装検証/09_Linear層の2層置換_実装]]
 - [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]]
-- [[00_基礎理論/05_PyTorch実装/07_PyTorch実装]]
+- [[05_SVD基礎実装検証/07_PyTorch実装]]

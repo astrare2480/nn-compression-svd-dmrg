@@ -98,12 +98,7 @@ src/nn_compression/compression/conv_svd.py
 
 主要関数：
 
-```python
-from nn_compression.compression import (
-    factorize_conv2d_layer,
-    factorize_named_conv2d,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順#PyTorch確認-001]]
 
 `factorize_conv2d_layer` は任意の `groups=1` の `nn.Conv2d` を対象とする。
 
@@ -161,13 +156,7 @@ shape: (C_out, r)
 
 これは、
 
-```python
-nn.Conv2d(
-    C_in,
-    r,
-    kernel_size=(K_h, K_w),
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順#PyTorch確認-002]]
 
 のweight shapeと一致する。
 
@@ -181,13 +170,7 @@ nn.Conv2d(
 
 これは、
 
-```python
-nn.Conv2d(
-    r,
-    C_out,
-    kernel_size=1,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順#PyTorch確認-003]]
 
 のweight shapeと一致する。
 
@@ -458,30 +441,11 @@ $$
 
 元Convの空間的なサンプリングは1層目へ持たせる。
 
-```python
-first_layer = nn.Conv2d(
-    in_channels=conv.in_channels,
-    out_channels=rank,
-    kernel_size=conv.kernel_size,
-    stride=conv.stride,
-    padding=conv.padding,
-    dilation=conv.dilation,
-    bias=False,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順#PyTorch確認-004]]
 
 2層目は、既に作られた中間特徴マップの各位置をchannel方向へ混ぜるだけなので、
 
-```python
-second_layer = nn.Conv2d(
-    in_channels=rank,
-    out_channels=conv.out_channels,
-    kernel_size=1,
-    stride=1,
-    padding=0,
-    bias=...,
-)
-```
+PyTorchの確認コード：[[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順#PyTorch確認-005]]
 
 とする。
 
@@ -866,57 +830,9 @@ optimizer
 
 ---
 
-## 12. optimizerを作り直す理由
+## PyTorch・Python操作：12. optimizerを作り直す理由
 
-SVD前は、
-
-```text
-1つのConv2d Parameter群
-```
-
-だった。
-
-SVD後は、
-
-```text
-1層目ConvのParameter群
-+
-2層目ConvのParameter群
-```
-
-という新しい `Parameter` オブジェクトになる。
-
-元optimizerは、作成時に登録された古いParameterを参照している。
-
-したがって、構造変更後は、
-
-```python
-optimizer = torch.optim.Adam(
-    compressed_model.parameters(),
-    lr=...,
-)
-```
-
-と作り直す。
-
-Adamなら、parameterごとに、
-
-- `step`
-- `exp_avg`
-- `exp_avg_sq`
-
-などの内部状態も持つ。
-
-したがって、
-
-```text
-weightはSVDから継承
-optimizer stateは継承しない
-```
-
-と考えると分かりやすい。
-
-詳細は [[00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎]]。
+コードと操作手順は [[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順]] にまとめた。数式や評価の考え方は本ノートで続ける。
 
 ---
 
@@ -940,92 +856,9 @@ Fine-tuning
 
 ---
 
-## 14. `copy.deepcopy` と層置換
+## PyTorch・Python操作：14. `copy.deepcopy` と層置換 〜 16. `groups` の扱い
 
-元モデルを残したまま候補モデルを作るなら、
-
-```python
-compressed_model = copy.deepcopy(model)
-```
-
-してから置換する。
-
-現在の便利関数、
-
-```python
-factorize_named_conv2d(
-    model,
-    "conv2",
-    rank,
-)
-```
-
-も、元モデルをdeepcopyし、コピー側だけを変更する。
-
-```text
-元モデル
-→ 変更しない
-
-圧縮モデル
-→ 独立したModule / Parameter群
-```
-
-となる。
-
-`model.conv2` へ `(64,288)` のTensorそのものを代入してはいけない。
-
-`model.conv2` は `nn.Module` としてforward時に呼び出されるため、置換後も、
-
-```text
-nn.Conv2d
-または
-nn.Sequential
-```
-
-などの `nn.Module` である必要がある。
-
----
-
-## 15. deviceとdtypeを維持する
-
-新しいConv層はデフォルトではCPU / default dtypeで作られる。
-
-元モデルがGPU上や別dtypeにある場合に備えて、
-
-```python
-return nn.Sequential(
-    first_layer,
-    second_layer,
-).to(
-    device=conv.weight.device,
-    dtype=conv.weight.dtype,
-)
-```
-
-のように、元weightのdevice / dtypeを引き継ぐ。
-
----
-
-## 16. `groups` の扱い
-
-現在の `factorize_conv2d_layer()` は、
-
-```text
-groups = 1
-```
-
-のConv2dだけを対象とする。
-
-```python
-if conv.groups != 1:
-    raise ValueError(...)
-```
-
-として、未対応の構造を明示する。
-
-Depthwise Convなどへ同じfactorizationをそのまま適用するのは別問題である。
-
-一方、MACsを数える汎用関数はgrouped Convのweight shapeを考慮している。詳しくは [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]。
+コードと操作手順は [[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順]] にまとめた。数式や評価の考え方は本ノートで続ける。
 
 ---
 
@@ -1135,7 +968,13 @@ full rankは主に等価性テスト。圧縮成立rankは別に計算する。
 
 ---
 
-## 20. このノートで押さえるポイント
+## PyTorch・Python操作：20. コメント付き処理を、一つの関数で追う
+
+コードと操作手順は [[05_SVD基礎実装検証/17_Conv2d低ランク置換のPyTorch手順]] にまとめた。数式や評価の考え方は本ノートで続ける。
+
+---
+
+## 21. このノートで押さえるポイント
 
 - Conv weightのSVD因子を、`K×K Conv + 1×1 Conv` として保持すると圧縮できる
 - 1層目は元kernel / stride / padding / dilationを引き継ぐ
@@ -1155,5 +994,5 @@ full rankは主に等価性テスト。圧縮成立rankは別に計算する。
 ## 次に読むノート
 
 - [[00_基礎理論/04_実験設計/11_理論計算量とベンチマーク]]
-- [[00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎]]
+- [[05_SVD基礎実装検証/12_PyTorch学習と評価の基礎]]
 - [[00_基礎理論/04_実験設計/10_SVD圧縮モデルの評価設計]]
