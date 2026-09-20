@@ -121,6 +121,8 @@ $$
 
 これは「$A_k$を選べばこの誤差を達成できる」という**上界**である。最適性を言うには、任意の $B$ に対してこれ未満にできないことを示す必要がある。
 
+同じ残差 $A-A_k=\sum_{\alpha=k+1}^{\rho}\sigma_\alpha u_\alpha v_\alpha^T$ は、非ゼロ特異値が $\sigma_{k+1},\ldots,\sigma_\rho$ のSVDでもある。従って作用素ノルムでは $\|A-A_k\|_2=\max_{\alpha>k}\sigma_\alpha=\sigma_{k+1}$。これは作用素ノルム版の**上界**であり、任意の$B$への下界は4–5節で示す。
+
 ## 4. $\rho-k=1$ の場合の下界証明（kernelを使う方法）
 
 この節の証明は $k=\rho-1$、すなわち捨てる特異値が $\sigma_\rho$ 一つだけの場合に**限って**完全である。理由は5節で明らかにする。
@@ -193,7 +195,7 @@ $$
 \|Mz\|_2\le\max_{\|x\|_2=1}\|Mx\|_2=\|M\|_2.
 $$
 
-$M=\sum_{i=1}^{p}\tau_i s_it_i^T$、$p=\min(m,n)$、$\tau_1\ge\cdots\ge\tau_p\ge0$ とする。任意の単位ベクトル$x$について、左特異ベクトルの直交性とBesselの不等式から
+$M=\sum_{i=1}^{p}\tau_i s_it_i^T$、$p=\min(m,n)$、$\tau_1\ge\cdots\ge\tau_p\ge0$ とする。右特異ベクトル$\{t_i\}$は正規直交系なので、$x_\parallel:=\sum_i(t_i^Tx)t_i$ と $x_\perp:=x-x_\parallel$ は直交する。従って $\|x\|_2^2=\|x_\parallel\|_2^2+\|x_\perp\|_2^2\ge\sum_i(t_i^Tx)^2$。これがここで使うBesselの不等式である。任意の単位ベクトル$x$について、左特異ベクトルの直交性も合わせると
 
 $$
 \|Mx\|_2^2
@@ -254,7 +256,41 @@ $$
 \|A-B\|_F^2\ge\sigma_{k+1}^2+\sigma_{k+2}^2+\cdots+\sigma_\rho^2 \tag{Goal}
 $$
 
-（$q$個の項の和）だが、4.2と同様の議論（$\mathcal V_{k+1}=\operatorname{span}\{v_1,\ldots,v_{k+1}\}$、$\dim=k+1$ との交差）から得られるのは
+（$q$個の項の和）である。4.2は $k=\rho-1$ の場合だったので、ここで**一般の$k$に対する1本の証明を途中式から書く**。任意の$\operatorname{rank}(B)\le k$について
+
+$$
+\dim\mathcal N(B)=n-\operatorname{rank}(B)\ge n-k,
+\qquad
+\mathcal V_{1:k+1}:=\operatorname{span}\{v_1,\ldots,v_{k+1}\},
+\qquad
+\dim\mathcal V_{1:k+1}=k+1.
+$$
+
+部分空間の次元公式を使うと
+
+$$
+\dim\bigl(\mathcal N(B)\cap\mathcal V_{1:k+1}\bigr)
+\ge\dim\mathcal N(B)+\dim\mathcal V_{1:k+1}-n
+\ge(n-k)+(k+1)-n=1.
+$$
+
+よって交差内に単位ベクトル $z=\sum_{\alpha=1}^{k+1}c_\alpha v_\alpha$ があり、$Bz=0$、$\sum_\alpha c_\alpha^2=1$。SVDを右から掛けて左特異ベクトルの直交性を使えば
+
+$$
+Az=\sum_{\alpha=1}^{k+1}\sigma_\alpha c_\alpha u_\alpha,
+\qquad
+\|Az\|_2^2=\sum_{\alpha=1}^{k+1}\sigma_\alpha^2c_\alpha^2
+\ge\sigma_{k+1}^2\sum_{\alpha=1}^{k+1}c_\alpha^2=\sigma_{k+1}^2.
+$$
+
+従って $(A-B)z=Az$ と4.2のノルム不等式から
+
+$$
+\|A-B\|_F\ge\|A-B\|_2
+\ge\|(A-B)z\|_2=\|Az\|_2\ge\sigma_{k+1}.
+$$
+
+この証明から得られるFrobenius版の下界は
 
 $$
 \|A-B\|_F^2\ge\sigma_{k+1}^2 \tag{3}
@@ -570,7 +606,7 @@ $$
 \text{一般Frobenius版EYM（7.2）}
 $$
 
-Ky Fanの原理のみ引用であり、それ以外はすべて自己完結して導出している。
+この証明の主要な外部定理はKy Fanの原理である。rank-nullityは4.1節で証明し、ノルム不等式やAbel和分の途中式も示した。基底拡張、Cauchy–Schwarzなど有限次元線形代数の基本事項は使用する。
 
 ## 8. TT/MPS単一ボンドtruncationへの翻訳
 
