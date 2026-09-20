@@ -1229,7 +1229,7 @@ $$
 
 である。
 
-実験では、同rankでHOOIがweight近似誤差を改善しても、圧縮直後のvalidation accuracyが同じ順序で改善するとは限らない。ここでは一般的な解釈だけを扱い、CIFAR-10 `conv2` の具体値は [[06_Tucker基礎実装検証/03_HOOIとTensorLy照合]] を正本とする。
+実験では、同rankでHOOIがweight近似誤差を改善しても、圧縮直後のvalidation accuracyが同じ順序で改善するとは限らない。ここでは一般的な解釈だけを扱い、CIFAR-10 `conv2` の具体値は [[30_CIFAR10_CNN/03_HOOIとTensorLy照合]] を正本とする。
 
 ---
 
@@ -1335,5 +1335,5 @@ PyTorchでの汎用HOOIとConv2d Tucker-2の実装は [[06_Tucker基礎実装検
 
 検証結果：
 
-- [[06_Tucker基礎実装検証/03_HOOIとTensorLy照合]]
-- [[06_Tucker基礎実装検証/04_HOSVD_HOOI_FineTuning比較]]
+- [[30_CIFAR10_CNN/03_HOOIとTensorLy照合]]
+- [[30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較]]

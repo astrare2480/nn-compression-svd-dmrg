@@ -152,7 +152,7 @@ notebooks/20_tucker/
 results/20_tucker/
 ```
 
-で、結果の整理は [[06_Tucker基礎実装検証/README]] を正本とする。
+で、結果の整理は [[30_CIFAR10_CNN/02_Tucker2_Convとrank_sweepの確認結果]]、[[30_CIFAR10_CNN/03_HOOIとTensorLy照合]]、[[30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較]] を参照する。
 
 ### balanced rank `(32,16)`
 

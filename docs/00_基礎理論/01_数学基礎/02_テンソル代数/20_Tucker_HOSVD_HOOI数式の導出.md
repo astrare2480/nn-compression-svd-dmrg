@@ -1844,7 +1844,7 @@ $$
 }
 $$
 
-具体的なrunの値と途中計算は [[06_Tucker基礎実装検証/03_HOOIとTensorLy照合]] を正本とする。
+具体的なrunの値と途中計算は [[30_CIFAR10_CNN/03_HOOIとTensorLy照合]] を正本とする。
 
 ---
 
@@ -1860,7 +1860,7 @@ $$
 
 を解いているのではなく、分類task lossを勾配法で最適化していることと整合する。
 
-具体的なrunの値、差分の途中計算、単一seedの解釈上の注意は [[06_Tucker基礎実装検証/04_HOSVD_HOOI_FineTuning比較]] を正本とする。
+具体的なrunの値、差分の途中計算、単一seedの解釈上の注意は [[30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較]] を正本とする。
 
 ---
 

@@ -31,6 +31,7 @@ tags:
 
 ## PyTorch操作
 
+- [[06_Tucker基礎実装検証/02_Tucker2_Convの実装契約と注意]]
 - [[06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約]]
 - [[06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード]]
 - [[06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード]]
@@ -42,9 +43,9 @@ tags:
 ## 実装・実験の確認結果
 
 1. [[06_Tucker基礎実装検証/01_Tucker_HOSVD基礎実装の確認結果]]
-2. [[06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果]]
-3. [[06_Tucker基礎実装検証/03_HOOIとTensorLy照合]]
-4. [[06_Tucker基礎実装検証/04_HOSVD_HOOI_FineTuning比較]]
+2. [[30_CIFAR10_CNN/02_Tucker2_Convとrank_sweepの確認結果]]
+3. [[30_CIFAR10_CNN/03_HOOIとTensorLy照合]]
+4. [[30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較]]
 5. [[06_Tucker基礎実装検証/05_Tucker実験で得た設計原則と考察]]
 
 ## canonical source

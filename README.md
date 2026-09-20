@@ -158,9 +158,9 @@ taskにとって最適なlow-rank weight
 詳細：
 
 - [Tucker基礎実装検証](docs/06_Tucker基礎実装検証/README.md)
-- [Tucker-2 Conv / rank sweep](docs/06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果.md)
-- [HOOI / TensorLy照合](docs/06_Tucker基礎実装検証/03_HOOIとTensorLy照合.md)
-- [HOSVD / HOOI Fine-tuning比較](docs/06_Tucker基礎実装検証/04_HOSVD_HOOI_FineTuning比較.md)
+- [Tucker-2 Conv / rank sweep](docs/30_CIFAR10_CNN/02_Tucker2_Convとrank_sweepの確認結果.md)
+- [HOOI / TensorLy照合](docs/30_CIFAR10_CNN/03_HOOIとTensorLy照合.md)
+- [HOSVD / HOOI Fine-tuning比較](docs/30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較.md)
 - [Tucker実験で得た設計原則と考察](docs/06_Tucker基礎実装検証/05_Tucker実験で得た設計原則と考察.md)
 
 ## canonical / historical

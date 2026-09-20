@@ -473,3 +473,4 @@ $$
 - 正準形は中心の左右に条件を課す表現であり、同じ $X$ の表現はQR符号やGaugeの選び方で一意ではない。
 - 複素MPSでは転置を随伴に置き換える。ここでのPyTorch例と既存のTT実装契約は実数Tensorを対象とする。
 - `reshape`、QR、`tensordot` の軸対応と検証コードは [[40_TensorTrain_MPS/01_直交中心移動のPyTorch確認]] を参照する。
+- QRと対比したexact SVDによる中心移動、ボンド上の特異値、Schmidt形への導出は [[43_TT_MPSのSVD中心移動とSchmidt形]] を参照する。

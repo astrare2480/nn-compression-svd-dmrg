@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00_基礎理論/01_数学基礎/02_テンソル代数/38_TT_MPSの右QR直交化と右ブロック.md",
+                "file": "06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "38_TT_MPSの右QR直交化と右ブロック"
+              "title": "26_Tucker_HOOIのPyTorch実装"
             }
           }
         ]
@@ -187,6 +187,21 @@
   },
   "active": "b6907776fdc3a747",
   "lastOpenFiles": [
+    "06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果.md",
+    "06_Tucker基礎実装検証/02_Tucker2_Convの実装契約と注意.md",
+    "30_CIFAR10_CNN/02_Tucker2_Convとrank_sweepの確認結果.md",
+    "30_CIFAR10_CNN/assets/03_finetuning/finetuning_learning_curves.png",
+    "30_CIFAR10_CNN/assets/03_finetuning",
+    "30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較.md",
+    "30_CIFAR10_CNN/03_HOOIとTensorLy照合.md",
+    "00_基礎理論/07_物理基礎/44_Schmidt打ち切りとボンド状態の物理的意味.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/43_TT_MPSのSVD中心移動とSchmidt形.md",
+    "06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装.md",
+    "06_Tucker基礎実装検証/25_評価設計のPyTorchコード.md",
+    "06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード.md",
+    "06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード.md",
+    "06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/38_TT_MPSの右QR直交化と右ブロック.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/37_TT_MPSの左ブロックと直交性の導出.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/39_TT_MPSの混合正準形への導入.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/40_TT_MPSの中心ノルムと内積の導出.md",
@@ -200,20 +215,7 @@
     "00_基礎理論/03_添付MD_説明と数式の逐項回収監査.md",
     "00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎.md",
     "00_基礎理論/02_TT_MPS正準形_資料対応監査.md",
-    "00_基礎理論/01_TT_MPS基礎理論_セルフRV.md",
-    "00_基礎理論/00_数式導出監査.md",
-    "00_基礎理論/00_TT_MPS基礎理論_docs化監査.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/38_TT_MPSの右QR直交化と右ブロック.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/36_TT_MPSのGauge自由度と左QR直交化.md",
-    "00_基礎理論/07_物理基礎/42_MPS正準形と直交中心の物理的意味.md",
-    "00_基礎理論/07_物理基礎/16_TT_MPSの物理解釈_縮約密度行列と局所写像.md",
-    "40_TensorTrain_MPS/02_混合正準形の中心摂動と等長性のPyTorch確認.md",
-    "00_基礎理論/07_物理基礎/README.md",
     "00_基礎理論/07_物理基礎",
-    "05_SVD基礎実装検証/07_PyTorch実装.md",
-    "40_TensorTrain_MPS/01_直交中心移動のPyTorch確認.md",
-    "05_SVD基礎実装検証/06_誤差評価のPyTorch集計.md",
-    "00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価.md",
     "06_Tucker基礎実装検証/assets/03_finetuning/finetuning_learning_curves.png",
     "06_Tucker基礎実装検証/assets/03_finetuning",
     "06_Tucker基礎実装検証/assets",
@@ -227,11 +229,9 @@
     "30_CIFAR10_CNN/assets/02_svd_global_compression_using_src_corrected",
     "30_CIFAR10_CNN/assets",
     "20_FashionMNIST/assets/05_cnn_conv_linear_svd_corrected_rerun/validation_delta.png",
-    "20_FashionMNIST/assets/05_cnn_conv_linear_svd_corrected_rerun/fine_tuning_history.png",
     "20_FashionMNIST/assets/05_cnn_conv_linear_svd_corrected_rerun",
     "20_FashionMNIST/assets/04_cnn_conv_svd_corrected_rerun",
     "20_FashionMNIST/assets/03_cnn_linear_svd_finetuning_rerun",
-    "20_FashionMNIST/assets/03_mlp_svd_finetuning_using_src_corrected_rerun",
-    "10_MNIST_MLP_SVD/assets/02_rank_accuracy_tradeoff_corrected_rerun"
+    "20_FashionMNIST/assets/03_mlp_svd_finetuning_using_src_corrected_rerun"
   ]
 }

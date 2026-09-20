@@ -447,6 +447,6 @@ $$
 
 ## 11. 参照結果
 
-- [[06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果]]
-- [[06_Tucker基礎実装検証/03_HOOIとTensorLy照合]]
-- [[06_Tucker基礎実装検証/04_HOSVD_HOOI_FineTuning比較]]
+- [[30_CIFAR10_CNN/02_Tucker2_Convとrank_sweepの確認結果]]
+- [[30_CIFAR10_CNN/03_HOOIとTensorLy照合]]
+- [[30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較]]
