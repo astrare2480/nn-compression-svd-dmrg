@@ -118,7 +118,7 @@ G_3^{[R]}(\alpha_2,i_3,1)\\
 \end{aligned}
 $$
 
-従って全要素が不変で、中心は第3サイトへ移る。$\rho<r_2$ ならボンドの**表示サイズ**は減るが、零特異方向だけを除くので近似誤差は0である。ただしこの場合、同サイズの可逆行列を挿入する意味でのGauge変換とは呼ばない。非零特異値をさらに捨てる打ち切りは [[33_TT-SVDの打ち切りと誤差]] の別操作である。
+従って全要素が不変で、中心は第3サイトへ移る。$\rho<r_2$ ならボンドの**表示サイズ**は減るが、零特異方向だけを除くので近似誤差は0である。ただしこの場合、同サイズの可逆行列を挿入する意味でのGauge変換とは呼ばない。非零特異値をさらに捨てる一回の打ち切りは [[45_TT_MPSの単一ボンドSVD打ち切り]] の別操作である。
 
 ここで行っているのは、既存の鎖状TTの隣接ボンドをまたぐ**局所的な中心移動**である。[[22_Tucker分解とHOSVD]] のように、各物理modeの因子行列と一つの密な3階coreを新たに作るTucker分解ではない。$\Sigma$ もTucker coreではなく、切断 $(i_1,i_2)\mid i_3$ の左右ブロックを結ぶ一本のボンド上の対角行列である。また、全テンソルから左から順にコアを構成するTT-SVDそのものとも区別する。
 
@@ -205,6 +205,11 @@ $$
 $$
 \begin{aligned}
 \sum_{i_1,i_2}L_\beta(i_1,i_2)L_\gamma(i_1,i_2)
+&=\sum_{i_1,i_2}
+\left[\sum_{\alpha_1}H(i_1,\alpha_1)
+U_{(\alpha_1,i_2),\beta}\right]
+\left[\sum_{\alpha_1'}H(i_1,\alpha_1')
+U_{(\alpha_1',i_2),\gamma}\right]\\
 &=\sum_{\alpha_1,\alpha_1',i_2}
 U_{(\alpha_1,i_2),\beta}U_{(\alpha_1',i_2),\gamma}
 \underbrace{\sum_{i_1}H(i_1,\alpha_1)H(i_1,\alpha_1')}_{\delta_{\alpha_1\alpha_1'}}\\
@@ -214,7 +219,25 @@ U_{(\alpha_1,i_2),\beta}U_{(\alpha_1,i_2),\gamma}
 \end{aligned}
 $$
 
-右側は前節の $\widetilde R\widetilde R^T=I_\rho$ である。従って全テンソルの切断 $12\mid3$ について
+右側は前節の $\widetilde R\widetilde R^T=I_\rho$ である。成分でも旧右コアの行直交性を先に使えば
+
+$$
+\begin{aligned}
+\sum_{i_3}R_\beta(i_3)R_\gamma(i_3)
+&=\sum_{i_3}
+\left[\sum_{\alpha_2}(V^T)_{\beta,\alpha_2}R(\alpha_2,i_3)\right]
+\left[\sum_{\alpha_2'}(V^T)_{\gamma,\alpha_2'}R(\alpha_2',i_3)\right]\\
+&=\sum_{\alpha_2,\alpha_2'}
+(V^T)_{\beta,\alpha_2}(V^T)_{\gamma,\alpha_2'}
+\underbrace{\sum_{i_3}R(\alpha_2,i_3)R(\alpha_2',i_3)}
+_{\delta_{\alpha_2\alpha_2'}}\\
+&=\sum_{\alpha_2}
+(V^T)_{\beta,\alpha_2}(V^T)_{\gamma,\alpha_2}
+=\delta_{\beta\gamma}.
+\end{aligned}
+$$
+
+最後の等号は $V^TV=I_\rho$、すなわち $V^T$ の行同士の直交性である。これも $\rho<r_2$ の場合に成立する。従って全テンソルの切断 $12\mid3$ について
 
 $$
 X^{\langle2\rangle}_{(i_1,i_2),i_3}
@@ -233,6 +256,23 @@ $$
 $$
 
 「一対一」とはスカラー積の順序ではなく、$\beta\ne\gamma$ の混合係数が0という意味である。
+
+各 $L_{:,\beta}R_{\beta,:}$ が単位Frobeniusノルムのrank-1行列であることも、行要素の内積から確かめられる。
+
+$$
+\begin{aligned}
+\langle L_{:,\beta}R_{\beta,:},
+L_{:,\gamma}R_{\gamma,:}\rangle_F
+&=\sum_{i_1,i_2,i_3}
+L_\beta(i_1,i_2)R_\beta(i_3)
+L_\gamma(i_1,i_2)R_\gamma(i_3)\\
+&=\left[\sum_{i_1,i_2}L_\beta(i_1,i_2)L_\gamma(i_1,i_2)\right]
+\left[\sum_{i_3}R_\beta(i_3)R_\gamma(i_3)\right]\\
+&=\delta_{\beta\gamma}.
+\end{aligned}
+$$
+
+$\beta=\gamma$ ならノルムは1で、$\beta\ne\gamma$ なら二つのrank-1行列は直交する。従って $\|\sigma_\beta L_{:,\beta}R_{\beta,:}\|_F=\sigma_\beta$。$\sigma_\beta$ は一つのコア要素の「残す割合」ではなく、**切断全体の一つの直交rank-1成分の大きさ**である。
 
 物理基底から $|L_\beta\rangle:=\sum_{i_1,i_2}L_\beta(i_1,i_2)|i_1\rangle\otimes|i_2\rangle$、$|R_\beta\rangle:=\sum_{i_3}R_\beta(i_3)|i_3\rangle$ と定めると、有限和の順序を入れ替えて
 
@@ -354,3 +394,108 @@ $$
 $$
 
 量子状態として規格化するなら $|X\rangle/\sqrt5$ とし、Schmidt係数は $2/\sqrt5,1/\sqrt5$ になる。QRによる中心移動だけでも左右の直交性は作れるが、一般に残差因子は非対角なので、この二つのSchmidt係数をそのまま読めるわけではない。
+
+## 7. QRとSVDで右へ渡す因子を比べる
+
+同じ中心行列 $A\in\mathbb R^{(r_1n_2)\times r_2}$ を右へ動かす場合、QRでは $A=Q_{\mathrm{QR}}R_{\mathrm{QR}}$ として、左コアへ $Q_{\mathrm{QR}}$、右コアへ $R_{\mathrm{QR}}G_3^{[R]\langle L\rangle}$ を入れる。SVDでは $A=U\Sigma V^T$ として、左コアへ $U$、右コアへ **$\Sigma V^TG_3^{[R]\langle L\rangle}$ 全体**を入れる。$\Sigma$ だけを右へ渡すと $V^T$ が欠け、一般に元の $A$ を再構成できない。
+
+$$
+\begin{aligned}
+A_{(\alpha_1,i_2),\alpha_2}
+&=\sum_{\beta}
+(Q_{\mathrm{QR}})_{(\alpha_1,i_2),\beta}
+(R_{\mathrm{QR}})_{\beta,\alpha_2}\\
+&=\sum_{\beta=1}^{\rho}
+U_{(\alpha_1,i_2),\beta}
+\sigma_\beta(V^T)_{\beta,\alpha_2}.
+\end{aligned}
+$$
+
+どちらも左因子は列直交で、残りの因子を右へ運べば $X$ は不変である。QRの残差 $R_{\mathrm{QR}}$ は、行列のshapeに応じて上三角または上台形で、正方形の場合は例えば
+
+$$
+R_{\mathrm{QR}}=
+\begin{pmatrix}
+r_{11}&r_{12}\\
+0&r_{22}
+\end{pmatrix}
+$$
+
+なら $r_{12}$ が二つの右ボンド方向を混ぜる。これをそのままボンド上のSchmidt係数とは読めない。SVDは左右の直交基底の間の係数を $\Sigma_{\beta\gamma}=\sigma_\beta\delta_{\beta\gamma}$ へ対角化する。特異値がどこから来るかは
+
+$$
+A^TA\,v_\beta=\sigma_\beta^2v_\beta,
+\qquad
+Av_\beta=\sigma_\beta u_\beta
+$$
+
+でも確かめられる。$\sigma_\beta$ は $A$ が右特異方向 $v_\beta$ をどれだけ伸ばすかを表す。QRの直交化だけでは、この固有方向と伸縮率は露出しない。
+
+ここでQRの「thin」分解の列数を、無条件に $\rho=\operatorname{rank}(A)$ としてはいけない。標準的なthin QRは $q=\min(r_1n_2,r_2)$ 列で、rank落ちした場合にも余分な直交方向を含み得る。compact SVDは非零特異値の本数 $\rho$ 列だけを取る。どちらも**全因子を保持**すればexactだが、$\rho<r_2$ のSVDを同サイズ可逆Gauge変換と同一視しない。
+
+## 8. 一般の積状態和からSchmidt形まで
+
+左右の正規直交基底 $|a_m\rangle_A$ と $|b_n\rangle_B$ を任意に選んだだけなら、係数行列 $C$ は一般に非対角である。2次元ずつなら全要素は
+
+$$
+\begin{aligned}
+|X\rangle
+&=c_{11}|a_1\rangle|b_1\rangle
++c_{12}|a_1\rangle|b_2\rangle\\
+&\quad+c_{21}|a_2\rangle|b_1\rangle
++c_{22}|a_2\rangle|b_2\rangle,
+\qquad
+C=\begin{pmatrix}c_{11}&c_{12}\\c_{21}&c_{22}\end{pmatrix}.
+\end{aligned}
+$$
+
+$|a_1\rangle|b_2\rangle$ などの交差係数があるので、これはまだSchmidt形とは限らない。$C=U_C\Sigma_CV_C^T$ で左右の基底を同時に更新すると
+
+$$
+|X\rangle
+=\sum_{\beta=1}^{\operatorname{rank}(C)}
+(\Sigma_C)_{\beta\beta}
+|L_\beta\rangle_A\otimes|R_\beta\rangle_B
+$$
+
+となる。この形をSchmidt分解と呼ぶ条件は、左右がそれぞれ正規直交し、係数が非負で、**同じ $\beta$ 同士だけが結合する**ことである。一般の積状態の和や、左側だけをQRで直交化した表現とは区別する。
+
+今回のTT/MPSでは $C$ に対応するのは**全テンソルの** $X^{\langle2\rangle}$ である。中心行列 $A$ の $V$ だけが物理的な右Schmidt状態になるわけではない。右状態の係数は $V^TR$、左状態の係数は $(H\otimes I_{n_2})U$ である。左右の等長性により $A$ と $X^{\langle2\rangle}$ の非零特異値は一致する。
+
+## 9. テンソル積の内積を4要素から確かめる
+
+第5節では積基底のdeltaから内積を分解した。2成分ずつを全要素で書くと、実数ベクトル $l=(a,b)^T$、$r=(c,d)^T$ に対して
+
+$$
+l\otimes r
+=\begin{pmatrix}ac\\ad\\bc\\bd\end{pmatrix},
+\qquad
+l'\otimes r'
+=\begin{pmatrix}a'c'\\a'd'\\b'c'\\b'd'\end{pmatrix}.
+$$
+
+従って積の4項は
+
+$$
+\begin{aligned}
+(l\otimes r)^T(l'\otimes r')
+&=aa'cc'+aa'dd'+bb'cc'+bb'dd'\\
+&=(aa'+bb')(cc'+dd')\\
+&=(l^Tl')(r^Tr').
+\end{aligned}
+$$
+
+独立な左添字と右添字の和を別々に括れることが本質である。一般次元でも
+
+$$
+\begin{aligned}
+\langle x\otimes y|x'\otimes y'\rangle
+&=\sum_{a,b,a',b'}x(a)y(b)x'(a')y'(b')
+\delta_{aa'}\delta_{bb'}\\
+&=\sum_{a,b}x(a)x'(a)y(b)y'(b)\\
+&=\left[\sum_a x(a)x'(a)\right]
+\left[\sum_b y(b)y'(b)\right].
+\end{aligned}
+$$
+
+同じ事実は $(l^T\otimes r^T)(l'\otimes r')=(l^Tl')\otimes(r^Tr')=(l^Tl')(r^Tr')$ とも表せる。特に $\|x\otimes y\|=\|x\|\,\|y\|$ であり、どちらか一方の内積が0なら積状態も直交する。左右Schmidt状態がそれぞれ正規直交するため、異なるSchmidt成分の交差項は0となり、$\|X\|_F^2=\sum_\beta\sigma_\beta^2$ が従う。
