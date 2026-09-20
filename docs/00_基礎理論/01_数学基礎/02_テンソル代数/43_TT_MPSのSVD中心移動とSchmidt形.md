@@ -600,6 +600,14 @@ $$
 両方にSVDと「中心」が現れるが、今回の操作では既存の鎖 $G_1-G_2-G_3$ の第2・第3コア間のボンドだけを扱う。Tucker分解の典型的な3階表現は、各物理modeに因子を置き、一つの密なcore $\mathcal S$ に結ぶ形である。
 
 $$
+X=\mathcal S\times_1 U^{(1)}\times_2 U^{(2)}\times_3 U^{(3)},
+\qquad
+U^{(j)}\in\mathbb R^{n_j\times s_j}.
+$$
+
+$\times_j$ は第 $j$ modeに沿った行列との積を表す。以下の添字式が各mode積を全要素に展開したものである。
+
+$$
 \begin{aligned}
 X(i_1,i_2,i_3)
 &=\sum_{a_1=1}^{s_1}\sum_{a_2=1}^{s_2}\sum_{a_3=1}^{s_3}
@@ -609,7 +617,7 @@ U^{(1)}(i_1,a_1)U^{(2)}(i_2,a_2)U^{(3)}(i_3,a_3),\\
 \end{aligned}
 $$
 
-一方、TT/MPSは第1節の $\sum_{\alpha_1,\alpha_2}G_1G_2G_3$ という隣接ボンドの縮約である。最小のexact表現なら、TT-rank $r_1,r_2$ は連続切断 $i_1\mid(i_2,i_3)$ と $(i_1,i_2)\mid i_3$ のunfolding rankに対応する。Tuckerのmultilinear rank $s_j$ は各mode $i_j\mid\text{他のmode}$ のunfolding rankに対応する。切断の取り方が異なる。
+一方、TT/MPSは第1節の $\sum_{\alpha_1,\alpha_2}G_1G_2G_3$ という隣接ボンドの縮約である。Tuckerが一つのcoreから各modeへ因子を伸ばす構造なのに対し、TT/MPSの内部自由度は二つのボンド $\alpha_1,\alpha_2$ に沿って局所コアへ分散する。最小のexact表現なら、TT-rank $r_1,r_2$ は連続切断 $i_1\mid(i_2,i_3)$ と $(i_1,i_2)\mid i_3$ のunfolding rankに対応する。Tuckerのmultilinear rank $s_j$ は各mode $i_j\mid\text{他のmode}$ のunfolding rankに対応する。切断の取り方が異なる。
 
 今回の $\Sigma\in\mathbb R^{\rho\times\rho}$ は一本のボンド上の**対角行列**であり、一般には密な3階Tucker core $\mathcal S$ ではない。Tucker/HOSVDのSVD、全テンソルからコアを順に作るTT-SVD、既存TTの局所的なSVD中心移動は、それぞれ分解対象と結果の構造が異なる。Tuckerの詳しい導出は [[22_Tucker分解とHOSVD]] に置く。
 
