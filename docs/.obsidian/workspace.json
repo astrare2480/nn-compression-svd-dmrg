@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装.md",
+                "file": "00_基礎理論/01_数学基礎/02_テンソル代数/46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "26_Tucker_HOOIのPyTorch実装"
+              "title": "46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性"
             }
           }
         ]
@@ -187,6 +187,10 @@
   },
   "active": "b6907776fdc3a747",
   "lastOpenFiles": [
+    "00_基礎理論/01_数学基礎/02_テンソル代数/46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性 (1).md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/45_TT_MPSの単一ボンドSVD打ち切り.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性.md",
+    "06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装.md",
     "06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果.md",
     "06_Tucker基礎実装検証/02_Tucker2_Convの実装契約と注意.md",
     "30_CIFAR10_CNN/02_Tucker2_Convとrank_sweepの確認結果.md",
@@ -196,7 +200,6 @@
     "30_CIFAR10_CNN/03_HOOIとTensorLy照合.md",
     "00_基礎理論/07_物理基礎/44_Schmidt打ち切りとボンド状態の物理的意味.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/43_TT_MPSのSVD中心移動とSchmidt形.md",
-    "06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装.md",
     "06_Tucker基礎実装検証/25_評価設計のPyTorchコード.md",
     "06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード.md",
     "06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード.md",
@@ -212,9 +215,6 @@
     "00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装.md",
     "00_基礎理論/05_PyTorch実装/08_Linear層のSVD実装.md",
     "00_基礎理論/05_PyTorch実装/07_PyTorch実装.md",
-    "00_基礎理論/03_添付MD_説明と数式の逐項回収監査.md",
-    "00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎.md",
-    "00_基礎理論/02_TT_MPS正準形_資料対応監査.md",
     "00_基礎理論/07_物理基礎",
     "06_Tucker基礎実装検証/assets/03_finetuning/finetuning_learning_curves.png",
     "06_Tucker基礎実装検証/assets/03_finetuning",
