@@ -33,6 +33,24 @@ $$
 
 $\sigma_{k+1}>0$ だから $|\widetilde\psi_k\rangle\ne|\psi\rangle$ である。exact SVDによる中心移動と異なり、これは単なるコア表示の変更ではない。ボンド次元を $\rho$ から $k$ へ下げると、保持できるSchmidtチャネルが $k$ 本になる。
 
+例えば $\rho=3$ から $k=2$ へ切る場合は
+
+$$
+\begin{aligned}
+|\psi\rangle
+&=\sigma_1|L_1\rangle|R_1\rangle
++\sigma_2|L_2\rangle|R_2\rangle
++\sigma_3|L_3\rangle|R_3\rangle,\\
+|\widetilde\psi_2\rangle
+&=\sigma_1|L_1\rangle|R_1\rangle
++\sigma_2|L_2\rangle|R_2\rangle,\\
+|\psi\rangle-|\widetilde\psi_2\rangle
+&=\sigma_3|L_3\rangle|R_3\rangle.
+\end{aligned}
+$$
+
+左の第3状態だけ、または右の第3状態だけを削るのではない。切断をまたぐ対応づけられた第3の組を丸ごと落とす。
+
 ## 2. 左ブロックへの射影を添字で確認する
 
 残す左状態が張る部分空間への直交射影を
@@ -84,7 +102,7 @@ $$
 w_{\mathrm{discard}}:=\sum_{\beta=k+1}^{\rho}\sigma_\beta^2
 $$
 
-と書く。直交性から、単一cutで一回だけSchmidt打ち切りをした非規格化状態について
+と書く。原資料で $\epsilon_{\mathrm{discard}}$ と書かれた量と同じである。直交性から、単一cutで一回だけSchmidt打ち切りをした非規格化状態について
 
 $$
 \begin{aligned}
@@ -99,7 +117,7 @@ $$
 \end{aligned}
 $$
 
-また $\|\widetilde\psi_k\|^2=1-w_{\mathrm{discard}}$ である。再規格化した状態は $|\widetilde\psi_k^{\mathrm{norm}}\rangle=|\widetilde\psi_k\rangle/\sqrt{1-w_{\mathrm{discard}}}$ で、元状態との二乗距離は一般に $w_{\mathrm{discard}}$ とは異なる。この等式を、複数cutを順に打ち切るTT-SVD全体へそのまま流用しない。
+従って距離そのものは $\|\psi-\widetilde\psi_k\|=\sqrt{w_{\mathrm{discard}}}$ である。また $\|\widetilde\psi_k\|^2=1-w_{\mathrm{discard}}$ である。再規格化した状態は $|\widetilde\psi_k^{\mathrm{norm}}\rangle=|\widetilde\psi_k\rangle/\sqrt{1-w_{\mathrm{discard}}}$ で、元状態との二乗距離は一般に $w_{\mathrm{discard}}$ とは異なる。この等式を、複数cutを順に打ち切るTT-SVD全体へそのまま流用しない。
 
 ## 4. 二つのスピン状態を全要素で見る
 
@@ -138,7 +156,7 @@ $$
 \|\psi-\widetilde\psi_1\|^2=0.01.
 $$
 
-再規格化後は $|\uparrow\downarrow\rangle$ という積状態になる。元の状態にあった $|\downarrow\uparrow\rangle$ との相関した組はなくなり、この切断のSchmidt rankは2から1へ変わる。rank 1の純粋な積状態では、この二つのスピン間のエンタングルメントは0である。「小さいから物理的に無意味」ではなく、**この状態のこの切断でノルム二乗の重みが小さい**という判断である。多数の係数が無視できない状態では、小さなボンド次元で重要な相関を失い得る。
+再規格化後は $|\uparrow\downarrow\rangle$ という積状態になる。元の状態にあった $|\downarrow\uparrow\rangle$ との相関した組はなくなり、この切断のSchmidt rankは2から1へ変わる。rank 1の純粋な積状態では、この二つのスピン間のエンタングルメントは0である。「小さいから物理的に無意味」ではなく、**この状態のこの切断でノルム二乗の重みが小さい**という判断である。臨界系や強くもつれた状態など、多数の係数が無視できない場合には、小さなボンド次元で長距離相関や量子相関を失い得る。
 
 ## 5. Schmidt状態と有効Hilbert空間
 

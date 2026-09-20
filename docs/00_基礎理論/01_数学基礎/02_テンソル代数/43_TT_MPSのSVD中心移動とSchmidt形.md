@@ -189,6 +189,8 @@ $$
 
 第2行は $\Sigma_{\beta,\gamma}=\sigma_\beta\delta_{\beta\gamma}$ により $\gamma$ の和を消した結果である。$\Sigma$ の対角性は、QRの一般に非対角な三角因子からは得られない。
 
+$\Sigma$ を常に独立したコアとして保存する必要はない。第2節のように左展開で $G_3^{[C]\langle L\rangle}=\Sigma\widetilde G_3^{[R]\langle L\rangle}$ と吸収しても、SVDで選んだ左右の基底と特異値の意味は失われない。ボンド上のSchmidt係数を明示したいときに、二つの因子へ分けて表示する。
+
 ## 4. 全テンソルのcut unfoldingとSchmidt形
 
 左ブロックと右ブロックの係数を
@@ -508,7 +510,15 @@ A^TA\,v_\beta=\sigma_\beta^2v_\beta,
 Av_\beta=\sigma_\beta u_\beta
 $$
 
-でも確かめられる。$\sigma_\beta$ は $A$ が右特異方向 $v_\beta$ をどれだけ伸ばすかを表す。QRは入力列 $A=[a_1,\ldots,a_{r_2}]$ をその順序で直交化するため、列順を変えると一般に $Q_{\mathrm{QR}}$ と $R_{\mathrm{QR}}$ も変わる。QRの直交化だけでは、$A^TA$ の固有方向と伸縮率は露出しない。単に中心を動かす目的なら、通常はSVDより計算の軽いQRを使える。
+でも確かめられる。$\sigma_\beta$ は $A$ が右特異方向 $v_\beta$ をどれだけ伸ばすかを表す。QRは入力列 $A=[a_1,\ldots,a_{r_2}]$ をその順序で直交化する。例えば独立な最初の2列にGram–Schmidtを適用すると
+
+$$
+q_1=\frac{a_1}{\|a_1\|},\qquad
+b_2=a_2-(q_1^Ta_2)q_1,\qquad
+q_2=\frac{b_2}{\|b_2\|}
+$$
+
+となる。$q_2$ を作る前に $q_1$ 成分を引くため、列順を変えると一般に $Q_{\mathrm{QR}}$ と $R_{\mathrm{QR}}$ も変わる。QRの直交化だけでは、$A^TA$ の固有方向と伸縮率は露出しない。単に中心を動かす目的なら、通常はSVDより計算の軽いQRを使える。
 
 ここでQRの「thin」分解の列数を、無条件に $\rho=\operatorname{rank}(A)$ としてはいけない。標準的なthin QRは $q=\min(r_1n_2,r_2)$ 列で、rank落ちした場合にも余分な直交方向を含み得る。compact SVDは非零特異値の本数 $\rho$ 列だけを取る。どちらも**全因子を保持**すればexactだが、$\rho<r_2$ のSVDを同サイズ可逆Gauge変換と同一視しない。
 
@@ -627,7 +637,7 @@ $$
 
 一方、TT/MPSは第1節の $\sum_{\alpha_1,\alpha_2}G_1G_2G_3$ という隣接ボンドの縮約である。Tuckerが一つのcoreから各modeへ因子を伸ばす構造なのに対し、TT/MPSの内部自由度は二つのボンド $\alpha_1,\alpha_2$ に沿って局所コアへ分散する。最小のexact表現なら、TT-rank $r_1,r_2$ は連続切断 $i_1\mid(i_2,i_3)$ と $(i_1,i_2)\mid i_3$ のunfolding rankに対応する。Tuckerのmultilinear rank $s_j$ は各mode $i_j\mid\text{他のmode}$ のunfolding rankに対応する。切断の取り方が異なる。
 
-今回の $\Sigma\in\mathbb R^{\rho\times\rho}$ は一本のボンド上の**対角行列**であり、一般には密な3階Tucker core $\mathcal S$ ではない。Tucker/HOSVDのSVD、全テンソルからコアを順に作るTT-SVD、既存TTの局所的なSVD中心移動は、それぞれ分解対象と結果の構造が異なる。Tuckerの詳しい導出は [[22_Tucker分解とHOSVD]] に置く。
+今回の $\Sigma\in\mathbb R^{\rho\times\rho}$ は一本のボンド上の**対角行列**であり、一般には密な3階Tucker core $\mathcal S$ ではない。TT/MPSでは鎖上の直交中心を隣のサイトへ移せるが、Tuckerの一つの密なcoreには通常そのようなサイト間の中心移動を考えない。Tucker/HOSVDのSVD、全テンソルからコアを順に作るTT-SVD、既存TTの局所的なSVD中心移動は、それぞれ分解対象と結果の構造が異なる。Tuckerの詳しい導出は [[22_Tucker分解とHOSVD]] に置く。
 
 ## 参考資料
 
