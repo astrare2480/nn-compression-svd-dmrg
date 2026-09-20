@@ -245,6 +245,30 @@ $$
 
 第4成分を一つ削る損失は $0.0001$、第1成分なら $100$ である。これはFrobeniusノルムで測った大きさの比較であり、個別の観測量や長距離相関への影響を同じ比率で保証するものではない。**すべてのrank-$k$行列の中での最適性**を証明するEckart–Young–Mirsky定理は、このノートの学習範囲に含めない。
 
+別の対比例でも、**小さい順**というだけで損失が小さいとは限らない。$k=2$ として二本を削ると、
+
+$$
+\begin{aligned}
+(\sigma_1,\sigma_2,\sigma_3,\sigma_4)&=(10,3,0.1,0.01),\\
+\|X\|_F^2&=100+9+0.01+0.0001=109.0101,\\
+\|X-\widetilde X_2\|_F^2&=0.1^2+0.01^2=0.0101,\\
+\|\widetilde X_2\|_F^2&=100+9=109.
+\end{aligned}
+$$
+
+これに対して
+
+$$
+\begin{aligned}
+(\sigma_1,\sigma_2,\sigma_3,\sigma_4)&=(5,4.8,4.6,4.5),\\
+\|X\|_F^2&=25+23.04+21.16+20.25=89.45,\\
+\|\widetilde X_2\|_F^2&=25+23.04=48.04,\\
+\|X-\widetilde X_2\|_F^2&=4.6^2+4.5^2=41.41.
+\end{aligned}
+$$
+
+後者では第3・第4成分も大きく、同じrank 2への削減で大きな相関成分を失う。どちらも成分は失われるが、Frobenius誤差の大きさが異なる。
+
 ## 6. 不変でなくなる理由と単一cutの誤差
 
 元の状態と近似状態を引くと、消えた項がそのまま残る。
@@ -328,6 +352,27 @@ $$
 $$
 
 後で $|\widehat X_k\rangle=|\widetilde X_k\rangle/\sqrt{1-w}$ と再規格化した場合、捨てた成分は戻らず、元状態との二乗距離は一般に $w$ ではない。
+
+一般の非規格化テンソルについても、保持成分と残差の内積は
+
+$$
+\langle\widetilde X_k,X-\widetilde X_k\rangle_F
+=\sum_{\beta=1}^{k}\sum_{\gamma=k+1}^{\rho}
+\sigma_\beta\sigma_\gamma\delta_{\beta\gamma}=0
+$$
+
+である。従って
+
+$$
+\begin{aligned}
+\|X\|_F^2
+&=\|\widetilde X_k\|_F^2+\|X-\widetilde X_k\|_F^2\\
+&=\sum_{\beta=1}^{k}\sigma_\beta^2
++\sum_{\beta=k+1}^{\rho}\sigma_\beta^2.
+\end{aligned}
+$$
+
+したがって誤差ノルム自体は $\|X-\widetilde X_k\|_F=\sqrt{\sum_{\beta=k+1}^{\rho}\sigma_\beta^2}$ である。$\rho=5$ から $k=2$ へ切るなら、五本のうち三本のSchmidt成分を除くという意味である。
 
 ## 7. 行位置と8要素を最後まで追う例
 
@@ -424,3 +469,20 @@ $$
 $$
 
 元のノルム二乗も $\|X\|_F^2=4(3/2)^2+4(1/2)^2=10=3^2+1^2$。保持後は $\|\widetilde X_1\|_F^2=9$、捨てた比率は $1/10$ である。この例は**一つのcutの打ち切り**だけを検証している。
+
+同じ例を規格化すると、Schmidt係数は $3/\sqrt{10}$ と $1/\sqrt{10}$ になる。
+
+$$
+\frac{|X\rangle}{\sqrt{10}}
+=\frac{3}{\sqrt{10}}|L_1\rangle\otimes|R_1\rangle
++\frac{1}{\sqrt{10}}|L_2\rangle\otimes|R_2\rangle,
+\qquad
+\frac{9}{10}+\frac{1}{10}=1.
+$$
+
+rank 1打ち切りで除く第2成分の重みは $1/10$ である。
+
+## 参考資料
+
+- [LMU：MPS I, Matrix Product States Canonical Forms](https://www2.physik.uni-muenchen.de/lehre/vorlesungen/sose_22/tensor_networks_22/skript/04-MPS-I-MatrixProductStatesCanonicalForms.pdf)：SVDによるボンド正準形と小さい特異値の削除。
+- [Tensor Network：TT-SVD Algorithm](https://tensornetwork.org/mps/algorithms/ttsvd/)：SVD打ち切りとTT/MPSの構成。ここでの単一cutの等式と、複数cutを処理するTT-SVD全体の誤差は区別する。

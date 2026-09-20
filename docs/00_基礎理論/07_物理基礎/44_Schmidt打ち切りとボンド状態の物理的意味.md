@@ -240,3 +240,7 @@ $$
 一般に、規格化された元状態で $w=w_{\mathrm{discard}}<1$ なら、再規格化後の二乗距離は $2-2\sqrt{1-w}$。discarded weightの値を、この距離と取り違えない。また「95%の重みを保持」は、元状態のノルム二乗の95%が残すSchmidt部分空間へ射影された意味であり、すべての物理現象が95%再現できるという保証ではない。
 
 量子状態ではこの切断をまたぐ弱い相関やもつれの成分を削る。一般のTTテンソルなら、左右の添字ブロック間にある独立な結合モードを削ると読む。小さい重みでも観測したい物理量に効くことがあり、特に多くのSchmidt係数が無視できない場合には小さなbond dimensionが十分とは限らない。
+
+## 参考資料
+
+- [Schollwöck：The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477)：Schmidt状態、縮約密度行列とDMRGのブロック基底。

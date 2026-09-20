@@ -53,6 +53,8 @@ $$
 
 である。零特異値を表記から除くのは圧縮rankを選んだことではない。非零成分はすべて保持するので $A=U\Sigma V^T$ は厳密な等式である。$\rho=0$ の零テンソルは係数がすべて0の自明な場合として分ける。
 
+ここでの $\rho$ は数学的なrankである。浮動小数点計算で零特異値が微小な非零値として現れる場合の数値rank判定は別の問題であり、このexact中心移動から打ち切り閾値を決めたことにはならない。
+
 ## 2. $U$ を左直交コアに戻し、$\Sigma V^T$ を右へ渡す
 
 $$
@@ -333,6 +335,38 @@ $$
 
 となる。$X$ が規格化された状態なら $\sum_\beta\sigma_\beta^2=1$。これはこの段階では規格化条件であり、特異値の打ち切りやエンタングルメントエントロピーの導入ではない。
 
+中心を第3サイトへ移した後も、同じノルムは第3中心コアだけで計算できる。左ブロックのGramを先に縮約すると
+
+$$
+\begin{aligned}
+\|X\|_F^2
+&=\sum_{i_1,i_2,i_3}
+\left[\sum_\beta L_\beta(i_1,i_2)G_3^{[C]}(\beta,i_3,1)\right]
+\left[\sum_\gamma L_\gamma(i_1,i_2)G_3^{[C]}(\gamma,i_3,1)\right]\\
+&=\sum_{\beta,\gamma,i_3}
+\underbrace{\sum_{i_1,i_2}L_\beta(i_1,i_2)L_\gamma(i_1,i_2)}_{\delta_{\beta\gamma}}
+G_3^{[C]}(\beta,i_3,1)G_3^{[C]}(\gamma,i_3,1)\\
+&=\sum_{\beta,i_3}G_3^{[C]}(\beta,i_3,1)^2
+=\|G_3^{[C]}\|_F^2.
+\end{aligned}
+$$
+
+また $G_3^{[C]\langle L\rangle}=\Sigma V^TR$ なので、$RR^T=I_{r_2}$ と $V^TV=I_\rho$ を順に使えば
+
+$$
+\begin{aligned}
+\|G_3^{[C]}\|_F^2
+&=\operatorname{tr}\!\left[(\Sigma V^TR)(\Sigma V^TR)^T\right]\\
+&=\operatorname{tr}\!\left[\Sigma V^TRR^TV\Sigma\right]\\
+&=\operatorname{tr}\!\left[\Sigma V^TI_{r_2}V\Sigma\right]\\
+&=\operatorname{tr}\!\left[\Sigma I_\rho\Sigma\right]\\
+&=\operatorname{tr}(\Sigma^2)
+=\sum_\beta\sigma_\beta^2.
+\end{aligned}
+$$
+
+従って $\|X\|_F=\|G_2^{[C]}\|_F=\|G_3^{[C]}\|_F$ である。
+
 ## 6. 一つの全要素例
 
 新しい切断を明瞭にするため、$n_1=n_2=n_3=r_1=r_2=2$ とし、第1・第3コアの境界を除いた行列を $H=R=I_2$ にする。第2中心コアの左展開を次の4行2列に取る。行順は $(i_1,i_2)=(1,1),(1,2),(2,1),(2,2)$ である。
@@ -499,3 +533,8 @@ $$
 $$
 
 同じ事実は $(l^T\otimes r^T)(l'\otimes r')=(l^Tl')\otimes(r^Tr')=(l^Tl')(r^Tr')$ とも表せる。特に $\|x\otimes y\|=\|x\|\,\|y\|$ であり、どちらか一方の内積が0なら積状態も直交する。左右Schmidt状態がそれぞれ正規直交するため、異なるSchmidt成分の交差項は0となり、$\|X\|_F^2=\sum_\beta\sigma_\beta^2$ が従う。
+
+## 参考資料
+
+- [Schollwöck：The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477)：MPS正準形とSchmidt分解。
+- [LMU：MPS I, Matrix Product States Canonical Forms](https://www2.physik.uni-muenchen.de/lehre/vorlesungen/sose_22/tensor_networks_22/skript/04-MPS-I-MatrixProductStatesCanonicalForms.pdf)：左右直交化、ボンド正準形とSVDによる中心移動。
