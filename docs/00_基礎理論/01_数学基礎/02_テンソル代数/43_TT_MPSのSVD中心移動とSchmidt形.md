@@ -25,6 +25,27 @@ $$
 
 と書く。$G_1^{[L]}$ の左展開は列直交、$G_3^{[R]}$ の右展開は行直交である。中心 $G_2^{[C]}\in\mathbb R^{r_1\times n_2\times r_2}$ には直交条件を課さない。
 
+旧中心の左右にあるブロック状態を
+
+$$
+|L_{\alpha_1}\rangle
+:=\sum_{i_1}G_1^{[L]}(1,i_1,\alpha_1)|i_1\rangle,
+\qquad
+|R_{\alpha_2}\rangle
+:=\sum_{i_3}G_3^{[R]}(\alpha_2,i_3,1)|i_3\rangle
+$$
+
+と定義する。コアの直交条件から $\langle L_{\alpha_1}|L_{\gamma_1}\rangle=\delta_{\alpha_1\gamma_1}$、$\langle R_{\alpha_2}|R_{\gamma_2}\rangle=\delta_{\alpha_2\gamma_2}$ である。従って同じ状態は
+
+$$
+|X\rangle
+=\sum_{\alpha_1,i_2,\alpha_2}
+G_2^{[C]}(\alpha_1,i_2,\alpha_2)
+|L_{\alpha_1}\rangle\otimes|i_2\rangle\otimes|R_{\alpha_2}\rangle
+$$
+
+とも書ける。この段階の $G_2^{[C]}$ は、直交する旧ブロック基底間の係数だが、$(\alpha_1,i_2)$ と $\alpha_2$ の間でまだ対角化されていない。
+
 まず中心だけを左展開する。$p=(\alpha_1,i_2)$ と置いて
 
 $$
@@ -52,6 +73,8 @@ U^TU=I_\rho,\qquad V^TV=I_\rho,\qquad
 $$
 
 である。零特異値を表記から除くのは圧縮rankを選んだことではない。非零成分はすべて保持するので $A=U\Sigma V^T$ は厳密な等式である。$\rho=0$ の零テンソルは係数がすべて0の自明な場合として分ける。
+
+$\Sigma$ は対角**行列**、$\sigma_\beta$ はその対角成分である非負の**スカラー**である。同じ特異値が複数あるときも値の組は定まるが、その縮退部分空間内の特異ベクトル、従って個々のSchmidt基底は一意ではない。同じ値の成分を左右で対応させて回転しても $X$ は変わらない。
 
 ここでの $\rho$ は数学的なrankである。浮動小数点計算で零特異値が微小な非零値として現れる場合の数値rank判定は別の問題であり、このexact中心移動から打ち切り閾値を決めたことにはならない。
 
@@ -257,7 +280,22 @@ $$
 =\sum_{\beta}\sigma_\beta L_{:,\beta}R_{\beta,:}.
 $$
 
-「一対一」とはスカラー積の順序ではなく、$\beta\ne\gamma$ の混合係数が0という意味である。
+一つの行要素と列要素に固定して、消える和も書く。
+
+$$
+\begin{aligned}
+X^{\langle2\rangle}_{(i_1,i_2),i_3}
+&=\sum_{\beta=1}^{\rho}\sum_{\gamma=1}^{\rho}
+L_{(i_1,i_2),\beta}\Sigma_{\beta,\gamma}R_{\gamma,i_3}\\
+&=\sum_{\beta=1}^{\rho}\sum_{\gamma=1}^{\rho}
+L_{(i_1,i_2),\beta}\sigma_\beta
+\delta_{\beta\gamma}R_{\gamma,i_3}\\
+&=\sum_{\beta=1}^{\rho}
+L_{(i_1,i_2),\beta}\sigma_\beta R_{\beta,i_3}.
+\end{aligned}
+$$
+
+一般の係数行列 $C$ なら $\sum_{\beta,\gamma}L_{(i_1,i_2),\beta}C_{\beta\gamma}R_{\gamma,i_3}$ に $\beta\ne\gamma$ の交差係数が残り得る。「一対一」とはスカラー積の順序ではなく、$\Sigma$ の非対角係数が0という意味である。
 
 各 $L_{:,\beta}R_{\beta,:}$ が単位Frobeniusノルムのrank-1行列であることも、行要素の内積から確かめられる。
 
@@ -455,7 +493,14 @@ r_{11}&r_{12}\\
 \end{pmatrix}
 $$
 
-なら $r_{12}$ が二つの右ボンド方向を混ぜる。これをそのままボンド上のSchmidt係数とは読めない。SVDは左右の直交基底の間の係数を $\Sigma_{\beta\gamma}=\sigma_\beta\delta_{\beta\gamma}$ へ対角化する。特異値がどこから来るかは
+なら $r_{12}$ が二つの右ボンド方向を混ぜる。これをそのままボンド上のSchmidt係数とは読めない。SVDは左右の直交基底の間の係数を $\Sigma_{\beta\gamma}=\sigma_\beta\delta_{\beta\gamma}$ へ対角化する。QRもrank-1行列の和として
+
+$$
+A=Q_{\mathrm{QR}}R_{\mathrm{QR}}
+=\sum_\beta (Q_{\mathrm{QR}})_{:,\beta}(R_{\mathrm{QR}})_{\beta,:}
+$$
+
+とも展開できるが、$R_{\mathrm{QR}}$ の異なる行は一般に直交しない。そのため、この和の各項はSchmidtの直交rank-1成分とは限らない。特異値は
 
 $$
 A^TA\,v_\beta=\sigma_\beta^2v_\beta,
@@ -463,7 +508,7 @@ A^TA\,v_\beta=\sigma_\beta^2v_\beta,
 Av_\beta=\sigma_\beta u_\beta
 $$
 
-でも確かめられる。$\sigma_\beta$ は $A$ が右特異方向 $v_\beta$ をどれだけ伸ばすかを表す。QRの直交化だけでは、この固有方向と伸縮率は露出しない。
+でも確かめられる。$\sigma_\beta$ は $A$ が右特異方向 $v_\beta$ をどれだけ伸ばすかを表す。QRは入力列 $A=[a_1,\ldots,a_{r_2}]$ をその順序で直交化するため、列順を変えると一般に $Q_{\mathrm{QR}}$ と $R_{\mathrm{QR}}$ も変わる。QRの直交化だけでは、$A^TA$ の固有方向と伸縮率は露出しない。単に中心を動かす目的なら、通常はSVDより計算の軽いQRを使える。
 
 ここでQRの「thin」分解の列数を、無条件に $\rho=\operatorname{rank}(A)$ としてはいけない。標準的なthin QRは $q=\min(r_1n_2,r_2)$ 列で、rank落ちした場合にも余分な直交方向を含み得る。compact SVDは非零特異値の本数 $\rho$ 列だけを取る。どちらも**全因子を保持**すればexactだが、$\rho<r_2$ のSVDを同サイズ可逆Gauge変換と同一視しない。
 
@@ -493,6 +538,22 @@ $$
 $$
 
 となる。この形をSchmidt分解と呼ぶ条件は、左右がそれぞれ正規直交し、係数が非負で、**同じ $\beta$ 同士だけが結合する**ことである。一般の積状態の和や、左側だけをQRで直交化した表現とは区別する。
+
+一般次元でも、二部系の係数行列 $M\in\mathbb R^{d_A\times d_B}$ を用いて
+
+$$
+\begin{aligned}
+|X\rangle&=\sum_{a=1}^{d_A}\sum_{b=1}^{d_B}
+M_{a,b}|a\rangle_A\otimes|b\rangle_B,\\
+M&=U_M\Sigma_MV_M^T,\\
+M_{a,b}&=\sum_{\beta=1}^{\operatorname{rank}(M)}
+(U_M)_{a,\beta}(\Sigma_M)_{\beta\beta}(V_M^T)_{\beta,b}.
+\end{aligned}
+$$
+
+$\rho_M=\operatorname{rank}(M)$ と置けば、compact SVDのshapeは $U_M\in\mathbb R^{d_A\times\rho_M}$、$\Sigma_M\in\mathbb R^{\rho_M\times\rho_M}$、$V_M^T\in\mathbb R^{\rho_M\times d_B}$ である。
+
+$|L_\beta\rangle_A:=\sum_a(U_M)_{a,\beta}|a\rangle_A$、$|R_\beta\rangle_B:=\sum_b(V_M^T)_{\beta,b}|b\rangle_B$ と置けば、$U_M$ の列と $V_M^T$ の行がそれぞれ正規直交し、上のSchmidt形が得られる。逆に二つの積状態の和でも、片側の状態同士が直交しなければSchmidt形とは呼べない。
 
 今回のTT/MPSでは $C$ に対応するのは**全テンソルの** $X^{\langle2\rangle}$ である。中心行列 $A$ の $V$ だけが物理的な右Schmidt状態になるわけではない。右状態の係数は $V^TR$、左状態の係数は $(H\otimes I_{n_2})U$ である。左右の等長性により $A$ と $X^{\langle2\rangle}$ の非零特異値は一致する。
 
@@ -533,6 +594,24 @@ $$
 $$
 
 同じ事実は $(l^T\otimes r^T)(l'\otimes r')=(l^Tl')\otimes(r^Tr')=(l^Tl')(r^Tr')$ とも表せる。特に $\|x\otimes y\|=\|x\|\,\|y\|$ であり、どちらか一方の内積が0なら積状態も直交する。左右Schmidt状態がそれぞれ正規直交するため、異なるSchmidt成分の交差項は0となり、$\|X\|_F^2=\sum_\beta\sigma_\beta^2$ が従う。
+
+## 10. Tucker分解との対応と違い
+
+両方にSVDと「中心」が現れるが、今回の操作では既存の鎖 $G_1-G_2-G_3$ の第2・第3コア間のボンドだけを扱う。Tucker分解の典型的な3階表現は、各物理modeに因子を置き、一つの密なcore $\mathcal S$ に結ぶ形である。
+
+$$
+\begin{aligned}
+X(i_1,i_2,i_3)
+&=\sum_{a_1=1}^{s_1}\sum_{a_2=1}^{s_2}\sum_{a_3=1}^{s_3}
+\mathcal S(a_1,a_2,a_3)
+U^{(1)}(i_1,a_1)U^{(2)}(i_2,a_2)U^{(3)}(i_3,a_3),\\
+\mathcal S&\in\mathbb R^{s_1\times s_2\times s_3}.
+\end{aligned}
+$$
+
+一方、TT/MPSは第1節の $\sum_{\alpha_1,\alpha_2}G_1G_2G_3$ という隣接ボンドの縮約である。最小のexact表現なら、TT-rank $r_1,r_2$ は連続切断 $i_1\mid(i_2,i_3)$ と $(i_1,i_2)\mid i_3$ のunfolding rankに対応する。Tuckerのmultilinear rank $s_j$ は各mode $i_j\mid\text{他のmode}$ のunfolding rankに対応する。切断の取り方が異なる。
+
+今回の $\Sigma\in\mathbb R^{\rho\times\rho}$ は一本のボンド上の**対角行列**であり、一般には密な3階Tucker core $\mathcal S$ ではない。Tucker/HOSVDのSVD、全テンソルからコアを順に作るTT-SVD、既存TTの局所的なSVD中心移動は、それぞれ分解対象と結果の構造が異なる。Tuckerの詳しい導出は [[22_Tucker分解とHOSVD]] に置く。
 
 ## 参考資料
 

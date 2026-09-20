@@ -138,7 +138,7 @@ $$
 \|\psi-\widetilde\psi_1\|^2=0.01.
 $$
 
-再規格化後は $|\uparrow\downarrow\rangle$ という積状態になる。元の状態にあった $|\downarrow\uparrow\rangle$ との相関した組はなくなり、この切断のSchmidt rankは2から1へ変わる。「小さいから物理的に無意味」ではなく、**この状態のこの切断でノルム二乗の重みが小さい**という判断である。多数の係数が無視できない状態では、小さなボンド次元で重要な相関を失い得る。
+再規格化後は $|\uparrow\downarrow\rangle$ という積状態になる。元の状態にあった $|\downarrow\uparrow\rangle$ との相関した組はなくなり、この切断のSchmidt rankは2から1へ変わる。rank 1の純粋な積状態では、この二つのスピン間のエンタングルメントは0である。「小さいから物理的に無意味」ではなく、**この状態のこの切断でノルム二乗の重みが小さい**という判断である。多数の係数が無視できない状態では、小さなボンド次元で重要な相関を失い得る。
 
 ## 5. Schmidt状態と有効Hilbert空間
 
@@ -167,7 +167,17 @@ $$
 \end{aligned}
 $$
 
-であり、右側でも対応する $k$ 本を残す。元のHilbert空間から状態が物理法則上「存在しなくなる」わけではない。**近似MPSが採用する有効部分空間から、元の波動関数にあった方向を除外する**という意味である。DMRGのブロック基底という言葉も、この有効状態の選択として読む。
+右側は同じボンド添字で
+
+$$
+\mathcal H_{B,\mathrm{eff}}
+=\operatorname{span}\{|R_1\rangle,\ldots,|R_\rho\rangle\},
+\qquad
+\widetilde{\mathcal H}_{B,\mathrm{eff}}
+=\operatorname{span}\{|R_1\rangle,\ldots,|R_k\rangle\}
+$$
+
+となる。元のHilbert空間から状態が物理法則上「存在しなくなる」わけではない。**近似MPSが採用する有効部分空間から、元の波動関数にあった方向を除外する**という意味である。DMRGのブロック基底という言葉も、この有効状態の選択として読む。
 
 ## 6. 左右の縮約密度行列まで展開する
 
@@ -186,7 +196,19 @@ $$
 \end{aligned}
 $$
 
-従って、非零固有値は左右とも $\sigma_\beta^2$ である。左Schmidt状態は $\rho_A$ の、右Schmidt状態は $\rho_B$ の固有状態となる。規格化した全状態で $p_\beta=\sigma_\beta^2$ と言う場合、それは**Schmidt基底への射影の重み**である。任意の局所観測量が同じ割合で保存されるという主張ではない。
+従って、非零固有値は重複度も含めて左右とも $\sigma_\beta^2$ である。左Schmidt状態は $\rho_A$ の、右Schmidt状態は $\rho_B$ の固有状態となる。打ち切った非規格化状態の縮約密度行列は一般に
+
+$$
+\widetilde\rho_A
+=\sum_{\beta=1}^{k}\sigma_\beta^2
+|L_\beta\rangle\langle L_\beta|,
+\qquad
+\widetilde\rho_B
+=\sum_{\beta=1}^{k}\sigma_\beta^2
+|R_\beta\rangle\langle R_\beta|
+$$
+
+であり、両者のトレースは $\sum_{\beta=1}^{k}\sigma_\beta^2$ である。規格化した全状態で $p_\beta=\sigma_\beta^2$ と言う場合、それは**Schmidt基底への射影の重み**である。任意の局所観測量が同じ割合で保存されるという主張ではない。
 
 第4節の二スピン例を右基底 $|\uparrow\rangle,|\downarrow\rangle$ の順に計算すれば
 
