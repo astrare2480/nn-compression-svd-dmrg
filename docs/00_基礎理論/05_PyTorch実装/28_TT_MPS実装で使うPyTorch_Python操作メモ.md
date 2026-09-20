@@ -562,6 +562,34 @@ $$
 
 行列積で「左の列数と右の行数を消す」のと同じ発想を、高階Tensorの任意axisへ拡張したものとして読む。
 
+`dims=1` という整数の省略形は、左Tensorの**最後の1軸**と右Tensorの**最初の1軸**を縮約する。この第1・第2コアでは、それぞれaxis 2とaxis 0が $r_1$ なので、次の二つは同じ結果を返す。
+
+```python
+import torch
+
+# 小さい第1・第2コアを用意する: (1, n1, r1) と (r1, n2, r2)。
+G1 = torch.arange(4, dtype=torch.float64).reshape(1, 2, 2)
+G2 = torch.arange(8, dtype=torch.float64).reshape(2, 2, 2)
+
+# 最後の1軸と最初の1軸が同じbond r1である場合に限り、dims=1と書ける。
+G12_short = torch.tensordot(G1, G2, dims=1)
+G12_explicit = torch.tensordot(G1, G2, dims=([2], [0]))
+assert torch.allclose(G12_short, G12_explicit)
+# 両方ともshapeは(1, n1, n2, r2)。
+
+# bだけを和で消し、残す軸をa,i,j,cの順に指定する。
+G12_einsum = torch.einsum("aib,bjc->aijc", G1, G2)
+assert torch.allclose(G12_explicit, G12_einsum)
+```
+
+収縮したい軸がこの配置にない場合、`dims=1` で別の軸を消してはいけない。軸番号を明示するか、添字を文字で指定する `einsum` を使う。同じ計算は上の `G12_einsum` のように書ける。`"aib,bjc->aijc"` では、二つの入力にある `b` が出力にないので和で消え、`a,i,j,c` は記した順の軸として残る。成分では
+
+$$
+\mathrm{G12}(a,i,j,c)=\sum_{b=1}^{r_1}G_1(a,i,b)G_2(b,j,c)
+$$
+
+である。`tensordot` は指定した収縮軸を消し、両入力の残りの軸を順に並べる。`einsum` は `->` の右側で残す添字とその順序を明示でき、3コア以上を一式で表すときにも使える。読むときは入力の各軸に文字を対応させ、出力に書かない添字を特定し、最後に出力shapeを確認する。3コアの再構成では境界のサイズ1の添字も出力から省くが、その意味は [[27_TT_MPS基礎のPyTorch実装]] で扱う。
+
 ---
 
 ## 17. `squeeze(dim)`
@@ -652,6 +680,8 @@ I_r = torch.eye(r, dtype=U.dtype, device=U.device)
 ```
 
 を使う。
+
+QRの $Q$ が `(m,r)` なら、列Gram `Q.T @ Q` のshapeは `(r,r)` なので、比較する単位行列は `torch.eye(Q.shape[1], dtype=Q.dtype, device=Q.device)` とする。`torch.eye(Q.shape)` のようにshape全体を一つの引数に渡さず、また行数 `Q.shape[0]` と列数を取り違えない。
 
 ### eyeの出力を全要素で確認する
 
@@ -1285,6 +1315,23 @@ assert torch.equal(
 
 Gramと単位行列の差は、`torch.linalg.matrix_norm(gram-I, ord="fro").item()` で数値化する。`I` はGramの大きさで作り、dtype/deviceをそろえる。
 
+例えば2階の誤差行列 $E=\begin{pmatrix}3&4\\0&12\end{pmatrix}$ なら、要素を二乗して足し、平方根を取る。
+
+$$
+\|E\|_F=\sqrt{3^2+4^2+0^2+12^2}=\sqrt{169}=13.
+$$
+
+```python
+import torch
+
+# 2階行列のFrobeniusノルムを明示して計算する。
+E = torch.tensor([[3.0, 4.0], [0.0, 12.0]], dtype=torch.float64)
+fro = torch.linalg.matrix_norm(E, ord="fro")
+assert torch.allclose(fro, torch.tensor(13.0, dtype=E.dtype))
+```
+
+2階行列に対しては従来の `torch.norm(E)` も同じ値を返すが、このAPIは非推奨である。行列のFrobeniusノルムであることを明示するため、ここでは `torch.linalg.matrix_norm(E, ord="fro")` を使う。ベクトルや高階Tensorのノルムを、2階行列のFrobeniusノルムと無条件に同一視しない。
+
 $$
 e_{\mathrm{orth}}=\|\mathrm{Gram}-I\|_F,\qquad
 e_{\mathrm{local}}=\|C_{\mathrm{before}}-C_{\mathrm{after}}\|_F,\qquad
@@ -1300,5 +1347,6 @@ QRの列符号は非一意なので、手計算と `Q,R_qr` の符号が違っ�
 - [PyTorch：torch.linalg.qr](https://docs.pytorch.org/docs/stable/generated/torch.linalg.qr.html)
 - [PyTorch：torch.einsum](https://docs.pytorch.org/docs/stable/generated/torch.functional.einsum.html)
 - [PyTorch：torch.tensordot](https://docs.pytorch.org/docs/stable/generated/torch.tensordot.html)
+- [PyTorch：torch.norm](https://docs.pytorch.org/docs/stable/generated/torch.norm.html)：非推奨の注意と代替API。
 - [PyTorch：torch.unsqueeze](https://docs.pytorch.org/docs/stable/generated/torch.unsqueeze.html)
 - [PyTorch：torch.squeeze](https://docs.pytorch.org/docs/stable/generated/torch.squeeze.html)

@@ -734,6 +734,8 @@ PyTorchの確認コード：[[05_SVD基礎実装検証/15_CNNのPyTorch確認コ
 
 畳み込みの空間軸は2次元。入力Tensorはbatchとchannelを含めて4次元である。
 
+対して `Conv3d` は奥行き（動画なら時間）も含む3方向にkernelを動かす。batch付き入力は `(N,C,D,H,W)` の5次元であり、`Conv2d` の `(N,C,H,W)` と区別する。いずれも `N` と `C` はkernelを動かす空間軸の数には含めない。たとえばRGB画像1枚は `(3,H,W)` の3次元Tensorでも、使うのは通常 `Conv2d` である。
+
 ### `3×3 filter` が64個という理解でよい？
 
 少し不十分。`conv2` の1filterは `(32,3,3)` であり、32入力channel分の3×3 kernelを持つ。それが64filterある。

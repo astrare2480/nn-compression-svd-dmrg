@@ -51,6 +51,29 @@ $$
 
 さらに $G_3$ を縮約すれば全要素について $\widetilde X=X$ となる。これは内部の仮想基底の変更であり、physical indexの基底変換やSVDによる打ち切りとは異なる。一般のGauge変換ではコアの直交性やコア単独のノルムは保存されないが、全体のテンソル・各cut rank・ノルムは不変である。
 
+最も単純な例は $M=cI_{r_1}$、$c\ne0$ のスカラーGaugeである。このとき $M^{-1}=c^{-1}I_{r_1}$ だから、コアの全要素は $\widetilde G_1(1,i_1,\alpha_1)=cG_1(1,i_1,\alpha_1)$、$\widetilde G_2(\alpha_1,i_2,\alpha_2)=c^{-1}G_2(\alpha_1,i_2,\alpha_2)$ となる。各物理添字を固定した隣接収縮では
+
+$$
+\begin{aligned}
+\sum_{\alpha_1}\widetilde G_1(1,i_1,\alpha_1)
+\widetilde G_2(\alpha_1,i_2,\alpha_2)
+&=\sum_{\alpha_1}cG_1(1,i_1,\alpha_1)
+c^{-1}G_2(\alpha_1,i_2,\alpha_2)\\
+&=\sum_{\alpha_1}G_1(1,i_1,\alpha_1)
+G_2(\alpha_1,i_2,\alpha_2).
+\end{aligned}
+$$
+
+例えば $c=100$ なら $\|\widetilde G_1\|_F=100\|G_1\|_F$、$\|\widetilde G_2\|_F=0.01\|G_2\|_F$ だが、$\widetilde X=X$ なので全体の $\|X\|_F$ は変わらない。コアの大きさを全体の大きさと同一視しないための反例である。
+
+「内部ボンドの基底を替える」の意味も、第1コアの左展開 $A_1\in\mathbb R^{n_1\times r_1}$ で確かめられる。$A_1$ の各列を左側の状態ベクトルと読むと、$A_1M$ の各列は元の列の線形結合なので $\operatorname{col}(A_1M)\subseteq\operatorname{col}(A_1)$ である。一方、$M$ は可逆だから $A_1=(A_1M)M^{-1}$ となり、逆向きの包含も成立する。従って
+
+$$
+\operatorname{col}(A_1M)=\operatorname{col}(A_1).
+$$
+
+例えば $A_1=(u_1\ u_2)$、$M=\begin{pmatrix}1&1\\0&1\end{pmatrix}$ なら $A_1M=(u_1\ u_1+u_2)$ で、二組は同じ列空間を張る。ただし新しい列同士が直交するとは限らない。列が一次独立なら二組は同じ空間の異なる基底であり、従属している場合も同じ生成集合の空間を保つ。右隣のコアに $M^{-1}$ を作用させるのは、このボンド上の列の取り替えに合わせて係数を逆変換し、全体の $X$ を保つためである。QRによる左直交化は、同じ空間内で直交する列を選ぶ特別な場合として後で扱う。
+
 ### 可逆行列を全要素で確認する
 
 第1コアの境界軸を外した行列 $A_1$ と第2コアのphysical slice $H_j=G_2(:,j,:)$ を
@@ -315,6 +338,24 @@ G_2^{[L]}(\beta_1,i_2,\beta_2)=Q_2((\beta_1,i_2),\beta_2),\qquad
 G_3^{\mathrm{new}}(\beta_2,i_3,1)
 =\sum_{\alpha_2}T_2(\beta_2,\alpha_2)G_3(\alpha_2,i_3,1).
 $$
+
+ここで第2QRの**直前**の局所収縮に使うのは、元の $G_2$ ではなく、第1QRの $T_1$ を吸収済みの $G_2^{\mathrm{tmp}}$ である。第2QRの分解式を代入すると、
+
+$$
+\begin{aligned}
+B_{\mathrm{before}}(\beta_1,i_2,i_3)
+&:=\sum_{\alpha_2}G_2^{\mathrm{tmp}}(\beta_1,i_2,\alpha_2)
+G_3(\alpha_2,i_3,1)\\
+&=\sum_{\alpha_2,\beta_2}G_2^{[L]}(\beta_1,i_2,\beta_2)
+T_2(\beta_2,\alpha_2)G_3(\alpha_2,i_3,1)\\
+&=\sum_{\beta_2}G_2^{[L]}(\beta_1,i_2,\beta_2)
+\underbrace{\sum_{\alpha_2}T_2(\beta_2,\alpha_2)
+G_3(\alpha_2,i_3,1)}_{G_3^{\mathrm{new}}(\beta_2,i_3,1)}\\
+&=:B_{\mathrm{after}}(\beta_1,i_2,i_3).
+\end{aligned}
+$$
+
+この局所等式は $G_1^{[L]}$ を掛ける前に成立する。従って全テンソルの不変性より強い位置で第2QRの吸収を検査できる。第1QR前の $G_2$ と第2QR後の局所収縮を直接比較すると、異なる段階を比べることになる。
 
 従って
 

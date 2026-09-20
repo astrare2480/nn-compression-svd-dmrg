@@ -43,6 +43,33 @@ $$
 \mathcal L_2(i_1,i_2,\alpha_2)|i_1\rangle\otimes|i_2\rangle.
 $$
 
+$n_1=n_2=2$ なら、各サイトの標準基底を $|1\rangle=(1,0)^T$、$|2\rangle=(0,1)^T$ と置ける。行の順序を $(i_1,i_2)=(1,1),(1,2),(2,1),(2,2)$ とすると、2サイトの基底は全要素で
+
+$$
+\begin{aligned}
+|1\rangle\otimes|1\rangle&=\begin{pmatrix}1\\0\\0\\0\end{pmatrix},
+&
+|1\rangle\otimes|2\rangle&=\begin{pmatrix}0\\1\\0\\0\end{pmatrix},\\
+|2\rangle\otimes|1\rangle&=\begin{pmatrix}0\\0\\1\\0\end{pmatrix},
+&
+|2\rangle\otimes|2\rangle&=\begin{pmatrix}0\\0\\0\\1\end{pmatrix}.
+\end{aligned}
+$$
+
+したがって $\alpha_2$ を一つ固定した左ブロック状態の係数列は
+
+$$
+|L_{\alpha_2}\rangle
+=\begin{pmatrix}
+\mathcal L_2(1,1,\alpha_2)\\
+\mathcal L_2(1,2,\alpha_2)\\
+\mathcal L_2(2,1,\alpha_2)\\
+\mathcal L_2(2,2,\alpha_2)
+\end{pmatrix}.
+$$
+
+この列の行は物理基底 $(i_1,i_2)$、列を選ぶ $\alpha_2$ は開いた右ボンドのラベルである。よって「$\alpha_2$ を固定する」は、二つのコアを収縮して得た左ブロック基底ベクトルを1本選ぶことに対応する。
+
 ここで $r_2$ 本の列が直交するのであって、$G_1$ と $G_2$ という別のコア同士の内積を取っているわけではない。
 
 ### 状態を列へ並べた行列を係数で展開する

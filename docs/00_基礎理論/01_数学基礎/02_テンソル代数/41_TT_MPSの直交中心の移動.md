@@ -313,6 +313,63 @@ $$
 
 ここで $a,b$ は和で消え、$I_L,i_c,I_R$ が全テンソルの物理添字として残る。$c=1$ なら $I_L$ は空で $r_0=1$、$\mathcal L_0(1,1)=1$ と読み、$c=d$ なら $I_R$ は空で $r_d=1$、$\mathcal R_d(1,1)=1$ と読む。空積は1なので、同じ式が端点にも使える。例えば3階では、第1サイト中心が $G_1^{[C]}G_2^{[R]}G_3^{[R]}$、第3サイト中心が $G_1^{[L]}G_2^{[L]}G_3^{[C]}$ である。
 
+再帰式に移る前に、両ブロックを全コアの積として展開する。$c\le d-2$ の右側では、内部ボンド $\alpha_{c+1},\ldots,\alpha_{d-1}$ をすべて和で消し、
+
+$$
+\begin{aligned}
+\mathcal R_c(b,i_{c+1},\ldots,i_d)
+&=\sum_{\alpha_{c+1}=1}^{r_{c+1}}\cdots
+\sum_{\alpha_{d-1}=1}^{r_{d-1}}
+G_{c+1}^{[R]}(b,i_{c+1},\alpha_{c+1})\cdots
+G_d^{[R]}(\alpha_{d-1},i_d,1).
+\end{aligned}
+$$
+
+同様に $c\ge3$ の左側では、
+
+$$
+\begin{aligned}
+\mathcal L_{c-1}(i_1,\ldots,i_{c-1},a)
+&=\sum_{\alpha_1=1}^{r_1}\cdots
+\sum_{\alpha_{c-2}=1}^{r_{c-2}}
+G_1^{[L]}(1,i_1,\alpha_1)\cdots
+G_{c-1}^{[L]}(\alpha_{c-2},i_{c-1},a).
+\end{aligned}
+$$
+
+省略記号は**異なる内部ボンドごとに一度ずつ**和を取る意味であり、$c=d-2$ または $c=3$ なら和は一つだけである。$c=d-1$ なら $\mathcal R_{d-1}(b,i_d)=G_d^{[R]}(b,i_d,1)$、$c=2$ なら $\mathcal L_1(i_1,a)=G_1^{[L]}(1,i_1,a)$ であり、内部ボンドの和はない。これらの全展開を、次は1コアずつ伸ばす再帰式で表す。
+
+3階で第1サイトを中心にした場合は、右ブロックが第2・第3コアからできる。
+
+$$
+\mathcal R_1(a,i_2,i_3)
+=\sum_{\alpha=1}^{r_2}
+G_2^{[R]}(a,i_2,\alpha)G_3^{[R]}(\alpha,i_3,1).
+$$
+
+第3コア、第2コアの順で右直交条件を使うまでを、二つの独立した内部添字 $\alpha,\beta$ から展開する。
+
+$$
+\begin{aligned}
+(\mathcal R_1\mathcal R_1^T)_{a,b}
+&=\sum_{i_2,i_3}\mathcal R_1(a,i_2,i_3)\mathcal R_1(b,i_2,i_3)\\
+&=\sum_{i_2,i_3}
+\left[\sum_\alpha G_2^{[R]}(a,i_2,\alpha)G_3^{[R]}(\alpha,i_3,1)\right]
+\left[\sum_\beta G_2^{[R]}(b,i_2,\beta)G_3^{[R]}(\beta,i_3,1)\right]\\
+&=\sum_{i_2,\alpha,\beta}
+G_2^{[R]}(a,i_2,\alpha)G_2^{[R]}(b,i_2,\beta)
+\underbrace{\sum_{i_3}G_3^{[R]}(\alpha,i_3,1)
+G_3^{[R]}(\beta,i_3,1)}_{\delta_{\alpha\beta}}\\
+&=\sum_{i_2,\alpha,\beta}
+G_2^{[R]}(a,i_2,\alpha)G_2^{[R]}(b,i_2,\beta)\delta_{\alpha\beta}\\
+&=\sum_{i_2,\alpha}G_2^{[R]}(a,i_2,\alpha)
+G_2^{[R]}(b,i_2,\alpha)
+=\delta_{ab}.
+\end{aligned}
+$$
+
+最後の等号は第2コアの右直交性である。従って $\mathcal R_1\mathcal R_1^T=I_{r_1}$ であり、二つのコアを収縮した後も右ブロックの行が正規直交する。
+
 右端から作る右ブロックを $\mathcal R_k(\alpha_k,i_{k+1},\ldots,i_d)$ とする。$\mathcal R_{d-1}(\alpha_{d-1},i_d)=G_d^{[R]}(\alpha_{d-1},i_d,1)$ は右直交性から行Gramが単位行列である。これを帰納法の出発点とする。
 
 $$

@@ -440,6 +440,17 @@ train_indices = indices[:45_000]
 validation_indices = indices[45_000:50_000]
 ```
 
+`indices` は 0 から 49,999 までの順列なので、二つのsliceは同じ位置を含まず、各indexも一度だけ現れる。したがって、
+
+$$
+\begin{aligned}
+|\mathrm{train\_indices}| &= 45{,}000, \\
+|\mathrm{validation\_indices}| &= 5{,}000, \\
+\mathrm{train\_indices} \cap \mathrm{validation\_indices} &= \varnothing, \\
+|\mathrm{train\_indices} \cup \mathrm{validation\_indices}| &= 50{,}000.
+\end{aligned}
+$$
+
 これはDataset / Subset / Generatorの仕組みを理解するための例として有効。
 
 ## canonical CIFAR-10実験は40,000 / 5,000 / 5,000

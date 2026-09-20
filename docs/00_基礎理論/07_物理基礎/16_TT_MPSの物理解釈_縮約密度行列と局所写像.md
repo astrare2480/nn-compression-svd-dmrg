@@ -89,6 +89,22 @@ $$
 \end{aligned}
 $$
 
+このtraceの順序を2成分でも確かめる。$|u\rangle=(u_0,u_1)^T$、$|v\rangle=(v_0,v_1)^T$ なら
+
+$$
+|u\rangle\langle v|
+=\begin{pmatrix}
+u_0v_0^*&u_0v_1^*\\
+u_1v_0^*&u_1v_1^*
+\end{pmatrix},
+\qquad
+\operatorname{Tr}(|u\rangle\langle v|)
+=u_0v_0^*+u_1v_1^*
+=\langle v|u\rangle.
+$$
+
+したがって $X_A$ が左側だけに作用するとき、$\operatorname{Tr}_B[X_A\otimes|u\rangle_B\langle v|]=X_A\langle v|u\rangle$ である。右側のtraceで $X_A$ 自体を消しているわけではない。
+
 したがって、
 
 $$
@@ -529,6 +545,66 @@ $$
 
 見かけ上は非対角の密度行列でも、固有値は $(1,0)$ である。
 右基底はサイト $2,3$ の複合基底のうち2本と考えてよく、サイト1とのcutが積状態であることだけを使った。
+
+### 2量子ビットの積状態を係数行列で判定する
+
+2サイトがともに2次元なら、一般の非ゼロ状態を
+
+$$
+|\psi\rangle=c_{00}|00\rangle+c_{01}|01\rangle
++c_{10}|10\rangle+c_{11}|11\rangle,
+\qquad
+C=\begin{pmatrix}c_{00}&c_{01}\\c_{10}&c_{11}\end{pmatrix}
+$$
+
+と書ける。$|a\rangle=(a,b)^T$ と $|\phi\rangle=(c,d)^T$ の積状態では、テンソル積の4要素を展開すると
+
+$$
+|a\rangle\otimes|\phi\rangle
+=ac|00\rangle+ad|01\rangle+bc|10\rangle+bd|11\rangle,
+\qquad
+C=\begin{pmatrix}ac&ad\\bc&bd\end{pmatrix}.
+$$
+
+従って $\det C=(ac)(bd)-(ad)(bc)=0$ である。逆に、非ゼロの $2\times2$ 行列で $\det C=0$ なら $\operatorname{rank}C=1$ であり、$C=uv^T$ と因数分解できる。ここでの転置は係数の外積を作るもので、密度行列の随伴 $v^\dagger$ とは区別する。よってこの2サイト状態は積状態である。「二つの局所状態が互いに定数倍」という意味ではなく、係数行列の行または列が従属しているという意味である。
+
+対照的にBell状態は
+
+$$
+|\Phi^+\rangle=\frac{|00\rangle+|11\rangle}{\sqrt2},
+\qquad
+C_{\Phi^+}=\frac{1}{\sqrt2}
+\begin{pmatrix}1&0\\0&1\end{pmatrix},
+\qquad
+\det C_{\Phi^+}=\frac12\ne0.
+$$
+
+この係数行列のrankは2で、Schmidt分解には $1/\sqrt2$ の係数が2本必要である。左側の縮約密度行列も全要素で $\rho_A=C_{\Phi^+}C_{\Phi^+}^\dagger=\frac12\begin{pmatrix}1&0\\0&1\end{pmatrix}$ となる。これは全体が1本の状態ベクトルで指定された**純粋状態**であっても、片側だけを見ると混合状態になり得る例である。
+
+### 純粋状態と確率的な混合状態を区別する
+
+「基底状態を重ね合わせる」ことと「異なる状態を確率的に準備する」ことは別である。前者の $|+\rangle=(|0\rangle+|1\rangle)/\sqrt2$ は毎回同じ状態を準備する純粋状態で、密度行列を外積から作ると
+
+$$
+\rho_+=|+\rangle\langle+|
+=\frac12\begin{pmatrix}1&1\\1&1\end{pmatrix},
+\qquad
+\rho_+^2=\rho_+,
+\qquad
+\operatorname{Tr}(\rho_+^2)=1.
+$$
+
+一方、$|0\rangle$ と $|1\rangle$ をそれぞれ確率 $1/2$ で準備する混合状態は、確率重み付きの外積の和として
+
+$$
+\rho_{\mathrm{mix}}
+=\frac12|0\rangle\langle0|+\frac12|1\rangle\langle1|
+=\frac12\begin{pmatrix}1&0\\0&1\end{pmatrix},
+\qquad
+\operatorname{Tr}(\rho_{\mathrm{mix}}^2)=\frac12.
+$$
+
+どちらも $|0\rangle,|1\rangle$ 基底で測れば確率は各 $1/2$ だが、非対角要素は異なる。実際、$|+\rangle$ への射影確率は $\langle+|\rho_+|+\rangle=1$ に対し、$\langle+|\rho_{\mathrm{mix}}|+\rangle=1/2$ である。「純粋」は測定結果が必ず一つという意味ではなく、準備した全体の状態を一つのketで指定できるという意味である。直前のBell状態では全体の密度行列は純粋だが、片側の縮約密度行列 $\rho_A=I_2/2$ は混合となる。
 
 ## 6. MPSコアの3本の添字を物理で読む
 

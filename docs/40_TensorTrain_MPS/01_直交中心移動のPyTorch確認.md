@@ -35,6 +35,47 @@ $$
 
 `C.reshape(r1, n2 * r2)` の列位置は `i2 * r2 + alpha2` である。右直交な行を得るため `C_R.T` をQR分解し、`Q_R.T` を `(q1, n2, r2)` に戻す。`T_R.T` は第1コアの右ボンド軸へ吸収する。
 
+### 左右の`reshape`を同じ18要素で比較する
+
+例えば $(r_1,n_2,r_2)=(2,3,3)$ とし、0始まりの要素を $C(\alpha_1,i_2,\alpha_2)=9\alpha_1+3i_2+\alpha_2$ と置く。左展開では $(\alpha_1,i_2)$ が行になり、
+
+$$
+C_L=\begin{pmatrix}
+0&1&2\\
+3&4&5\\
+6&7&8\\
+9&10&11\\
+12&13&14\\
+15&16&17
+\end{pmatrix}\in\mathbb R^{6\times3}.
+$$
+
+右展開では同じ値を $(i_2,\alpha_2)$ の列へ並べ、
+
+$$
+C_R=\begin{pmatrix}
+0&1&2&3&4&5&6&7&8\\
+9&10&11&12&13&14&15&16&17
+\end{pmatrix}\in\mathbb R^{2\times9}.
+$$
+
+例えば $C(1,2,0)=15$ は $C_L(5,0)=15$ かつ $C_R(1,6)=15$ である。行位置 $5=1\cdot3+2$、列位置 $6=2\cdot3+0$ なので、左右でまとめる軸だけが異なる。どちらも`permute`はせず、18個の値と論理的な格納順を保った`reshape`である。
+
+```python
+import torch
+
+# 0始まりの値を全要素に割り当て、左右の展開位置を確認する。
+center = torch.arange(18).reshape(2, 3, 3)
+center_left = center.reshape(2 * 3, 3)
+center_right = center.reshape(2, 3 * 3)
+
+assert center_left.shape == (6, 3)
+assert center_right.shape == (2, 9)
+assert center[1, 2, 0].item() == center_left[5, 0].item() == center_right[1, 6].item() == 15
+assert torch.equal(center.flatten(), center_left.flatten())
+assert torch.equal(center.flatten(), center_right.flatten())
+```
+
 ## 小さい全要素例の数値確認
 
 以下は単独で実行できる確認用コードである。最初の `G1` と `G3` は境界軸を持つ単位行列、第2コアは理論ノートと同じ $(2,2,2)$ の全要素例を使う。`float64` は丸め誤差を見やすくするためであり、QRの符号の一致を要求するためではない。

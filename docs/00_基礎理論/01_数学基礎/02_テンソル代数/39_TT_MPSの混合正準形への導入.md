@@ -48,6 +48,46 @@ G_k^{[R]}(\beta_{k-1},i_k,\alpha_k)
 \end{aligned}
 $$
 
+物理添字を一つ固定した行列を $A^{[k]i_k}_{\alpha_{k-1},\alpha_k}:=G_k(\alpha_{k-1},i_k,\alpha_k)$ と書くと、上の二条件はMPSでよく使う「物理添字ごとの行列の積の和」と同じである。転置と和の順序を成分まで戻せば、
+
+$$
+\begin{aligned}
+(A_k^TA_k)_{\alpha_k,\beta_k}
+&=\sum_{i_k}\sum_{\alpha_{k-1}}
+A^{[k]i_k}_{\alpha_{k-1},\alpha_k}
+A^{[k]i_k}_{\alpha_{k-1},\beta_k}
+=\left[\sum_{i_k}(A^{[k]i_k})^TA^{[k]i_k}\right]_{\alpha_k,\beta_k},\\
+(B_kB_k^T)_{\alpha_{k-1},\beta_{k-1}}
+&=\sum_{i_k}\sum_{\alpha_k}
+A^{[k]i_k}_{\alpha_{k-1},\alpha_k}
+A^{[k]i_k}_{\beta_{k-1},\alpha_k}
+=\left[\sum_{i_k}A^{[k]i_k}(A^{[k]i_k})^T\right]_{\alpha_{k-1},\beta_{k-1}}.
+\end{aligned}
+$$
+
+例えば $n_k=r_{k-1}=r_k=2$ とし、$A^{[k]1}=\begin{pmatrix}a&b\\c&d\end{pmatrix}$、$A^{[k]2}=\begin{pmatrix}e&f\\g&h\end{pmatrix}$ と置く。二つのGram行列を全要素で書くと、
+
+$$
+\begin{aligned}
+\sum_{i_k=1}^{2}(A^{[k]i_k})^TA^{[k]i_k}
+&=\begin{pmatrix}
+a^2+c^2+e^2+g^2&ab+cd+ef+gh\\
+ab+cd+ef+gh&b^2+d^2+f^2+h^2
+\end{pmatrix},\\
+\sum_{i_k=1}^{2}A^{[k]i_k}(A^{[k]i_k})^T
+&=\begin{pmatrix}
+a^2+b^2+e^2+f^2&ac+bd+eg+fh\\
+ac+bd+eg+fh&c^2+d^2+g^2+h^2
+\end{pmatrix}.
+\end{aligned}
+$$
+
+左直交では前者を、右直交では後者を $I_2$ に等しくする。一般には異なる行列なので、両方を無条件に単位行列とはしない。中心コアにはどちらも要求しない。複素係数の場合は、ここで使った転置を随伴に置き換える。
+
+これらは $X$ をTT/MPSで表すための必須条件ではなく、同じ $X$ の表現から、中心の左右に正規直交なブロック基底を選ぶ条件である。左右の基底のGram行列が単位行列になるため、全体のノルムを中心コアの二乗和で測れる。左右を固定して中心コアを $\Delta G_c^{[C]}$ だけ変えた場合にも、$\|\Delta X\|_F=\|\Delta G_c^{[C]}\|_F$ と全体の変化量を中心だけで測れる。
+
+中心自身を直交化しないのは、スケールと結合を担う係数を中心に残すためである。Gram行列が消えるまでの途中式と、左右の基底が異なる二つのTTの内積では単純化できない条件は [[40_TT_MPSの中心ノルムと内積の導出]] で示す。
+
 したがって $G_c^{[C]}$ が偶然直交条件を満たしても、中心であることと矛盾しない。「中心」は「必ず非直交」という意味ではない。第2サイト中心の3階TTなら $G_1^{[L]}G_2^{[C]}G_3^{[R]}$ がmixed-canonical formで、orthogonality centerは $G_2^{[C]}$ である。中心を右端 $c=d$ へ置いてその左を左直交にした配置は左正準形（left-canonical form）、左端 $c=1$ へ置いてその右を右直交にした配置は右正準形（right-canonical form）としても読む。内部の $1<c<d$ では左右の条件が同時に現れる。サイト上に中心を置く同じ配置をsite-canonical formと呼ぶ文献もある。「canonical form」とだけ書くと左・右・混合の区別が曖昧なので、中心位置も併記する。端点と一般の $d$ 階でブロック全体が正規直交になる導出は [[41_TT_MPSの直交中心の移動]] に置く。
 
 ## 1. 左右を別に試したことと、一つにまとめることの違い

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00_基礎理論/01_数学基礎/02_テンソル代数/40_TT_MPSの中心ノルムと内積の導出.md",
+                "file": "00_基礎理論/01_数学基礎/02_テンソル代数/38_TT_MPSの右QR直交化と右ブロック.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "40_TT_MPSの中心ノルムと内積の導出"
+              "title": "38_TT_MPSの右QR直交化と右ブロック"
             }
           }
         ]
@@ -187,12 +187,24 @@
   },
   "active": "b6907776fdc3a747",
   "lastOpenFiles": [
-    "00_基礎理論/01_数学基礎/02_テンソル代数/39_TT_MPSの混合正準形への導入.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/38_TT_MPSの右QR直交化と右ブロック.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/40_TT_MPSの中心ノルムと内積の導出.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/37_TT_MPSの左ブロックと直交性の導出.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/36_TT_MPSのGauge自由度と左QR直交化.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/39_TT_MPSの混合正準形への導入.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/40_TT_MPSの中心ノルムと内積の導出.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/41_TT_MPSの直交中心の移動.md",
+    "00_基礎理論/06_手法間のつながり/16_TT_MPSの物理解釈_縮約密度行列と局所写像.md",
+    "00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装.md",
+    "00_基礎理論/05_PyTorch実装/13_PandasとPython実装メモ.md",
+    "00_基礎理論/05_PyTorch実装/09_Linear層の2層置換_実装.md",
+    "00_基礎理論/05_PyTorch実装/08_Linear層のSVD実装.md",
+    "00_基礎理論/05_PyTorch実装/07_PyTorch実装.md",
+    "00_基礎理論/03_添付MD_説明と数式の逐項回収監査.md",
+    "00_基礎理論/02_ニューラルネットワーク基礎/12_PyTorch学習と評価の基礎.md",
+    "00_基礎理論/02_TT_MPS正準形_資料対応監査.md",
+    "00_基礎理論/01_TT_MPS基礎理論_セルフRV.md",
+    "00_基礎理論/00_数式導出監査.md",
+    "00_基礎理論/00_TT_MPS基礎理論_docs化監査.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/38_TT_MPSの右QR直交化と右ブロック.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/36_TT_MPSのGauge自由度と左QR直交化.md",
     "00_基礎理論/07_物理基礎/42_MPS正準形と直交中心の物理的意味.md",
     "00_基礎理論/07_物理基礎/16_TT_MPSの物理解釈_縮約密度行列と局所写像.md",
     "40_TensorTrain_MPS/02_混合正準形の中心摂動と等長性のPyTorch確認.md",
@@ -202,18 +214,6 @@
     "40_TensorTrain_MPS/01_直交中心移動のPyTorch確認.md",
     "05_SVD基礎実装検証/06_誤差評価のPyTorch集計.md",
     "00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価.md",
-    "00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価_数式導出補足.md",
-    "00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える.md",
-    "06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード.md",
-    "05_SVD基礎実装検証/00_SVD理論のPyTorch確認コード.md",
-    "06_Tucker基礎実装検証/25_評価設計のPyTorchコード.md",
-    "05_SVD基礎実装検証/19_再現性のPyTorchコード.md",
-    "05_SVD基礎実装検証/10_評価設計のPyTorchコード.md",
-    "06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード.md",
-    "05_SVD基礎実装検証/15_CNNのPyTorch確認コード.md",
-    "05_SVD基礎実装検証/02_nn.LinearのPyTorch操作.md",
-    "06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約.md",
-    "05_SVD基礎実装検証/16_Conv2d行列化のAutograd境界.md",
     "06_Tucker基礎実装検証/assets/03_finetuning/finetuning_learning_curves.png",
     "06_Tucker基礎実装検証/assets/03_finetuning",
     "06_Tucker基礎実装検証/assets",
