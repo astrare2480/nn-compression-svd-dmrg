@@ -13,7 +13,7 @@ tags:
 
 # Eckart–Young–Mirsky定理とTT/MPS単一ボンド打ち切りの最適性
 
-[[45_TT_MPSの単一ボンドSVD打ち切り]]（[Notebook 09](../../../../notebooks/30_tt_mps/00_fundamentals/09_truncated_svd_and_bond_rank_truncation.ipynb)）で、3階TT/MPSの第2サイトを直交中心とし、中心行列 $A=G_2^{[C]\langle L\rangle}\in\mathbb R^{(r_1n_2)\times r_2}$ を特異値 $(\sigma_1,\sigma_2,\sigma_3)=(6,2,0.25)$、$k=2$ で打ち切り、誤差
+[[45_TT_MPSの単一ボンドSVD打ち切り]]（[Notebook 09](../../../../notebooks/30_tt_mps/00_fundamentals/09_truncated_svd_and_bond_rank_truncation.ipynb)）で、3階TT/MPSの第2サイトを直交中心（orthogonality center）とし、中心行列 $A=G_2^{[C]\langle L\rangle}\in\mathbb R^{(r_1n_2)\times r_2}$ を特異値 $(\sigma_1,\sigma_2,\sigma_3)=(6,2,0.25)$、$k=2$ で打ち切り、誤差
 
 $$
 \|X-\widetilde X_k\|_F=\sigma_3=0.25,
@@ -27,7 +27,7 @@ Notebook 09ではさらに、$\|X\|_F^2=\|\widetilde X_k\|_F^2+\|X-\widetilde X_
 
 ## 1. 定理の主張
 
-$A\in\mathbb R^{m\times n}$、$\rho=\operatorname{rank}(A)$、$0\le k<\rho\le n$ とする（$k<\rho$は「まだ捨てる特異値が少なくとも1個ある」ために必要、$\rho\le n$は$A$のshapeから自動的に成立）。reduced SVDを
+$A\in\mathbb R^{m\times n}$、$\rho=\operatorname{rank}(A)$、$0\le k<\rho\le\min(m,n)$ とする（$k<\rho$は「まだ捨てる特異値が少なくとも1個ある」ために必要、$\rho\le\min(m,n)$は$A$のshapeから自動的に成立）。reduced SVDを
 
 $$
 A=U\Sigma V^T=\sum_{\alpha=1}^{\rho}\sigma_\alpha u_\alpha v_\alpha^T,
@@ -136,6 +136,8 @@ $$
 $$
 \operatorname{Im}(B)=\operatorname{span}\{Bx_{r+1},\ldots,Bx_n\}.
 $$
+
+ここで $\operatorname{Im}(B)$ は像（image）であり、$\operatorname{rank}(B)=\dim\operatorname{Im}(B)$ である。
 
 $Bx_{r+1},\ldots,Bx_n$ が一次独立であることを背理法で示す。もし $\sum_{i=r+1}^nc_iBx_i=0$（すべてゼロではない $c_i$）なら、$w:=\sum_{i=r+1}^nc_ix_i\in\mathcal N(B)$ なので $w=\sum_{i=1}^rd_ix_i$ とも書け、
 
@@ -347,6 +349,8 @@ $$
 
 検討の過程で「$\mathcal N(B)\cap\mathcal V_{k+1:\rho}$から捨てる本数 $q=\rho-k$ 本を常に取れる」と示唆したが、これは誤りだった。次元公式が保証する本数の下界は $\max(0,q-k)=\max(0,\rho-2k)$ であり、$k\ge q$ なら0本しか保証しない。$k>0$ で $\rho-2k>0$ の場合に数本取れても、必要な$q$本には届かない。**この単純な交差次元の評価だけでは、一般の捨てた特異値すべてを同時に強制できない**ことが、この試行錯誤で判明した限界である。
 
+添付中の $\rho=5,\,k=3$ という確認例では $q=2$ だが、計算上は $\rho-2k=5-6=-1$。次元は非負なので、この式から得られる実質的な下界は0である。「$q=2$本取れる」という先の見込みとは異なり、捨てた側の空間との非自明な交差さえ強制されない。
+
 ### 5.4 なぜ下界が「支えられない」のか：アドバーサリー的な直感
 
 4.2の証明で見つかる $z$ は、$\mathcal N(B)\cap\mathcal V_{1:k+1}$ の中に「少なくとも1本存在する」ことしか保証されない。その中身は、
@@ -408,13 +412,13 @@ $$
 
 ### 6.1 Ky Fanの最大値原理（引用、証明は別立て）
 
-任意の $M\in\mathbb R^{m\times n}$ と正規直交列 $X\in\mathbb R^{m\times k}$（$X^TX=I_k$）、$Y\in\mathbb R^{n\times k}$（$Y^TY=I_k$）に対して、
+任意の $M\in\mathbb R^{m\times n}$ と $1\le k\le\min(m,n)$、正規直交列 $X\in\mathbb R^{m\times k}$（$X^TX=I_k$）、$Y\in\mathbb R^{n\times k}$（$Y^TY=I_k$）に対して、
 
 $$
 \operatorname{tr}(X^TMY)\le\sum_{i=1}^{k}\sigma_i(M),
 $$
 
-かつ$X,Y$を$M$の上位$k$特異ベクトルに選ぶと等号成立。この定理はKy Fan (1949)の結果として引用し、本ノートでは再証明しない。
+かつ$X,Y$を$M$の上位$k$特異ベクトルに選ぶと等号成立。これはKy Fanの最大値原理の特異値版であり、本ノートでは引用して再証明しない。1949年の原型は固有値の最大値原理として発表された。
 
 ### 6.2 Abel和分による証明
 
@@ -494,7 +498,7 @@ $$
 
 である。$D'=\text{二重確率行列}$ とするには最後の行和から $s=1-\sum_jc_j$ が必要。例えば $n=2, D=0$ では $c=(1,1)$ なので $s=-1$ となり非負性に反する。$D=0$ は $W=I_2$、$Z$を2列の交換行列とすれば実際に起こりうる。隅の成分を非負に選んでも行和1にはできない。
 
-このため、その先で**二重確率行列**（各行・各列の和がちょうど1）を置換行列の凸結合 $D'=\sum_\ell\lambda_\ell\Pi_\ell$（$\lambda_\ell\ge0,\ \sum_\ell\lambda_\ell=1$）と表すBirkhoff–von Neumannの定理を使っても、元の試みは証明としてつながらない。二重確率行列全体の集合はBirkhoff多面体とも呼ばれ、その頂点が置換行列である。降順列について $\sum_i a_ib_{\pi(i)}\le\sum_i a_ib_i$ とする並べ替え不等式自体は、逆転 $i<j,\,\pi(i)>\pi(j)$ を交換すると
+このため、その先で**二重確率行列**（各行・各列の和がちょうど1）を置換行列の凸結合 $D'=\sum_\ell\lambda_\ell\Pi_\ell$（$\lambda_\ell\ge0,\ \sum_\ell\lambda_\ell=1$）と表すBirkhoff–von Neumannの定理を使っても、元の試みは証明としてつながらない。二重確率行列全体の集合はBirkhoff多面体とも呼ばれ、その頂点が置換行列である。降順列について $\sum_i a_ib_{\pi(i)}\le\sum_i a_ib_i$ とする並べ替え不等式（rearrangement inequality）自体は、逆転 $i<j,\,\pi(i)>\pi(j)$ を交換すると
 
 $$
 \left(a_ib_{\pi(i)}+a_jb_{\pi(j)}\right)
@@ -612,7 +616,7 @@ $$
 
 ### 8.1 等長写像とノルム保存
 
-mixed-canonical formの左右コアは等長写像である。
+mixed-canonical formの左右コアは等長写像（isometry）である。
 
 $$
 H:=G_1^{[L]\langle R\rangle}\in\mathbb R^{n_1\times r_1},\quad H^TH=I_{r_1},
@@ -778,6 +782,8 @@ $$
 - Ky Fanの最大値原理自体の証明
 - 6.4節で触れたWeyl型不等式ルートによる別証明
 
+添付資料では、DMRG、ALS、TT-matrix／MPOもこの段階で扱わない話題として挙げられている。これらはこの定理の証明に必要な前提ではなく、後続の学習項目である。
+
 ## 12. 検算例と資料上の実施状況
 
 添付資料で実測値が記録されているのは、4.3節のNotebook 09（$A\in\mathbb R^{6\times3}$、$\rho=3$、$k=2$）である。$2\times2$、特異値 $(2,1)$ の数値検算がNotebook 09で実施済みという記述は添付資料から確認できないため、実施済みとは扱わない。$\rho-k\ge2$ の場合は、例えば特異値 $(6,4,2,1)$ の $4\times4$ 行列を $k=2$ で打ち切ると、理論値は $\|A-A_2\|_F=\sqrt{2^2+1^2}=\sqrt5$、$\|A-A_2\|_2=2$ と**手計算で予測**できる。これに対する任意のrank-2候補の数値比較は、添付資料では今後の実験として提案され、現リポジトリのNotebook 10には演習として配置されている。
@@ -787,7 +793,8 @@ $$
 - SVDの定義と行列のshape：[[01_SVDとは]]、[[02_SVD数式の導出]]
 - 低rank近似と誤差評価：[[03_SVDによる低ランク近似]]、[[06_誤差評価_数式導出補足]]
 - 切断行列とTT-rank：[[31_TT-rankとunfolding]]、[[33_TT-SVDの打ち切りと誤差]]
-- 等長写像、mixed-canonical form、中心ノルム：[[35_TT_MPSの等長写像と射影]]、[[39_TT_MPSの混合正準形への導入]]、[[40_TT_MPSの中心ノルムと内積の導出]]
+- 左右ブロックの直交性：[[35_TT_MPSの等長写像と射影]]、[[37_TT_MPSの左ブロックと直交性の導出]]、[[38_TT_MPSの右QR直交化と右ブロック]]
+- mixed-canonical formと直交中心：[[39_TT_MPSの混合正準形への導入]]、[[40_TT_MPSの中心ノルムと内積の導出]]、[[41_TT_MPSの直交中心の移動]]
 - SVDでのSchmidt形と単一ボンド打ち切り：[[43_TT_MPSのSVD中心移動とSchmidt形]]、[[45_TT_MPSの単一ボンドSVD打ち切り]]
 
 ## 添付資料で参照された資料
