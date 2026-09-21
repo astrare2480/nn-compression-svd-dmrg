@@ -63,9 +63,7 @@ $$
 
 へreduced SVDを適用した。
 
-この `A = G2_center.reshape(r1 * n2, r2)` は、第2コアのshape $(r_1,n_2,r_2)$ のうち旧左ボンド $\alpha_1$ と物理添字 $i_2$ を行にまとめる操作である。Pythonの0始まりでは行番号 $p=\alpha_1n_2+i_2$、$A[p,\alpha_2]=G_2^{[C]}[\alpha_1,i_2,\alpha_2]$。同じコアを右展開するなら行は $\alpha_1$、列は $c=i_2r_2+\alpha_2$ で、中心を左へ動かす別の操作になる。両方の展開を同じ要素で比較した行列は [[40_TensorTrain_MPS/01_直交中心移動のPyTorch確認]] に置いた。
-
-Notebook 08の独立した添字確認用小例では $(r_1,n_2,r_2)=(2,3,4)$。`A_left: (6,4)`、`C_right: (2,12)` となり、`G[1,2,3] = A_left[5,3] = C_right[1,11] = 23`（$5=1\cdot3+2$、$11=2\cdot4+3$）を保存出力で確認できる。この小例の $r_2=4$ は、以下の本実験の $r_2=3$ とは異なる。
+`G2_center` のleft unfoldingをSVDへ渡した。左右の行列化でまとめる添字とNotebook 08の小例（`G[1,2,3] = 23`）は [[00_基礎理論/05_PyTorch実装/28_TT_MPS実装で使うPyTorch_Python操作メモ]] と [[40_TensorTrain_MPS/01_直交中心移動のPyTorch確認]] を参照する。小例の $r_2=4$ と本実験の $r_2=3$ は別の設定である。
 
 得られたshapeは、
 
@@ -125,15 +123,7 @@ $$
 
 ## Sigmaをbond上へ明示する
 
-Notebookの `R_old = G3_right.squeeze(-1)` は旧右コアの行列表現 $(r_2,n_3)=(3,5)$、`Vh` は実数SVDの $V^T$ で $(\rho,r_2)=(3,3)$ である。`R_tilde = Vh @ R_old` は旧ボンド添字を足し、新しいSchmidtラベル $\beta$ を行にする。
-
-$$
-R_{\mathrm{tilde}}[\beta,i_3]
-=\sum_{\alpha_2=0}^{r_2-1}V^T[\beta,\alpha_2]R_{\mathrm{old}}[\alpha_2,i_3],
-\qquad R_{\mathrm{tilde}}\in\mathbb R^{\rho\times n_3}.
-$$
-
-これを第3中心コアへ戻すには対角係数も掛け、$G_3^{[C]}[\beta,i_3,0]=(\Sigma V^TR_{\mathrm{old}})[\beta,i_3]=\sigma_\beta R_{\mathrm{tilde}}[\beta,i_3]$ とする。右基底回転と係数の吸収は別の操作である。右直交性の途中式は [[00_基礎理論/01_数学基礎/02_テンソル代数/43_TT_MPSのSVD中心移動とSchmidt形]] の第3節を参照する。
+実数SVDの `Vh` と旧右ブロックの積 `R_tilde = Vh @ R_old` は、旧ボンドを縮約して右基底を回転する。$\Sigma$ を第3中心へ吸収する操作との違いは [[00_基礎理論/05_PyTorch実装/28_TT_MPS実装で使うPyTorch_Python操作メモ]]、右直交性の証明は43番ノートの第3節を参照する。
 
 右coreを$V^T$でbond基底回転した行列は、
 
@@ -174,26 +164,7 @@ $$
 
 ## Schmidt states
 
-`torch.tensordot(G1_left, G2_left_svd, dims=([2], [0]))` は共通の $r_1$ 軸だけを縮約する。入力shape $(1,n_1,r_1)$ と $(r_1,n_2,\rho)$ から未縮約の $(1,n_1,n_2,\rho)$ が残るため、保存出力の `L_tensor` は **4階**の $(1,4,3,3)$ になる。各要素は
-
-$$
-\mathrm{L\_tensor}[0,i_1,i_2,\beta]
-=\sum_{\alpha_1=0}^{r_1-1}
-G_1^{[L]}[0,i_1,\alpha_1]G_2^{[L]}[\alpha_1,i_2,\beta].
-$$
-
-`squeeze(0)` 後の $(n_1,n_2,\rho)$ は二つの物理添字を別々に持つテンソル表示である。左Schmidt状態を**列**としてGram行列を計算するため、$a=i_1n_2+i_2$ を行にして `L_block = L_tensor.reshape(n1 * n2, rho)` とする。Notebookでは一度 `L_tensor.squeeze(0)` を `L_block` に代入した後、reshapeした行列で上書きしている。係数は同じで、最終的な行列表示が $(12,3)$ である。
-
-$$
-\begin{aligned}
-(L_{\mathrm{block}}^TL_{\mathrm{block}})_{\beta\gamma}
-&=\sum_{a=0}^{n_1n_2-1}L_{\mathrm{block}}[a,\beta]L_{\mathrm{block}}[a,\gamma]\\
-&=\sum_{i_1,i_2}L_\beta(i_1,i_2)L_\gamma(i_1,i_2)
-=\delta_{\beta\gamma}.
-\end{aligned}
-$$
-
-最後の等号は第1・第2コアの左直交性を順に使う。行要素を省かずに証明した式は43番ノートの第4節にある。
+第1・第2コアを縮約した保存出力は `L_tensor: (1,4,3,3)`。4階になる軸の追跡、行列化とGramの要素式は [[00_基礎理論/05_PyTorch実装/28_TT_MPS実装で使うPyTorch_Python操作メモ]]、直交性の証明は43番ノートの第4節を参照する。
 
 左Schmidt blockは、
 

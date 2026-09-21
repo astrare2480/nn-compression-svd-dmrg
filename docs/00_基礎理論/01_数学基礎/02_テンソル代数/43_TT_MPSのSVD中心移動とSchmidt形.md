@@ -643,7 +643,7 @@ $$
 
 中心コアのleft unfoldingと全テンソルのcut unfoldingの違いは第1・4節、$V^TR_{\mathrm{old}}$の意味と右直交性は第3節、左ブロックの$L^TL=I_\rho$の行要素展開は第4節に示した。
 
-Pythonの`reshape`で左右の添字をどの順にまとめるかは [[40_TensorTrain_MPS/01_直交中心移動のPyTorch確認]]、`Vh @ R_old`、`tensordot`後のshape、`L_tensor`から`L_block`への行列化、Notebook 08の保存済み数値は [[40_TensorTrain_MPS/05_SVD中心移動とSchmidt形のPyTorch確認]] を参照する。
+Pythonの`reshape`で左右の添字をどの順にまとめるかは [[40_TensorTrain_MPS/01_直交中心移動のPyTorch確認]]、`Vh @ R_old`、`tensordot`後のshape、`L_tensor`から`L_block`への行列化は [[00_基礎理論/05_PyTorch実装/28_TT_MPS実装で使うPyTorch_Python操作メモ]] を参照する。Notebook 08の保存済みshape・数値結果は [[40_TensorTrain_MPS/05_SVD中心移動とSchmidt形のPyTorch確認]] にまとめた。
 
 ## 参考資料
 

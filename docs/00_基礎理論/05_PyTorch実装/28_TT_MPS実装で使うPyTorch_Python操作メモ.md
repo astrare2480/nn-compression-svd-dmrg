@@ -1307,7 +1307,35 @@ assert torch.equal(
 
 `torch.einsum("aib,bjc->ijc", G1_left, G2_left)` では、内部bond `b` とsize 1の左境界 `a` を消し、`(i1,i2,alpha2)` が残る。次に `reshape(n1*n2,r2)` で $(i_1,i_2)$ を行にする。実数の左Gramは `L2_block.T @ L2_block` である。
 
+Notebook 08の `torch.tensordot(G1_left, G2_left_svd, dims=([2], [0]))` は内部bondだけを消し、境界軸は残す。入力shape $(1,n_1,r_1)$ と $(r_1,n_2,\rho)$ から、出力 `L_tensor` は**4階**の $(1,n_1,n_2,\rho)$ となる。以下の配列添字はPythonに合わせて0始まりとする。各要素は
+
+$$
+L_{\mathrm{tensor}}[0,i_1,i_2,\beta]
+=\sum_{\alpha_1=0}^{r_1-1}
+G_1^{[L]}[0,i_1,\alpha_1]G_2^{[L]}[\alpha_1,i_2,\beta].
+$$
+
+`L_tensor.squeeze(0)` のshape $(n_1,n_2,\rho)$ は物理添字を分けた**テンソル表示**である。`L_tensor.reshape(n1 * n2, rho)` は $a=i_1n_2+i_2$ を一つの行にした**行列表示** `L_block` を作る。$\beta$ 列が一つの左Schmidt状態の全係数を持つので、その内積を `L_block.T @ L_block` で計算できる。Notebook 08は一度 `squeeze(0)` の結果を `L_block` に代入し、後で行列shapeへ上書きしているが、係数は変えていない。
+
+$$
+(L_{\mathrm{block}}^TL_{\mathrm{block}})_{\beta\gamma}
+=\sum_{a=0}^{n_1n_2-1}L_{\mathrm{block}}[a,\beta]L_{\mathrm{block}}[a,\gamma]
+=\sum_{i_1,i_2}L_\beta(i_1,i_2)L_\gamma(i_1,i_2)
+=\delta_{\beta\gamma}.
+$$
+
+最後の等号には第1・第2コアの左直交性を使う。Gramが単位行列になる途中式は [[43_TT_MPSのSVD中心移動とSchmidt形]] の第4節、Notebook 08で得たshapeと誤差は [[40_TensorTrain_MPS/05_SVD中心移動とSchmidt形のPyTorch確認]] を参照する。
+
 3階TTの右ブロックは `R2_block = G3_right.squeeze(-1)`。shapeは `(r2,n3)`、右Gramは `R2_block @ R2_block.T` である。すでに右QRした第3コアから境界を外すだけなので、ここで三角因子を再吸収しない。
+
+SVDで第2中心を右へ動かすNotebook 08では、この旧右ブロックを `R_old` として `R_tilde = Vh @ R_old` を計算する。実数SVDの `Vh` は $V^T$ でshape $(\rho,r_2)$、`R_old` は $(r_2,n_3)$ だから、旧ボンド $\alpha_2$ を和で消し、結果は $(\rho,n_3)$ になる。
+
+$$
+R_{\mathrm{tilde}}[\beta,i_3]
+=\sum_{\alpha_2=0}^{r_2-1}V^T[\beta,\alpha_2]R_{\mathrm{old}}[\alpha_2,i_3].
+$$
+
+`R_tilde` は右直交基底だけを表す。第3サイトの**中心コア**へ値を吸収するなら、さらに `Sigma @ R_tilde` を作り、要素は $G_3^{[C]}[\beta,i_3,0]=\sigma_\beta R_{\mathrm{tilde}}[\beta,i_3]$ となる。$\Sigma$ をボンド上に明示する場合は `R_tilde` のまま右コアにする。両表示の数学的な等価性と右直交性の証明は [[43_TT_MPSのSVD中心移動とSchmidt形]] の第2・3節を参照する。
 
 `R2_block` と `R2_qr` は別の対象である。また、以前の `L2 = torch.kron(U, I_n2)` は2コア左ブロックではなく、`(n1*n2,r1*n2)` の基底拡張行列である。命名を `L2_expand` / `L2_block` のように分けると取り違えを防げる。詳しくは [[37_TT_MPSの左ブロックと直交性の導出]] を参照する。
 
