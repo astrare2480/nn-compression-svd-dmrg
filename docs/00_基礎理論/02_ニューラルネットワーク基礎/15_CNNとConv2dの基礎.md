@@ -466,6 +466,62 @@ $$
 
 幅方向も同様に計算する。
 
+### padding 0・1・2を同じ入力で比較する
+
+$H=28$、$K=3$、$S=1$、$D=1$ を固定し、paddingだけを変える。
+
+paddingなしの $P=0$ では、
+
+$$
+\begin{aligned}
+O
+&=
+\left\lfloor
+\frac{28+2\cdot0-3}{1}
+\right\rfloor+1\\
+&=25+1\\
+&=26.
+\end{aligned}
+$$
+
+$P=1$ では、
+
+$$
+\begin{aligned}
+O
+&=
+\left\lfloor
+\frac{28+2\cdot1-3}{1}
+\right\rfloor+1\\
+&=27+1\\
+&=28.
+\end{aligned}
+$$
+
+$P=2$ では、
+
+$$
+\begin{aligned}
+O
+&=
+\left\lfloor
+\frac{28+2\cdot2-3}{1}
+\right\rfloor+1\\
+&=29+1\\
+&=30.
+\end{aligned}
+$$
+
+したがってshapeは、
+
+```text
+padding=0: 28×28 → 26×26
+padding=1: 28×28 → 28×28
+padding=2: 28×28 → 30×30
+```
+
+となる。paddingはkernel sizeそのものを変える操作ではなく、入力の外側へ値を補ってkernelを置ける開始位置を増やす操作である。
+
 ### 空間サイズを維持する例
 
 奇数kernel、stride 1、dilation 1で
@@ -720,11 +776,206 @@ $$
 - `kernel_size`：Convが1回に見る局所領域
 - `patch_size`：ViTなどで画像をtoken化するときの1patchの大きさ
 
-ViTのpatch embeddingをConvで実装し
+ViTのpatch embeddingをConvで実装するときは、通常
+
+$$
+K_h=K_w=P,
+\qquad
+S_h=S_w=P
+$$
+
+として、patch size $P$ と同じ大きさのkernelをpatch sizeずつ移動させる。これによりpatchは重ならない。
+
+### paddingなし・重なりなしのpatch数
+
+画像の高さを $H$、幅を $W$、正方形patchの一辺を $P$ とする。`kernel_size=P`、`stride=P`、`padding=0` を出力サイズ式へ代入すると、縦方向のpatch数は
+
+$$
+\begin{aligned}
+H_{\mathrm{patch}}
+&=
+\left\lfloor
+\frac{H-P}{P}
+\right\rfloor+1\\
+&=
+\left\lfloor
+\frac{H}{P}-1
+\right\rfloor+1\\
+&=
+\left\lfloor
+\frac{H}{P}
+\right\rfloor.
+\end{aligned}
+$$
+
+同様に、横方向は
+
+$$
+W_{\mathrm{patch}}
+=
+\left\lfloor
+\frac{W}{P}
+\right\rfloor
+$$
+
+なので、総patch数は
+
+$$
+\boxed{
+N_{\mathrm{patch}}
+=
+H_{\mathrm{patch}}W_{\mathrm{patch}}
+}
+$$
+
+となる。$H,W$ が $P$ で割り切れる場合は、
+
+$$
+N_{\mathrm{patch}}
+=
+\frac{H}{P}\frac{W}{P}
+$$
+
+と書ける。割り切れない場合、paddingなしでは右端・下端の余った領域は完全なpatchにならないため使われない。
+
+### 28×28画像を全ケースで確認する
+
+Fashion-MNISTの $28\times28$ 画像では、
+
+| patch size $P$ | 縦×横のpatch数 | 総patch数 |
+|---:|---:|---:|
+| 1 | $28\times28$ | 784 |
+| 2 | $14\times14$ | 196 |
+| 4 | $7\times7$ | 49 |
+| 7 | $4\times4$ | 16 |
+| 14 | $2\times2$ | 4 |
+| 28 | $1\times1$ | 1 |
+
+となる。例えば $P=4$ なら、1patchはグレースケールの1channelを含めて
+
+$$
+1\times4\times4=16
+$$
+
+個の画素値を持ち、patchは
+
+$$
+\frac{28}{4}\times\frac{28}{4}
+=7\times7
+=49
+$$
+
+個になる。
+
+### Convでpatch embeddingを実装する
+
+次のConvは、重なりのない $4\times4$ patchを切り出しながら、各patchを64次元へ写像する。
+
+```python
+import torch
+from torch import nn
+
+patch_size = 4
+embed_dim = 64
+
+# 28×28の1channel画像を、重なりのない4×4 patchへ分ける。
+patch_embed = nn.Conv2d(
+    in_channels=1,
+    out_channels=embed_dim,
+    kernel_size=patch_size,
+    stride=patch_size,
+)
+
+images = torch.randn(2, 1, 28, 28)
+feature_map = patch_embed(images)
+assert feature_map.shape == (2, 64, 7, 7)
+```
+
+入力shapeは
+
+```text
+(N, 1, 28, 28)
+```
+
+で、Conv出力は
+
+```text
+(N, 64, 7, 7)
+```
+
+となる。ここで64はpatch数ではなく、各patchを表すembeddingの次元である。Transformerへ渡すには空間軸 $7\times7$ を49個のtoken軸へ変換する。
+
+```python
+# channel軸はembedding次元として残し、7×7を49 tokenへまとめる。
+x = feature_map.flatten(2)  # (N, 64, 49)
+x = x.transpose(1, 2)       # (N, 49, 64)
+assert x.shape == (2, 49, 64)
+```
+
+したがって最終shapeは
+
+$$
+(N,N_{\mathrm{patch}},D_{\mathrm{embed}})
+=(N,49,64)
+$$
+
+である。
+
+### strideとpatch sizeが異なる場合
+
+例えば
+
+```python
+import torch
+from torch import nn
+
+# 4×4領域を2画素ずつ動かすため、隣り合うpatchは重なる。
+overlapping_patch_embed = nn.Conv2d(
+    in_channels=1,
+    out_channels=64,
+    kernel_size=4,
+    stride=2,
+)
+
+images = torch.randn(2, 1, 28, 28)
+feature_map = overlapping_patch_embed(images)
+assert feature_map.shape == (2, 64, 13, 13)
+```
+
+では、$4\times4$ の領域を2画素ずつ移動させる。隣り合うpatchが重なり、縦・横のpatch数はそれぞれ
+
+$$
+\left\lfloor
+\frac{28-4}{2}
+\right\rfloor+1
+=12+1
+=13
+$$
+
+となる。shapeは
+
+```text
+(N, 1, 28, 28)
+→ (N, 64, 13, 13)
+→ 169 patch
+```
+
+である。
+
+```text
+stride = patch_size
+→ patchは重ならない
+
+stride < patch_size
+→ patchが重なり、token数が増える
+
+stride > patch_size
+→ patch間に見ない領域が生じる
+```
+
+上記のpatch embeddingについては、次の確認コードを参照する。
 
 PyTorchの確認コード：[[05_SVD基礎実装検証/15_CNNのPyTorch確認コード#PyTorch確認-003]]
-
-とすればpatchは重ならない。`stride < patch_size` なら重なる。
 
 ---
 

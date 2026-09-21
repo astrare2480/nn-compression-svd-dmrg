@@ -242,7 +242,7 @@ $$
 \quad\|X-\widetilde X_2\|_F^2=0.0625
 $$
 
-と一致する。添付資料に記録された浮動小数点の値は、テンソル誤差二乗 $0.06250000000000003$、捨てた特異値の二乗和 $0.0625000000000003$、誤差等式の差約 $2.78\times10^{-16}$、Pythagorasの差約 $2.84\times10^{-14}$ である。これらは資料に記録されたNotebook 09の結果であり、このノートを編集する際に再実行した値ではない。
+と一致する。Notebook 09に記録されている浮動小数点の値は、テンソル誤差二乗 $0.06250000000000003$、捨てた特異値の二乗和 $0.0625000000000003$、誤差等式の差約 $2.78\times10^{-16}$、Pythagorasの差約 $2.84\times10^{-14}$ である。これらはNotebook 09の保存済み出力であり、このノートを編集する際に再実行した値ではない。
 
 ### 4.4 補足：この証明で見落としていた前提
 
@@ -468,7 +468,7 @@ $$
 
 ### 6.3 撤回した二重劣確率行列の試み：成立する途中式と破綻点
 
-添付資料では、最初にBirkhoff–von Neumannの定理と並べ替え不等式を使う道も試した。$A=U\operatorname{diag}(a)V^T$、$B=P\operatorname{diag}(b)Q^T$（$a_i=\sigma_i(A)$、$b_j=\sigma_j(B)$、双方降順）とし、まず正方行列として $W=U^TP$、$Z=Q^TV$ と置く。トレースの巡回性と対角成分の展開は正しく、
+検討過程では、最初にBirkhoff–von Neumannの定理と並べ替え不等式を使う道も試した。$A=U\operatorname{diag}(a)V^T$、$B=P\operatorname{diag}(b)Q^T$（$a_i=\sigma_i(A)$、$b_j=\sigma_j(B)$、双方降順）とし、まず正方行列として $W=U^TP$、$Z=Q^TV$ と置く。トレースの巡回性と対角成分の展開は正しく、
 
 $$
 \begin{aligned}
@@ -743,7 +743,7 @@ $\Sigma_k$ を左側に置き、$\operatorname{reshape}(U_k\Sigma_k)$ と $V_k^T
 
 ## 9. 手を動かして確かめる実験計画とNotebook 10
 
-添付資料が提案した実験は以下の3つである。現在のリポジトリには[Notebook 10](../../../../notebooks/30_tt_mps/00_fundamentals/10_eckart_young_mirsky_and_single_bond_optimality.ipynb)があり、A・B・Cの演習セルと`TODO`が用意されている。このノートでは演習セルを実行していないため、実験の数値結果としては扱わない。
+対応する数値実験は以下の3つである。現在のリポジトリには[Notebook 10](../../../../notebooks/30_tt_mps/00_fundamentals/10_eckart_young_mirsky_and_single_bond_optimality.ipynb)があり、A・B・Cの演習セルと`TODO`が用意されている。このノートでは演習セルを実行していないため、実験の数値結果としては扱わない。
 
 | 実験 | 確認する内容 | 使用ツール |
 |---|---|---|
@@ -782,11 +782,11 @@ $$
 - Ky Fanの最大値原理自体の証明
 - 6.4節で触れたWeyl型不等式ルートによる別証明
 
-添付資料では、DMRG、ALS、TT-matrix／MPOもこの段階で扱わない話題として挙げられている。これらはこの定理の証明に必要な前提ではなく、後続の学習項目である。
+DMRG、ALS、TT-matrix／MPOは、この段階では扱わない。これらはこの定理の証明に必要な前提ではなく、後続の学習項目である。
 
-## 12. 検算例と資料上の実施状況
+## 12. 検算例と実施状況
 
-添付資料で実測値が記録されているのは、4.3節のNotebook 09（$A\in\mathbb R^{6\times3}$、$\rho=3$、$k=2$）である。$2\times2$、特異値 $(2,1)$ の数値検算がNotebook 09で実施済みという記述は添付資料から確認できないため、実施済みとは扱わない。$\rho-k\ge2$ の場合は、例えば特異値 $(6,4,2,1)$ の $4\times4$ 行列を $k=2$ で打ち切ると、理論値は $\|A-A_2\|_F=\sqrt{2^2+1^2}=\sqrt5$、$\|A-A_2\|_2=2$ と**手計算で予測**できる。これに対する任意のrank-2候補の数値比較は、添付資料では今後の実験として提案され、現リポジトリのNotebook 10には演習として配置されている。
+実測済みとして扱うのは、4.3節のNotebook 09（$A\in\mathbb R^{6\times3}$、$\rho=3$、$k=2$）の結果である。$2\times2$、特異値 $(2,1)$ の数値検算はNotebook 09の実測結果としては扱わない。$\rho-k\ge2$ の場合は、例えば特異値 $(6,4,2,1)$ の $4\times4$ 行列を $k=2$ で打ち切ると、理論値は $\|A-A_2\|_F=\sqrt{2^2+1^2}=\sqrt5$、$\|A-A_2\|_2=2$ と**手計算で予測**できる。これに対する任意のrank-2候補の数値比較は、現リポジトリのNotebook 10に未実行の演習として配置されている。
 
 ## 関連ノート
 
@@ -797,8 +797,8 @@ $$
 - mixed-canonical formと直交中心：[[39_TT_MPSの混合正準形への導入]]、[[40_TT_MPSの中心ノルムと内積の導出]]、[[41_TT_MPSの直交中心の移動]]
 - SVDでのSchmidt形と単一ボンド打ち切り：[[43_TT_MPSのSVD中心移動とSchmidt形]]、[[45_TT_MPSの単一ボンドSVD打ち切り]]
 
-## 添付資料で参照された資料
+## 参考資料
 
 - EYM定理と行列ノルム：[SJSU講義資料](https://www.sjsu.edu/faculty/guangliang.chen/Math253S20/lec7matrixnorm.pdf)、[京都大学Yukawa Institute資料](https://www2.yukawa.kyoto-u.ac.jp/~ken.shiozaki/doc_EN/Eckart_Young_EN.pdf)
-- 一般のユニタリ不変ノルムまでのSchmidt–Mirsky定理：[Ballani–Kressner（EPFL）](https://sma.epfl.ch/~anchpcommon/publications/cime.pdf)。添付資料では別の[EPFL講義資料](https://sma.epfl.ch/~anchpcommon/lecture1.pdf)も参照している。
+- 一般のユニタリ不変ノルムまでのSchmidt–Mirsky定理：[Ballani–Kressner（EPFL）](https://sma.epfl.ch/~anchpcommon/publications/cime.pdf)。関連する[EPFL講義資料](https://sma.epfl.ch/~anchpcommon/lecture1.pdf)も参照できる。
 - PyTorchのreduced SVD：[`torch.linalg.svd` 公式資料](https://docs.pytorch.org/docs/stable/generated/torch.linalg.svd.html)。実数入力なら返り値 `U, S, Vh` の `Vh` が数式の $V^T$ に対応する。SVDは縮退特異値のもとで特異ベクトルが一意とは限らないため、因子の成分一致より再構成値と誤差を検証する。

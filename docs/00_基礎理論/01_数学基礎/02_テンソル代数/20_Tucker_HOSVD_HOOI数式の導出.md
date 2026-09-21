@@ -699,6 +699,34 @@ $$
 
 この「factor計算中は相互依存しない」点がHOOIとの違いである。
 
+### 7.4 1つのunfoldingのSVDとHOSVDを区別する
+
+mode 0だけをunfoldして
+
+$$
+W_{(0)}=Q_0\Sigma_0V_0^{\mathsf T}
+$$
+
+と分解する1回の操作は、**mode 0 unfoldingに対する通常の行列SVD**である。同様にmode 1だけなら、mode 1 unfoldingに対するSVDである。
+
+HOSVDは、対象とする複数modeについてこのSVDを行い、
+
+$$
+U^{(0)},U^{(1)},\ldots
+$$
+
+を揃えてから、それらを用いてcoreを作る一連のTensor分解を指す。Tucker-2なら、
+
+```text
+mode 0 unfoldingのSVD → U_out
+mode 1 unfoldingのSVD → U_in
+元Tensorを両factorで射影 → core
+```
+
+までを合わせてHOSVD初期化と呼ぶ。
+
+HOOIの各factor更新でも、他modeへ射影したTensorを1つのmodeでunfoldしてSVDする。ただし、その1回のSVDだけを新しいHOSVDと呼ぶのではなく、**HOOIの交互更新内で解く局所SVD**と呼び分ける。HOSVDとHOOIではSVDという部品は共通でも、SVDへ入力するTensorとfactor間の依存関係が異なる。
+
 ---
 
 ## 8. Tucker-2の要素表示

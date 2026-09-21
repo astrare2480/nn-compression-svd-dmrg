@@ -41,6 +41,7 @@ SVDによる低ランク近似からTucker/HOSVD/HOOI、さらにTT/MPS・DMRG�
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/41_TT_MPSの直交中心の移動]]：QRによる左右移動と全テンソルの不変性を、テンソル代数として導出する。ブロック状態としての解釈は物理ノートへ分ける。
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/43_TT_MPSのSVD中心移動とSchmidt形]]：exact SVDの中心移動、cut unfolding、Schmidt状態、ノルムと全要素例。
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/45_TT_MPSの単一ボンドSVD打ち切り]]：$\rho\to k$ のコアshape、添字、射影、単一cut誤差と8要素例。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性]]：単一ボンドのrank-$k$ 打ち切りが最良近似になる理由と、TT全体の逐次近似との区別。
 
 ## 02_ニューラルネットワーク基礎
 
@@ -71,6 +72,7 @@ TT / MPSの実装教材はSVD・Tuckerの検証章とは別系統として、現
 - [[00_基礎理論/05_PyTorch実装/27_TT_MPS基礎のPyTorch実装]]
 - [[00_基礎理論/05_PyTorch実装/28_TT_MPS実装で使うPyTorch_Python操作メモ]]
 - [[00_基礎理論/05_PyTorch実装/29_TT_cutとPyTorchのreshape_Kronecker順序]]
+- [[00_基礎理論/05_PyTorch実装/45_TT-matrix線形層のPyTorch直接forward]]
 
 ## 06_手法間のつながり
 
@@ -130,9 +132,11 @@ TT / MPSの実装教材はSVD・Tuckerの検証章とは別系統として、現
 → 41_直交中心の移動
 → 43_SVD中心移動とSchmidt形
 → 45_単一ボンドSVD打ち切り
+→ 46_Eckart–Young–Mirsky定理と単一ボンド打ち切りの最適性
 → 07_物理基礎（42_直交中心、44_Schmidt打ち切り）
 → 28_PyTorch/Python操作メモ
 → 27_TT/MPS基礎のPyTorch実装
 → 29_TT cutとreshape/Kronecker順序
 → 17_TT/MPS学習ロードマップ
+→ 45_TT-matrix線形層のPyTorch直接forward
 ```
