@@ -639,6 +639,98 @@ $$
 
 今回の $\Sigma\in\mathbb R^{\rho\times\rho}$ は一本のボンド上の**対角行列**であり、一般には密な3階Tucker core $\mathcal S$ ではない。TT/MPSでは鎖上の直交中心を隣のサイトへ移せるが、Tuckerの一つの密なcoreには通常そのようなサイト間の中心移動を考えない。Tucker/HOSVDのSVD、全テンソルからコアを順に作るTT-SVD、既存TTの局所的なSVD中心移動は、それぞれ分解対象と結果の構造が異なる。Tuckerの詳しい導出は [[22_Tucker分解とHOSVD]] に置く。
 
+## 11. Notebook 08の実装操作と添字・shapeの対応
+
+[Notebook 08](../../../../notebooks/30_tt_mps/00_fundamentals/08_svd_center_move_and_schmidt_form.ipynb) の変数名で、上の数式を読み直す。以下の添字をPythonと同じ**0始まり**とする。数学的な説明で1始まりを使う場合、複合添字はそれぞれ $(\alpha_1-1)n_2+i_2$、$(i_2-1)r_2+\alpha_2$ となる。
+
+### 11.1 `reshape(r1 * n2, r2)` は何を一つの行にするか
+
+`G2_center` のshapeは $(r_1,n_2,r_2)$。第2サイトから右へ中心を動かすには、旧左ボンド $\alpha_1$ と物理添字 $i_2$ を**一つの行添字**にし、旧右ボンド $\alpha_2$ を列にする。C順序の `reshape` なら
+
+$$
+p=\alpha_1n_2+i_2,\qquad
+A[p,\alpha_2]=G_2^{[C]}[\alpha_1,i_2,\alpha_2],\qquad
+A\in\mathbb R^{(r_1n_2)\times r_2}.
+$$
+
+したがって `A = G2_center.reshape(r1 * n2, r2)` とする。これは第1節の**中心コアのleft unfolding**であり、全テンソルのcut unfolding $X^{\langle2\rangle}\in\mathbb R^{(n_1n_2)\times n_3}$ とは行数も添字も違う。SVDの$U$を `reshape(r1, n2, rho)` で戻せるのは、この行順を変えていないためである。
+
+対照的に同じ第2コアの**right unfolding**は $C_{\mathrm{right}}\in\mathbb R^{r_1\times(n_2r_2)}$ で、$c=i_2r_2+\alpha_2$ を列とする。
+
+$$
+C_{\mathrm{right}}[\alpha_1,c]
+=G_2^{[C]}[\alpha_1,i_2,\alpha_2].
+$$
+
+右展開をSVDしても対象の切断が変わるため、この $2\to3$ のleft unfoldingと取り違えない。Notebookの小例では $(r_1,n_2,r_2)=(2,3,4)$、`A_left: (6,4)`、`C_right: (2,12)` で、$G[1,2,3]=23$ である。$p=1\cdot3+2=5$、$c=2\cdot4+3=11$ なので `A_left[5,3] = C_right[1,11] = 23` と確かめられる。
+
+### 11.2 `Vh @ R_old` は何を回すか
+
+実数入力では `Vh` は第1節の $V^T\in\mathbb R^{\rho\times r_2}$、`R_old = G3_right.squeeze(-1)` は旧右コアの行列表現 $R_{\mathrm{old}}\in\mathbb R^{r_2\times n_3}$ である。従って
+
+$$
+\begin{aligned}
+R_{\mathrm{tilde}}&=V^TR_{\mathrm{old}}\in\mathbb R^{\rho\times n_3},\\
+R_{\mathrm{tilde}}[\beta,i_3]
+&=\sum_{\alpha_2=0}^{r_2-1}V^T[\beta,\alpha_2]
+R_{\mathrm{old}}[\alpha_2,i_3],\\
+G_3^{[C]}[\beta,i_3,0]
+&=\sum_{\alpha_2=0}^{r_2-1}
+(\Sigma V^T)[\beta,\alpha_2]
+R_{\mathrm{old}}[\alpha_2,i_3]
+=\sigma_\beta R_{\mathrm{tilde}}[\beta,i_3].
+\end{aligned}
+$$
+
+`Vh @ R_old` は旧右ボンド基底を新しいSchmidtラベル $\beta$ の基底へ組み替える操作である。`Sigma @ Vh` だけを右へ渡し、$R_{\mathrm{old}}$ を落としてよいわけではない。右直交性が残る途中式は第3節の $(V^TR_{\mathrm{old}})(V^TR_{\mathrm{old}})^T=V^T(R_{\mathrm{old}}R_{\mathrm{old}}^T)V=I_\rho$ に示した。
+
+### 11.3 `tensordot` から `L_tensor`、`L_block` まで
+
+`G1_left` のshape $(1,n_1,r_1)$ と `G2_left_svd` のshape $(r_1,n_2,\rho)$ に `torch.tensordot(..., dims=([2], [0]))` を使うと、$r_1$ 軸だけが和で消える。残る軸は左から $(1,n_1)$ と $(n_2,\rho)$ の計**4軸**なので、出力 `L_tensor` は $(1,n_1,n_2,\rho)$ の4階テンソルになる。
+
+$$
+\mathrm{L\_tensor}[0,i_1,i_2,\beta]
+=\sum_{\alpha_1=0}^{r_1-1}
+G_1^{[L]}[0,i_1,\alpha_1]
+G_2^{[L]}[\alpha_1,i_2,\beta].
+$$
+
+左端のサイズ1の軸を `squeeze(0)` するとshapeは $(n_1,n_2,\rho)$。これはまだ $i_1,i_2$ が別々の**テンソル表示**である。Gram行列を作る `L_block` はその二つを行 $a=i_1n_2+i_2$ にまとめた**行列表示**で、
+
+$$
+\mathrm{L\_block}[a,\beta]
+=\mathrm{L\_tensor}[0,i_1,i_2,\beta],\qquad
+\mathrm{L\_block}\in\mathbb R^{(n_1n_2)\times\rho}.
+$$
+
+このため `L_tensor.reshape(n1 * n2, rho)`（左端の軸が1のとき）を行う。Notebookの実装では `L_tensor.squeeze(0)` を一度 `L_block` に入れた後、行列shapeへの `reshape` で上書きしている。**同じ係数を異なるshapeで見ている**のであり、別の左状態を作っているのではない。
+
+列 $\beta$ は左Schmidt状態の全 $(i_1,i_2)$ 成分を並べたものになる。したがって行列積の各要素は
+
+$$
+(\mathrm{L\_block}^T\mathrm{L\_block})_{\beta\gamma}
+=\sum_{a=0}^{n_1n_2-1}\mathrm{L\_block}[a,\beta]
+\mathrm{L\_block}[a,\gamma]
+=\sum_{i_1,i_2}L_\beta(i_1,i_2)L_\gamma(i_1,i_2)
+=\delta_{\beta\gamma}.
+$$
+
+最後の等号は第4節で $G_1^{[L]}$ の列直交性を先に縮約し、次にSVDの $U^TU=I_\rho$ を使って全項を展開した結果である。単に `G2_left_svd` が左直交だから、という一段だけでは、`L_block` の物理添字 $i_1$ を含む直交性の説明には足りない。
+
+### 11.4 保存済み出力のshapeと数値誤差
+
+Notebook 08の保存済み出力は、$n_1=4,n_2=3,n_3=5,r_1=2,r_2=3$、float64の実行記録である。元のコアは `G1_left: (1,4,2)`、`G2_center: (2,3,3)`、`G3_right: (3,5,1)`、全テンソルは $(4,3,5)$。SVD後は `U: (6,3)`、`S: (3,)`、`Vh: (3,3)`、$\Sigma:(3,3)$、`G2_left_svd: (2,3,3)`、`G3_center_svd: (3,5,1)`。$\Sigma$を別にした右ブロックは `R_tilde: (3,5)`、左の収縮は `L_tensor: (1,4,3,3)`、行列化後は `L_block: (12,3)`、右ブロックは `R_block: (3,5)` である。
+
+- 第2サイト中心を準備する段階の再構成誤差：$8.426803138067863\times10^{-15}$。
+- exact SVDの $2\to3$ 中心移動後の再構成誤差：$1.5759259231498567\times10^{-14}$。新しい第2コアの左直交性誤差：$9.038292206142435\times10^{-16}$。$\bigl|\|X\|_F-\|G_3^{[C]}\|_F\bigr|=3.552713678800501\times10^{-15}$。
+- $\Sigma$ を明示した形式の再構成誤差：$1.3927300431570368\times10^{-14}$。右ブロックの直交性誤差：$8.275842379697559\times10^{-16}$。
+- 左Schmidt状態の直交性誤差：$8.242513085424968\times10^{-16}$。右Schmidt状態の直交性誤差：$8.275842379697559\times10^{-16}$。
+- 二乗ノルムは $\|X\|_F^2=714.0546134934193$、$\|G_2^{[C]}\|_F^2=714.0546134934189$、$\sum_\beta\sigma_\beta^2=714.0546134934187$。前二者の差は $4.547473508864641\times10^{-13}$、$X$と特異値二乗和の差は $5.684341886080801\times10^{-13}$。
+
+これらは**Notebookに保存されていた出力**であり、このノートの加筆時にRun Allを再実行して得た値ではない。現行Notebookの複合添字小例では `r1, n2, r2 = 2, 3, 4` と再代入している一方、後続の本実験は $r_2=3$ の `G2_center` を使う。このままでは要素数18の中心コアを `reshape(2 * 3, 4)` の要素数24へ変えようとして失敗する。先頭から順に再実行するなら小例の変数名を分けるか、本実験の $r_1,n_2,r_2$ をコアのshapeから再取得する必要がある。
+
+添付資料冒頭にあるNotebook 07の**QR移動**の記録も区別する。$2\to3$ では再構成誤差約 $9.57\times10^{-15}$、第2コア左直交性誤差約 $3.20\times10^{-16}$、全テンソルと第3中心のノルム差約 $3.55\times10^{-15}$。$2\to1$ では再構成誤差約 $7.13\times10^{-15}$、第2コア右直交性誤差約 $4.84\times10^{-16}$、全テンソルと第1中心のノルム差約 $3.55\times10^{-15}$。これらは上記のNotebook 08の**SVD移動**の数値ではない。QRの左右移動の導出は [[41_TT_MPSの直交中心の移動]] を参照する。
+
 ## 参考資料
 
 - [Schollwöck：The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477)：MPS正準形とSchmidt分解。
