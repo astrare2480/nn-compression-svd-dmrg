@@ -146,3 +146,5 @@ print("left move error =", torch.linalg.vector_norm(after_left_move - original).
 `Q_R.T` の行Gramは `Q_R.T @ Q_R = I` であり、コードでは同じ行列積 `q_right.T @ q_right` を確認している。元の `G2` のshapeと新しいコアのshapeがたまたま一致する例でも、`q_left.shape[1]` や `q_right.shape[1]` を用いる。一般の横長行列ではreduced QRの列数が元のボンド次元と異なる場合があるためである。
 
 全体の再構成誤差と局所Gram誤差は別の確認項目である。QR符号や丸め値だけの一致では合否を決めない。既存の `src` のTT-SVD関数の契約、dtype、rank検証は [[00_基礎理論/05_PyTorch実装/27_TT_MPS基礎のPyTorch実装]] を参照する。
+
+添付の学習記録にあるNotebook 07の**保存済み**QR移動結果も、このノートの小行列例とは区別して記す。$2\to3$ の再構成誤差は約 $9.57\times10^{-15}$、第2コアの左直交性誤差は約 $3.20\times10^{-16}$、全テンソルと第3中心コアのノルム差は約 $3.55\times10^{-15}$。$2\to1$ の再構成誤差は約 $7.13\times10^{-15}$、第2コアの右直交性誤差は約 $4.84\times10^{-16}$、全テンソルと第1中心コアのノルム差は約 $3.55\times10^{-15}$。これらは [[40_TensorTrain_MPS/05_SVD中心移動とSchmidt形のPyTorch確認]] のNotebook 08に記録されたSVD移動の値ではない。
