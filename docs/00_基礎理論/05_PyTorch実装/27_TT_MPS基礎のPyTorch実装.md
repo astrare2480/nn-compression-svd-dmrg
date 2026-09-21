@@ -14,6 +14,8 @@ tags:
 
 # TT・MPS基礎のPyTorch実装
 
+線形層を4階TT-matrixコアとして直接縮約する実装は [[45_TT-matrix線形層のPyTorch直接forward]] を参照する。本章の通常TTコアとは入力・出力脚の本数が異なる。
+
 ## サマリー
 
 TT/MPS基礎編では、理論を先に小さいNotebookで手実装して確認し、その後再利用可能な処理を `src` へ抽出した。

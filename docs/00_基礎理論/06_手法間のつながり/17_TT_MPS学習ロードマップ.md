@@ -938,6 +938,8 @@ bit分解、space-filling curveがある。どれが最良かは事前には確�
 MPOコアを `nn.Parameter` / `nn.ParameterList` へ登録し、全コアを通常の勾配降下で
 fine-tuningすること自体はDMRGではない。forwardはdense重みを復元する版と、
 コアを直接縮約する版を分け、後者では入力・出力添字と中間shapeを確認する。
+直接forwardの添字式、一般サイト数のPyTorch実装、密行列との小さい一致確認は
+[[45_TT-matrix線形層のPyTorch直接forward]] を参照する。
 MPOのbiasは通常の出力vectorとして残せるため、必ずMPO化する必要はない。
 
 比較は同じparameter予算でaccuracyを見るか、同じaccuracy条件で必要parameter数を見る。
