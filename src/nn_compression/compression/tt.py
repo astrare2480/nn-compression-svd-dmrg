@@ -9,14 +9,16 @@ mode-n unfolding（``nn_compression.tensor.operations.unfold``）とは違い、
 TT の cut unfolding は先頭 ``k`` 軸をまとめて残りと切り分ける。この違いを
 混同しないよう、TT 専用の unfolding は ``tt_unfold`` としてここに独立させる。
 
-``tt_svd_exact`` と ``tt_svd(max_rank)`` は exact / truncation の違いを
-コード上でも明示するために別関数のままにするが、逐次SVDループ本体
-（``_tt_svd_sweep``）は共有し、reshape ロジック自体は変更しない。
+``tt_svd_exact``、``tt_svd(max_rank)``、``tt_svd_ranks(ranks)`` は
+exact / 共通上限 / bond ごとの上限の違いをコード上でも明示するために
+別関数のままにするが、逐次SVDループ本体（``_tt_svd_sweep``）は共有し、
+reshape ロジック自体は変更しない。
 """
 
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 
 import torch
 
@@ -46,12 +48,17 @@ def tt_unfold(X: torch.Tensor, k: int) -> torch.Tensor:
 def _tt_svd_sweep(
     X: torch.Tensor,
     max_rank: int | None = None,
+    bond_ranks: Sequence[int] | None = None,
 ) -> list[torch.Tensor]:
-    """``tt_svd_exact`` / ``tt_svd`` が共有する逐次SVDループ本体。
+    """``tt_svd_exact`` / ``tt_svd`` / ``tt_svd_ranks`` が共有する逐次SVDループ本体。
 
-    ``max_rank=None`` なら打ち切りなし（各段階の数値rankをそのまま使う）。
+    ``max_rank=None`` かつ ``bond_ranks=None`` なら打ち切りなし
+    （各段階の数値rankをそのまま使う）。
     ``max_rank`` に整数を渡すと、各段階で
     ``min(max_rank, その段階の数値rank)`` を bond dimension として使う。
+    ``bond_ranks`` を渡すと、第 ``k`` 段階は
+    ``min(bond_ranks[k], その段階の数値rank)`` を使う。
+    ``max_rank`` と ``bond_ranks`` は同時に指定しない。
 
     reshape ``mat = remainder.reshape(r_left * n_mode, -1)`` は
     notebook 01/02 のアルゴリズムのまま変更しない。``tt_unfold`` では
@@ -66,8 +73,16 @@ def _tt_svd_sweep(
     validate_tensor_shape(X)
     validate_tt_dtype(X, name="X")
 
+    if max_rank is not None and bond_ranks is not None:
+        raise ValueError("max_rank と bond_ranks は同時に指定できません。")
+
     shape = X.shape
     d = X.ndim
+    if bond_ranks is not None and len(bond_ranks) != d - 1:
+        raise ValueError(
+            f"ranks の長さは bond 数 X.ndim-1={d - 1} である必要があります: "
+            f"{len(bond_ranks)}"
+        )
     cores: list[torch.Tensor] = []
 
     # remainder: 未分解の残り。shape は (r_left, n_mode, n_{mode+1}, ..., n_d)
@@ -85,7 +100,12 @@ def _tt_svd_sweep(
         # （例: 零テンソル）のみ最低rank 1を使う。数値rank >= 1 の通常
         # ケースでは effective_rank == numerical_rank で挙動は変わらない。
         effective_rank = max(1, numerical_rank)
-        r = effective_rank if max_rank is None else min(max_rank, effective_rank)
+        if bond_ranks is not None:
+            r = min(bond_ranks[mode], effective_rank)
+        elif max_rank is None:
+            r = effective_rank
+        else:
+            r = min(max_rank, effective_rank)
         U, S, Vh = truncated_svd(mat, r)
         cores.append(U.reshape(r_left, n_mode, r))
 
@@ -128,6 +148,31 @@ def tt_svd(X: torch.Tensor, max_rank: int) -> list[torch.Tensor]:
         raise ValueError(f"max_rank は 1 以上である必要があります: {max_rank}")
 
     return _tt_svd_sweep(X, max_rank=max_rank)
+
+
+def tt_svd_ranks(X: torch.Tensor, ranks: Sequence[int]) -> list[torch.Tensor]:
+    """bond ごとの rank 上限付き TT-SVD。
+
+    ``ranks`` の長さは ``X.ndim - 1``。第 ``k`` 段階（0 始まり）の
+    bond dimension は ``min(ranks[k], その段階の数値rank)``。
+    数値 rank を超える指定は、``tt_svd`` と同じくその段階の数値 rank で頭打ちにする。
+    各要素は 1 以上の整数である必要があり、0 や負数を有効な rank へ丸め込まない。
+    """
+    if isinstance(ranks, (str, bytes)) or not isinstance(ranks, Sequence):
+        raise TypeError(
+            f"ranks は bond ごとの整数列である必要があります: {ranks!r}"
+        )
+
+    bond_ranks: list[int] = []
+    for index, rank in enumerate(ranks):
+        rank_int = coerce_integer_scalar(rank, name=f"ranks[{index}]")
+        if rank_int < 1:
+            raise ValueError(
+                f"ranks[{index}] は 1 以上である必要があります: {rank_int}"
+            )
+        bond_ranks.append(rank_int)
+
+    return _tt_svd_sweep(X, bond_ranks=bond_ranks)
 
 
 def tt_reconstruct(cores: list[torch.Tensor]) -> torch.Tensor:
