@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "40_TensorTrain_MPS/03_TT_SVDとrank_truncationのPyTorch確認.md",
+                "file": "00_基礎理論/01_数学基礎/02_テンソル代数/47_TT-SVDの準最適性と誤差上界.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "03_TT_SVDとrank_truncationのPyTorch確認"
+              "title": "47_TT-SVDの準最適性と誤差上界"
             }
           }
         ]
@@ -80,7 +80,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 431.5
+    "width": 296.5
   },
   "right": {
     "id": "faefdb403c832295",
@@ -185,36 +185,36 @@
       "bases:新規ベースを作成": false
     }
   },
-  "active": "1beb77a867b91160",
+  "active": "b6907776fdc3a747",
   "lastOpenFiles": [
+    "07_src設計/05_Core_API_v1/compression/tt_svd.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/47_TT_SVD_Zhun-Zui-Shi-Xing-toWu-Cha-Shang-Jie_ChatXue-Xi-Ji-Lu.md",
+    "40_TensorTrain_MPS/07_TT-SVDの準最適性と誤差上界のPyTorch確認.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/47_TT-SVDの準最適性と誤差上界.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/tt-rounding直交化.md",
+    "07_src設計/05_Core_API_v1/compression/tt_reconstruct.md",
+    "07_src設計/05_Core_API_v1/compression/tt_svd_exact.md",
+    "07_src設計/05_Core_API_v1/compression/hosvd.md",
+    "07_src設計/05_Core_API_v1/compression/tucker_parameter_count.md",
+    "07_src設計/05_Core_API_v1/compression/truncated_svd.md",
+    "07_src設計/05_Core_API_v1/compression/tt_num_parameters.md",
+    "07_src設計/05_Core_API_v1/compression/sweep_conv_svd_ranks.md",
+    "07_src設計/05_Core_API_v1/compression/retained_energy_from_matrix.md",
+    "07_src設計/05_Core_API_v1/compression/sweep_conv2d_ranks.md",
+    "07_src設計/05_Core_API_v1/compression/retained_energy.md",
+    "07_src設計/05_Core_API_v1/compression/rebuild_linear_from_svd.md",
+    "07_src設計/05_Core_API_v1/compression/parameter_ratio.md",
+    "07_src設計/05_Core_API_v1/compression/make_two_layer_svd_model.md",
+    "07_src設計/05_Core_API_v1/compression/hooi.md",
+    "07_src設計/05_Core_API_v1/compression/has_converged.md",
+    "07_src設計/05_Core_API_v1/compression/factorize_named_linear.md",
+    "07_src設計/05_Core_API_v1/compression/factorize_named_layers.md",
+    "07_src設計/05_Core_API_v1/compression/factorize_named_conv2d.md",
+    "40_TensorTrain_MPS/03_TT_SVDとrank_truncationのPyTorch確認.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/43a_TT_MPSのSVD中心移動_実装とshapeの補助導出.md",
     "00_基礎理論/05_PyTorch実装/45_TT-matrix線形層のPyTorch直接forward.md",
-    "40_TensorTrain_MPS/04_基底変換_Gauge自由度_左右直交化のPyTorch確認.md",
-    "40_TensorTrain_MPS/05_SVD中心移動とSchmidt形のPyTorch確認.md",
-    "40_TensorTrain_MPS/06_単一ボンドSVD打ち切りのPyTorch確認.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性 (1).md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/45_TT_MPSの単一ボンドSVD打ち切り.md",
-    "06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装.md",
-    "06_Tucker基礎実装検証/02_Tucker2_Convとrank_sweepの確認結果.md",
-    "06_Tucker基礎実装検証/02_Tucker2_Convの実装契約と注意.md",
-    "30_CIFAR10_CNN/02_Tucker2_Convとrank_sweepの確認結果.md",
     "30_CIFAR10_CNN/assets/03_finetuning/finetuning_learning_curves.png",
     "30_CIFAR10_CNN/assets/03_finetuning",
-    "30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較.md",
-    "30_CIFAR10_CNN/03_HOOIとTensorLy照合.md",
-    "00_基礎理論/07_物理基礎/44_Schmidt打ち切りとボンド状態の物理的意味.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/43_TT_MPSのSVD中心移動とSchmidt形.md",
-    "06_Tucker基礎実装検証/25_評価設計のPyTorchコード.md",
-    "06_Tucker基礎実装検証/20_Tucker数式のPyTorch確認コード.md",
-    "06_Tucker基礎実装検証/20_CIFAR10モデルのPyTorch確認コード.md",
-    "06_Tucker基礎実装検証/10_Tucker2_Conv2dのPyTorch契約.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/38_TT_MPSの右QR直交化と右ブロック.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/37_TT_MPSの左ブロックと直交性の導出.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/39_TT_MPSの混合正準形への導入.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/40_TT_MPSの中心ノルムと内積の導出.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/41_TT_MPSの直交中心の移動.md",
-    "00_基礎理論/06_手法間のつながり/16_TT_MPSの物理解釈_縮約密度行列と局所写像.md",
-    "00_基礎理論/05_PyTorch実装/26_Tucker_HOOIのPyTorch実装.md",
     "00_基礎理論/07_物理基礎",
     "06_Tucker基礎実装検証/assets/03_finetuning/finetuning_learning_curves.png",
     "06_Tucker基礎実装検証/assets/03_finetuning",

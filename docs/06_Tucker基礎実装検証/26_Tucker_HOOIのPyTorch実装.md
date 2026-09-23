@@ -156,6 +156,43 @@ core_from_factors
 hooi
 ```
 
+### `has_converged()`の`*`は許容値をkeyword-onlyにする
+
+```python
+def has_converged(
+    error: float,
+    prev_error: float,
+    *,
+    abs_tol: float = 1e-8,
+    rel_tol: float = 1e-5,
+) -> bool:
+    absolute_change = abs(error - prev_error)
+    return absolute_change <= (
+        abs_tol + rel_tol * abs(prev_error)
+    )
+```
+
+引数列の単独の `*` は、それより後ろをkeyword-only引数にする。
+
+```python
+# 許容値の意味を名前で明示する正しい呼び出し。
+converged = has_converged(
+    error,
+    prev_error,
+    abs_tol=1e-8,
+    rel_tol=1e-5,
+)
+```
+
+次のように許容値を位置だけで渡す呼び出しはエラーになる。
+
+```python
+# abs_tolとrel_tolの取り違えを防ぐため許可されない。
+has_converged(error, prev_error, 1e-8, 1e-5)
+```
+
+絶対許容値と相対許容値は桁も意味も異なるため、引数名を強制すると順序の取り違えを防ぎやすい。default値を使う場合は `has_converged(error, prev_error)` でよい。
+
 ### `hooi_sweep`
 
 下のloopで対象modeのfactorは射影に使わない。これから選び直す基底で先に情報を落とすと、候補を調べる局所問題そのものが変わってしまうためである。
@@ -575,6 +612,53 @@ conv_tucker.py内部validation
 
 NumPy scalarをどのAPIまで受理するかは全体で完全統一しておらず、後続のAPI設計課題として残している。
 
+### `assert`で式・helper・実Moduleを照合する
+
+Tucker-2のparameter数は、同じ値を異なる3経路で求めて照合できる。
+
+```python
+# 手計算式、src helper、構築済みModuleのweight数を比較する。
+out_channels, in_channels, kernel_height, kernel_width = (
+    target_conv.weight.shape
+)
+rank_out = ranks[0]
+rank_in = ranks[1]
+
+tucker_params_formula = (
+    in_channels * rank_in
+    + rank_out * rank_in * kernel_height * kernel_width
+    + out_channels * rank_out
+)
+
+tucker_params_src = tucker_parameter_count(
+    target_conv.weight.shape,
+    {0: rank_out, 1: rank_in},
+)
+
+tucker_params_module = sum(
+    layer.weight.numel()
+    for layer in tucker_conv
+    if isinstance(layer, torch.nn.Conv2d)
+)
+
+assert tucker_params_formula == tucker_params_src, (
+    f"formula={tucker_params_formula}, src={tucker_params_src}"
+)
+assert tucker_params_src == tucker_params_module, (
+    f"src={tucker_params_src}, module={tucker_params_module}"
+)
+```
+
+`assert` の条件が真ならそのまま続行し、偽なら `AssertionError` で停止する。この2本により、
+
+```text
+数式によるparameter数
+= srcのparameter数helper
+= 実際に構築した3層のweight要素数
+```
+
+を確認できる。失敗した場合は、rankの順序、前後 `1×1 Conv` のchannel、core kernel size、biasを数えるかどうかを確認する。上の例は `weight.numel()` だけを合計しているため、bias込みの総parameter数とは区別する。
+
 ---
 
 ## 7. 評価・学習側で固定したcontract
@@ -677,6 +761,107 @@ relative_error_tl = (
     / tl.norm(weight, 2)
 )
 ```
+
+### backendは計算libraryを選ぶ
+
+TensorLyのbackendは、Tensor演算をどのarray / Tensor libraryへdispatchするかを決める。defaultはNumPyであり、
+
+```python
+tl.set_backend("pytorch")
+```
+
+とすると、`partial_tucker()`、`mode_dot()`、`multi_mode_dot()`などがPyTorch backendを使う。入力が `torch.Tensor` ならcoreとfactorもPyTorch Tensorとして扱えるため、NumPyへ変換せず新しい `nn.Conv2d` の初期値へコピーできる。
+
+ここで指定しているのはdeviceではない。
+
+```text
+backend = "pytorch"
+→ Tensor演算をPyTorchで行う
+
+weight.device = cpu
+→ CPU上で計算する
+
+weight.device = cuda:0
+→ 対応演算をCUDA上で計算する
+```
+
+したがって、`set_backend("pytorch")` だけで必ずGPU実行になるわけではない。dtypeとdeviceは入力weight側でも確認する。
+
+### `init`はHOOIの開始点を選ぶ
+
+`partial_tucker()` は反復法なので、最初のfactorが必要になる。
+
+```text
+init="svd"
+→ 対象modeのunfoldingをSVDし、上位左特異ベクトルから開始
+
+init="random"
+→ ランダムなfactorから開始
+
+init=(core, factors)
+→ shapeが整合する既存Tucker表現からwarm start
+```
+
+今回のHOSVD／HOOI比較では、元weightの情報を使う開始点として `init="svd"` を使う。概念的には、
+
+$$
+U_{\mathrm{out}}^{(0)}
+=
+\operatorname{top\text{-}}R_{\mathrm{out}}
+\operatorname{leftSVD}(W_{(0)}),
+$$
+
+$$
+U_{\mathrm{in}}^{(0)}
+=
+\operatorname{top\text{-}}R_{\mathrm{in}}
+\operatorname{leftSVD}(W_{(1)})
+$$
+
+である。
+
+`init="random"` を使う場合は開始点依存性が比較へ混ざるため、`random_state` を固定し、必要なら複数seedで結果を確認する。
+
+```python
+(core_random, factors_random), errors_random = partial_tucker(
+    weight,
+    rank=[rank_out, rank_in],
+    modes=[0, 1],
+    init="random",
+    random_state=0,
+)
+```
+
+既存分解からのwarm startでは、利用中のTensorLy versionが要求するTuckerTensorの構造と、core・factor・rankのshapeを先に確認する。rankやmodeの意味が異なる分解結果を、そのまま初期値にはしない。
+
+### scalar Tensorと`.item()`を区別する
+
+`relative_frobenius_error()`のようなmetricが1個の誤差を0次元Tensorで返す場合、
+
+```python
+error_tensor = relative_frobenius_error(
+    weight,
+    weight_hat_tl,
+)
+
+assert error_tensor.ndim == 0
+error_value = error_tensor.item()
+assert isinstance(error_value, float)
+```
+
+とすればPython scalarへ変換できる。
+
+```text
+error_tensor
+→ tensor(0.1234)
+→ torch.Tensor
+
+error_tensor.item()
+→ 0.1234
+→ Python float
+```
+
+DataFrame、JSON、CSVなどへ集計値を渡す境界では `.item()` が便利である。一方、lossをbackwardしたい場合やTensor演算を続けたい場合は、途中で `.item()` を呼ぶとautograd graphからPython値へ出るため、Tensorのまま保持する。
 
 ### `partial_tucker` の返り値は入れ子で受ける
 

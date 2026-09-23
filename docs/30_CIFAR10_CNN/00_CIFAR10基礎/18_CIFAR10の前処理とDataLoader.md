@@ -692,7 +692,119 @@ if ($actualMd5 -ne $expectedMd5) {
 Write-Output "MD5 verified: $actualMd5"
 ```
 
-MD5が一致したら展開し、`data_dir/cifar-10-batches-py/` になるよう配置して、以後 `download=False` で読む。hash不一致は不完全なダウンロードや別内容の可能性を示すため、そのarchiveは展開せず再取得する。mirrorの速度は環境依存なので、教材では特定mirrorを固定せず公式hashを判断基準にする。
+`-Algorithm MD` ではなく、`-Algorithm MD5` と書く。`MD` はPowerShellの有効なalgorithm名ではない。
+
+MD5は衝突耐性を必要とするセキュリティ用途のためではなく、**取得したarchiveが公式配布物と同じbyte列かを照合する識別値**として用いる。
+
+### archiveの場所が分からない場合
+
+想定したpathにファイルがないまま `Resolve-Path` や `Get-FileHash` を実行すると、pathが存在しないというエラーになる。先にDownloads直下から候補を列挙する。
+
+```powershell
+# ファイル名末尾に「(1)」などが付いた場合も含めて候補を探す。
+$downloadsDir = Join-Path $env:USERPROFILE 'Downloads'
+$archives = Get-ChildItem `
+    -LiteralPath $downloadsDir `
+    -File `
+    -Filter '*cifar*.tar.gz'
+
+$archives | Select-Object Name, FullName, Length
+```
+
+候補が複数ある場合は、表示された `FullName` とsizeを確認して対象を明示的に選ぶ。
+
+```powershell
+# 上の一覧で確認した実在pathを指定する。
+$archive = 'C:\Users\ユーザー名\Downloads\cifar-10-python.tar.gz'
+$archive = (Resolve-Path -LiteralPath $archive).Path
+
+Get-FileHash -LiteralPath $archive -Algorithm MD5
+```
+
+`Resolve-Path` が成功してからhashを計算することで、「algorithm指定の誤り」と「そもそもファイルがない」を分けて診断できる。
+
+### projectの`data`へ配置して展開する
+
+hashが一致したarchiveだけをprojectの `data` へコピーする。元のdownloadを残すため、ここでは移動ではなくcopyを使う。
+
+```powershell
+# repository rootで実行する。
+$dataDir = Join-Path (Get-Location) 'data'
+$archiveInData = Join-Path $dataDir 'cifar-10-python.tar.gz'
+
+New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+if (Test-Path -LiteralPath $archiveInData) {
+    throw "Destination already exists: $archiveInData"
+}
+Copy-Item -LiteralPath $archive -Destination $archiveInData
+
+# Windows標準のtar.exeでgzip圧縮tarを展開する。
+tar.exe -xzf $archiveInData -C $dataDir
+```
+
+展開後は、必要なfileを直接確認する。
+
+```powershell
+$batchDir = Join-Path $dataDir 'cifar-10-batches-py'
+$requiredFiles = @(
+    'data_batch_1',
+    'data_batch_2',
+    'data_batch_3',
+    'data_batch_4',
+    'data_batch_5',
+    'test_batch'
+)
+
+foreach ($name in $requiredFiles) {
+    $path = Join-Path $batchDir $name
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "Missing CIFAR-10 file: $path"
+    }
+}
+
+Write-Output "CIFAR-10 layout verified: $batchDir"
+```
+
+最終的に必要なのは、`data/cifar-10-batches-py/` という1段の配置である。次のようにarchive名のdirectoryが余分に入った2段構成にはしない。
+
+```text
+# 正しい
+data/
+└─ cifar-10-batches-py/
+
+# 誤り
+data/
+└─ cifar-10-python/
+   └─ cifar-10-batches-py/
+```
+
+MD5が一致したら展開し、`data_dir/cifar-10-batches-py/` になるよう配置して、以後 `download=False` で読む。hash不一致は不完全なダウンロードや別内容の可能性を示すため、そのarchiveは展開せず再取得する。
+
+mirrorの速度とavailabilityは環境や時期に依存する。mirrorを利用する場合も、URLを実験コードへ固定するのではなく、取得後に公式MD5と照合する。学習時に利用できた候補例は次だが、利用時点で配布元とavailabilityを確認する。
+
+```text
+https://data.brainchip.com/dataset-mirror/cifar10/cifar-10-python.tar.gz
+```
+
+公式配布ページは次である。Python版のlinkとMD5をここで確認できる。
+
+```text
+https://www.cs.toronto.edu/~kriz/cifar.html
+```
+
+Linux / WSLでは、同じ確認を次のように行える。
+
+```bash
+# 中断済みの取得があれば継続し、取得後に公式MD5と照合する。
+wget -c \
+  https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+echo "c58f30108f718f92721af3b95e74349a  cifar-10-python.tar.gz" \
+  | md5sum --check
+
+# 照合に成功したarchiveだけをdata直下へ展開する。
+mkdir -p data
+tar -xzf cifar-10-python.tar.gz -C data
+```
 
 > [!note]
 > この節はSVD理論ではなく、実際のCIFAR-10データ準備で詰まった際の再現用トラブルシュート。実験結果そのものには含めない。

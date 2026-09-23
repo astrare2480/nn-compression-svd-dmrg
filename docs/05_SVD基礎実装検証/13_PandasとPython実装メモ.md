@@ -1232,6 +1232,45 @@ assert isinstance(by_rank.at[(16, 32), "before_ft_state"], dict)
 
 `.at` の座標は「行label、列名」の二つである。object列をnumeric計算へ混ぜず、永続保存ではweightを別ファイルへ保存してCSVにはpathを置く。
 
+## 33. Python・NumPy・Pandas・PyTorchを処理の役割で使い分ける
+
+どれが常に速いかではなく、処理の種類、配列の大きさ、device転送、自動微分の要否で選ぶ。
+
+- Python：`if`、`for`、関数、`list`、`dict`による制御。
+- Pandas：rank候補、parameter数、validation指標の表形式での整理・抽出・CSV保存。
+- NumPy：CPU上の配列演算、正規化、Pareto／kneeの幾何計算。
+- PyTorch：NNのforward、loss、backward、optimizer、SVD、GPU Tensor演算。
+- Matplotlib：Pandas／NumPyで整理した結果の可視化。
+
+候補数が数十から数千程度のPareto／knee計算では、PandasとNumPyが自然である。小さい配列をGPUへ移すと、転送とkernel起動のoverheadが演算時間を上回ることがある。反対に、大きな行列積やNN学習ではPyTorchとGPUの並列処理を利用しやすい。Python loopで要素を一つずつ更新せず、可能ならNumPyまたはPyTorchの一括演算を使う。
+
+PyTorch TensorをNumPyへ渡すときは、計算graphから切り離し、CPUへ移してから変換する。逆にNumPy配列をPyTorch Tensorへ変換するときは、必要なdtypeとdeviceを明示する。
+
+```python
+import torch
+
+layer = torch.nn.Linear(4, 3)
+
+# 学習用Parameterを変更しない、集計・表示用のNumPy配列を作る。
+weight_np = layer.weight.detach().cpu().numpy().copy()
+
+# NumPy配列をTensorへ戻し、元の層と同じdtype・deviceへ置く。
+weight_tensor = torch.from_numpy(weight_np).to(
+    device=layer.weight.device,
+    dtype=layer.weight.dtype,
+)
+
+torch.testing.assert_close(weight_tensor, layer.weight.detach())
+```
+
+速度比較ではwarm-up、反復回数、入力shape、dtype、deviceを固定する。CUDA演算は非同期なので、計測区間の前後で同期が必要である。具体的な計測コードは [[05_SVD基礎実装検証/11_ベンチマークのPyTorchコード]] を参照する。
+
+## 34. Cursorでインデント解除と置換を行う
+
+複数行のインデントを一段戻すときは、対象行を選択して `Shift + Tab` を使う。右へ一段進める操作は `Tab` である。これはコードの文字列を変更する編集操作であり、Pythonの実行時処理ではない。
+
+現在のファイル内を置換するショートカットは、Windows／Linuxでは `Ctrl + H`、macOSでは `Cmd + Option + F` である。プロジェクト全体を検索・置換する場合は、Windows／Linuxでは `Ctrl + Shift + H`、macOSでは `Cmd + Shift + H` を使う。全置換の前に検索結果と対象ファイルを確認し、変数名の一部やMarkdownリンクまで意図せず変更しないようにする。
+
 ---
 
 ## 関連ノート

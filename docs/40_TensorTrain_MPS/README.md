@@ -39,6 +39,7 @@ HOOI
 | 07 | QRによるorthogonality centerの移動 | [[40_TensorTrain_MPS/01_直交中心移動のPyTorch確認]] |
 | 08 | SVD center move、Schmidt形 | [[40_TensorTrain_MPS/05_SVD中心移動とSchmidt形のPyTorch確認]] |
 | 09 | truncated SVD、単一bond rank truncation | [[40_TensorTrain_MPS/06_単一ボンドSVD打ち切りのPyTorch確認]] |
+| 11 | TT-SVDの基本誤差上界、準最適性 | [[40_TensorTrain_MPS/07_TT-SVDの準最適性と誤差上界のPyTorch確認]] |
 
 この対応は「Notebook 1本につきdocs 1本」ではなく、内容が連続するNotebookは1つの検証ノートへまとめる方針とする。
 
@@ -50,6 +51,7 @@ HOOI
 - [[40_TensorTrain_MPS/04_基底変換_Gauge自由度_左右直交化のPyTorch確認]]
 - [[40_TensorTrain_MPS/05_SVD中心移動とSchmidt形のPyTorch確認]]
 - [[40_TensorTrain_MPS/06_単一ボンドSVD打ち切りのPyTorch確認]]
+- [[40_TensorTrain_MPS/07_TT-SVDの準最適性と誤差上界のPyTorch確認]]
 
 ## 学習予定
 
