@@ -42,7 +42,9 @@ $$
 
 を示す。これら二つの不等式を接続することで、TT-SVDの準最適性が得られる。その際、間違えやすい論点も明示する。
 
-PyTorchによる数値検証は [[40_TensorTrain_MPS/07_TT-SVDの準最適性と誤差上界のPyTorch確認]]と [Notebook 11](../../../../notebooks/30_tt_mps/00_fundamentals/11_tt_svd_quasi_optimality_and_error_bound.ipynb) に分ける。
+PyTorchによる数値検証は [[08_TT_MPS基礎実装検証/07_TT-SVDの準最適性と誤差上界のPyTorch確認]]と [Notebook 11](../../../../notebooks/30_tt_mps/00_fundamentals/11_tt_svd_quasi_optimality_and_error_bound.ipynb) に分ける。
+
+すでにTT形式で与えられたテンソルのrankを誤差制御付きで下げるTT-roundingは、[[48_TT-roundingの定義と正準化sweep]]、[[49_TT-roundingの環境行列と誤差直交分解]]、[[50_TT-roundingの誤差予算とrank選択]] へ続く。
 
 ---
 
@@ -1742,7 +1744,7 @@ $$
 
 ## 12. 数値検証との対応
 
-PyTorchの操作、コード、shape、実行値は [[40_TensorTrain_MPS/07_TT-SVDの準最適性と誤差上界のPyTorch確認]] に分離する。手を動かす演習は [Notebook 11](../../../../notebooks/30_tt_mps/00_fundamentals/11_tt_svd_quasi_optimality_and_error_bound.ipynb) を参照する。
+PyTorchの操作、コード、shape、実行値は [[08_TT_MPS基礎実装検証/07_TT-SVDの準最適性と誤差上界のPyTorch確認]] に分離する。手を動かす演習は [Notebook 11](../../../../notebooks/30_tt_mps/00_fundamentals/11_tt_svd_quasi_optimality_and_error_bound.ipynb) を参照する。
 
 数値検証では、次を確認した。
 

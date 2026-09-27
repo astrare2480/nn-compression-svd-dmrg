@@ -1553,13 +1553,7 @@ $$
 
 したがって実装では「数値的に0と見なす閾値」が必要になる。
 
-このプロジェクトの `tt_svd_exact` は
-
-```python
-torch.linalg.matrix_rank(mat)
-```
-
-のdefault toleranceに基づくnumerical rankを使う。
+このプロジェクトの `tt_svd_exact` は、PyTorchの行列rank判定が使うdefault toleranceに基づくnumerical rankを使う。具体的なAPIと返り値の扱いは [[08_TT_MPS基礎実装検証/27_TT_MPS基礎のPyTorch実装]] に分ける。
 
 そのため、ここでのexactは
 
@@ -1575,13 +1569,19 @@ $$
 
 ## 21. Notebook 02で見たtrade-off
 
-基礎Notebookでは
+基礎Notebookではrank上限
 
-```python
-max_ranks = [1, 2, 4, 8]
-```
+$$
+1,
+\quad
+2,
+\quad
+4,
+\quad
+8
+$$
 
-をsweepし、rank上限を増やしたとき
+を順に変え、rank上限を増やしたとき
 
 - bond rankが増える
 - TT parameter数が増える
@@ -1597,6 +1597,8 @@ $$
 $$
 
 なら「TTにしたが圧縮にはなっていない」ことも重要な観察である。
+
+このsweepをPyTorchで記述し、rank・パラメータ数・再構成誤差を集計する方法は [[08_TT_MPS基礎実装検証/27_TT_MPS基礎のPyTorch実装]] を参照する。
 
 ---
 

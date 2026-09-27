@@ -71,25 +71,15 @@ $$
 
 である。
 
-PyTorchでは
+積のshapeは
 
-```python
-UtU = U.T @ U
-```
+$$
+(r\times m)(m\times r)
+=
+r\times r
+$$
 
-に対応する。
-
-shapeは
-
-```text
-U   : (m, r)
-U.T : (r, m)
-
-U.T @ U
-→ (r, r)
-```
-
-である。
+である。PyTorchで転置・行列積・単位行列との誤差を確認するコードは [[08_TT_MPS基礎実装検証/04_基底変換_Gauge自由度_左右直交化のPyTorch確認]] に分ける。
 
 ---
 

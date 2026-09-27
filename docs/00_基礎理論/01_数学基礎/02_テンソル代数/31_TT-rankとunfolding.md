@@ -758,19 +758,9 @@ $$
 }
 $$
 
-となる。TT-SVDでも、
+となる。TT-SVDでも、行列shapeの小さい方はSVDで取り得る成分数の上限であり、exact TT-rankではない。実際に必要なrankは、特異値の数値的な非零判定から評価する。
 
-```python
-min(X1.shape)
-```
-
-はSVDで取り得る成分数の上限であり、exact TT-rankではない。実際に必要なrankは
-
-```python
-torch.linalg.matrix_rank(X1).item()
-```
-
-で評価する。
+PyTorchにおけるshape上限と `torch.linalg.matrix_rank` の使い分けは [[08_TT_MPS基礎実装検証/27_TT_MPS基礎のPyTorch実装]] に分ける。
 
 ---
 

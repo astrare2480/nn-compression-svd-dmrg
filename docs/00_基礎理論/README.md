@@ -42,6 +42,13 @@ SVDによる低ランク近似からTucker/HOSVD/HOOI、さらにTT/MPS・DMRG�
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/43_TT_MPSのSVD中心移動とSchmidt形]]：exact SVDの中心移動、cut unfolding、Schmidt状態、ノルムと全要素例。
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/45_TT_MPSの単一ボンドSVD打ち切り]]：$\rho\to k$ のコアshape、添字、射影、単一cut誤差と8要素例。
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/46_Eckart_Young_Mirsky定理とTT_MPS単一ボンド打ち切りの最適性]]：単一ボンドのrank-$k$ 打ち切りが最良近似になる理由と、TT全体の逐次近似との区別。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/47_TT-SVDの準最適性と誤差上界]]：TT-SVDの局所誤差の直交分解、基本誤差上界、最良TT近似に対する準最適性。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/48_TT-roundingの定義と正準化sweep]]：既存TTを対象とする右→左QRと左→右SVD、各matricization・shape・計算量。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/49_TT-roundingの環境行列と誤差直交分解]]：局所残差の全体埋め込み、gauge依存性、正準環境の等長性、実局所誤差の二乗和。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/50_TT-roundingの誤差予算とrank選択]]：相対・絶対誤差予算、特異値尾部による最小rank、境界条件、rank cap、数値比較。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/51_TT_MPSの内積とenvironment縮約]]：TT成分表示からleft environment更新式を導き、dense復元なしの内積、複素MPSの共役、計算量へ接続する。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/52_TT_MPSのFrobeniusノルムと距離]]：自己内積からノルムを、3つの内積からTT間距離を導き、丸め誤差の扱いを整理する。
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/53_TT_MPSの加減算とrank増加]]：コアの直和・block diagonal構成、交差項、加減算後のrank上界とroundingの必要性を導く。
 
 ## 02_ニューラルネットワーク基礎
 
@@ -69,10 +76,12 @@ SVDによる低ランク近似からTucker/HOSVD/HOOI、さらにTT/MPS・DMRG�
 
 TT / MPSの実装教材はSVD・Tuckerの検証章とは別系統として、現時点では次のノートからたどる。
 
-- [[00_基礎理論/05_PyTorch実装/27_TT_MPS基礎のPyTorch実装]]
-- [[00_基礎理論/05_PyTorch実装/28_TT_MPS実装で使うPyTorch_Python操作メモ]]
-- [[00_基礎理論/05_PyTorch実装/29_TT_cutとPyTorchのreshape_Kronecker順序]]
-- [[00_基礎理論/05_PyTorch実装/45_TT-matrix線形層のPyTorch直接forward]]
+- [[08_TT_MPS基礎実装検証/27_TT_MPS基礎のPyTorch実装]]
+- [[08_TT_MPS基礎実装検証/28_TT_MPS実装で使うPyTorch_Python操作メモ]]
+- [[08_TT_MPS基礎実装検証/29_TT_cutとPyTorchのreshape_Kronecker順序]]
+- [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]]
+- [[08_TT_MPS基礎実装検証/08_TT-roundingのPyTorch実装設計と検証]]
+- [[08_TT_MPS基礎実装検証/09_TT内積_Frobeniusノルム_距離のPyTorch確認]]
 
 ## 06_手法間のつながり
 
@@ -133,6 +142,15 @@ TT / MPSの実装教材はSVD・Tuckerの検証章とは別系統として、現
 → 43_SVD中心移動とSchmidt形
 → 45_単一ボンドSVD打ち切り
 → 46_Eckart–Young–Mirsky定理と単一ボンド打ち切りの最適性
+→ 47_TT-SVDの準最適性と誤差上界
+→ 48_TT-roundingの定義と正準化sweep
+→ 49_TT-roundingの環境行列と誤差直交分解
+→ 50_TT-roundingの誤差予算とrank選択
+→ 08_TT-roundingのPyTorch実装設計と検証
+→ 51_TT/MPSの内積とenvironment縮約
+→ 52_TT/MPSのFrobeniusノルムと距離
+→ 53_TT/MPSの加減算とrank増加
+→ 09_TT内積・Frobeniusノルム・距離のPyTorch確認
 → 07_物理基礎（42_直交中心、44_Schmidt打ち切り）
 → 28_PyTorch/Python操作メモ
 → 27_TT/MPS基礎のPyTorch実装
