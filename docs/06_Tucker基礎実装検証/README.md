@@ -38,7 +38,7 @@ tags:
 - [[06_Tucker基礎実装検証/25_評価設計のPyTorchコード]]
 - [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
 
-数式の導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]、評価設計は [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]、現行の共通関数の契約は [[07_src設計/05_Core_API_v1]] を参照する。
+数式の導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]、評価設計は [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]、現行の共通関数の契約は [[90_src設計/05_Core_API_v1]] を参照する。
 
 ## 実装・実験の確認結果
 
@@ -234,4 +234,4 @@ benchmark warmup / repeats validation
 
 - [[30_CIFAR10_CNN/README]]
 - [[README_実装編]]
-- [[40_TensorTrain_MPS/README]]
+- [[08_TT_MPS基礎実装検証/README]]

@@ -16,9 +16,13 @@ import torch
 
 from nn_compression.compression import (
     tt_num_parameters,
+    tt_physical_shape,
+    tt_ranks,
     tt_reconstruct,
     tt_svd,
+    tt_svd_error_bound,
     tt_svd_exact,
+    tt_svd_ranks,
     tt_unfold,
 )
 from nn_compression.compression.tt_validation import (
@@ -414,6 +418,54 @@ def test_tt_svd_rejects_non_integer_max_rank(max_rank):
         tt_svd(X, max_rank)
 
 
+def test_tt_svd_ranks_uses_per_bond_caps():
+    X = _tensor(seed=2, shape=(4, 4, 4, 4))
+    ranks = [2, 4, 2]
+    cores = tt_svd_ranks(X, ranks)
+
+    bond_ranks = [core.shape[-1] for core in cores[:-1]]
+    assert bond_ranks == ranks
+    assert cores[-1].shape[-1] == 1
+
+    X_hat = tt_reconstruct(cores)
+    assert X_hat.shape == X.shape
+
+
+def test_tt_svd_ranks_matches_uniform_tt_svd():
+    X = _tensor(seed=2, shape=(4, 4, 4, 4))
+    uniform = tt_svd(X, max_rank=2)
+    per_bond = tt_svd_ranks(X, [2, 2, 2])
+
+    assert torch.allclose(tt_reconstruct(uniform), tt_reconstruct(per_bond))
+
+
+def test_tt_svd_ranks_caps_at_numerical_rank():
+    X = _tensor(seed=1, shape=(2, 3, 2))
+    exact_bonds = [core.shape[-1] for core in tt_svd_exact(X)[:-1]]
+    cores = tt_svd_ranks(X, [10**6, 10**6])
+    assert [core.shape[-1] for core in cores[:-1]] == exact_bonds
+
+
+def test_tt_svd_ranks_rejects_wrong_length():
+    X = _tensor(seed=1, shape=(4, 4, 4, 4))
+    with pytest.raises(ValueError):
+        tt_svd_ranks(X, [2, 4])
+
+
+@pytest.mark.parametrize("ranks", [[0, 2, 2], [2, -1, 2]])
+def test_tt_svd_ranks_rejects_non_positive_rank(ranks):
+    X = _tensor(seed=1, shape=(4, 4, 4, 4))
+    with pytest.raises(ValueError):
+        tt_svd_ranks(X, ranks)
+
+
+@pytest.mark.parametrize("ranks", [2, True, "2"])
+def test_tt_svd_ranks_rejects_non_sequence(ranks):
+    X = _tensor(seed=1, shape=(4, 4, 4, 4))
+    with pytest.raises(TypeError):
+        tt_svd_ranks(X, ranks)
+
+
 # ---------------------------------------------------------------------------
 # tt_num_parameters
 # ---------------------------------------------------------------------------
@@ -435,3 +487,165 @@ def test_tt_num_parameters_matches_bond_rank_formula():
         core.shape[0] * core.shape[1] * core.shape[2] for core in cores
     )
     assert tt_num_parameters(cores) == expected_from_shapes
+
+
+# ---------------------------------------------------------------------------
+# tt_physical_shape / tt_ranks
+# ---------------------------------------------------------------------------
+
+
+def test_tt_physical_shape_returns_middle_axis_of_each_core():
+    X = _tensor(seed=0, shape=SHAPE_3D)
+    cores = tt_svd_exact(X)
+
+    assert tt_physical_shape(cores) == SHAPE_3D
+
+
+def test_tt_physical_shape_matches_valid_cores_helper():
+    cores = _valid_cores()
+    assert tt_physical_shape(cores) == (2, 3, 4)
+
+
+def test_tt_physical_shape_rejects_empty_list():
+    with pytest.raises(ValueError):
+        tt_physical_shape([])
+
+
+def test_tt_physical_shape_rejects_invalid_core_list():
+    cores = _valid_cores()
+    cores[1] = torch.randn(3, 3, 4, dtype=cores[1].dtype)  # bond不整合
+    with pytest.raises(ValueError):
+        tt_physical_shape(cores)
+
+
+def test_tt_ranks_includes_boundary_ranks_of_one():
+    cores = _valid_cores()
+    assert tt_ranks(cores) == (1, 2, 4, 1)
+
+
+def test_tt_ranks_matches_bond_shapes_from_tt_svd_exact():
+    X = _tensor(seed=1)
+    cores = tt_svd_exact(X)
+
+    expected = (1,) + tuple(core.shape[-1] for core in cores[:-1]) + (1,)
+    assert tt_ranks(cores) == expected
+    assert len(tt_ranks(cores)) == len(cores) + 1
+
+
+def test_tt_ranks_rejects_empty_list():
+    with pytest.raises(ValueError):
+        tt_ranks([])
+
+
+def test_tt_ranks_rejects_invalid_core_list():
+    cores = _valid_cores()
+    cores[0] = torch.randn(2, 2, 2, dtype=cores[0].dtype)  # 左境界rankが1でない
+    with pytest.raises(ValueError):
+        tt_ranks(cores)
+
+
+# ---------------------------------------------------------------------------
+# tt_svd_error_bound
+# ---------------------------------------------------------------------------
+
+
+def test_tt_svd_error_bound_matches_independent_sequential_tail_calculation():
+    X = _tensor(seed=9, shape=(3, 4, 2)).double()
+    ranks = [2, 1]
+
+    bound, local_errors = tt_svd_error_bound(X, ranks)
+
+    expected_local = []
+    remainder = X
+    r_left = 1
+    for mode, rank_cap in enumerate(ranks):
+        mat = remainder.reshape(r_left * X.shape[mode], -1)
+        numerical_rank = max(1, int(torch.linalg.matrix_rank(mat).item()))
+        rank = min(rank_cap, numerical_rank)
+        _, singular_values, Vh = torch.linalg.svd(mat, full_matrices=False)
+        expected_local.append(torch.linalg.vector_norm(singular_values[rank:]))
+        remainder = (singular_values[:rank].unsqueeze(1) * Vh[:rank]).reshape(
+            rank,
+            *X.shape[mode + 1 :],
+        )
+        r_left = rank
+    expected_bound = torch.linalg.vector_norm(torch.stack(expected_local))
+
+    assert len(local_errors) == len(ranks)
+    for actual, expected in zip(local_errors, expected_local):
+        assert torch.allclose(actual, expected, atol=1e-12, rtol=1e-12)
+    assert torch.allclose(bound, expected_bound, atol=1e-12, rtol=1e-12)
+
+
+@pytest.mark.parametrize(
+    "seed,ranks",
+    [
+        (10, [2, 2, 1]),
+        (11, [1, 1, 1]),
+        (12, [3, 2, 2]),
+        (13, [2, 3, 1]),
+        (14, [1, 3, 2]),
+    ],
+)
+def test_tt_svd_error_bound_bounds_measured_tt_svd_error(seed, ranks):
+    X = _tensor(seed=seed, shape=(3, 4, 3, 2)).double()
+
+    bound, _ = tt_svd_error_bound(X, ranks)
+    approximation = tt_reconstruct(tt_svd_ranks(X, ranks))
+    measured_error = torch.linalg.vector_norm(X - approximation)
+
+    assert measured_error <= bound + 1e-10
+
+
+def test_tt_svd_error_bound_includes_numerical_rank_truncation():
+    """指定rankより数値rankが小さい場合も、破棄成分を上限へ含める。"""
+    X = torch.zeros(100, 100, dtype=torch.float64)
+    X[0, 0] = 1e8
+    X[1, 1] = 1e-6
+
+    bound, local_errors = tt_svd_error_bound(X, [100])
+    approximation = tt_reconstruct(tt_svd_ranks(X, [100]))
+    measured_error = torch.linalg.vector_norm(X - approximation)
+
+    assert torch.linalg.matrix_rank(X).item() == 1
+    assert local_errors[0].item() > 0.0
+    assert torch.equal(bound, local_errors[0])  # 1 cutなので全体上限と局所tailは同じ
+    assert measured_error.item() == pytest.approx(1e-6, rel=1e-12)
+    assert measured_error <= bound
+
+
+def test_tt_svd_error_bound_full_cut_ranks_are_zero_and_preserve_input():
+    X = _tensor(seed=11, shape=(2, 3, 2)).double()
+    saved = X.clone()
+
+    bound, local_errors = tt_svd_error_bound(X, [100, 100])
+
+    assert bound.item() == 0.0
+    assert [error.item() for error in local_errors] == [0.0, 0.0]
+    assert bound.dtype == X.dtype
+    assert bound.device == X.device
+    assert torch.equal(X, saved)
+
+
+def test_tt_svd_error_bound_preserves_autograd_graph():
+    X = _tensor(seed=18, shape=(2, 3, 2)).double().requires_grad_()
+
+    bound, local_errors = tt_svd_error_bound(X, [1, 1])
+    (bound + torch.stack(local_errors).sum()).backward()
+
+    assert X.grad is not None
+    assert torch.isfinite(X.grad).all()
+
+
+@pytest.mark.parametrize("ranks", [[1], [1, 1, 1]])
+def test_tt_svd_error_bound_rejects_wrong_rank_count(ranks):
+    X = _tensor(seed=12, shape=(2, 3, 2)).double()
+    with pytest.raises(ValueError):
+        tt_svd_error_bound(X, ranks)
+
+
+@pytest.mark.parametrize("ranks", [[0, 1], [1, True], 2, "1"])
+def test_tt_svd_error_bound_rejects_invalid_ranks(ranks):
+    X = _tensor(seed=12, shape=(2, 3, 2)).double()
+    with pytest.raises((TypeError, ValueError)):
+        tt_svd_error_bound(X, ranks)

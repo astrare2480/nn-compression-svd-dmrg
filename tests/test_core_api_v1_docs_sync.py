@@ -12,7 +12,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DOCS_ROOT = PROJECT_ROOT / "docs"
-CORE_API_ROOT = DOCS_ROOT / "07_src設計" / "05_Core_API_v1"
+CORE_API_ROOT = DOCS_ROOT / "90_src設計" / "05_Core_API_v1"
 SRC_ROOT = PROJECT_ROOT / "src"
 
 PUBLIC_PACKAGES = (

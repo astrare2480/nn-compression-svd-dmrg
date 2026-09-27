@@ -20,7 +20,7 @@ DMRG
 その後
 ```
 
-TT / MPSの準備と学習順は [[40_TensorTrain_MPS/README]] を参照。
+TT / MPSの準備と学習順は [[08_TT_MPS基礎実装検証/README]] を参照。
 
 ## 既存ノート
 
@@ -86,5 +86,5 @@ DMRGを実装するときも、これまでと同様に、
 
 - [[00_基礎理論/06_手法間のつながり/14_低ランク学習からテンソルネットワークへの発展]]
 - [[06_Tucker基礎実装検証/README]]
-- [[40_TensorTrain_MPS/README]]
+- [[08_TT_MPS基礎実装検証/README]]
 - [[README_実装編]]

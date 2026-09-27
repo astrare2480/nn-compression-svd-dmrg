@@ -236,10 +236,10 @@ src contract reviewのbaseline `49836bc` ではローカル全pytest `252 passed
 
 詳細：
 
-- [src設計書](docs/07_src設計/README.md)
-- [アーキテクチャ設計](docs/07_src設計/01_アーキテクチャ設計.md)
-- [Core API v1 / 関数仕様](docs/07_src設計/05_Core_API_v1.md)
-- [テスト設計](docs/07_src設計/06_テスト設計.md)
+- [src設計書](docs/90_src設計/README.md)
+- [アーキテクチャ設計](docs/90_src設計/01_アーキテクチャ設計.md)
+- [Core API v1 / 関数仕様](docs/90_src設計/05_Core_API_v1.md)
+- [テスト設計](docs/90_src設計/06_テスト設計.md)
 - [実装編](docs/README_実装編.md)
 - [Tucker基礎実装検証](docs/06_Tucker基礎実装検証/README.md)
 

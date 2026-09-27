@@ -136,3 +136,48 @@ def validate_tt_cores(cores: list[torch.Tensor], *, name: str = "cores") -> None
                 f"{name}[{index}].device={core.device} は "
                 f"{name}[0].device={device0} と一致しません。"
             )
+
+
+def validate_tt_pair(
+    cores_a: list[torch.Tensor],
+    cores_b: list[torch.Tensor],
+    *,
+    name_a: str = "cores_a",
+    name_b: str = "cores_b",
+) -> None:
+    """2つの TT core列が、内積・距離などの2項演算に使える contract を満たすか検証する。
+
+    ``tt_inner`` / ``tt_distance`` などが前提とする条件:
+
+    - order（core の個数、TT の階数 ``d``）が一致する
+    - 各 site の物理次元 ``n_k`` が一致する
+    - dtype が一致する
+    - device が一致する
+
+    TT-rank（各 core の bond dimension）は A/B で異なっていてよい。
+    ``validate_tt_cores`` による各TT単独の structure 検証は、この関数の
+    前提として呼び出し側が別途行う。
+    """
+    if len(cores_a) != len(cores_b):
+        raise ValueError(
+            f"{name_a} と {name_b} の order が一致しません: "
+            f"{len(cores_a)} != {len(cores_b)}"
+        )
+
+    for index, (core_a, core_b) in enumerate(zip(cores_a, cores_b)):
+        if core_a.shape[1] != core_b.shape[1]:
+            raise ValueError(
+                f"{name_a}[{index}] と {name_b}[{index}] の物理次元が"
+                f"一致しません: {core_a.shape[1]} != {core_b.shape[1]}"
+            )
+
+    if cores_a[0].dtype != cores_b[0].dtype:
+        raise TypeError(
+            f"{name_a}.dtype={cores_a[0].dtype} は "
+            f"{name_b}.dtype={cores_b[0].dtype} と一致しません。"
+        )
+    if cores_a[0].device != cores_b[0].device:
+        raise ValueError(
+            f"{name_a}.device={cores_a[0].device} は "
+            f"{name_b}.device={cores_b[0].device} と一致しません。"
+        )

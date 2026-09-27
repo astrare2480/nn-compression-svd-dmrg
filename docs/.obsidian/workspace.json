@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "00_基礎理論/01_数学基礎/02_テンソル代数/47_TT-SVDの準最適性と誤差上界.md",
+                "file": "90_src設計/05_Core_API_v1.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "47_TT-SVDの準最適性と誤差上界"
+              "title": "05_Core_API_v1"
             }
           }
         ]
@@ -185,12 +185,19 @@
       "bases:新規ベースを作成": false
     }
   },
-  "active": "b6907776fdc3a747",
+  "active": "1beb77a867b91160",
   "lastOpenFiles": [
+    "90_src設計/05_Core_API_v1/compression/tt_bond_singular_values.md",
+    "90_src設計/05_Core_API_v1/compression/tt_canonicality_errors.md",
+    "90_src設計/05_Core_API_v1/compression/tt_svd_error_bound.md",
+    "90_src設計/06_テスト設計.md",
+    "90_src設計/07_既知の制約と拡張方針.md",
+    "90_src設計/08_Core_API_v1セルフレビュー.md",
+    "90_src設計/09_関数別API仕様セルフレビュー.md",
+    "00_基礎理論/01_数学基礎/02_テンソル代数/47_TT-SVDの準最適性と誤差上界.md",
     "07_src設計/05_Core_API_v1/compression/tt_svd.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/47_TT_SVD_Zhun-Zui-Shi-Xing-toWu-Cha-Shang-Jie_ChatXue-Xi-Ji-Lu.md",
     "40_TensorTrain_MPS/07_TT-SVDの準最適性と誤差上界のPyTorch確認.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/47_TT-SVDの準最適性と誤差上界.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/tt-rounding直交化.md",
     "07_src設計/05_Core_API_v1/compression/tt_reconstruct.md",
     "07_src設計/05_Core_API_v1/compression/tt_svd_exact.md",
@@ -206,13 +213,6 @@
     "07_src設計/05_Core_API_v1/compression/parameter_ratio.md",
     "07_src設計/05_Core_API_v1/compression/make_two_layer_svd_model.md",
     "07_src設計/05_Core_API_v1/compression/hooi.md",
-    "07_src設計/05_Core_API_v1/compression/has_converged.md",
-    "07_src設計/05_Core_API_v1/compression/factorize_named_linear.md",
-    "07_src設計/05_Core_API_v1/compression/factorize_named_layers.md",
-    "07_src設計/05_Core_API_v1/compression/factorize_named_conv2d.md",
-    "40_TensorTrain_MPS/03_TT_SVDとrank_truncationのPyTorch確認.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/43a_TT_MPSのSVD中心移動_実装とshapeの補助導出.md",
-    "00_基礎理論/05_PyTorch実装/45_TT-matrix線形層のPyTorch直接forward.md",
     "30_CIFAR10_CNN/assets/03_finetuning/finetuning_learning_curves.png",
     "30_CIFAR10_CNN/assets/03_finetuning",
     "00_基礎理論/07_物理基礎",

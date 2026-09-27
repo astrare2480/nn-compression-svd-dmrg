@@ -41,7 +41,7 @@ rank候補
 
 を担当し、再利用可能な処理と守るべきcontractを `src` に置く。
 
-src全体のアーキテクチャ、各moduleの責務、処理フロー、Public APIの責務・引数・戻り値・使用場面は [[07_src設計/README]] を正本とする。
+src全体のアーキテクチャ、各moduleの責務、処理フロー、Public APIの責務・引数・戻り値・使用場面は [[90_src設計/README]] を正本とする。
 
 ---
 
@@ -592,7 +592,7 @@ src/nn_compression/
 - [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
 - [[05_SVD基礎実装検証/README]]
 - [[06_Tucker基礎実装検証/README]]
-- [[07_src設計/README]]
+- [[90_src設計/README]]
 
 理論式、Notebookの学習実装、srcの最終API、tests、設計書を対応させて読む。
 
@@ -637,6 +637,6 @@ empty / Iterable loaderを意識する
 - [[00_基礎理論/README]]
 - [[05_SVD基礎実装検証/README]]
 - [[06_Tucker基礎実装検証/README]]
-- [[07_src設計/README]]
+- [[90_src設計/README]]
 - [[30_CIFAR10_CNN/README]]
-- [[40_TensorTrain_MPS/README]]
+- [[08_TT_MPS基礎実装検証/README]]

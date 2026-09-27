@@ -83,7 +83,7 @@ SVD/Tuckerの式だけでなく、
 
 も実験を通して整理している。
 
-SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、現行srcの設計は [[07_src設計/README]] を参照。
+SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、現行srcの設計は [[90_src設計/README]] を参照。
 
 ---
 
@@ -519,10 +519,10 @@ contract review baseline `49836bc` のローカル全pytestでは、
 
 設計・API仕様：
 
-- [[07_src設計/README]]
-- [[07_src設計/01_アーキテクチャ設計]]
-- [[07_src設計/05_Core_API_v1]]
-- [[07_src設計/06_テスト設計]]
+- [[90_src設計/README]]
+- [[90_src設計/01_アーキテクチャ設計]]
+- [[90_src設計/05_Core_API_v1]]
+- [[90_src設計/06_テスト設計]]
 
 Tucker/HOOIの実装詳細は [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]、実装寄り索引は [[README_実装編]] を参照。
 
@@ -630,7 +630,7 @@ taskにとって最適なlow-rank weight
 5. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
 6. [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
 7. [[06_Tucker基礎実装検証/README]]
-8. [[07_src設計/README]]
+8. [[90_src設計/README]]
 
 CIFAR-10のコードを理解しながらSVD編を読む場合は、途中に、
 

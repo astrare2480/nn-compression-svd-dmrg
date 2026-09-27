@@ -1,6 +1,6 @@
 # Linear層置換のPyTorch手順
 
-数式と考え方は [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]] を参照する。このノートはPyTorch・Pythonの操作、コード例、実装上の注意を扱う。教材のコード例と現行の共通関数は区別し、公開APIの仕様は [[07_src設計/05_Core_API_v1]] を参照する。
+数式と考え方は [[00_基礎理論/03_モデル圧縮理論/04_Linear層を2層へ置き換える]] を参照する。このノートはPyTorch・Pythonの操作、コード例、実装上の注意を扱う。教材のコード例と現行の共通関数は区別し、公開APIの仕様は [[90_src設計/05_Core_API_v1]] を参照する。
 
 ---
 
@@ -1756,4 +1756,3 @@ nn.Linear(
 compressed.first.weight
 compressed.second.weight
 ```
-
