@@ -25,6 +25,8 @@ tags:
 
 手を動かす学習用教材は [Notebook 13](../../notebooks/30_tt_mps/00_fundamentals/13_tt_inner_frobenius_norm_and_distance.ipynb) である。本ノートはNotebookの全文を複製せず、数式とコードの対応、代表的な数値結果、検証上の注意をまとめる。
 
+> **現行srcとの境界:** `tt_inner`と`tt_fro_norm`はPublic APIとして実装済みである。一方、本ノートの`tt_distance_sq` / `tt_distance`は学習用の参照実装であり、現行srcでは公開していない。近接・大規模・gauge違いのTTに対する数値安定性と有限gradientのcontractが未確立なためである。
+
 ---
 
 ## 1. 固定する実行条件
@@ -633,17 +635,17 @@ OK [different TT-ranks allowed]: 14.243284453983861
 
 ## 13. 何ができるようになったか
 
-この実装により、dense復元なしで次を評価できる。
+Notebookの学習実装では、dense復元なしで次を確認した。
 
 ```text
 TT inner product
 TT Frobenius norm
-TT-to-TT Frobenius distance
+TT-to-TT Frobenius distance（Notebook検証のみ）
 TT-rounding前後の絶対・相対誤差
 圧縮前後の重み差
 ```
 
-内積environmentはDMRGの環境縮約へ、距離は圧縮評価へ、PyTorchの0次元tensorを保つ設計はautogradへ接続する。
+内積environmentはDMRGの環境縮約へ、PyTorchの0次元tensorを保つ設計はautogradへ接続する。圧縮評価用の安定なTT距離は後続設計とし、現行Public APIへ含めない。
 
 次のNN接続では、TT-matrixの定義、行列tensorization、TT-Linear forwardを扱う。既存の実装ノートは [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] を参照する。
 

@@ -9,13 +9,15 @@ tags:
 
 # TT-matrix線形層のPyTorch直接forward
 
-[[17_TT_MPS学習ロードマップ]] では、線形層の重みをTT-matrixへ変換するためのmode分解、paired順、コアshape、格納量を扱った。本章では、そのコアから密な重み行列を作らずに
+[[00_基礎理論/06_手法間のつながり/17_TT_MPS学習ロードマップ]] では、線形層の重みをTT-matrixへ変換するためのmode分解、paired順、コアshape、格納量を扱った。本章では、そのコアから密な重み行列を作らずに
 
 $$
 y=Wx+b
 $$
 
-を計算するPyTorch上の添字対応だけを扱う。通常のTT tensorの分解・再構成は [[27_TT_MPS基礎のPyTorch実装]]、`reshape` と `permute` の順序は [[29_TT_cutとPyTorchのreshape_Kronecker順序]] を参照する。
+を計算するPyTorch上の添字対応だけを扱う。通常のTT tensorの分解・再構成は [[08_TT_MPS基礎実装検証/27_TT_MPS基礎のPyTorch実装]]、`reshape` と `permute` の順序は [[08_TT_MPS基礎実装検証/29_TT_cutとPyTorchのreshape_Kronecker順序]] を参照する。
+
+定義から途中式を追う場合は [[00_基礎理論/01_数学基礎/02_テンソル代数/54_TT-matrixの定義とKronecker積表現]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]] を参照する。Notebook 14で行った右から左への逐次縮約と保存済み数値結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]] に分けている。
 
 ## 1. TT tensorとTT-matrixを区別する
 
@@ -74,7 +76,7 @@ $$
 (b,r_1,m_1,n_2,\ldots,n_d)
 $$
 
-のように、確定した出力軸 $m_1$ と未処理の入力軸 $n_2,ldots,n_d$ を同時に持つ。次の反復で中間Tensorを無条件に
+のように、確定した出力軸 $m_1$ と未処理の入力軸 $n_2,\ldots,n_d$ を同時に持つ。次の反復で中間Tensorを無条件に
 
 ```text
 (batch, left_rank, current_input, ...)
@@ -204,8 +206,8 @@ $$
 ## 4. 2サイトの全要素例
 
 $$
-(n_1,n_2)=(2,2),qquad
-(m_1,m_2)=(2,2),qquad
+(n_1,n_2)=(2,2),\qquad
+(m_1,m_2)=(2,2),\qquad
 (r_0,r_1,r_2)=(1,2,1)
 $$
 
