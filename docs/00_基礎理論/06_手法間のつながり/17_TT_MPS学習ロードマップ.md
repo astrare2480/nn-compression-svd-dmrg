@@ -939,7 +939,14 @@ MPOコアを `nn.Parameter` / `nn.ParameterList` へ登録し、全コアを通�
 fine-tuningすること自体はDMRGではない。forwardはdense重みを復元する版と、
 コアを直接縮約する版を分け、後者では入力・出力添字と中間shapeを確認する。
 直接forwardの添字式、一般サイト数のPyTorch実装、密行列との小さい一致確認は
-[[45_TT-matrix線形層のPyTorch直接forward]] を参照する。
+[[00_基礎理論/01_数学基礎/02_テンソル代数/54_TT-matrixの定義とKronecker積表現]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/58_TTLinearとdense_Linearのforward等価性]] で途中式を確認し、
+PyTorchの確認結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、
+2-core `nn.Linear`の等価性は [[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]、
+一括`einsum`による層実装は [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] を参照する。
 MPOのbiasは通常の出力vectorとして残せるため、必ずMPO化する必要はない。
 
 比較は同じparameter予算でaccuracyを見るか、同じaccuracy条件で必要parameter数を見る。

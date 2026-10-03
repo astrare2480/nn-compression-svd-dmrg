@@ -234,9 +234,9 @@ TT-SVD
 
 Notebook 14はTT-matrixのdense reconstructionとdirect forwardを扱い、保存済み小規模例ではdense reconstruction、direct contraction、`F.linear`がfloat64の丸め誤差水準で一致している。ただしFresh Run Allは未確認である。
 
-Notebook 15はdense `nn.Linear`とのforward等価性を、自分でTODOを実装しながら学ぶ教材であり、現在は完了済み結果として扱わない。
+Notebook 15はdense `nn.Linear`とのforward等価性を、自分でTODOを実装しながら学ぶ教材である。現在のソースにはtruncationなし2-core TT-SVD、weight再構成、direct contraction、三者比較が実装され、保存済み出力では最大絶対誤差 $1.1102230246251565\times10^{-15}$ でforwardが一致している。ただし一部セルの`execution_count`が`null`であり、現在の全ソースを新しいカーネルでFresh Run Allした証明ではない。学習済みFashion-MNIST MLPの置換結果としても扱わない。
 
-詳細：[[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、[[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]]
+詳細：[[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、[[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]、[[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]]
 
 ## 関連
 

@@ -18,6 +18,7 @@ flowchart LR
     Canonical["compression.tt_canonical<br/>QR step"]
     Rounding["compression.tt_rounding<br/>tolerance / scale-safe tail"]
     Contraction["compression.tt_contraction<br/>zero-safe sqrt"]
+    TTMatrix["compression.tt_matrix_validation<br/>TT-matrix modes / cores / Linear input"]
     Tucker["compression.tucker_validation<br/>Tucker rank / tolerance validation"]
     Tensor["tensor.validation<br/>generic tensor validation"]
     Layer["conv_svd / linear_svd<br/>layer固有max rank"]
@@ -27,6 +28,7 @@ flowchart LR
     Public --> Canonical
     Public --> Rounding
     Public --> Contraction
+    Public --> TTMatrix
     Public --> Tucker
     Public --> Tensor
     Public --> Layer
@@ -88,6 +90,22 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 |---|---|
 | `_safe_sqrt` | 正値では通常の平方根、零点では有限な0勾配を返す。負値を`ValueError`とし、NaNを隠さず伝播する。 |
 
+### `compression.tt_matrix`
+
+| helper | 責務 |
+|---|---|
+| `_validate_tt_svd_max_rank` | 1-site TT-matrixでTT-SVDを迂回するときも、`max_rank`へ既存`tt_svd`と同じ型・下限contractを適用する。 |
+
+### `compression.tt_matrix_validation`
+
+| helper | 責務 |
+|---|---|
+| `validate_tt_matrix_modes` | 出力・入力mode列が同じ非零長で、各要素がboolではない正の整数か検証し、tupleへ正規化する。 |
+| `validate_tt_matrix_cores` | 4階TT-matrix core列の境界rank、隣接bond、物理次元、dtype、deviceを検証する。 |
+| `validate_dense_tt_matrix_weight` | dense weightが2階で、mode積とshapeが一致し、対応dtypeであることを検証する。 |
+| `validate_tt_linear_input` | `tt_linear_forward`の入力が2階で、入力feature数、dtype、deviceがcoreと一致することを検証する。 |
+| `validate_tt_linear_bias` | biasの`None`分岐、shape、dtype、deviceを検証する。 |
+
 ### `compression.tucker_validation`
 
 | helper | 責務 |
@@ -125,6 +143,8 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 - canonicalizationの方向別QR stepは`compression.tt_canonical`が担当する。
 - rounding固有の許容誤差、scale-safe norm、tail rank選択は`compression.tt_rounding`が担当する。
 - contractionの平方根境界処理は`compression.tt_contraction`が担当する。
+- TT-matrix固有のmode列、4階core、dense weight、forward入力・biasは`compression.tt_matrix_validation`が担当する。
+- 1-site TT-matrixでTT-SVDを迂回するときの`max_rank`整合は`compression.tt_matrix`のprivate helperが担当する。
 - Conv2d / Linear固有の最大rankは各factorization componentが担当する。
 
 ## 現在の重複と変更時の注意
@@ -141,4 +161,4 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 
 ## 関連API
 
-[[90_src設計/05_Core_API_v1/README]]、[[90_src設計/05_Core_API_v1/compression/truncated_svd]]、[[90_src設計/05_Core_API_v1/compression/hosvd]]、[[90_src設計/05_Core_API_v1/compression/tt_svd]]、[[90_src設計/05_Core_API_v1/compression/tt_canonicalize]]、[[90_src設計/05_Core_API_v1/compression/tt_round]]、[[90_src設計/05_Core_API_v1/compression/tt_inner]]、[[90_src設計/05_Core_API_v1/tensor/unfold]]
+[[90_src設計/05_Core_API_v1/README]]、[[90_src設計/05_Core_API_v1/compression/truncated_svd]]、[[90_src設計/05_Core_API_v1/compression/hosvd]]、[[90_src設計/05_Core_API_v1/compression/tt_svd]]、[[90_src設計/05_Core_API_v1/compression/tt_canonicalize]]、[[90_src設計/05_Core_API_v1/compression/tt_round]]、[[90_src設計/05_Core_API_v1/compression/tt_inner]]、[[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]、[[90_src設計/05_Core_API_v1/tensor/unfold]]

@@ -122,6 +122,10 @@ Signature
 | `tt_truncate_bond` | シーケンス図 | canonicalization、SVD、右隣core更新の責務分担 |
 | `tt_round` | フローチャート | 零TT等の分岐とleft-to-right truncated SVD sweep |
 | `tt_inner` | Component配置図 | core対とleft environmentの逐次縮約 |
+| `dense_to_tt_matrix_tensor` | 構造図 | grouped / interleaved / combinedのaxis順 |
+| `dense_to_tt_matrix_cores` | フローチャート | 1-site分岐とTT-SVDへの委譲 |
+| `tt_matrix_to_dense` | 構造図 | bond縮約とdense weightのaxis順 |
+| `tt_linear_forward` | フローチャート | site逐次縮約とbias分岐 |
 | `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
 | `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
 | `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
@@ -207,7 +211,7 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/compression/sweep_conv2d_ranks]]
 - [[90_src設計/05_Core_API_v1/compression/sweep_conv_svd_ranks]]
 
-## compression — TT / MPS
+## compression — TT / MPS / TT-matrix
 
 - [[90_src設計/05_Core_API_v1/compression/tt_unfold]]
 - [[90_src設計/05_Core_API_v1/compression/tt_svd_exact]]
@@ -226,6 +230,13 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/compression/tt_round]]
 - [[90_src設計/05_Core_API_v1/compression/tt_inner]]
 - [[90_src設計/05_Core_API_v1/compression/tt_fro_norm]]
+- [[90_src設計/05_Core_API_v1/compression/tt_matrix_ranks]]
+- [[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters]]
+- [[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_tensor]]
+- [[90_src設計/05_Core_API_v1/compression/tt_cores_to_tt_matrix_cores]]
+- [[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_cores]]
+- [[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]
+- [[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]
 
 ## training
 

@@ -472,3 +472,5 @@ A[a1,a2,a3]   = 0.8613672523333044
 - 実測メモリ、速度、task accuracy
 
 したがって、この段階はTT-matrixの添字・shape・forwardのsanity checkであり、NN圧縮実験の完了ではない。
+
+学習済みdense重みをtruncationなし2-core TT-SVDへ渡し、元の`nn.Linear`とforwardを比較する次の具体例は、[[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]へ進む。

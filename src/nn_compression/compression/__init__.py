@@ -42,6 +42,15 @@ from .tt import (
 )
 from .tt_canonical import tt_canonicality_errors, tt_canonicalize, tt_move_center
 from .tt_contraction import tt_fro_norm, tt_inner
+from .tt_matrix import (
+    dense_to_tt_matrix_cores,
+    dense_to_tt_matrix_tensor,
+    tt_cores_to_tt_matrix_cores,
+    tt_linear_forward,
+    tt_matrix_num_parameters,
+    tt_matrix_ranks,
+    tt_matrix_to_dense,
+)
 from .tt_rounding import tt_bond_singular_values, tt_round, tt_truncate_bond
 from .tucker import (
     compression_factor,
@@ -101,6 +110,13 @@ __all__ = [
     "tt_fro_norm",
     # tt_distance_sq / tt_distance は現時点では公開しない。
     # 理由: docs/90_src設計 に記載予定（distance API延期の設計メモ）。
+    "tt_matrix_ranks",
+    "tt_matrix_num_parameters",
+    "tt_matrix_to_dense",
+    "dense_to_tt_matrix_tensor",
+    "tt_cores_to_tt_matrix_cores",
+    "dense_to_tt_matrix_cores",
+    "tt_linear_forward",
     # 旧名
     "SVD",
     "RebuildSVD",
