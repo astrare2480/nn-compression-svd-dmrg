@@ -13,7 +13,7 @@ tags:
 
 # Eckart–Young–Mirsky定理とTT/MPS単一ボンド打ち切りの最適性
 
-[[45_TT_MPSの単一ボンドSVD打ち切り]]（[Notebook 09](../../../../notebooks/30_tt_mps/00_fundamentals/09_truncated_svd_and_bond_rank_truncation.ipynb)）で、3階TT/MPSの第2サイトを直交中心（orthogonality center）とし、中心行列 $A=G_2^{[C]\langle L\rangle}\in\mathbb R^{(r_1n_2)\times r_2}$ を特異値 $(\sigma_1,\sigma_2,\sigma_3)=(6,2,0.25)$、$k=2$ で打ち切り、誤差
+[[45_TT_MPSの単一ボンドSVD打ち切り]]（[Notebook 09](../../../../../notebooks/30_tt_mps/00_fundamentals/09_truncated_svd_and_bond_rank_truncation.ipynb)）で、3階TT/MPSの第2サイトを直交中心（orthogonality center）とし、中心行列 $A=G_2^{[C]\langle L\rangle}\in\mathbb R^{(r_1n_2)\times r_2}$ を特異値 $(\sigma_1,\sigma_2,\sigma_3)=(6,2,0.25)$、$k=2$ で打ち切り、誤差
 
 $$
 \|X-\widetilde X_k\|_F=\sigma_3=0.25,
@@ -743,7 +743,7 @@ $\Sigma_k$ を左側に置き、$\operatorname{reshape}(U_k\Sigma_k)$ と $V_k^T
 
 ## 9. 手を動かして確かめる実験計画とNotebook 10
 
-対応する数値実験は以下の3つである。現在のリポジトリには[Notebook 10](../../../../notebooks/30_tt_mps/00_fundamentals/10_eckart_young_mirsky_and_single_bond_optimality.ipynb)があり、A・B・Cの演習セルと`TODO`が用意されている。このノートでは演習セルを実行していないため、実験の数値結果としては扱わない。
+対応する数値実験は以下の3つである。現在のリポジトリには[Notebook 10](../../../../../notebooks/30_tt_mps/00_fundamentals/10_eckart_young_mirsky_and_single_bond_optimality.ipynb)があり、A・B・Cの演習セルと`TODO`が用意されている。このノートでは演習セルを実行していないため、実験の数値結果としては扱わない。
 
 | 実験 | 確認する内容 | 使用ツール |
 |---|---|---|

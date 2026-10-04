@@ -12,7 +12,7 @@ tags:
 
 ## このノートの位置づけ
 
-理論導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/47_TT-SVDの準最適性と誤差上界]]、手を動かす学習セルは [Notebook 11](../../notebooks/30_tt_mps/00_fundamentals/11_tt_svd_quasi_optimality_and_error_bound.ipynb) を参照する。ここでは、Notebookで確認した式、shape、代表的な数値結果、PyTorch実装上の注意をまとめる。
+理論導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価/47_TT-SVDの準最適性と誤差上界]]、手を動かす学習セルは [Notebook 11](../../notebooks/30_tt_mps/00_fundamentals/11_tt_svd_quasi_optimality_and_error_bound.ipynb) を参照する。ここでは、Notebookで確認した式、shape、代表的な数値結果、PyTorch実装上の注意をまとめる。
 
 対象は、dense tensorから左から右へ構成する標準TT-SVDである。既存TTコアのrankを下げるTT-roundingとは区別する。
 

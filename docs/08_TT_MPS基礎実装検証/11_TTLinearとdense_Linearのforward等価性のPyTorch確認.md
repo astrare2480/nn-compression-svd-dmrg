@@ -15,7 +15,7 @@ tags:
 
 このノートは、[Notebook 15](../../notebooks/30_tt_mps/00_fundamentals/15_ttlinear_dense_forward_equivalence_learning.ipynb) で行った、truncationなし2-core TT-SVDとdense `nn.Linear`のforward等価性検証を整理する。
 
-理論上の等価性、転置、添字、縮約順序、biasの意味は [[00_基礎理論/01_数学基礎/02_テンソル代数/58_TTLinearとdense_Linearのforward等価性]] を参照する。TT-matrix一般の実装は、[[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]] と [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] に分けている。
+理論上の等価性、転置、添字、縮約順序、biasの意味は [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/58_TTLinearとdense_Linearのforward等価性]] を参照する。TT-matrix一般の実装は、[[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]] と [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] に分けている。
 
 ここで検証したのは、CPU・`float64`の小さいrandom `nn.Linear(6, 8)`である。学習済みFashion-MNIST MLPの層を置き換えた実験ではない。
 
@@ -636,6 +636,8 @@ $$
 - parameter削減、速度、メモリの実測
 
 したがって、今回の到達点は「小規模2-core TTLinearのforward correctness」であり、「Fashion-MNIST MLPのTT圧縮完了」ではない。
+
+次の段階で行った学習済みFashion-MNIST MLPの`fc1`置換とlogits比較は、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/00_TTLinear一層置換とlogits等価性]]を参照する。rank打ち切りによる一般的なLinear出力誤差は、[[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]]へ分けている。
 
 ## 14. 学習済みMLPへ接続するときの検証順
 

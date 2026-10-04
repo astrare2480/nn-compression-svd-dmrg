@@ -394,4 +394,4 @@ rankを上げれば表現力は増えるが、保存量と縮約量も増える�
 
 である。一方、dense重みをどの軸順でtensorizeするか、どのrankで近似するか、学習精度や速度がどう変わるかは別の問題である。
 
-次は [[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]] で、同じsiteの $(i_k,j_k)$ を正しく隣接させる変換を追う。
+次は [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]] で、同じsiteの $(i_k,j_k)$ を正しく隣接させる変換を追う。

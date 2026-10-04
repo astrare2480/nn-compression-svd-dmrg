@@ -409,4 +409,4 @@ A = interleaved.reshape(*q_modes)
 
 ただし短いコードでも、軸の意味を誤ると別のtensorizationになる。実装上の入力検証、要素照合、保存済み結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]] で扱う。
 
-逆変換は [[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]] へ進む。
+逆変換は [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]] へ進む。

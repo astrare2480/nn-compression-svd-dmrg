@@ -83,7 +83,7 @@ SVD/Tuckerの式だけでなく、
 
 も実験を通して整理している。
 
-SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、現行srcの設計は [[90_src設計/README]] を参照。
+SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、TT/MPSの基礎実装は [[08_TT_MPS基礎実装検証/README]]、学習済みNNへのTT適用は [[40_TT_MPS_NN圧縮/README]]、現行srcの設計は [[90_src設計/README]] を参照。
 
 ---
 
@@ -197,9 +197,9 @@ flowchart TD
 
 ## Tucker / HOSVD / HOOI
 
-21. [[00_基礎理論/01_数学基礎/02_テンソル代数/21_テンソルとmode演算]]
-22. [[00_基礎理論/01_数学基礎/02_テンソル代数/22_Tucker分解とHOSVD]]
-23. [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
+21. [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/21_テンソルとmode演算]]
+22. [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/22_Tucker分解とHOSVD]]
+23. [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/23_HOOI]]
 24. [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
 25. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
 26. [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
@@ -207,6 +207,14 @@ flowchart TD
 ## Tensor Networkへの橋渡し
 
 14. [[00_基礎理論/06_手法間のつながり/14_低ランク学習からテンソルネットワークへの発展]]
+
+## TT / MPS
+
+27. [[00_基礎理論/01_数学基礎/02_テンソル代数/README]]
+28. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/README]]
+29. [[08_TT_MPS基礎実装検証/README]]
+30. [[40_TT_MPS_NN圧縮/README]]
+31. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]
 
 基礎理論だけの索引は、[[00_基礎理論/README]] を参照。
 
@@ -623,10 +631,10 @@ taskにとって最適なlow-rank weight
 
 ## Tucker / HOOI編
 
-1. [[00_基礎理論/01_数学基礎/02_テンソル代数/21_テンソルとmode演算]]
-2. [[00_基礎理論/01_数学基礎/02_テンソル代数/22_Tucker分解とHOSVD]]
+1. [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/21_テンソルとmode演算]]
+2. [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/22_Tucker分解とHOSVD]]
 3. [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]
-4. [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
+4. [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/23_HOOI]]
 5. [[00_基礎理論/04_実験設計/25_Tucker_HOOI圧縮の評価設計]]
 6. [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
 7. [[06_Tucker基礎実装検証/README]]

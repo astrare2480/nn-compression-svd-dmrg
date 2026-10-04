@@ -6,7 +6,7 @@
 
 ## PyTorch確認-001
 
-対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]（7.1 一般mode $n$）
+対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]]（7.1 一般mode $n$）
 
 ```python
 U_n = Q_n[:, :R_n]
@@ -14,7 +14,7 @@ U_n = Q_n[:, :R_n]
 
 ## PyTorch確認-002
 
-対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]（14. HOOIの1 factor更新）
+対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]]（14. HOOIの1 factor更新）
 
 ```python
 U_new = Q[:, :R_n]
@@ -22,7 +22,7 @@ U_new = Q[:, :R_n]
 
 ## PyTorch確認-003
 
-対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/22_Tucker分解とHOSVD]]（3. HOSVDのfactorを1 modeずつ作る）
+対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/22_Tucker分解とHOSVD]]（3. HOSVDのfactorを1 modeずつ作る）
 
 ```python
 U_n = Q_n[:, :R_n]
@@ -30,7 +30,7 @@ U_n = Q_n[:, :R_n]
 
 ## PyTorch確認-004
 
-対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]（Ky Fanの重みを展開して上界を達成する）
+対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/23_HOOI]]（Ky Fanの重みを展開して上界を達成する）
 
 ```python
 U_new = Q[:, :R_n]
@@ -38,7 +38,7 @@ U_new = Q[:, :R_n]
 
 ## PyTorch確認-005
 
-対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]（13. srcとの対応）
+対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/23_HOOI]]（13. srcとの対応）
 
 ```python
 ranks = {0: r0, 1: r1, 2: r2}
@@ -46,7 +46,7 @@ ranks = {0: r0, 1: r1, 2: r2}
 
 ## PyTorch確認-006
 
-対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]（13. srcとの対応）
+対応する数式・説明：[[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/23_HOOI]]（13. srcとの対応）
 
 ```python
 ranks = {0: rank_out, 1: rank_in}

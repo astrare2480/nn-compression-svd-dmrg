@@ -18,7 +18,7 @@ tags:
 - `notebooks/30_tt_mps/00_fundamentals/01_tt_rank_unfolding.ipynb`
 - `notebooks/30_tt_mps/00_fundamentals/02_truncation_error_tradeoff.ipynb`
 
-理論は [[00_基礎理論/01_数学基礎/02_テンソル代数/30_TT_MPSの定義]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/31_TT-rankとunfolding]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/32_TT-SVD]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/33_TT-SVDの打ち切りと誤差]] を参照する。
+理論は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_TT_MPS基礎/30_TT_MPSの定義]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/20_TT_MPS基礎/31_TT-rankとunfolding]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/20_TT_MPS基礎/32_TT-SVD]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/20_TT_MPS基礎/33_TT-SVDの打ち切りと誤差]] を参照する。
 
 ## 00: 3階TensorのTT-SVD
 

@@ -667,4 +667,4 @@ $$
 
 比較対象はrandomコアが定義する $W_{\mathrm{TT}}$ である。truncated TT-SVDで元の $W$ を近似した場合、$Y_{\mathrm{TT}}$ と $XW^{\mathsf T}+b$ の差にはforward実装誤差だけでなく重み近似誤差も含まれる。
 
-`nn.Linear.weight`の向きからexact TT-SVD後のforward等価性までを一続きで確認する場合は、[[00_基礎理論/01_数学基礎/02_テンソル代数/58_TTLinearとdense_Linearのforward等価性]]を参照する。PyTorchでの一般実装contractと保存済み数値結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、2-core `nn.Linear`等価性の具体例は [[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]、別方式の一括`einsum`実装は [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] を参照する。
+`nn.Linear.weight`の向きからexact TT-SVD後のforward等価性までを一続きで確認する場合は、[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/58_TTLinearとdense_Linearのforward等価性]]を参照する。PyTorchでの一般実装contractと保存済み数値結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、2-core `nn.Linear`等価性の具体例は [[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]、別方式の一括`einsum`実装は [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] を参照する。

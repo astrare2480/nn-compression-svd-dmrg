@@ -1329,7 +1329,7 @@ PyTorchの確認コード：[[06_Tucker基礎実装検証/20_Tucker数式のPyTo
 
 なら4階Conv weightに対するpartial HOOI / Tucker-2として同じ実装を再利用できる。
 
-より長い途中導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]] にも残す。
+より長い途中導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]] にも残す。
 
 PyTorchでの汎用HOOIとConv2d Tucker-2の実装は [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]] を参照する。
 

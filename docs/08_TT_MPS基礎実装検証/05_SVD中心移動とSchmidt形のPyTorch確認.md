@@ -15,7 +15,7 @@ tags:
 
 [Notebook 08](../../notebooks/30_tt_mps/00_fundamentals/08_svd_center_move_and_schmidt_form.ipynb) の実装操作と保存済み数値結果をまとめる。ここで記す数値はNotebook内の出力であり、このノートを整理する際にRun Allで再取得した値ではない。
 
-理論は [[00_基礎理論/01_数学基礎/02_テンソル代数/43_TT_MPSのSVD中心移動とSchmidt形]] を参照する。QRによる中心移動は [[08_TT_MPS基礎実装検証/01_直交中心移動のPyTorch確認]]、mixed-canonical環境の等長性は [[08_TT_MPS基礎実装検証/02_混合正準形の中心摂動と等長性のPyTorch確認]] を参照する。
+理論は [[00_基礎理論/01_数学基礎/02_テンソル代数/30_Gauge_正準形_直交中心/43_TT_MPSのSVD中心移動とSchmidt形]] を参照する。QRによる中心移動は [[08_TT_MPS基礎実装検証/01_直交中心移動のPyTorch確認]]、mixed-canonical環境の等長性は [[08_TT_MPS基礎実装検証/02_混合正準形の中心摂動と等長性のPyTorch確認]] を参照する。
 
 ## Setup
 

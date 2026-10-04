@@ -5,7 +5,7 @@ tags: [Tucker, HOOI, HOSVD, 実験設計, NN圧縮]
 
 # Tucker実験で得た設計原則と考察
 
-数式の完全な途中導出：[[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]。
+数式の完全な途中導出：[[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]]。
 
 ## 1. Tucker化は自動的に圧縮ではない
 

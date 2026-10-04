@@ -230,7 +230,7 @@ TT-SVD
 
 ただし、到達点は「基礎アルゴリズムとPublic API contractが揃った」という意味である。全NotebookのFresh Run All、実データ上のNN圧縮精度、TT-matrix層の学習、DMRG-like optimizationまで完了したという意味ではない。
 
-## 12. 次フェーズ
+## 12. TT-matrix基礎とNN適用章への接続
 
 Notebook 14はTT-matrixのdense reconstructionとdirect forwardを扱い、保存済み小規模例ではdense reconstruction、direct contraction、`F.linear`がfloat64の丸め誤差水準で一致している。ただしFresh Run Allは未確認である。
 
@@ -238,9 +238,88 @@ Notebook 15はdense `nn.Linear`とのforward等価性を、自分でTODOを実�
 
 詳細：[[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、[[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]、[[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]]
 
+NN適用前の一般的なtoy確認として、$(20,12)$の重みを2-core・rank 2へ打ち切り、
+
+$$
+\Delta Y=X\Delta W^{\mathsf T}
+$$
+
+と
+
+$$
+\|\Delta Y\|_F
+\le
+\|X\|_F\|\Delta W\|_2,
+\qquad
+\|\Delta Y\|_F
+\le
+\|X\|_2\|\Delta W\|_F
+$$
+
+を保存出力で確認した。実測$\|\Delta Y\|_F$は約4.814、上界は約8.592と11.712だった。一方、主要な中間2 cellの`execution_count`が`null`なので、現行ソースのFresh Run All成功とは扱わない。
+
+詳細：[[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/14_TTLinear置換で使うPyTorchモデル操作]]
+
+続くReLUのtoy Notebookでは、4種類の符号ケースを含む $2\times4$ 行列の全8要素について
+
+$$
+|\Delta H_{ij}|
+\le
+|\Delta Z_{ij}|
+$$
+
+を保存出力で確認した。random Linear例の保存出力では、
+
+$$
+\|\Delta H\|_F
+=
+0.337250011229,
+$$
+
+$$
+\|\Delta Z\|_F
+=
+0.519605165542,
+$$
+
+$$
+\|X\|_F\|\Delta W\|_2
+=
+0.893184613722
+$$
+
+であり、
+
+$$
+\|\Delta H\|_F
+\le
+\|\Delta Z\|_F
+\le
+\|X\|_F\|\Delta W\|_2
+$$
+
+が成り立った。ただし、別形式の上界cellは`execution_count=null`であり、Notebook全体のFresh Run Allは未確認である。
+
+詳細：[[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]、[[08_TT_MPS基礎実装検証/30_PyTorchのvector_norm_matrix_normとtorch_linalg]]
+
+続く第2 Linearのtoy Notebookで使うPyTorch操作、shape、独立assert、norm APIは、[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]に整理した。実験設定、保存済み数値、scale sweepとその考察は、適用・実験側の[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/00_第2Linearのlogits誤差伝播_設定結果考察]]へ分ける。
+
+1 sampleのclassification marginとargmax安定性に進むtoy Notebookでは、dense top class、strongest competitor、$\ell_\infty$ logits error、worst-case方向による $2\varepsilon$ のgap縮小、common shiftを確認する。PyTorch操作と直接条件は[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、保存済み結果と考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/01_ClassificationMarginとArgmax安定性_設定結果考察]]に分ける。これは手入力したtoy logits errorの検証であり、学習済みmodelを実TT-rankで圧縮した結果ではない。
+
+学習済みFashion-MNIST MLPの`fc1`置換、activation比較、logits比較は基礎実装から分離し、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]に置く。
+
+## 13. NN適用側との境界
+
+rank sweep、test accuracy、fine-tuning、性能比較などの未完了項目は、この基礎実装章ではなく [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] で管理する。ReLUの1-Lipschitz性は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/61_Lipschitz連続性とReLUの1-Lipschitz性]]、Linearからhidden activationまでの誤差伝播は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]、第2 Linearからlogitsまでの理論は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]、classification marginとargmax安定性は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]、toy PyTorch確認は [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]、[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、toy実験の設定・結果・考察は [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]] に収録している。ただし、学習済みFashion-MNIST MLPの打ち切りrank、後続logits、prediction、accuracyまで実装検証済みという意味ではない。
+
 ## 関連
 
 - [[08_TT_MPS基礎実装検証/README]]
 - [[00_基礎理論/README]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]
+- [[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]
+- [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]
 - [[90_src設計/README]]
 - [[50_DMRG/README]]

@@ -29,7 +29,7 @@ src/nn_compression/
    └─ tensor_approximation.py
 ```
 
-数式導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]] を参照する。
+数式導出は [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]] を参照する。
 
 ## 1. unfold / fold
 

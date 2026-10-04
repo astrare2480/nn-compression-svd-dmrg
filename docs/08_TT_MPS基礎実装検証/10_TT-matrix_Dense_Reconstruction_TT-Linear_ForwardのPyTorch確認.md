@@ -17,10 +17,10 @@ tags:
 
 理論は次のノートへ分けている。
 
-- 定義とKronecker積：[[00_基礎理論/01_数学基礎/02_テンソル代数/54_TT-matrixの定義とKronecker積表現]]
-- dense重みのtensorization：[[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]
-- dense reconstruction：[[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]]
-- 右から左へのforward縮約：[[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]]
+- 定義とKronecker積：[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]
+- dense重みのtensorization：[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]
+- dense reconstruction：[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]
+- 右から左へのforward縮約：[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]]
 
 [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] は、全コアを一つの`einsum`へ渡す再利用可能な`nn.Module`例を扱う。本ノートはそれとは別に、右から左へ一siteずつ縮約し、途中shapeを追う学習用実装を扱う。
 

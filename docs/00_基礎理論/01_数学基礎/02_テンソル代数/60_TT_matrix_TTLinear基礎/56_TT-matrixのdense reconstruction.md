@@ -342,4 +342,4 @@ $$
 
 を要する。途中tensorやgradientまで含めればさらに増える。dense reconstructionは小さいsanity check、テスト、誤差計測に限定し、本番TT-Linear forwardはコアを直接縮約する。
 
-その直接forwardは [[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]] で導出する。
+その直接forwardは [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]] で導出する。

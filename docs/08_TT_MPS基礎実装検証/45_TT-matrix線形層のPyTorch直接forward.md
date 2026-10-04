@@ -17,7 +17,7 @@ $$
 
 を計算するPyTorch上の添字対応だけを扱う。通常のTT tensorの分解・再構成は [[08_TT_MPS基礎実装検証/27_TT_MPS基礎のPyTorch実装]]、`reshape` と `permute` の順序は [[08_TT_MPS基礎実装検証/29_TT_cutとPyTorchのreshape_Kronecker順序]] を参照する。
 
-定義から途中式を追う場合は [[00_基礎理論/01_数学基礎/02_テンソル代数/54_TT-matrixの定義とKronecker積表現]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]] を参照する。Notebook 14で行った右から左への逐次縮約と保存済み数値結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]] に分けている。
+定義から途中式を追う場合は [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]] を参照する。Notebook 14で行った右から左への逐次縮約と保存済み数値結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]] に分けている。
 
 ## 1. TT tensorとTT-matrixを区別する
 

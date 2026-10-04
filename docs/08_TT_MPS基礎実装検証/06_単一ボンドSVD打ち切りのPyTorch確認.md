@@ -15,7 +15,7 @@ tags:
 
 `notebooks/30_tt_mps/00_fundamentals/09_truncated_svd_and_bond_rank_truncation.ipynb` の数値確認結果をまとめる。
 
-理論は [[00_基礎理論/01_数学基礎/02_テンソル代数/45_TT_MPSの単一ボンドSVD打ち切り]] を参照する。SVD center moveとSchmidt形は [[08_TT_MPS基礎実装検証/05_SVD中心移動とSchmidt形のPyTorch確認]] を参照する。
+理論は [[00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価/45_TT_MPSの単一ボンドSVD打ち切り]] を参照する。SVD center moveとSchmidt形は [[08_TT_MPS基礎実装検証/05_SVD中心移動とSchmidt形のPyTorch確認]] を参照する。
 
 ## Setup
 

@@ -939,14 +939,26 @@ MPOコアを `nn.Parameter` / `nn.ParameterList` へ登録し、全コアを通�
 fine-tuningすること自体はDMRGではない。forwardはdense重みを復元する版と、
 コアを直接縮約する版を分け、後者では入力・出力添字と中間shapeを確認する。
 直接forwardの添字式、一般サイト数のPyTorch実装、密行列との小さい一致確認は
-[[00_基礎理論/01_数学基礎/02_テンソル代数/54_TT-matrixの定義とKronecker積表現]]、
-[[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、
-[[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]]、
-[[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]]、
-[[00_基礎理論/01_数学基礎/02_テンソル代数/58_TTLinearとdense_Linearのforward等価性]] で途中式を確認し、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]]、
+[[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/58_TTLinearとdense_Linearのforward等価性]] で途中式を確認し、
 PyTorchの確認結果は [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、
 2-core `nn.Linear`の等価性は [[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]、
 一括`einsum`による層実装は [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] を参照する。
+
+学習済みFashion-MNIST MLPへ接続した現在の到達点は、`fc1`を打ち切りなしTTLinearへ置換し、Linear出力・ReLU出力・最終logitsの近接を確認した段階である。理論は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/59_TTLinearによるMLP一層置換とlogits等価性]]、保存済みPyTorch結果は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/00_TTLinear一層置換とlogits等価性]] を参照する。
+
+rank打ち切り後については、Linear単体の
+
+$$
+\Delta Y=X\Delta W^{\mathsf T}
+$$
+
+と2本のnorm上界までをtoy例で確認した。[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/60_TT-rank打ち切りによるLinear出力誤差とnorm上界]]と[[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]]を参照する。
+
+一般的なtoy例では、ReLUを通るhidden error、第2 Linearを通るlogits error、1 sampleのclassification marginとargmax安定性まで進んでいる。理論は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]、PyTorch確認は[[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]、[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]を参照する。ただし、学習済みFashion-MNIST MLPを実際にrank打ち切りした後のReLU・logits・sample別margin、test accuracy、rank sweep、fine-tuningは未完了である。
 MPOのbiasは通常の出力vectorとして残せるため、必ずMPO化する必要はない。
 
 比較は同じparameter予算でaccuracyを見るか、同じaccuracy条件で必要parameter数を見る。

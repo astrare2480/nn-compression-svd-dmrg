@@ -1349,7 +1349,7 @@ $$
 \approx0.099995.
 $$
 
-後段でも打ち切る場合は、各段の局所誤差を [[00_基礎理論/01_数学基礎/02_テンソル代数/33_TT-SVDの打ち切りと誤差]] の全体誤差式へ加える。ランダムな $4\times4\times4\times4$ ではcut rankが大きくなりやすく、高rankのTTがdenseより多く保存する場合もあるため、誤差を制御した例と任意データの圧縮結果を分ける。
+後段でも打ち切る場合は、各段の局所誤差を [[00_基礎理論/01_数学基礎/02_テンソル代数/20_TT_MPS基礎/33_TT-SVDの打ち切りと誤差]] の全体誤差式へ加える。ランダムな $4\times4\times4\times4$ ではcut rankが大きくなりやすく、高rankのTTがdenseより多く保存する場合もあるため、誤差を制御した例と任意データの圧縮結果を分ける。
 
 rank sweepには `max_rank`、実際の `bond_ranks`、`tt_params`、`compression_ratio`、`relative_error` を記録する。`bond_ranks` は最後の境界1を除く各コアの右bondから読み、全てを設定値 `max_rank` で置き換えない。圧縮率がdense/TTかTT/denseかも明記する。
 

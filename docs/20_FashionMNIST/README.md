@@ -17,6 +17,8 @@ Fashion-MNISTでは、MNISTから一段進めて、MLP Fine-tuning、CNN、Linea
 - [[05_SVD基礎実装検証/03_SVD実験で修正した問題と設計原則]]
 - [[00_基礎理論/04_実験設計/19_再現性と乱数管理]]
 
+TTLinearの学習段階は、既存のSVD canonical resultとは分けている。学習済みMLPの`fc1`を打ち切りなしTTLinearへ置換したforward等価性は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/00_TTLinear一層置換とlogits等価性]]、rank打ち切りによる一般的なtoy Linear出力誤差は [[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]] を参照する。前者はtest accuracy、rank sweep、fine-tuningまで行ったTT圧縮実験ではない。
+
 ## docsの位置づけ
 
 | docs | 位置づけ |

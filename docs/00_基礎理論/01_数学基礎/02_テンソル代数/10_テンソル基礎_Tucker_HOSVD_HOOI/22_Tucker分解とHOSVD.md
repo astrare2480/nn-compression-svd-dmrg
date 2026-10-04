@@ -1001,6 +1001,6 @@ src/nn_compression/metrics/tensor_approximation.py
 
 詳細な途中式：
 
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/23_HOOI]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/23_HOOI]]
 - [[00_基礎理論/03_モデル圧縮理論/24_Conv2dのTucker2圧縮]]

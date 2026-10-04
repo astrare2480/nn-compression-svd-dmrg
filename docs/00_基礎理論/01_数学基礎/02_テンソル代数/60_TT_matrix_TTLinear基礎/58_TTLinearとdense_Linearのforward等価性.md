@@ -53,10 +53,10 @@ $$
 
 TT-matrixの定義、tensorization、dense reconstruction、一般site数の縮約は、それぞれ次を参照する。
 
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/54_TT-matrixの定義とKronecker積表現]]
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]]
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]]
 
 ## 2. `nn.Linear`が保存する重みの向き
 
@@ -671,3 +671,5 @@ $$
 この順序を守ることで、添字実装の誤りとrank truncationによる近似誤差を分けられる。
 
 PyTorchで行った2-coreの具体的な確認と保存済み数値結果は、[[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]を参照する。
+
+学習済みFashion-MNIST MLPの一層を置き換え、activationと最終logitsまで等価性を追う段階は、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/59_TTLinearによるMLP一層置換とlogits等価性]]と[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/00_TTLinear一層置換とlogits等価性]]へ進む。

@@ -122,7 +122,7 @@ $$
 
 を実装する。
 
-数式・shapeは [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]] を参照。
+数式・shapeは [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]] を参照。
 
 ## `validation.py`
 
@@ -589,7 +589,7 @@ src/nn_compression/
 # 15. 数式・検証との対応
 
 - [[00_基礎理論/01_数学基礎/01_線形代数/02_SVD数式の導出]]
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]]
 - [[05_SVD基礎実装検証/README]]
 - [[06_Tucker基礎実装検証/README]]
 - [[90_src設計/README]]
@@ -640,3 +640,4 @@ empty / Iterable loaderを意識する
 - [[90_src設計/README]]
 - [[30_CIFAR10_CNN/README]]
 - [[08_TT_MPS基礎実装検証/README]]
+- [[40_TT_MPS_NN圧縮/README]]

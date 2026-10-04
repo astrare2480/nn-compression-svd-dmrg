@@ -4,7 +4,7 @@
 
 理論そのものは [[00_基礎理論/README]] に置き、この章では小さいTensorによるPyTorch確認、配列操作、実装contract、保存済み実行結果を扱う。NN重みのTT圧縮・学習実験は、ここで完了したとは扱わない。
 
-Notebook 00〜13の到達点、代表的な保存済み数値結果、src化状況、未確認事項をまとめて読む場合は、最初に[[08_TT_MPS基礎実装検証/00_TT_MPS基礎実装の確認結果]]を参照する。
+基礎Notebook 00〜15の到達点、代表的な保存済み数値結果、src化状況、未確認事項をまとめて読む場合は、最初に[[08_TT_MPS基礎実装検証/00_TT_MPS基礎実装の確認結果]]を参照する。学習済みニューラルネットワークへの適用は [[40_TT_MPS_NN圧縮/README]] に分ける。
 
 ## 前提として完了した内容
 
@@ -46,6 +46,10 @@ HOOI
 | 13 | TT内積、left environment、Frobeniusノルム、TT間距離 | [[08_TT_MPS基礎実装検証/09_TT内積_Frobeniusノルム_距離のPyTorch確認]] |
 | 14 | TT-matrix、dense reconstruction、TT-Linear forward | [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]、[[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]] |
 | 15 | truncationなし2-core TT-SVD、dense `nn.Linear`とのforward等価性 | [[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]] |
+| `10_fashion_mnist_mlp/01` | NN適用前に一般化できる2-core rank truncation、Linear出力誤差恒等式、Frobenius / spectral norm上界のtoy確認 | [[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]] |
+| `10_fashion_mnist_mlp/02` | ReLUの4符号ケース、要素不等式、hidden activationのFrobenius誤差、LinearからReLUまでのtoy上界 | [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]] |
+| `10_fashion_mnist_mlp/03` | 第2 Linearのlogits誤差恒等式、spectral norm、合成上界、固定方向の人工摂動scale sweep | 実装は[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/00_第2Linearのlogits誤差伝播_設定結果考察]] |
+| `10_fashion_mnist_mlp/04` | 1 sampleのclassification margin、$\ell_\infty$ logits error、worst-case方向、argmax安定性 | 実装は[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/01_ClassificationMarginとArgmax安定性_設定結果考察]] |
 
 この対応は「Notebook 1本につきdocs 1本」ではなく、内容が連続するNotebookは1つの検証ノートへまとめる方針とする。
 
@@ -63,15 +67,24 @@ HOOI
 - [[08_TT_MPS基礎実装検証/09_TT内積_Frobeniusノルム_距離のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/10_TT-matrix_Dense_Reconstruction_TT-Linear_ForwardのPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/11_TTLinearとdense_Linearのforward等価性のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/14_TTLinear置換で使うPyTorchモデル操作]]
+- [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]
 
 ## 共通実装・操作ノート
 
 - [[08_TT_MPS基礎実装検証/27_TT_MPS基礎のPyTorch実装]]：TT cut、TT-SVD、再構成、rank、パラメータ数と公開APIのcontract。
 - [[08_TT_MPS基礎実装検証/28_TT_MPS実装で使うPyTorch_Python操作メモ]]：shape、reshape、縮約、Pythonコンテナなどの操作。
 - [[08_TT_MPS基礎実装検証/29_TT_cutとPyTorchのreshape_Kronecker順序]]：複合添字、reshape、置換行列、Kronecker積の順序。
+- [[08_TT_MPS基礎実装検証/30_PyTorchのvector_norm_matrix_normとtorch_linalg]]：要素絶対値、vector norm、Frobenius norm、spectral norm、特異値関連APIの使い分け。
 - [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]]：TT-matrix / MPOコアから密行列を作らないforward。
+- [[08_TT_MPS基礎実装検証/14_TTLinear置換で使うPyTorchモデル操作]]：checkpoint、`state_dict`、`eval()`、`no_grad()`、module pathによる一層置換。
 
-TT-matrixの理論は、定義とKronecker積を [[00_基礎理論/01_数学基礎/02_テンソル代数/54_TT-matrixの定義とKronecker積表現]]、dense重みのtensorizationを [[00_基礎理論/01_数学基礎/02_テンソル代数/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、dense reconstructionを [[00_基礎理論/01_数学基礎/02_テンソル代数/56_TT-matrixのdense reconstruction]]、右から左へのforward縮約を [[00_基礎理論/01_数学基礎/02_テンソル代数/57_TT-Linear_forwardの縮約とshape]]、dense `nn.Linear`との等価性を [[00_基礎理論/01_数学基礎/02_テンソル代数/58_TTLinearとdense_Linearのforward等価性]] に分けている。
+TT-matrixの理論は、定義とKronecker積を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]、dense重みのtensorizationを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、dense reconstructionを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]、右から左へのforward縮約を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]]、dense `nn.Linear`との等価性を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/58_TTLinearとdense_Linearのforward等価性]] に分けている。
+
+学習済みMLPへ進む部分は、一層置換からlogitsまでの等価性を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/59_TTLinearによるMLP一層置換とlogits等価性]]、rank打ち切りによるLinear出力誤差を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/60_TT-rank打ち切りによるLinear出力誤差とnorm上界]]、ReLUの数学的性質を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/61_Lipschitz連続性とReLUの1-Lipschitz性]]、hidden activationまでの誤差伝播を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]、第2 Linearを通るlogits誤差と合成上界を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]、1 sampleのprediction安定性を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]、modeとrankの設計を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/62_TT-matrixのmode分解とrank設計]] に分けている。学習済みモデルでの検証記録は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] を参照する。
 
 ## 学習予定
 
@@ -143,14 +156,14 @@ src
 
 理論ノートでは、reshape / unfolding / SVD / truncate / core / reconstruction / errorを途中式から確認する。
 
-直交中心の移動は [[00_基礎理論/01_数学基礎/02_テンソル代数/41_TT_MPSの直交中心の移動]]、ブロック状態としての意味は [[00_基礎理論/07_物理基礎/42_MPS正準形と直交中心の物理的意味]]、PyTorchでのshape・QR・収縮の確認は [[08_TT_MPS基礎実装検証/01_直交中心移動のPyTorch確認]] を参照する。中心だけの摂動と等長性を検証する場合は [[08_TT_MPS基礎実装検証/02_混合正準形の中心摂動と等長性のPyTorch確認]] へ進む。TT-roundingでは [[00_基礎理論/01_数学基礎/02_テンソル代数/48_TT-roundingの定義と正準化sweep]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/49_TT-roundingの環境行列と誤差直交分解]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/50_TT-roundingの誤差予算とrank選択]] を読んでから、[[08_TT_MPS基礎実装検証/08_TT-roundingのPyTorch実装設計と検証]] で実装上のshapeと検証項目へ接続する。既存の学習NotebookのTODOはこの実装ノートでは変更しない。
+直交中心の移動は [[00_基礎理論/01_数学基礎/02_テンソル代数/30_Gauge_正準形_直交中心/41_TT_MPSの直交中心の移動]]、ブロック状態としての意味は [[00_基礎理論/07_物理基礎/42_MPS正準形と直交中心の物理的意味]]、PyTorchでのshape・QR・収縮の確認は [[08_TT_MPS基礎実装検証/01_直交中心移動のPyTorch確認]] を参照する。中心だけの摂動と等長性を検証する場合は [[08_TT_MPS基礎実装検証/02_混合正準形の中心摂動と等長性のPyTorch確認]] へ進む。TT-roundingでは [[00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価/48_TT-roundingの定義と正準化sweep]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価/49_TT-roundingの環境行列と誤差直交分解]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価/50_TT-roundingの誤差予算とrank選択]] を読んでから、[[08_TT_MPS基礎実装検証/08_TT-roundingのPyTorch実装設計と検証]] で実装上のshapeと検証項目へ接続する。既存の学習NotebookのTODOはこの実装ノートでは変更しない。
 
-TT-rounding後の内積・Frobeniusノルムをdense復元なしで評価する場合は、[[00_基礎理論/01_数学基礎/02_テンソル代数/51_TT_MPSの内積とenvironment縮約]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/52_TT_MPSのFrobeniusノルムと距離]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/53_TT_MPSの加減算とrank増加]] を読み、[[08_TT_MPS基礎実装検証/09_TT内積_Frobeniusノルム_距離のPyTorch確認]] で`einsum`の添字、environment shape、dense照合へ接続する。距離は同ノートの学習検証に留め、現行Public APIとしては利用しない。
+TT-rounding後の内積・Frobeniusノルムをdense復元なしで評価する場合は、[[00_基礎理論/01_数学基礎/02_テンソル代数/50_縮約_ノルム_代数演算/51_TT_MPSの内積とenvironment縮約]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/50_縮約_ノルム_代数演算/52_TT_MPSのFrobeniusノルムと距離]]、[[00_基礎理論/01_数学基礎/02_テンソル代数/50_縮約_ノルム_代数演算/53_TT_MPSの加減算とrank増加]] を読み、[[08_TT_MPS基礎実装検証/09_TT内積_Frobeniusノルム_距離のPyTorch確認]] で`einsum`の添字、environment shape、dense照合へ接続する。距離は同ノートの学習検証に留め、現行Public APIとしては利用しない。
 
 ## 先に読む
 
 - [[00_基礎理論/06_手法間のつながり/14_低ランク学習からテンソルネットワークへの発展]]
-- [[00_基礎理論/01_数学基礎/02_テンソル代数/20_Tucker_HOSVD_HOOI数式の導出]]
+- [[00_基礎理論/01_数学基礎/02_テンソル代数/10_テンソル基礎_Tucker_HOSVD_HOOI/20_Tucker_HOSVD_HOOI数式の導出]]
 - [[06_Tucker基礎実装検証/README]]
 - [[README_実装編]]
 
