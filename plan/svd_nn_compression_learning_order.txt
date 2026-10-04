@@ -1,7 +1,7 @@
 # NN圧縮（SVD / Tucker / TT-MPS / DMRG）学習・研究ロードマップ
 
 - 対象期間: 2026年8月〜2028年8月
-- 改訂日: 2026年8月19日
+- 改訂日: 2026年10月4日
 - 方針: 研究実装を本筋とし、資格学習を研究段階に合わせて組み込む
 - テキスト版: `plan/svd_nn_compression_learning_order.txt`
 
@@ -54,6 +54,43 @@ CIFAR-10 CNN baseline
 
 2026年8〜9月は、これらを再実行可能なSVD baselineとして確定し、Tucker以降の比較基準へ昇格させる期間とする。
 
+### 2026年10月4日時点のTT / MPS進捗
+
+予定より前倒しで、SVD / Tucker段階を完了し、TT / MPSのNN適用準備まで進んでいる。
+
+完了済み:
+
+- TT定義、TT-rank、unfolding、TT-SVD、truncation、誤差評価
+- Gauge freedom、QR、left / right orthogonalization
+- mixed-canonical form、orthogonality center、Schmidt分解
+- truncated SVD、bond-rank truncation、TT-SVDの誤差評価、TT-rounding
+- TT inner product、Frobenius norm、distance
+- TT-matrix / TT-Linear、dense reconstruction、dense forwardとの一致
+- `notebooks/30_tt_mps/00_fundamentals/00〜15`
+- `notebooks/30_tt_mps/10_fashion_mnist_mlp/00〜05`
+  - 00: truncationなしTTLinearとMLP logitsの等価性
+  - 01: weight error → Linear output error / norm bound
+  - 02: ReLU hidden activation error
+  - 03: 第2 Linearまでの logits error propagation
+  - 04: classification margin と 1 sample の argmax stability
+  - 05: batch-level logits bound と sample-wise margin certificate の接続
+
+直近の順序は次とする。
+
+```text
+05 logits bound → margin certificate（完了）
+→ 06 minimum margin / batch-wide prediction stability
+→ TT-rank / bond dimension sweep
+→ NNへのTT / MPS適用
+→ contraction / environment
+→ 1-site DMRG
+→ 2-site DMRG
+→ DMRG-like NN最適化
+```
+
+06は04〜05で積み上げたprediction-stability理論を閉じるための短い補助段階とする。
+06完了後は理論をさらに延長せず、ロードマップ本筋のTT-rank / bond dimension sweepへ移る。
+
 ---
 
 ## 3. 全体ロードマップ
@@ -61,10 +98,11 @@ CIFAR-10 CNN baseline
 | 時期 | 研究実装 | 資格・学習 | 期間終了時の成果 |
 |---|---|---|---|
 | 2026/8〜9 | CIFAR-10 CNN baselineを確定し、SVDのrank選択、Linear / Conv圧縮を整理 | 統計検定2級 | 再現可能なCIFAR-10 SVD baseline |
-| 2026/10〜11 | CIFAR-10へTuckerを適用し、SVDと同条件で比較 | 統計検定2級を受験 | SVD vs Tucker比較結果 |
-| 2026/12〜2027/2 | TT / MPS基礎、TT-SVD、TT-rank / bond dimension、NNのTT化 | Pythonデータ分析実践 | TT-SVDと最小TT層 |
-| 2027/3〜5 | MPS、canonical form、Schmidt分解を学び、DMRG最小実装を開始 | 統計検定準1級 | MPS操作とDMRG toy problem |
-| 2027/6〜8 | 1-site / 2-site DMRG、environment、sweepを実装し、TT / MPS-NNへ接続 | 統計検定準1級を受験 | DMRG実装とNN接続試作 |
+| 2026/10 | 04〜05のprediction-stability理論を06 minimum margin / batch-wide stabilityで閉じ、rank sweepの評価設計へ移る | 統計検定2級 | TT / MPS→NNの理論接続を完了し、rank sweepへ移行 |
+| 2026/11〜12 | TT-rank / bond dimension sweep。再構成誤差、params、圧縮率、logits error、prediction agreementを同条件で比較しCSV・図へ保存 | Pythonデータ分析実践を研究優先で進める | rankと精度・圧縮率のtrade-off、次段階のrank候補 |
+| 2027/1 | Fashion-MNIST / CIFAR-10等へTT / MPS層を適用し、baseline、TT置換直後、必要ならTT + fine-tuningを分けて評価 | 必要に応じ統計学復習 | TT / MPSによるNN圧縮の基準実験 |
+| 2027/2〜3 | contraction / environment、1-site DMRG、sweepの基礎を小規模toy problemで実装 | 統計検定準1級 | environmentと1-site DMRGの最小実装 |
+| 2027/4〜5 | 2-site DMRG、SVD再分割、bond dimension制御を実装し、TT / MPS-NNへの接続条件を整理 | 統計検定準1級 | 2-site DMRGとNN接続試作 |
 | 2027/9〜11 | DMRG-likeなNN最適化を行い、通常fine-tuningと比較 | AI実装検定S級候補 | DMRG-like vs fine-tuning比較 |
 | 2027/12〜2028/2 | SVD / Tucker / TT-MPS / DMRG-likeの比較設計を統一 | E資格の認定講座・学習 | 手法横断の共通実験基盤 |
 | 2028/2〜4 | 複数seed、圧縮率、MACs、latency、training costを測定 | E資格を受験候補 | 本比較実験の結果一式 |
@@ -103,7 +141,7 @@ CIFAR-10 CNN baseline
 - 主要結果をCSVとmatplotlib / seabornの図で再生成できる。
 - 統計検定2級の受験日を2026年10〜11月内に設定できる状態にする。
 
-### 2026/10〜11: CIFAR-10 + Tucker
+### 完了済み（前倒し）: CIFAR-10 + Tucker
 
 #### 研究実装
 
@@ -137,17 +175,17 @@ Tucker-2（例: r_out=16, r_in=12）:
 - SVD vs Tuckerを同一データ分割・同一評価指標で比較できる。
 - 統計検定2級を受験し、結果と弱点を記録する。
 
-### 2026/12〜2027/2: TT / MPS基礎とPythonデータ分析実践
+### 2026/10〜2027/1: TT / MPS理論の締め → rank sweep → NN適用
 
 #### 研究実装
 
-1. 高階テンソル、tensorization、mode、coreの表記を統一する。
-2. TT-SVDを小さなNumPy / PyTorchテンソルで実装する。
-3. TT-rankとMPSのbond dimensionの対応を理解する。
-4. full tensorとTT表現のパラメータ数、再構成誤差を比較する。
-5. left / right unfoldingと逐次SVDのshapeをテストする。
-6. 最小のTT-LinearまたはMPS層を実装し、forwardの一致を確認する。
-7. まず小規模モデルで動作確認し、その後CIFAR-10モデルへの適用可能性を調べる。
+1. 04〜05で導いたclassification margin / logits error certificateを、06のminimum marginでbatch-wide prediction stabilityまで拡張して理論を閉じる。
+2. 06完了後は、TT-rank / bond dimensionを複数候補でsweepする。
+3. 各rankで、weight / tensor reconstruction error、パラメータ数、圧縮率を記録する。
+4. NN上ではlogits error、prediction agreement、accuracyを分けて記録する。margin certificateは補助指標として扱う。
+5. rank候補はvalidation相当の基準で選び、結果をCSVと図で保存する。
+6. Fashion-MNIST等の小規模モデルでTT / MPS置換を確認し、その後CIFAR-10等への適用可能性を評価する。
+7. baseline、TT置換直後、必要な場合のみTT + fine-tuningを明確に分ける。
 
 数値例として、`16 × 16` 行列を `(4, 4) × (4, 4)` にtensorizeし、TT-rankを `(1, 2, 1)` とした場合、元の256パラメータに対して、coreのパラメータ数は次のように見積もる。
 
@@ -167,10 +205,11 @@ Tucker-2（例: r_out=16, r_in=12）:
 
 #### 完了条件
 
-- TT-SVDの各stepとshapeを説明でき、単体テストが通る。
-- TT-rank別のパラメータ数と再構成誤差をCSV・図で比較できる。
-- 最小TT / MPS層のforwardを検証できる。
-- Pythonデータ分析実践を受験するか、研究優先で見送るかを2月末に確定する。
+- 06 minimum margin / batch-wide stabilityまで説明・検証し、04〜06のprediction-stability理論を閉じられる。
+- TT-rank別の再構成誤差、パラメータ数、圧縮率をCSV・図で比較できる。
+- NN上でrankとlogits error、prediction agreement、accuracyの関係を比較できる。
+- 次のNN適用で使うrank候補をvalidation相当の基準で決められる。
+- Pythonデータ分析実践は研究を止めない範囲で継続し、必要なら延期する。
 
 ### 2027/3〜5: MPS理解とDMRG最小実装
 
@@ -384,11 +423,20 @@ Conv重みのmode確認
 tensorization
 → unfolding
 → TT-SVD
-→ canonical form
-→ TT-Linear / MPS層
-→ bond dimension探索
-→ CIFAR-10へ接続
+→ canonical form / Schmidt分解
+→ TT-matrix / TT-Linear
+→ dense forwardとの一致
+→ NN forward error propagation（00〜03）
+→ classification margin / argmax stability（04）
+→ logits bound → margin certificate（05）
+→ minimum margin / batch-wide stability（06）
+→ TT-rank / bond dimension sweep
+→ NNへのTT / MPS適用
+→ DMRGへ接続
 ```
+
+04〜06は、rank sweepやNN適用時に「weight approximation errorがlogitsとpredictionへどう影響するか」を解釈するための理論補助である。
+06完了後はprediction certificateをさらに一般化し続けず、rank sweepと実データ評価へ進む。
 
 ### DMRG / DMRG-like
 
