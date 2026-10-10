@@ -50,6 +50,9 @@ HOOI
 | `10_fashion_mnist_mlp/02` | ReLUの4符号ケース、要素不等式、hidden activationのFrobenius誤差、LinearからReLUまでのtoy上界 | [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]] |
 | `10_fashion_mnist_mlp/03` | 第2 Linearのlogits誤差恒等式、spectral norm、合成上界、固定方向の人工摂動scale sweep | 実装は[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/00_第2Linearのlogits誤差伝播_設定結果考察]] |
 | `10_fashion_mnist_mlp/04` | 1 sampleのclassification margin、$\ell_\infty$ logits error、worst-case方向、argmax安定性 | 実装は[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/01_ClassificationMarginとArgmax安定性_設定結果考察]] |
+| `10_fashion_mnist_mlp/05` | batch logits errorから1 sampleのnorm chain、重み誤差上界、classification margin、prediction stability certificateへの接続 | 実装は[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/02_BatchLogitsErrorからPredictionStabilityCertificate_設定結果考察]] |
+| `10_fashion_mnist_mlp/06` | margin vector、minimum margin、bottleneck sample、batch内全sampleのprediction stability certificate | 実装は[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/03_MinimumMarginとBatch-widePredictionStability_設定結果考察]] |
+| `10_fashion_mnist_mlp/07` | 固定tensorization・3-core TT-matrixでのrank sweep、parameter count、compression ratio、weight reconstruction error | [[08_TT_MPS基礎実装検証/20_TT-matrixのrank_sweepと圧縮誤差のPyTorch確認]] |
 
 この対応は「Notebook 1本につきdocs 1本」ではなく、内容が連続するNotebookは1つの検証ノートへまとめる方針とする。
 
@@ -72,6 +75,9 @@ HOOI
 - [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/20_TT-matrixのrank_sweepと圧縮誤差のPyTorch確認]]
 
 ## 共通実装・操作ノート
 
@@ -82,9 +88,9 @@ HOOI
 - [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]]：TT-matrix / MPOコアから密行列を作らないforward。
 - [[08_TT_MPS基礎実装検証/14_TTLinear置換で使うPyTorchモデル操作]]：checkpoint、`state_dict`、`eval()`、`no_grad()`、module pathによる一層置換。
 
-TT-matrixの理論は、定義とKronecker積を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]、dense重みのtensorizationを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、dense reconstructionを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]、右から左へのforward縮約を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]]、dense `nn.Linear`との等価性を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/58_TTLinearとdense_Linearのforward等価性]] に分けている。
+TT-matrixの理論は、定義とKronecker積を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]、dense重みのtensorizationを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、dense reconstructionを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]、右から左へのforward縮約を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]]、dense `nn.Linear`との等価性を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/58_TTLinearとdense_Linearのforward等価性]]、bond dimensionとunfoldingの表現能力を[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/69_TT-matrixのbond_dimensionと表現能力]]、固定tensorizationでのrank sweepを[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/70_TT-matrixのrank_sweepと圧縮率_再構成誤差]]に分けている。
 
-学習済みMLPへ進む部分は、一層置換からlogitsまでの等価性を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/59_TTLinearによるMLP一層置換とlogits等価性]]、rank打ち切りによるLinear出力誤差を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/60_TT-rank打ち切りによるLinear出力誤差とnorm上界]]、ReLUの数学的性質を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/61_Lipschitz連続性とReLUの1-Lipschitz性]]、hidden activationまでの誤差伝播を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]、第2 Linearを通るlogits誤差と合成上界を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]、1 sampleのprediction安定性を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]、modeとrankの設計を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/62_TT-matrixのmode分解とrank設計]] に分けている。学習済みモデルでの検証記録は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] を参照する。
+学習済みMLPへ進む部分は、一層置換からlogitsまでの等価性を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/59_TTLinearによるMLP一層置換とlogits等価性]]、rank打ち切りによるLinear出力誤差を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/60_TT-rank打ち切りによるLinear出力誤差とnorm上界]]、ReLUの数学的性質を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/61_Lipschitz連続性とReLUの1-Lipschitz性]]、hidden activationまでの誤差伝播を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]、第2 Linearを通るlogits誤差と合成上界を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]、1 sampleのprediction安定性を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]、batch errorからsample-wise certificateへの接続を[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/66_BatchLogitsErrorからSample-wisePredictionStabilityへ]]、minimum marginによるbatch内全sampleの同時保証を[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/67_Batch内全予測不変の十分条件]]、modeとrankの設計を [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/62_TT-matrixのmode分解とrank設計]] に分けている。学習済みモデルでの検証記録は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] を参照する。
 
 ## 学習予定
 

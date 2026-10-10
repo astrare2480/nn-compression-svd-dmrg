@@ -70,4 +70,4 @@ flowchart TD
 
 ## 関連API
 
-[[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_tensor]]、[[90_src設計/05_Core_API_v1/compression/tt_cores_to_tt_matrix_cores]]、[[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]、[[90_src設計/05_Core_API_v1/compression/tt_svd_exact]]、[[90_src設計/05_Core_API_v1/compression/tt_svd]]
+[[90_src設計/05_Core_API_v1/compression/build_tt_linear]]、[[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_tensor]]、[[90_src設計/05_Core_API_v1/compression/tt_cores_to_tt_matrix_cores]]、[[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]、[[90_src設計/05_Core_API_v1/compression/tt_svd_exact]]、[[90_src設計/05_Core_API_v1/compression/tt_svd]]

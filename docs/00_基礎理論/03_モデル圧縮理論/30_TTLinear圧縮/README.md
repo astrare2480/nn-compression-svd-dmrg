@@ -10,6 +10,11 @@ TT-matrix・TTLinearの数学的基礎を、学習済みMLPの一層置換、ran
 4. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]
 5. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]
 6. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]
-7. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/62_TT-matrixのmode分解とrank設計]]
+7. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/66_BatchLogitsErrorからSample-wisePredictionStabilityへ]]
+8. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/67_Batch内全予測不変の十分条件]]
+9. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/68_TTLinear圧縮の誤差上界と予測安定性_不等式の全体像]]
+10. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/62_TT-matrixのmode分解とrank設計]]
+11. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/69_TT-matrixのbond_dimensionと表現能力]]
+12. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/70_TT-matrixのrank_sweepと圧縮率_再構成誤差]]
 
 spectral normと最大特異値の一般的な導出は [[00_基礎理論/01_数学基礎/01_線形代数/07_spectral_normと最大特異値_supとmax]]、前提となるTT-matrixの定義とforwardは [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/README]]、PyTorchの一般的な小規模確認は [[08_TT_MPS基礎実装検証/README]]、学習済みFashion-MNIST MLPへの適用記録は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] を参照する。

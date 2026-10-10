@@ -898,7 +898,7 @@ $$
 
 はsample $n$ のargmaxを保存する、さらに上流からの十分条件になる。
 
-ただし、batch全体のFrobenius normを1 sampleへ使い、さらに各段階でspectral norm上界を使うため、非常に保守的になり得る。ここでは接続関係だけを示し、batch全体の保証やminimum marginの設計へは進まない。
+ただし、batch全体のFrobenius normを1 sampleへ使い、さらに各段階でspectral norm上界を使うため、非常に保守的になり得る。各normの定義、二つの不等式の途中式、具体行列、上流の重み誤差上界までの完全なchainは、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/66_BatchLogitsErrorからSample-wisePredictionStabilityへ]]で扱う。batch全体の保証やminimum marginの設計へはまだ進まない。
 
 ## 12. この条件から言えること・言えないこと
 
@@ -916,4 +916,4 @@ $$
 - TT-rankが最適であること。
 - fine-tuning後の性能。
 
-PyTorchでの計算手順と実装上の注意は、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]を参照する。toy Notebookの設定、保存済み結果、考察は、[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/01_ClassificationMarginとArgmax安定性_設定結果考察]]へ分ける。
+PyTorchでの計算手順と実装上の注意は、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]を参照する。toy Notebookの設定、保存済み結果、考察は、[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/01_ClassificationMarginとArgmax安定性_設定結果考察]]へ分ける。batch-level logits errorからこの条件を実際につなぐ次段階は、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/66_BatchLogitsErrorからSample-wisePredictionStabilityへ]]、[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/02_BatchLogitsErrorからPredictionStabilityCertificate_設定結果考察]]を参照する。

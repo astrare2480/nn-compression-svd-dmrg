@@ -306,11 +306,15 @@ $$
 
 1 sampleのclassification marginとargmax安定性に進むtoy Notebookでは、dense top class、strongest competitor、$\ell_\infty$ logits error、worst-case方向による $2\varepsilon$ のgap縮小、common shiftを確認する。PyTorch操作と直接条件は[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、保存済み結果と考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/01_ClassificationMarginとArgmax安定性_設定結果考察]]に分ける。これは手入力したtoy logits errorの検証であり、学習済みmodelを実TT-rankで圧縮した結果ではない。
 
+続くtoy Notebookでは、固定した第1 Linearの重み摂動からbatch logits errorを作り、$\|\delta l_n\|_\infty\le\|\delta l_n\|_2\le\|\Delta L\|_F\le\|X\|_F\|\Delta W_1\|_2\|W_2\|_2$を経て、1 sampleのmargin certificateへ接続する。PyTorchのshape、norm API、scalar boolean、assertは[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、固定行列、保存済み数値、考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/02_BatchLogitsErrorからPredictionStabilityCertificate_設定結果考察]]に分ける。この重み摂動も手入力したproxyであり、実TT-rank打ち切り結果ではない。
+
+さらにminimum marginへ進むtoy Notebookでは、margin vector、bottleneck sample、$U<\gamma_{\min}/2$、全sampleのsample-wise条件、dense/compressed prediction vectorの一致を確認する。`argmax`、`topk`、minimumの値とindex、訂正済みcertificateは[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、保存済み数値と考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/03_MinimumMarginとBatch-widePredictionStability_設定結果考察]]に分ける。これは1つのbatch内のprediction agreementであり、ground-truth correctnessやaccuracyの保証ではない。
+
 学習済みFashion-MNIST MLPの`fc1`置換、activation比較、logits比較は基礎実装から分離し、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]に置く。
 
 ## 13. NN適用側との境界
 
-rank sweep、test accuracy、fine-tuning、性能比較などの未完了項目は、この基礎実装章ではなく [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] で管理する。ReLUの1-Lipschitz性は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/61_Lipschitz連続性とReLUの1-Lipschitz性]]、Linearからhidden activationまでの誤差伝播は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]、第2 Linearからlogitsまでの理論は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]、classification marginとargmax安定性は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]、toy PyTorch確認は [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]、[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、toy実験の設定・結果・考察は [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]] に収録している。ただし、学習済みFashion-MNIST MLPの打ち切りrank、後続logits、prediction、accuracyまで実装検証済みという意味ではない。
+rank sweep、test accuracy、fine-tuning、性能比較などの未完了項目は、この基礎実装章ではなく [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] で管理する。ReLUの1-Lipschitz性は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/61_Lipschitz連続性とReLUの1-Lipschitz性]]、Linearからhidden activationまでの誤差伝播は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]、第2 Linearからlogitsまでの理論は [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]、classification marginとargmax安定性は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]、batch errorからsample-wise certificateへの接続は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/66_BatchLogitsErrorからSample-wisePredictionStabilityへ]]、minimum marginによるbatch内全sampleの同時保証は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/67_Batch内全予測不変の十分条件]]、toy PyTorch確認は [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]、[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、toy実験の設定・結果・考察は [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]] に収録している。ただし、学習済みFashion-MNIST MLPの打ち切りrank、後続logits、prediction、accuracyまで実装検証済みという意味ではない。
 
 ## 関連
 
@@ -320,6 +324,8 @@ rank sweep、test accuracy、fine-tuning、性能比較などの未完了項目�
 - [[08_TT_MPS基礎実装検証/13_TT-rank打ち切りとLinear出力誤差上界のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]
 - [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]
 - [[90_src設計/README]]
 - [[50_DMRG/README]]

@@ -42,7 +42,7 @@ shape `(batch, product(out_modes))`のTensorを返す。`x`、各core、biasに�
 
 - TT-matrix化したLinear weightのdense化しないforward。
 - `F.linear`との値・勾配の一致検証。
-- 後続の学習可能な`TTLinear` Moduleを設計するためのfunctional primitive。
+- 学習可能な`TTLinear` Moduleがforwardを委譲するfunctional primitive。
 
 ## 処理概要
 
@@ -84,8 +84,8 @@ $$
 - `.item()`、`.detach()`、暗黙のCPU転送、in-place更新を行わず、`x`、core、biasへの勾配経路を保つ。
 - `bias=None`を許可し、`None`に対してshapeを参照しない。
 - `d=1`も同じ縮約で処理する。
-- 現時点では任意個のleading batch axisや`torch.nn.Module`としてのParameter登録、`state_dict`、初期化方針は責務外である。
+- 任意個のleading batch axisや`torch.nn.Module`としてのParameter登録、`state_dict`、初期化方針は責務外であり、Module側の境界は`TTLinear`が担当する。
 
 ## 関連API
 
-[[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]、[[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_cores]]、[[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters]]、[[90_src設計/05_Core_API_v1/Internal_API]]
+[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]、[[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_cores]]、[[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters]]、[[90_src設計/05_Core_API_v1/Internal_API]]

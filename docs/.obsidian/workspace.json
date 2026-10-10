@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "90_src設計/05_Core_API_v1.md",
+                "file": "00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/68_TTLinear圧縮の誤差上界と予測安定性_不等式の全体像.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "05_Core_API_v1"
+              "title": "68_TTLinear圧縮の誤差上界と予測安定性_不等式の全体像"
             }
           }
         ]
@@ -187,6 +187,12 @@
   },
   "active": "b6907776fdc3a747",
   "lastOpenFiles": [
+    "00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価_数式導出補足.md",
+    "00_基礎理論/01_数学基礎/01_線形代数/07_spectral_normと最大特異値_supとmax.md",
+    "00_基礎理論/01_数学基礎/01_線形代数/06_誤差評価.md",
+    "00_基礎理論/01_数学基礎/01_線形代数/05_圧縮率とRank.md",
+    "00_基礎理論/01_数学基礎/01_線形代数/03_SVDによる低ランク近似.md",
+    "90_src設計/05_Core_API_v1.md",
     "00_基礎理論/03_モデル圧縮理論/README.md",
     "00_基礎理論/01_数学基礎/README.md",
     "00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/README.md",
@@ -208,14 +214,8 @@
     "00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/50_縮約_ノルム_代数演算/53_TT_MPSの加減算とrank増加.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/50_縮約_ノルム_代数演算/52_TT_MPSのFrobeniusノルムと距離.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/50_縮約_ノルム_代数演算/51_TT_MPSの内積とenvironment縮約.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/50_縮約_ノルム_代数演算",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価/50_TT-roundingの誤差予算とrank選択.md",
-    "00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価/49_TT-roundingの環境行列と誤差直交分解.md",
     "00_基礎理論/01_数学基礎/02_テンソル代数/40_打ち切り_rounding_誤差評価",
     "00_基礎理論/01_数学基礎/02_テンソル代数/30_Gauge_正準形_直交中心",
     "00_基礎理論/01_数学基礎/02_テンソル代数/20_TT_MPS基礎",

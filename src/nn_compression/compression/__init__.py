@@ -42,6 +42,7 @@ from .tt import (
 )
 from .tt_canonical import tt_canonicality_errors, tt_canonicalize, tt_move_center
 from .tt_contraction import tt_fro_norm, tt_inner
+from .tt_linear import TTLinear, build_tt_linear, factorize_named_tt_linear
 from .tt_matrix import (
     dense_to_tt_matrix_cores,
     dense_to_tt_matrix_tensor,
@@ -51,6 +52,13 @@ from .tt_matrix import (
     tt_matrix_ranks,
     tt_matrix_to_dense,
 )
+from .tt_modes import (
+    ordered_factorizations,
+    tt_matrix_num_parameters_from_ranks,
+    tt_matrix_physical_sizes,
+    tt_matrix_shape_imbalance,
+)
+from .tt_rank_sweep import sweep_tt_matrix_weight_ranks
 from .tt_rounding import tt_bond_singular_values, tt_round, tt_truncate_bond
 from .tucker import (
     compression_factor,
@@ -117,6 +125,14 @@ __all__ = [
     "tt_cores_to_tt_matrix_cores",
     "dense_to_tt_matrix_cores",
     "tt_linear_forward",
+    "ordered_factorizations",
+    "tt_matrix_physical_sizes",
+    "tt_matrix_shape_imbalance",
+    "tt_matrix_num_parameters_from_ranks",
+    "sweep_tt_matrix_weight_ranks",
+    "TTLinear",
+    "build_tt_linear",
+    "factorize_named_tt_linear",
     # 旧名
     "SVD",
     "RebuildSVD",

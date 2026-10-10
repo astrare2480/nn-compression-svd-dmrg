@@ -126,6 +126,10 @@ Signature
 | `dense_to_tt_matrix_cores` | フローチャート | 1-site分岐とTT-SVDへの委譲 |
 | `tt_matrix_to_dense` | 構造図 | bond縮約とdense weightのaxis順 |
 | `tt_linear_forward` | フローチャート | site逐次縮約とbias分岐 |
+| `TTLinear` | Parameter構造図 | core・biasのParameter登録とfunctional forwardへの委譲 |
+| `build_tt_linear` | シーケンス図 | dense層、TT-SVD、Module構築の責務分担 |
+| `factorize_named_tt_linear` | シーケンス図 | named層の解決、model copy、対象層置換の責務分担 |
+| `ordered_factorizations` | フローチャート | 解なしの早期判定と反復DFSによる候補列挙 |
 | `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
 | `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
 | `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
@@ -237,6 +241,10 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_cores]]
 - [[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]
 - [[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]
+- [[90_src設計/05_Core_API_v1/compression/TTLinear]]
+- [[90_src設計/05_Core_API_v1/compression/build_tt_linear]]
+- [[90_src設計/05_Core_API_v1/compression/factorize_named_tt_linear]]
+- [[90_src設計/05_Core_API_v1/compression/ordered_factorizations]]
 
 ## training
 

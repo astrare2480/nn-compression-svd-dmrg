@@ -106,6 +106,13 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 | `validate_tt_linear_input` | `tt_linear_forward`の入力が2階で、入力feature数、dtype、deviceがcoreと一致することを検証する。 |
 | `validate_tt_linear_bias` | biasの`None`分岐、shape、dtype、deviceを検証する。 |
 
+### `compression.tt_modes`
+
+| helper | 責務 |
+|---|---|
+| `_positive_int` | `ordered_factorizations`の整数引数についてbool・非整数・1未満を拒否し、Python整数へ正規化する。 |
+| `_divisors_at_least` | 残りの積の約数を昇順に列挙し、指定した因子下限未満を除外する。 |
+
 ### `compression.tucker_validation`
 
 | helper | 責務 |
@@ -145,6 +152,7 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 - contractionの平方根境界処理は`compression.tt_contraction`が担当する。
 - TT-matrix固有のmode列、4階core、dense weight、forward入力・biasは`compression.tt_matrix_validation`が担当する。
 - 1-site TT-matrixでTT-SVDを迂回するときの`max_rank`整合は`compression.tt_matrix`のprivate helperが担当する。
+- TT-matrixのtensorization候補列挙に固有の正整数正規化と約数列挙は`compression.tt_modes`が担当する。
 - Conv2d / Linear固有の最大rankは各factorization componentが担当する。
 
 ## 現在の重複と変更時の注意
@@ -161,4 +169,4 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 
 ## 関連API
 
-[[90_src設計/05_Core_API_v1/README]]、[[90_src設計/05_Core_API_v1/compression/truncated_svd]]、[[90_src設計/05_Core_API_v1/compression/hosvd]]、[[90_src設計/05_Core_API_v1/compression/tt_svd]]、[[90_src設計/05_Core_API_v1/compression/tt_canonicalize]]、[[90_src設計/05_Core_API_v1/compression/tt_round]]、[[90_src設計/05_Core_API_v1/compression/tt_inner]]、[[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]、[[90_src設計/05_Core_API_v1/tensor/unfold]]
+[[90_src設計/05_Core_API_v1/README]]、[[90_src設計/05_Core_API_v1/compression/truncated_svd]]、[[90_src設計/05_Core_API_v1/compression/hosvd]]、[[90_src設計/05_Core_API_v1/compression/tt_svd]]、[[90_src設計/05_Core_API_v1/compression/tt_canonicalize]]、[[90_src設計/05_Core_API_v1/compression/tt_round]]、[[90_src設計/05_Core_API_v1/compression/tt_inner]]、[[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]、[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/compression/ordered_factorizations]]、[[90_src設計/05_Core_API_v1/tensor/unfold]]

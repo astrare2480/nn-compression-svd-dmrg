@@ -11,10 +11,10 @@
 
 ## 現在の教材
 
-- [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]：randomな2層MLPの重み誤差からlogits誤差までと、1 sampleのclassification margin・argmax安定性の設定・結果・考察を確認する。
+- [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]：2層MLPの重み誤差からbatch logits誤差、sample-wise certificate、minimum marginによるbatch内全予測不変の十分条件までの設定・結果・考察を確認する。
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]
 
-toy検証では人工的な重み誤差を使い、第2 Linearまでの恒等式、合成上界、scale sweepを確認した。さらに、手入力した1 sampleのlogits errorを使い、classification margin、worst-case方向によるgap縮小、argmax安定性を確認した。学習済みFashion-MNIST MLPでは、第1層を打ち切りなしTTLinearへ置換し、対象Linear出力、ReLU出力、最終logitsの等価性を確認した段階である。いずれもTT-rank打ち切りによる実データ圧縮結果ではない。
+toy検証では人工的な重み誤差を使い、第2 Linearまでの恒等式、合成上界、scale sweepを確認した。さらに、1 sampleのmargin、batch Frobenius誤差からsample-wise certificateへのchain、minimum marginを使った1 batch内全sampleの同時保証まで確認した。学習済みFashion-MNIST MLPでは、第1層を打ち切りなしTTLinearへ置換し、対象Linear出力、ReLU出力、最終logitsの等価性を確認した段階である。いずれもTT-rank打ち切りによる実データ圧縮結果ではない。
 
 test accuracyを含むrank sweep、TT coreのfine-tuning、parameter・MACs・latency・memoryの比較は、今後この章へ追加する。
 
@@ -27,3 +27,5 @@ test accuracyを含むrank sweep、TT coreのfine-tuning、parameter・MACs・la
 - [[08_TT_MPS基礎実装検証/14_TTLinear置換で使うPyTorchモデル操作]]
 - [[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]

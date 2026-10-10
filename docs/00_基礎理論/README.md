@@ -79,6 +79,8 @@ SVDによる低ランク近似からTucker/HOSVD/HOOI、さらにTT/MPS・DMRG�
 - [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/63_ReLUによるhidden_activation誤差伝播]]：第1 Linearの近似誤差をReLU後のhidden activation誤差へ接続する。
 - [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/64_第2Linearによるlogits誤差伝播と合成上界]]：hidden errorからlogits errorへの恒等式と、第1 Linearからの合成上界。
 - [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/65_ClassificationMarginとArgmax安定性]]：1 sampleのclassification margin、$\ell_\infty$ logits error、argmax不変の十分条件と直接判定。
+- [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/66_BatchLogitsErrorからSample-wisePredictionStabilityへ]]：batch Frobenius誤差からsampleの$\ell_\infty$誤差、classification margin、prediction stability certificateへ至る途中式。
+- [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/67_Batch内全予測不変の十分条件]]：minimum marginと共通上界を使い、1つのbatch内の全sampleを同時に保証する十分条件。
 
 ## 04_実験設計
 
@@ -105,6 +107,8 @@ TT / MPSの実装教材はSVD・Tuckerの検証章とは別系統として、現
 - [[08_TT_MPS基礎実装検証/15_ReLU_hidden_activation誤差伝播のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]
 
 ## 06_手法間のつながり
 
