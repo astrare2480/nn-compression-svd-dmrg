@@ -1,0 +1,2 @@
+requested_rank,between_rank_low,between_rank_high,reason
+12,,16,rank 16のfine-tuning後accuracyがdenseとの差の許容範囲内なので、さらに低rankでも精度を維持できるか確認する

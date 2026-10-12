@@ -16,5 +16,11 @@ TT-matrix・TTLinearの数学的基礎を、学習済みMLPの一層置換、ran
 10. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/62_TT-matrixのmode分解とrank設計]]
 11. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/69_TT-matrixのbond_dimensionと表現能力]]
 12. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/70_TT-matrixのrank_sweepと圧縮率_再構成誤差]]
+13. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/71_TT-matrixのtensorization比較とcut別特異値エネルギー]]
+14. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/72_TT圧縮の重み近似指標と分類性能指標の読み分け]]
+15. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/73_TT圧縮後fine-tuningの評価とモデル選択]]
+16. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/74_fine-tuning後のPareto_frontierと追加rank探索]]
+17. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/75_epoch0を含むcheckpoint選択と保存モデルの再現確認]]
+18. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/76_fine-tuning更新範囲のcontrolled_ablation]]
 
 spectral normと最大特異値の一般的な導出は [[00_基礎理論/01_数学基礎/01_線形代数/07_spectral_normと最大特異値_supとmax]]、前提となるTT-matrixの定義とforwardは [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/README]]、PyTorchの一般的な小規模確認は [[08_TT_MPS基礎実装検証/README]]、学習済みFashion-MNIST MLPへの適用記録は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] を参照する。

@@ -1,0 +1,2 @@
+selection_role,tensorization,requested_rank,actual_ranks,model_parameters,model_compression_ratio,validation_accuracy,prediction_agreement,logits_rmse,stage,validation_error
+aggressive,reversed_sites,16,"(1, 16, 16, 1)",153386,3.4932653566818352,0.889,0.9314,3.666437362029727,after,0.11099999999999999

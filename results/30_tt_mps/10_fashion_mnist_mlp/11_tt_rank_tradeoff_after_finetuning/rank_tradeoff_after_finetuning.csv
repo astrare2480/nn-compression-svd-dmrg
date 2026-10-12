@@ -1,0 +1,7 @@
+selection_role,tensorization,requested_rank,actual_ranks,model_parameters,model_compression_ratio,validation_accuracy,prediction_agreement,logits_rmse,stage
+aggressive,reversed_sites,16,"(1, 16, 16, 1)",153386,3.4932653566818352,0.5116,0.5276,7.933702566031197,before
+aggressive,reversed_sites,16,"(1, 16, 16, 1)",153386,3.4932653566818352,0.889,0.9314,3.666437362029727,after
+balanced,reversed_sites,32,"(1, 32, 32, 1)",205130,2.6120898942134256,0.798,0.846,4.451787095619754,before
+balanced,reversed_sites,32,"(1, 32, 32, 1)",205130,2.6120898942134256,0.885,0.9298,7.104990105167723,after
+conservative,reversed_sites,64,"(1, 64, 64, 1)",406922,1.3167584942568846,0.8872,0.9922,0.1794695368607887,before
+conservative,reversed_sites,64,"(1, 64, 64, 1)",406922,1.3167584942568846,0.885,0.9208,11.700915204422849,after

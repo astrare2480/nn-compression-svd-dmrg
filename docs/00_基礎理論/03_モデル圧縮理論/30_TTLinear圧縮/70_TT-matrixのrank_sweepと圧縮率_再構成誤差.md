@@ -284,6 +284,50 @@ $$
 
 となる。$C=2$ はTTの保存要素数がdenseの半分という意味であり、推論速度が2倍という意味ではない。実メモリ量にはdtypeや保存形式も、実行時間には縮約順序やkernelも影響する。
 
+### 6.1 一部の層だけを圧縮する場合の上限
+
+モデル全体のparameter数を、圧縮対象層$P_{\mathrm{target}}$と、それ以外の層$P_{\mathrm{rest}}$へ分ける。
+
+$$
+P_{\mathrm{dense\ model}}
+=
+P_{\mathrm{target}}
++
+P_{\mathrm{rest}}
+$$
+
+対象層を$P_{\mathrm{TT}}$まで圧縮した後のモデル全体の圧縮率は、
+
+$$
+C_{\mathrm{model}}
+=
+\frac{P_{\mathrm{target}}+P_{\mathrm{rest}}}
+{P_{\mathrm{TT}}+P_{\mathrm{rest}}}
+$$
+
+である。$P_{\mathrm{TT}}$を0へ近づけても、
+
+$$
+C_{\mathrm{model}}
+\longrightarrow
+\frac{P_{\mathrm{target}}+P_{\mathrm{rest}}}
+{P_{\mathrm{rest}}}
+$$
+
+という上限がある。未圧縮層は消えないため、対象層単体の大きな圧縮率が、そのままモデル全体の圧縮率にはならない。
+
+例えば、対象層が900 parameters、残りが100 parametersのモデルを考える。対象層を90 parametersへ圧縮すると、層単体は10倍圧縮だが、モデル全体は、
+
+$$
+\frac{900+100}{90+100}
+=
+\frac{1000}{190}
+\approx
+5.26
+$$
+
+倍である。対象層を極限まで小さくしても、モデル全体の圧縮率は$1000/100=10$倍を超えない。
+
 ## 7. dense reconstructionと二つの誤差
 
 rank上限 $r$ でTT-SVDし、全coreを縮約してdense shapeへ戻したweightを

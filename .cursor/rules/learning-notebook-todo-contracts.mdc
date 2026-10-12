@@ -1,0 +1,17 @@
+---
+description: 学習用NotebookのTODOで責務とセル間接続を明示する
+globs: notebooks/**/*.ipynb
+alwaysApply: false
+---
+
+# 学習用NotebookのTODO実装契約
+
+- TODOごとに「入力」「このTODOで行うこと」「行わないこと」「出力」「完了条件」「次のTODOへの接続」を書く。
+- 入出力は変数名、辞書キー、DataFrame列を具体的に書く。
+- 1つのTODOは1つの責務に限定し、学習・評価・可視化・保存を勝手に先取りしない。
+- 前後セルの変数契約を読み、producerとconsumerの形式を一致させる。
+- 既存の`src` APIを確認し、同じ関数をNotebook内で再実装しない。
+- 重い学習の前に、形状、更新対象、parameter数、キー形式をassertする。
+- loaderを使うTODOでは、学習・early stopping・条件選択・testの役割を明記する。
+- 未実装TODOに完成コードを先に書かない。ユーザーが解答を求めた場合だけ実装する。
+- TODO実装後は次へ進む前に、そのTODOの範囲と後続セルへの接続だけを集中確認する。

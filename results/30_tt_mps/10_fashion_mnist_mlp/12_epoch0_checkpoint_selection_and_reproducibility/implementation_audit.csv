@@ -1,0 +1,13 @@
+item,expected,status,evidence
+loss,CrossEntropyLoss only,PASS,Notebook 10 creates only CrossEntropyLoss; no distillation loss
+optimizer,Adam,PASS,a new Adam is constructed inside each role loop
+learning_rate,1e-3,PASS,Notebook 10 configuration
+weight_decay,0,PASS,Adam default; Notebook 10 does not override weight_decay
+scheduler,none,PASS,no scheduler is constructed or stepped
+seed,0,PASS,seed and train Generator are reset for each role
+dense_initialization,same checkpoint,PASS,each role starts from baseline_state before TT conversion
+optimizer_independence,independent by role,PASS,Adam construction is inside the role loop
+best_checkpoint_criterion,early-stop validation loss,PASS,fit_with_early_stopping uses strict min_delta improvement
+epoch0_originally_included,no,PASS,original fit initializes best at infinity and evaluates after epoch 1
+evaluation_mode,eval plus no_grad,PASS,existing evaluate API controls inference mode
+logits_rmse,global over all logit elements,PASS,"sum squared error divided by all logit elements, then square root"
