@@ -1,0 +1,3 @@
+requested_rank,update_scope,epoch,actual_ranks,core_shapes,model_parameters,model_compression_ratio,trainable_parameters,validation_loss,validation_accuracy,rank_validation_loss,rank_validation_accuracy,prediction_agreement,logits_rmse
+12,all_parameters,0,"(1, 12, 12, 1)","((1, 32, 2, 12), (12, 8, 8, 12), (12, 2, 49, 1))",145570,3.6808270934945386,145570,1.6691145820617677,0.3982,1.6592713041305542,0.395,0.4092,8.442083647334568
+12,tt_cores_only,0,"(1, 12, 12, 1)","((1, 32, 2, 12), (12, 8, 8, 12), (12, 2, 49, 1))",145570,3.6808270934945386,11160,1.6691145820617677,0.3982,1.6592713041305542,0.395,0.4092,8.442083647334568

@@ -1,0 +1,5 @@
+requested_rank,model_parameters_exact_match,model_compression_ratio_exact_match,rank_validation_accuracy_exact_match,prediction_agreement_exact_match,logits_rmse_exact_match
+12,True,True,True,True,True
+16,True,True,True,True,True
+32,True,True,True,True,True
+64,True,True,True,True,True

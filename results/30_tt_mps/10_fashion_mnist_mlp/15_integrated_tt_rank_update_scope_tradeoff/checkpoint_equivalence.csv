@@ -1,0 +1,2 @@
+requested_rank,left_update_scope,right_update_scope,both_selected_epoch0,state_dict_exact_equal,candidate_treatment
+64,all_parameters,tt_cores_only,True,True,merge_as_common_epoch0

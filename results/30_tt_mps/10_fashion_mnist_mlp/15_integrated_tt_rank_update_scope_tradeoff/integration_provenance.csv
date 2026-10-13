@@ -1,0 +1,15 @@
+setting,notebook13_value,notebook14_value,exact_match,verification
+SEED,0,0,True,literal assignment
+TARGET_LAYER,fc1,fc1,True,literal assignment
+TRAIN_BATCH_SIZE,64,64,True,literal assignment
+VALIDATION_BATCH_SIZE,64,64,True,literal assignment
+LEARNING_RATE,0.001,0.001,True,literal assignment
+MAX_EPOCHS,50,50,True,literal assignment
+PATIENCE,5,5,True,literal assignment
+MIN_DELTA,0.0001,0.0001,True,literal assignment
+DTYPE,torch.float32,torch.float32,True,AST/code evidence
+BASELINE_CHECKPOINT,baseline_same_run.pt,baseline_same_run.pt,True,AST/code evidence
+TENSORIZATION,reversed_sites; same selected_tensorizations.csv,reversed_sites; same selected_tensorizations.csv,True,AST/code evidence
+DATA_SPLIT,50000/5000/5000; seed=SEED,50000/5000/5000; seed=SEED,True,AST/code evidence
+OPTIMIZER,torch.optim.Adam; lr=LEARNING_RATE,torch.optim.Adam; lr=LEARNING_RATE,True,AST/code evidence
+LOSS,torch.nn.CrossEntropyLoss,torch.nn.CrossEntropyLoss,True,AST/code evidence

@@ -1,0 +1,2 @@
+requested_rank,update_scope,selected_epoch,rank_validation_accuracy,prediction_agreement,logits_rmse,model_parameters,model_compression_ratio,validation_error,agreement_error,parameters_normalized,error_normalized,knee_distance
+16,tt_cores_only,12,0.8904,0.9186,4.309766604306288,153386,3.4932653566818352,0.10960000000000003,0.08140000000000003,0.13122901276024176,0.5238095238095213,0.24392459003955574

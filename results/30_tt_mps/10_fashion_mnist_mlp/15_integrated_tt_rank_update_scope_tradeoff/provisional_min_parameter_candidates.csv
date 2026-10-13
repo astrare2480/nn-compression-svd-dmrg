@@ -1,0 +1,2 @@
+requested_rank,update_scope,selected_epoch,rank_validation_accuracy,prediction_agreement,logits_rmse,model_parameters,model_compression_ratio,validation_error,agreement_error
+12,tt_cores_only,17,0.8884,0.928,5.097318187545106,145570,3.680827093494538,0.11160000000000003,0.07199999999999995

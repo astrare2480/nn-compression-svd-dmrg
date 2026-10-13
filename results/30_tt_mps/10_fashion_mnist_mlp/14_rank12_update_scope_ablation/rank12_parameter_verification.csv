@@ -1,0 +1,17 @@
+requested_rank,update_scope,parameter_name,is_trainable,numel,exact_equal,max_abs_change,selected_epoch
+12,all_parameters,fc1.bias,True,512,False,0.3043108880519867,7
+12,all_parameters,fc1.cores.0,True,768,False,0.18066726624965668,7
+12,all_parameters,fc1.cores.1,True,9216,False,0.5003694891929626,7
+12,all_parameters,fc1.cores.2,True,1176,False,0.5364301800727844,7
+12,all_parameters,fc2.bias,True,256,False,0.1746848225593567,7
+12,all_parameters,fc2.weight,True,131072,False,0.6425959467887878,7
+12,all_parameters,fc3.bias,True,10,False,0.11863002181053162,7
+12,all_parameters,fc3.weight,True,2560,False,0.877782940864563,7
+12,tt_cores_only,fc1.bias,False,512,True,0.0,17
+12,tt_cores_only,fc1.cores.0,True,768,False,0.3692770302295685,17
+12,tt_cores_only,fc1.cores.1,True,9216,False,0.811181366443634,17
+12,tt_cores_only,fc1.cores.2,True,1176,False,0.9456968307495117,17
+12,tt_cores_only,fc2.bias,False,256,True,0.0,17
+12,tt_cores_only,fc2.weight,False,131072,True,0.0,17
+12,tt_cores_only,fc3.bias,False,10,True,0.0,17
+12,tt_cores_only,fc3.weight,False,2560,True,0.0,17

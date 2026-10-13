@@ -26,6 +26,14 @@ Notebook 12の保存結果、rank 64でlossとaccuracyが逆方向へ動いた�
 
 Notebook 13の保存結果、更新方式ごとの違い、rank 64の学習trajectory、単一試行から言える範囲は、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/06_TTコアのみ更新ablation]]に整理した。更新範囲を制限する一般的な意味は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/76_fine-tuning更新範囲のcontrolled_ablation]]へ分けている。
 
+[14_rank12_update_scope_ablation.ipynb](../../../notebooks/30_tt_mps/10_fashion_mnist_mlp/14_rank12_update_scope_ablation.ipynb)では、Notebook 11が追加候補として登録したrank 12について、Notebook 13と同じ全parameter更新／TT coresのみ更新の比較を行った。epoch 0のaccuracyは`0.3950`だったが、全parameter更新で`0.8848`、TT coresのみ更新で`0.8884`まで回復した。後者はdenseと同じrank-validation accuracyで、比較候補中のモデル総parameter数も最小だったため、圧縮を優先する暫定候補とした。ただし、最高accuracy・最短学習時間・test性能を意味しない。
+
+Notebook 14の保存結果とNotebook 11・13を統合した候補整理は、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/07_rank12追加と更新範囲比較]]に整理した。rank、モデル総parameter数、学習対象数、学習時間、推論コストの一般的な読み分けは[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/77_TT-rankと学習計算量_推論コストの切り分け]]へ分けている。
+
+[15_integrated_tt_rank_update_scope_tradeoff.ipynb](../../../notebooks/30_tt_mps/10_fashion_mnist_mlp/15_integrated_tt_rank_update_scope_tradeoff.ipynb)では、Notebook 13・14の8 trialを統合し、rank 64の同一checkpointをまとめた7モデル候補について、モデル総parameter数とaccuracy・agreement・logits RMSEのtrade-offを分けて比較した。accuracy Paretoにはrank 12・16・32のTT coresのみ更新が残り、dense accuracyから0.001以内という事後的許容差ではrank 12・TT coresのみ更新が最小候補になった。ただし、最高accuracy、最短学習時間、統計的同等性、test性能を意味しない。rank 12が探索範囲の下端なので、圧縮を優先する場合はさらに低rankを検証する余地が残る。
+
+Notebook 15の統合結果と候補選択の考察は、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/08_TT-rankと更新範囲の統合trade-off]]に整理した。許容差、Pareto frontier、knee、学習コストを分ける一般的な方法は、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/78_accuracy許容差とParetoによる圧縮候補選択]]へ分けている。
+
 一般的なtoy modelでは、第1 Linearの重み誤差をReLUと第2 Linearへ伝播させる合成上界、1 sampleのclassification margin、batch logits errorからsample-wise prediction certificate、minimum marginによるbatch内全sampleの同時保証までを確認している。PyTorch操作は[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]に分け、Fashion-MNISTの実測結果とは数えない。
 
 ## 読む順序
@@ -62,15 +70,19 @@ Notebook 13の保存結果、更新方式ごとの違い、rank 64の学習traje
 30. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/05_epoch0を含むcheckpoint再選択と再現確認]]
 31. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/76_fine-tuning更新範囲のcontrolled_ablation]]
 32. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/06_TTコアのみ更新ablation]]
+33. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/77_TT-rankと学習計算量_推論コストの切り分け]]
+34. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/07_rank12追加と更新範囲比較]]
+35. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/78_accuracy許容差とParetoによる圧縮候補選択]]
+36. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/08_TT-rankと更新範囲の統合trade-off]]
 
 対応Notebookは [10_fashion_mnist_mlp](../../../notebooks/30_tt_mps/10_fashion_mnist_mlp/) に置く。
 
 ## 未完了の次段階
 
+- rank 12未満の少数候補を同じ条件で追加し、圧縮優先時の下限を確認すること
 - 学習済みFashion-MNIST MLPの打ち切りrankで、ReLUを通るhidden errorを数値確認すること。一般的なtoy例は実装検証ノート15で確認済み
 - 学習済みFashion-MNIST MLPの実際の打ち切りrankで、後続Linearを通るlogits errorと合成上界を数値確認すること。random toy modelは実装検証ノート16で確認済み
 - 学習済みFashion-MNIST MLPを実際にTT-rank打ち切りしたときのsample別classification margin、minimum margin、batch内prediction agreement。一般的なtoy例は理論ノート65〜67、実装ノート17〜19、toy結果ノート01〜03で確認済み
-- rank 12を実際にfine-tuningし、rank 16より強い圧縮側の限界を確認すること
 - validationで選択したrank・tensorization・fine-tuning条件に対するFashion-MNIST test setでの最終評価
 - rank 64について、同じepoch 0から学習率を下げ、fine-tuning不要と更新量過大の仮説を切り分けること
 - 更新方式の差を複数seedとsample別の対応のある予測で確認すること

@@ -1,0 +1,2 @@
+requested_rank,update_scope,selection_rule,accuracy_gap_to_dense,model_compression_ratio,prediction_agreement,logits_rmse,benefit,tradeoff,limitations
+12,tt_cores_only,"accuracy >= dense - 0.001, then minimum model parameters; keep all ties",0.0,3.680827093494538,0.928,5.097318187545106,許容accuracy内でモデル総parameter数が最小,agreementとlogits RMSEはaccuracyとは別に確認が必要,single seed; tolerance applied after experiments; test not evaluated; no latency/MACs claim

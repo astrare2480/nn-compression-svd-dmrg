@@ -1,0 +1,12 @@
+requested_rank,update_scope,parameter_name,numel
+12,all_parameters,fc1.bias,512
+12,all_parameters,fc1.cores.0,768
+12,all_parameters,fc1.cores.1,9216
+12,all_parameters,fc1.cores.2,1176
+12,all_parameters,fc2.bias,256
+12,all_parameters,fc2.weight,131072
+12,all_parameters,fc3.bias,10
+12,all_parameters,fc3.weight,2560
+12,tt_cores_only,fc1.cores.0,768
+12,tt_cores_only,fc1.cores.1,9216
+12,tt_cores_only,fc1.cores.2,1176
