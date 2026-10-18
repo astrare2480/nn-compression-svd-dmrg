@@ -1,0 +1,47 @@
+{
+  "checkpoint_path": "models\\10_svd\\30_fashion_mnist_cnn\\01_cnn_baseline\\fashion_mnist_cnn_baseline.pt",
+  "checkpoint_best_epoch": 10,
+  "checkpoint_best_validation_loss": 0.22325173783302307,
+  "seed": 0,
+  "split_lengths": [
+    50000,
+    5000,
+    5000
+  ],
+  "validation_batch_size": 256,
+  "out_modes": [
+    4,
+    4,
+    4
+  ],
+  "in_modes": [
+    6,
+    6,
+    8
+  ],
+  "requested_rank_upper_bounds": [
+    1,
+    2,
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28,
+    29,
+    32
+  ],
+  "dtype": "torch.float32",
+  "device": "cpu",
+  "selection_status": {
+    "knee_defined": true,
+    "reason": "一意な内部kneeを定義できた",
+    "knee_distance": 0.3433197294130896,
+    "selection_method": "normalized Pareto chord distance",
+    "pareto_point_count": 10,
+    "balanced_requested_rank_upper_bound": 16
+  },
+  "selection_budget_column": "tt_core_parameters",
+  "test_evaluated_in_notebook_03": false
+}

@@ -1,0 +1,44 @@
+{
+  "seed": 0,
+  "device": "cuda",
+  "dtype": "torch.float32",
+  "baseline_checkpoint": "D:\\dev\\nn-compression-svd-dmrg\\models\\10_svd\\30_fashion_mnist_cnn\\01_cnn_baseline\\fashion_mnist_cnn_baseline.pt",
+  "out_modes": [
+    4,
+    4,
+    4
+  ],
+  "in_modes": [
+    6,
+    6,
+    8
+  ],
+  "rank_candidates": [
+    12,
+    16,
+    20,
+    24
+  ],
+  "rank_roles": {
+    "12": "pareto_aggressive",
+    "16": "pareto_balanced",
+    "20": "pareto_conservative",
+    "24": "accuracy_recovery_reference"
+  },
+  "split_lengths": [
+    50000,
+    5000,
+    5000
+  ],
+  "train_batch_size": 64,
+  "validation_batch_size": 256,
+  "learning_rate": 0.001,
+  "max_epochs": 50,
+  "patience": 5,
+  "min_delta": 0.0001,
+  "update_scope": "conv2.cores.* only",
+  "checkpoint_selection": "finetuning_monitor_loss including epoch 0",
+  "training_time_definition": "train_one_epoch only; monitor evaluation excluded",
+  "rank_validation_usage": "epoch 0 and selected checkpoint diagnostics only",
+  "test_evaluated": false
+}
