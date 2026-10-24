@@ -40,7 +40,15 @@ from .prediction_stability import (
     minimum_classification_margin,
     sample_stability_certificates,
 )
+from .classification_outputs import (
+    ClassificationMetrics,
+    LogitsComparison,
+    classification_metrics_from_logits,
+    collect_model_logits,
+    compare_logits,
+)
 from .tensor_approximation import relative_frobenius_error
+from .tensor_comparison import TensorApproximationMetrics, tensor_approximation_metrics
 
 __all__ = [
     "count_parameters",
@@ -74,4 +82,11 @@ __all__ = [
     "minimum_classification_margin",
     "sample_stability_certificates",
     "batch_stability_certificate",
+    "TensorApproximationMetrics",
+    "tensor_approximation_metrics",
+    "ClassificationMetrics",
+    "LogitsComparison",
+    "collect_model_logits",
+    "classification_metrics_from_logits",
+    "compare_logits",
 ]

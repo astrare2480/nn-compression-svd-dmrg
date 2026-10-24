@@ -25,7 +25,8 @@ from collections.abc import Sequence
 import torch
 from torch import nn
 
-from ..utils.modules import get_named_module, set_named_module
+from ..utils.modules import set_named_module
+from ._named_layer import _get_named_layer
 from .tt_matrix import dense_to_tt_matrix_cores, tt_linear_forward, tt_matrix_ranks
 from .tt_matrix_validation import (
     validate_tt_linear_bias,
@@ -205,18 +206,7 @@ def factorize_named_tt_linear(
         model 全体の dtype / device / 各 module の ``training`` 状態は ``deepcopy`` が
         そのまま保持する。置換される層の ``training`` は元の ``nn.Linear`` に揃える。
     """
-    if not isinstance(layer_name, str):
-        raise TypeError(
-            f"layer_name は str である必要があります: {type(layer_name).__name__}"
-        )
-    if layer_name == "":
-        raise ValueError("layer_name は空文字にできません。")
-
-    layer = get_named_module(model, layer_name)
-    if not isinstance(layer, nn.Linear):
-        raise TypeError(
-            f"{layer_name!r} は Linear である必要があります: {type(layer).__name__}"
-        )
+    layer = _get_named_layer(model, layer_name, nn.Linear)
 
     tt_layer = build_tt_linear(layer, out_modes, in_modes, max_rank=max_rank)
 

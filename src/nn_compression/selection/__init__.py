@@ -8,8 +8,11 @@ from .knee import (
     line_equation,
 )
 from .pareto import extract_pareto_frontier, is_pareto_candidate
+from .pareto_knee import ParetoKneeSelection, select_pareto_knee
 
 __all__ = [
+    "ParetoKneeSelection",
+    "select_pareto_knee",
     "extract_pareto_frontier",
     "is_pareto_candidate",
     "get_first_point",

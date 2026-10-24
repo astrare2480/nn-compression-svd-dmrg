@@ -130,6 +130,12 @@ Signature
 | `build_tt_linear` | シーケンス図 | dense層、TT-SVD、Module構築の責務分担 |
 | `factorize_named_tt_linear` | シーケンス図 | named層の解決、model copy、対象層置換の責務分担 |
 | `ordered_factorizations` | フローチャート | 解なしの早期判定と反復DFSによる候補列挙 |
+| `tt_conv2d_forward` | フローチャート | unfold、TT-Linear縮約、出力shape復元の順序 |
+| `TTConv2d` | Parameter構造図 | core・biasのParameter登録とfunctional forwardへの委譲 |
+| `build_tt_conv2d` | シーケンス図 | dense kernelのTT化とModule構築の責務分担 |
+| `factorize_named_tt_conv2d` | シーケンス図 | named層の解決、model copy、対象層置換の責務分担 |
+| `batch_stability_certificate` | フローチャート | margin計算、sample判定、batch集約の責務分担 |
+| `select_pareto_knee` | フローチャート | frontier抽出後の未定義判定とknee選択 |
 | `fit_with_early_stopping` | フローチャート | epoch反復・best state・停止条件 |
 | `benchmark_inference` | フローチャート | fixed input・同期・計測分岐 |
 | `collect_compression_metrics` | フローチャート + シーケンス図 | optional分岐と評価API委譲 |
@@ -147,8 +153,8 @@ Signature
 ```mermaid
 flowchart LR
     Compression["compression<br/>SVD / Tucker / TT / rank sweep"]
-    Metrics["metrics<br/>accuracy / latency / MACs"]
-    Training["training<br/>train / evaluate / early stopping"]
+    Metrics["metrics<br/>accuracy / logits / error bound / stability"]
+    Training["training<br/>train / evaluate / parameter scope"]
     Tensor["tensor<br/>unfold / fold / mode_dot"]
     Utils["utils<br/>named module / path / seed"]
     Datasets["datasets<br/>dataset / split / loader"]
@@ -236,6 +242,9 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/compression/tt_fro_norm]]
 - [[90_src設計/05_Core_API_v1/compression/tt_matrix_ranks]]
 - [[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters]]
+- [[90_src設計/05_Core_API_v1/compression/tt_matrix_physical_sizes]]
+- [[90_src設計/05_Core_API_v1/compression/tt_matrix_shape_imbalance]]
+- [[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters_from_ranks]]
 - [[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_tensor]]
 - [[90_src設計/05_Core_API_v1/compression/tt_cores_to_tt_matrix_cores]]
 - [[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_cores]]
@@ -245,6 +254,35 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/compression/build_tt_linear]]
 - [[90_src設計/05_Core_API_v1/compression/factorize_named_tt_linear]]
 - [[90_src設計/05_Core_API_v1/compression/ordered_factorizations]]
+- [[90_src設計/05_Core_API_v1/compression/sweep_tt_matrix_weight_ranks]]
+- [[90_src設計/05_Core_API_v1/compression/tt_conv2d_forward]]
+- [[90_src設計/05_Core_API_v1/compression/TTConv2d]]
+- [[90_src設計/05_Core_API_v1/compression/build_tt_conv2d]]
+- [[90_src設計/05_Core_API_v1/compression/factorize_named_tt_conv2d]]
+- [[90_src設計/05_Core_API_v1/compression/tt_conv2d_to_dense_weight]]
+- [[90_src設計/05_Core_API_v1/compression/sweep_tt_conv2d_weight_ranks]]
+
+### TT-Convの責務分担
+
+```mermaid
+flowchart LR
+    Dense["nn.Conv2d"] --> Build["build_tt_conv2d"]
+    Build --> Matrix["dense_to_tt_matrix_cores"]
+    Matrix --> Layer["TTConv2d"]
+    Layer --> Forward["tt_conv2d_forward"]
+    Forward --> Unfold["torch.nn.functional.unfold"]
+    Forward --> TTLinear["tt_linear_forward"]
+    Named["factorize_named_tt_conv2d"] --> Resolve["named layerを解決"]
+    Resolve --> Build
+    Named --> Copy["modelをdeepcopyして置換"]
+    Sweep["sweep_tt_conv2d_weight_ranks"] --> MatrixSweep["sweep_tt_matrix_weight_ranks"]
+```
+
+- `build_tt_conv2d`はdense kernelの行列化とTT-SVDを担当する。
+- `TTConv2d`は学習対象ParameterとConv設定を所有する。
+- `tt_conv2d_forward`はdense kernelを復元せず、patch列に既存のTT-Linear縮約を適用する。
+- `factorize_named_tt_conv2d`はmodelの探索・コピー・置換だけを担当し、分解処理を再実装しない。
+- rank sweepはweight近似と層全体のparameter数を分けて記録する。
 
 ## training
 
@@ -252,6 +290,9 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/training/evaluate]]
 - [[90_src設計/05_Core_API_v1/training/fit_with_early_stopping]]
 - [[90_src設計/05_Core_API_v1/training/non_shuffling_loader]]
+- [[90_src設計/05_Core_API_v1/training/set_trainable_parameter_prefixes]]
+- [[90_src設計/05_Core_API_v1/training/trainable_named_parameters]]
+- [[90_src設計/05_Core_API_v1/training/parameter_change_summary]]
 
 ## metrics — model comparison
 
@@ -264,6 +305,13 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/metrics/benchmark_inference]]
 - [[90_src設計/05_Core_API_v1/metrics/benchmark_inference_print]]
 - [[90_src設計/05_Core_API_v1/metrics/collect_compression_metrics]]
+- [[90_src設計/05_Core_API_v1/metrics/collect_model_logits]]
+- [[90_src設計/05_Core_API_v1/metrics/ClassificationMetrics]]
+- [[90_src設計/05_Core_API_v1/metrics/classification_metrics_from_logits]]
+- [[90_src設計/05_Core_API_v1/metrics/LogitsComparison]]
+- [[90_src設計/05_Core_API_v1/metrics/compare_logits]]
+- [[90_src設計/05_Core_API_v1/metrics/TensorApproximationMetrics]]
+- [[90_src設計/05_Core_API_v1/metrics/tensor_approximation_metrics]]
 
 ## metrics — MACs / Tensor error
 
@@ -278,6 +326,19 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/metrics/estimate_cnn_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/relative_frobenius_error]]
 
+## metrics — error bound / prediction stability
+
+- [[90_src設計/05_Core_API_v1/metrics/LinearOutputErrorBounds]]
+- [[90_src設計/05_Core_API_v1/metrics/linear_output_error_bounds]]
+- [[90_src設計/05_Core_API_v1/metrics/mlp_logits_error_bound]]
+- [[90_src設計/05_Core_API_v1/metrics/mlp_sample_logits_error_bounds]]
+- [[90_src設計/05_Core_API_v1/metrics/MinimumMargin]]
+- [[90_src設計/05_Core_API_v1/metrics/BatchStabilityCertificate]]
+- [[90_src設計/05_Core_API_v1/metrics/classification_margins]]
+- [[90_src設計/05_Core_API_v1/metrics/minimum_classification_margin]]
+- [[90_src設計/05_Core_API_v1/metrics/sample_stability_certificates]]
+- [[90_src設計/05_Core_API_v1/metrics/batch_stability_certificate]]
+
 ## selection
 
 - [[90_src設計/05_Core_API_v1/selection/is_pareto_candidate]]
@@ -287,6 +348,24 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/selection/line_equation]]
 - [[90_src設計/05_Core_API_v1/selection/find_knee_point]]
 - [[90_src設計/05_Core_API_v1/selection/find_knee_point_numpy]]
+- [[90_src設計/05_Core_API_v1/selection/ParetoKneeSelection]]
+- [[90_src設計/05_Core_API_v1/selection/select_pareto_knee]]
+
+## Notebookとsrcの対応
+
+`notebooks/30_tt_mps/`は学習の流れを残し、再利用可能な計算・評価・model置換だけを`src`へ移す。Notebook固有の可視化、実験条件、結果解釈、教材用TODOはNotebook側に残す。
+
+| Notebook範囲 | 学習・実験上の役割 | 対応するCore API |
+|---|---|---|
+| `00_fundamentals/00`〜`15` | TT表現、TT-SVD、正準化、rounding、縮約、TT-matrix | `tt_svd`, `tt_canonicalize`, `tt_round`, `tt_inner`, `tt_matrix_to_dense`, `tt_linear_forward`ほか |
+| MLP `00`〜`07` | TTLinear、mode設計、rank sweep、誤差上界、予測安定性 | `TTLinear`, `ordered_factorizations`, `sweep_tt_matrix_weight_ranks`, error bound / stability API |
+| MLP `08` | logits収集と圧縮前後比較 | `collect_model_logits`, `classification_metrics_from_logits`, `compare_logits`, `tensor_approximation_metrics` |
+| MLP `13`〜`14` | fine-tuning対象Parameterの限定と更新確認 | `set_trainable_parameter_prefixes`, `trainable_named_parameters`, `parameter_change_summary` |
+| CNN `00`〜`02` | Conv kernelのTT-matrix表現とTT-Conv forward | `tt_conv2d_forward`, `TTConv2d`, `build_tt_conv2d`, `tt_conv2d_to_dense_weight` |
+| CNN `03` | TT-Conv rank候補比較とknee診断 | `sweep_tt_conv2d_weight_ranks`, `select_pareto_knee` |
+| CNN `04` | model内Conv置換とcore fine-tuning | `factorize_named_tt_conv2d`とtraining parameter-scope API |
+
+実験のループ構成、DataFrameの加工、plot、保存先、採用rankの判断はCore APIへ固定せずNotebook側の責務とする。
 
 ## datasets
 

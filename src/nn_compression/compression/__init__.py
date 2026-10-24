@@ -42,6 +42,14 @@ from .tt import (
 )
 from .tt_canonical import tt_canonicality_errors, tt_canonicalize, tt_move_center
 from .tt_contraction import tt_fro_norm, tt_inner
+from .tt_conv import (
+    TTConv2d,
+    build_tt_conv2d,
+    factorize_named_tt_conv2d,
+    sweep_tt_conv2d_weight_ranks,
+    tt_conv2d_forward,
+    tt_conv2d_to_dense_weight,
+)
 from .tt_linear import TTLinear, build_tt_linear, factorize_named_tt_linear
 from .tt_matrix import (
     dense_to_tt_matrix_cores,
@@ -133,6 +141,12 @@ __all__ = [
     "TTLinear",
     "build_tt_linear",
     "factorize_named_tt_linear",
+    "tt_conv2d_forward",
+    "TTConv2d",
+    "build_tt_conv2d",
+    "factorize_named_tt_conv2d",
+    "tt_conv2d_to_dense_weight",
+    "sweep_tt_conv2d_weight_ranks",
     # 旧名
     "SVD",
     "RebuildSVD",
