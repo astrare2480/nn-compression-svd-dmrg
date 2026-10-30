@@ -2,7 +2,7 @@
 
 ニューラルネットワーク圧縮を、**SVD → Tucker / HOSVD / HOOI → TT / MPS → DMRG** の順に学習・実験するリポジトリ。
 
-現在は、**SVD編のcorrected実験と、Tucker / HOSVD / HOOI編まで完了**している。
+現在は、**SVD、Tucker / HOSVD / HOOI、TT / MPSの基礎とNN圧縮検証**まで進み、DMRGでは2-site局所更新の複数往復、energy停止判定、global residual・energy分散、bond上限比較まで確認している。
 
 - MNIST / Fashion-MNIST / CIFAR-10でSVD低rank圧縮を検証
 - Linear / Conv2dの分解、Fine-tuning、rank選択、model-wide rank allocationを実施
@@ -12,6 +12,9 @@
 - Tucker / HOOI処理を `src/nn_compression/` へ共通化
 - SVDからHOOIまでの基礎理論を、shape・途中式・成立条件まで含めて再監査
 - src全体のpublic API contractをレビューし、SVD〜Tucker/HOOIを **Core API v1** として固定する設計書を作成
+- TT-SVD、Gauge自由度、正準形、Schmidt形、TT-rounding、TT-matrix / TT-Linearを小さいTensorで検証
+- Fashion-MNISTのMLPとCNNへTT層を接続し、rank sweepとFine-tuningを検証
+- DMRGの中心線形写像、2-site局所最適化、複数往復、停止判定、bond上限比較を小さいMPSで確認
 
 ## 現在の到達点
 
@@ -38,8 +41,10 @@ Core API v1
   public contract freeze
         ↓
 TT / MPS
+  基礎実装 / TT-Linear / TT-Conv / Fashion-MNIST検証
         ↓
 DMRG
+  2-site局所更新の複数往復 / 停止判定 / bond上限比較
 ```
 
 ## 基礎理論
@@ -163,6 +168,61 @@ taskにとって最適なlow-rank weight
 - [HOSVD / HOOI Fine-tuning比較](docs/30_CIFAR10_CNN/04_HOSVD_HOOI_FineTuning比較.md)
 - [Tucker実験で得た設計原則と考察](docs/06_Tucker基礎実装検証/05_Tucker実験で得た設計原則と考察.md)
 
+## TT / MPS編
+
+TT / MPSでは、chain型Tensor表現の基礎から、学習済みFashion-MNISTモデルへの接続までを段階的に確認した。
+
+```text
+TT-SVD / TT-rank
+→ Gauge自由度 / 左右正準形 / 直交中心
+→ Schmidt形 / 単一bond打ち切り
+→ TT-rounding / TT内積 / Frobeniusノルム
+→ TT-matrix / TT-Linear / TT-Conv
+→ Fashion-MNIST MLP・CNNでのrank sweepとFine-tuning
+```
+
+Fashion-MNIST MLPでは、`fc1`のtensorization・rank・更新範囲を比較した。保存済みの固定条件では、dense accuracyから0.001以内という許容差規則により、rank 12・TT coresのみ更新を圧縮優先の暫定候補とした。ただしrank 12は探索下端であり、さらに低rankを調べる余地がある。
+
+Fashion-MNIST CNNでは、`conv2`をTT-Convへ置換した。rank制限なしの置換でdense modelとのforward・backward整合性を確認した後、rank sweepとTT cores-only Fine-tuningを行った。rank 12は開発用accuracyが0.6910から0.9238へ回復したが、test性能、全parameter更新との比較、速度・peak memoryの優位性は未評価である。
+
+詳細：
+
+- [TT/MPS基礎実装検証](docs/08_TT_MPS基礎実装検証/README.md)
+- [TT/MPSによるNN圧縮](docs/40_TT_MPS_NN圧縮/README.md)
+- [Fashion-MNIST MLPのTT圧縮](docs/40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README.md)
+- [Fashion-MNIST CNNのTT圧縮](docs/40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/README.md)
+
+## DMRG入門
+
+DMRGでは、3-site実数MPSでの局所更新から始め、横磁場Ising HamiltonianのMPOと左右environmentを用いた2-site局所更新を複数往復へ接続した。energy安定による停止と解の精度を区別し、bond上限2・4・無切り捨てを共通初期状態から比較した。
+
+```text
+固定した左右環境
+→ 中心から全状態への線形写像 x = Pc
+→ 有効Hamiltonian H_eff = P^T H P
+→ 最小固有値問題による2-site中心の更新
+→ SVDによる2コアへの再分割
+→ bond dimension打ち切り
+→ 左右environmentの逐次更新
+→ left-to-right / right-to-leftの1往復
+→ 1往復を反復単位とする複数往復
+→ energy安定による停止と全系診断
+```
+
+正準環境では $P^{\mathsf T}P=I$ となり、局所問題が通常の固有値問題へ簡約されることを整理した。小さい数値例では、更新前エネルギー $-0.936$、局所最適化後 $-2$、選択したrank-1打ち切り後 $-1$ を得ており、エネルギー最小化とSVDによる状態近似が別の目的であることを確認した。
+
+現時点で確認済みなのは複数往復、energy停止判定、global residual・energy分散、bond上限比較までである。反復固有値solverとNN目的関数への接続は今後の範囲である。
+
+- [DMRG章](docs/50_DMRG/README.md)
+- [中心テンソルの線形写像と2-site局所更新](docs/50_DMRG/02_中心テンソルの線形写像と2-site局所更新.md)
+- [MPOとenvironmentによる1-site局所有効問題](docs/50_DMRG/03_MPOとenvironmentによる1-site局所有効問題.md)
+- [environmentを用いた2-site DMRG 1往復](docs/50_DMRG/04_environmentを用いた2-site_DMRG_1往復.md)
+- [複数往復・停止判定・bond上限比較](docs/50_DMRG/05_複数往復_停止判定_bond上限比較.md)
+- [2-site DMRG局所更新の演習Notebook](notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb)
+- [MPO・environment・1-site局所更新の演習Notebook](notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb)
+- [environmentを逐次更新する2-site DMRG 1往復演習Notebook](notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb)
+- [複数往復・停止判定・bond上限比較の演習Notebook](notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb)
+
 ## canonical / historical
 
 正式な実験結果を引用するときは、SVDでは原則として `*_corrected.ipynb` と対応するcorrected resultsを使用する。
@@ -209,7 +269,14 @@ src/nn_compression/
 │  ├─ tucker.py            # HOSVD / Tucker reconstruction
 │  ├─ tucker_validation.py # Tucker/HOOI contract
 │  ├─ hooi.py              # generic / partial HOOI
-│  └─ conv_tucker.py       # Conv2d Tucker-2
+│  ├─ conv_tucker.py       # Conv2d Tucker-2
+│  ├─ tt.py                # TT-SVD / reconstruction
+│  ├─ tt_canonical.py      # 正準化
+│  ├─ tt_contraction.py    # TT縮約
+│  ├─ tt_rounding.py       # TT-rounding
+│  ├─ tt_matrix.py         # TT-matrix
+│  ├─ tt_linear.py         # TT-Linear
+│  └─ tt_conv.py           # TT-Conv
 ├─ models/
 ├─ training/
 ├─ metrics/
@@ -245,6 +312,6 @@ src contract reviewのbaseline `49836bc` ではローカル全pytest `252 passed
 
 ## 次
 
-次は **Tensor Train / MPS**。
+物理DMRGの基礎Notebookは03で一区切りとし、次はFashion-MNIST TT-MLPに対するDMRG-likeな2-core局所更新へ接続する。
 
-SVDで学んだ「低rank近似」、Tucker/HOOIで学んだ「Tensor mode・反復更新・sweep・収束」の考え方を、TT rank / bond dimensionを持つchain型Tensor networkへつなげ、その後DMRGへ進む。
+NNへ適用する段階では、量子Hamiltonianの最小固有値問題をそのまま移すのではなく、教師あり損失、局所更新変数、局所solver、通常のgradient-based Fine-tuningとの比較条件を別途定義する。

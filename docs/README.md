@@ -33,7 +33,7 @@ DMRG
 
 の順に学ぶ。
 
-現在、**SVD編のcorrected実験と、Tucker/HOSVD/HOOI編まで完了**している。
+現在、**SVD、Tucker/HOSVD/HOOI、TT/MPS基礎とNN圧縮検証**まで進み、DMRGでは2-site局所更新の複数往復、energy停止判定、global residual・energy分散、bond上限比較まで確認している。
 
 SVD編では、
 
@@ -83,7 +83,7 @@ SVD/Tuckerの式だけでなく、
 
 も実験を通して整理している。
 
-SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、TT/MPSの基礎実装は [[08_TT_MPS基礎実装検証/README]]、学習済みNNへのTT適用は [[40_TT_MPS_NN圧縮/README]]、現行srcの設計は [[90_src設計/README]] を参照。
+SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、TT/MPSの基礎実装は [[08_TT_MPS基礎実装検証/README]]、学習済みNNへのTT適用は [[40_TT_MPS_NN圧縮/README]]、DMRGへの接続は [[50_DMRG/README]]、現行srcの設計は [[90_src設計/README]] を参照。
 
 ---
 
@@ -215,6 +215,18 @@ flowchart TD
 29. [[08_TT_MPS基礎実装検証/README]]
 30. [[40_TT_MPS_NN圧縮/README]]
 31. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]
+
+## DMRG
+
+32. [[50_DMRG/01_SVDからDMRGへのつながり]]
+33. [[50_DMRG/02_中心テンソルの線形写像と2-site局所更新]]
+34. [[50_DMRG/03_MPOとenvironmentによる1-site局所有効問題]]
+35. [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
+36. [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
+37. [[notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb|2-site DMRG局所更新の演習Notebook]]
+38. [[notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb|MPO・environment・1-site局所更新の演習Notebook]]
+39. [[notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb|environmentを逐次更新する2-site DMRG 1往復演習Notebook]]
+40. [[notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb|複数往復・停止判定・bond上限比較の演習Notebook]]
 
 基礎理論だけの索引は、[[00_基礎理論/README]] を参照。
 
@@ -615,7 +627,48 @@ taskにとって最適なlow-rank weight
 
 ---
 
-# 12. 最短で読むなら
+# 12. TT/MPSとDMRGの現在地
+
+TT/MPSでは、TT-SVD、Gauge自由度、正準形、Schmidt形、単一bond打ち切り、TT-rounding、TT-matrix / TT-Linear / TT-Convまでを確認した。学習済みFashion-MNIST MLPでは`fc1`、CNNでは`conv2`を対象に、rank sweepとFine-tuningを行っている。
+
+```text
+TT/MPS基礎
+→ TT-matrix / TT-Linear / TT-Conv
+→ Fashion-MNIST MLP・CNNへの接続
+→ rank・tensorization・更新範囲の比較
+```
+
+MLPではrank 12・TT coresのみ更新が、現在のaccuracy許容差規則における圧縮優先の暫定候補である。ただしrank 12は探索下端であり、最終候補ではない。CNNではrank 12の開発用accuracyが0.6910から0.9238へ回復したが、test性能や速度・memoryの優位性はまだ確認していない。
+
+DMRGでは、3-site MPSを用いた1回の2-site局所更新と、MPO・左右environmentによる局所更新を経て、2-site局所更新を複数往復へ接続した。energy安定による停止判定、global residual・energy分散、bond上限比較まで確認している。
+
+```text
+x = Pc
+→ H_eff = P^T H P
+→ 最小固有値問題
+→ 2-site中心の更新
+→ SVD再分割
+→ bond dimension打ち切り
+→ 左右environmentの逐次更新
+→ left-to-right / right-to-leftの1往復
+→ 1往復を反復単位とする複数往復
+→ energy安定による停止と全系診断
+```
+
+正準環境で $P^{\mathsf T}P=I$ になる理由と、非正準環境では一般化固有値問題になることも整理している。複数往復と停止判定までは確認したが、大規模固有値solverとNN目的関数への接続は未実装である。
+
+- [[08_TT_MPS基礎実装検証/README]]
+- [[40_TT_MPS_NN圧縮/README]]
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/README]]
+- [[50_DMRG/README]]
+- [[50_DMRG/02_中心テンソルの線形写像と2-site局所更新]]
+- [[50_DMRG/03_MPOとenvironmentによる1-site局所有効問題]]
+- [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
+- [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
+
+---
+
+# 13. 最短で読むなら
 
 ## SVD編
 
@@ -639,6 +692,28 @@ taskにとって最適なlow-rank weight
 6. [[06_Tucker基礎実装検証/26_Tucker_HOOIのPyTorch実装]]
 7. [[06_Tucker基礎実装検証/README]]
 8. [[90_src設計/README]]
+
+## TT / MPS編
+
+1. [[00_基礎理論/01_数学基礎/02_テンソル代数/20_TT_MPS基礎/README]]
+2. [[00_基礎理論/01_数学基礎/02_テンソル代数/30_Gauge_正準形_直交中心/README]]
+3. [[08_TT_MPS基礎実装検証/00_TT_MPS基礎実装の確認結果]]
+4. [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/README]]
+5. [[40_TT_MPS_NN圧縮/README]]
+6. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]
+7. [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/README]]
+
+## DMRG編
+
+1. [[50_DMRG/01_SVDからDMRGへのつながり]]
+2. [[50_DMRG/02_中心テンソルの線形写像と2-site局所更新]]
+3. [[50_DMRG/03_MPOとenvironmentによる1-site局所有効問題]]
+4. [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
+5. [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
+6. [[notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb|2-site DMRG局所更新の演習Notebook]]
+7. [[notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb|MPO・environment・1-site局所更新の演習Notebook]]
+8. [[notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb|environmentを逐次更新する2-site DMRG 1往復演習Notebook]]
+9. [[notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb|複数往復・停止判定・bond上限比較の演習Notebook]]
 
 CIFAR-10のコードを理解しながらSVD編を読む場合は、途中に、
 
