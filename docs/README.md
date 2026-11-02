@@ -223,10 +223,15 @@ flowchart TD
 34. [[50_DMRG/03_MPOとenvironmentによる1-site局所有効問題]]
 35. [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
 36. [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
-37. [[notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb|2-site DMRG局所更新の演習Notebook]]
-38. [[notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb|MPO・environment・1-site局所更新の演習Notebook]]
-39. [[notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb|environmentを逐次更新する2-site DMRG 1往復演習Notebook]]
-40. [[notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb|複数往復・停止判定・bond上限比較の演習Notebook]]
+37. [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+38. [[notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb|2-site DMRG局所更新の演習Notebook]]
+39. [[notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb|MPO・environment・1-site局所更新の演習Notebook]]
+40. [[notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb|environmentを逐次更新する2-site DMRG 1往復演習Notebook]]
+41. [[notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb|複数往復・停止判定・bond上限比較の演習Notebook]]
+42. [[notebooks/40_dmrg/00_fundamentals/04_tt_mlp_two_core_local_update.ipynb|TT-MLP 2-core局所更新の演習Notebook]]
+43. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
+44. [[notebooks/40_dmrg/10_fashion_mnist_mlp/00_full_batch_two_core_sweep_training.ipynb|Fashion-MNIST TT-MLP full-batch 2-core sweep Notebook]]
+45. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
 
 基礎理論だけの索引は、[[00_基礎理論/README]] を参照。
 
@@ -640,7 +645,7 @@ TT/MPS基礎
 
 MLPではrank 12・TT coresのみ更新が、現在のaccuracy許容差規則における圧縮優先の暫定候補である。ただしrank 12は探索下端であり、最終候補ではない。CNNではrank 12の開発用accuracyが0.6910から0.9238へ回復したが、test性能や速度・memoryの優位性はまだ確認していない。
 
-DMRGでは、3-site MPSを用いた1回の2-site局所更新と、MPO・左右environmentによる局所更新を経て、2-site局所更新を複数往復へ接続した。energy安定による停止判定、global residual・energy分散、bond上限比較まで確認している。
+DMRGでは、3-site MPSを用いた1回の2-site局所更新と、MPO・左右environmentによる局所更新を経て、2-site局所更新を複数往復へ接続した。energy安定による停止判定、global residual・energy分散、bond上限比較まで確認している。さらに、TT-MLPの隣接2 coreを固定minibatchの分類損失で1回更新する最小単位から、Fashion-MNIST全データ平均勾配による6-core・5往復・50局所更新まで接続した。
 
 ```text
 x = Pc
@@ -655,7 +660,7 @@ x = Pc
 → energy安定による停止と全系診断
 ```
 
-正準環境で $P^{\mathsf T}P=I$ になる理由と、非正準環境では一般化固有値問題になることも整理している。複数往復と停止判定までは確認したが、大規模固有値solverとNN目的関数への接続は未実装である。
+正準環境で $P^{\mathsf T}P=I$ になる理由と、非正準環境では一般化固有値問題になることも整理している。物理系の複数往復と停止判定、およびNN目的関数によるFashion-MNIST full-batch左右sweepは確認したが、大規模固有値solverと、更新対象・更新回数・学習率を切り分ける性能比較は未実施である。
 
 - [[08_TT_MPS基礎実装検証/README]]
 - [[40_TT_MPS_NN圧縮/README]]
@@ -665,6 +670,10 @@ x = Pc
 - [[50_DMRG/03_MPOとenvironmentによる1-site局所有効問題]]
 - [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
 - [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
+- [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+- [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
 
 ---
 
@@ -710,10 +719,15 @@ x = Pc
 3. [[50_DMRG/03_MPOとenvironmentによる1-site局所有効問題]]
 4. [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
 5. [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
-6. [[notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb|2-site DMRG局所更新の演習Notebook]]
-7. [[notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb|MPO・environment・1-site局所更新の演習Notebook]]
-8. [[notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb|environmentを逐次更新する2-site DMRG 1往復演習Notebook]]
-9. [[notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb|複数往復・停止判定・bond上限比較の演習Notebook]]
+6. [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+7. [[notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb|2-site DMRG局所更新の演習Notebook]]
+8. [[notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb|MPO・environment・1-site局所更新の演習Notebook]]
+9. [[notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb|environmentを逐次更新する2-site DMRG 1往復演習Notebook]]
+10. [[notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb|複数往復・停止判定・bond上限比較の演習Notebook]]
+11. [[notebooks/40_dmrg/00_fundamentals/04_tt_mlp_two_core_local_update.ipynb|TT-MLP 2-core局所更新の演習Notebook]]
+12. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
+13. [[notebooks/40_dmrg/10_fashion_mnist_mlp/00_full_batch_two_core_sweep_training.ipynb|Fashion-MNIST TT-MLP full-batch 2-core sweep Notebook]]
+14. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
 
 CIFAR-10のコードを理解しながらSVD編を読む場合は、途中に、
 

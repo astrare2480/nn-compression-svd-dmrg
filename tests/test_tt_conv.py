@@ -18,16 +18,18 @@ import torch.nn.functional as F
 from torch import nn
 
 import nn_compression.compression.tt_conv as tt_conv_module
-import nn_compression.compression.tt_matrix as tt_matrix_module
+import nn_compression.tt_mps.matrix as tt_matrix_module
 from nn_compression.compression import (
     TTConv2d,
     build_tt_conv2d,
-    dense_to_tt_matrix_cores,
     factorize_named_tt_conv2d,
     sweep_tt_conv2d_weight_ranks,
     sweep_tt_matrix_weight_ranks,
     tt_conv2d_forward,
     tt_conv2d_to_dense_weight,
+)
+from nn_compression.tt_mps import (
+    dense_to_tt_matrix_cores,
     tt_matrix_num_parameters,
     tt_matrix_ranks,
 )

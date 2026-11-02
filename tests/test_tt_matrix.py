@@ -13,16 +13,16 @@ import pytest
 import torch
 import torch.nn.functional as F
 
-from nn_compression.compression import (
+from nn_compression.tt_mps import (
     dense_to_tt_matrix_cores,
     dense_to_tt_matrix_tensor,
     tt_cores_to_tt_matrix_cores,
-    tt_linear_forward,
     tt_matrix_num_parameters,
     tt_matrix_ranks,
     tt_matrix_to_dense,
 )
-import nn_compression.compression.tt_matrix as tt_matrix_module
+from nn_compression.compression import tt_linear_forward
+import nn_compression.tt_mps.matrix as tt_matrix_module
 
 # ---------------------------------------------------------------------------
 # テスト用ヘルパー（src化しない、本テストファイル専用）
@@ -299,7 +299,7 @@ def test_tt_matrix_to_dense_does_not_mutate_cores():
 
 
 def test_tt_cores_to_tt_matrix_cores_does_not_mutate_input():
-    from nn_compression.compression import tt_svd_exact
+    from nn_compression.tt_mps import tt_svd_exact
 
     out_modes, in_modes = OUT_MODES_3, IN_MODES_3
     combined = dense_to_tt_matrix_tensor(

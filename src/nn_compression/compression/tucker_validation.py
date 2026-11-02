@@ -8,7 +8,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 
-from .svd import coerce_integer_scalar, coerce_rank
+from ..linalg.svd import coerce_integer_scalar, coerce_rank
 
 
 def validate_real_dtype(tensor, *, name: str = "X") -> None:

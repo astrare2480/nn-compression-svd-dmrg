@@ -211,17 +211,22 @@ DMRGでは、3-site実数MPSでの局所更新から始め、横磁場Ising Hami
 
 正準環境では $P^{\mathsf T}P=I$ となり、局所問題が通常の固有値問題へ簡約されることを整理した。小さい数値例では、更新前エネルギー $-0.936$、局所最適化後 $-2$、選択したrank-1打ち切り後 $-1$ を得ており、エネルギー最小化とSVDによる状態近似が別の目的であることを確認した。
 
-現時点で確認済みなのは複数往復、energy停止判定、global residual・energy分散、bond上限比較までである。反復固有値solverとNN目的関数への接続は今後の範囲である。
+物理DMRGでは複数往復、energy停止判定、global residual・energy分散、bond上限比較まで確認した。NN目的関数への接続では、TT-MLPの1 pair・1 stepからFashion-MNIST全学習データに対する6-core左右sweepへ進み、5 sweep・50局所更新、validation best選択、checkpoint再現まで完了した。ただし、accuracyは約9.5%でrandom baseline付近であり、学習性能の結論ではなく基準実装の成立を確認した段階である。
 
 - [DMRG章](docs/50_DMRG/README.md)
 - [中心テンソルの線形写像と2-site局所更新](docs/50_DMRG/02_中心テンソルの線形写像と2-site局所更新.md)
 - [MPOとenvironmentによる1-site局所有効問題](docs/50_DMRG/03_MPOとenvironmentによる1-site局所有効問題.md)
 - [environmentを用いた2-site DMRG 1往復](docs/50_DMRG/04_environmentを用いた2-site_DMRG_1往復.md)
 - [複数往復・停止判定・bond上限比較](docs/50_DMRG/05_複数往復_停止判定_bond上限比較.md)
+- [TT-MLPのDMRG-like 2-core局所更新](docs/50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新.md)
+- [Fashion-MNIST full-batch 2-core sweep学習設計](docs/40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計.md)
+- [Fashion-MNIST full-batch 2-core sweep実験結果と考察](docs/40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察.md)
 - [2-site DMRG局所更新の演習Notebook](notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb)
 - [MPO・environment・1-site局所更新の演習Notebook](notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb)
 - [environmentを逐次更新する2-site DMRG 1往復演習Notebook](notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb)
 - [複数往復・停止判定・bond上限比較の演習Notebook](notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb)
+- [TT-MLP 2-core局所更新の演習Notebook](notebooks/40_dmrg/00_fundamentals/04_tt_mlp_two_core_local_update.ipynb)
+- [Fashion-MNIST TT-MLP full-batch 2-core sweep Notebook](notebooks/40_dmrg/10_fashion_mnist_mlp/00_full_batch_two_core_sweep_training.ipynb)
 
 ## canonical / historical
 
@@ -262,24 +267,31 @@ src/nn_compression/
 ├─ tensor/
 │  ├─ operations.py        # unfold / fold / mode product
 │  └─ validation.py        # tensor shape / mode contract
-├─ compression/
-│  ├─ svd.py
+├─ linalg/
+│  └─ svd.py               # モデル非依存の truncated SVD
+├─ tt_mps/                 # 汎用 TT/MPS・TT-matrix
+│  ├─ core.py              # TT-SVD / reconstruction
+│  ├─ canonical.py         # 正準化
+│  ├─ contraction.py       # TT縮約
+│  ├─ rounding.py          # TT-rounding
+│  ├─ matrix.py            # TT-matrix
+│  └─ matrix_two_site.py   # 2-core の汎用操作
+├─ dmrg/                   # DMRG Core
+│  ├─ support/             # 初期化・dense診断
+│  └─ models/              # TFIM
+├─ compression/            # NN層への SVD / Tucker / TT 適用
+│  ├─ svd.py               # retained energy と Compatibility API
 │  ├─ linear_svd.py
 │  ├─ conv_svd.py
 │  ├─ tucker.py            # HOSVD / Tucker reconstruction
 │  ├─ tucker_validation.py # Tucker/HOOI contract
 │  ├─ hooi.py              # generic / partial HOOI
 │  ├─ conv_tucker.py       # Conv2d Tucker-2
-│  ├─ tt.py                # TT-SVD / reconstruction
-│  ├─ tt_canonical.py      # 正準化
-│  ├─ tt_contraction.py    # TT縮約
-│  ├─ tt_rounding.py       # TT-rounding
-│  ├─ tt_matrix.py         # TT-matrix
-│  ├─ tt_linear.py         # TT-Linear
-│  └─ tt_conv.py           # TT-Conv
+│  ├─ tt_linear.py         # TTLinear と NN固有 forward
+│  └─ tt_conv.py           # TTConv
+├─ metrics/                # 評価指標
+├─ training/               # 学習・sweep
 ├─ models/
-├─ training/
-├─ metrics/
 ├─ selection/
 ├─ datasets/
 └─ utils/
@@ -312,6 +324,6 @@ src contract reviewのbaseline `49836bc` ではローカル全pytest `252 passed
 
 ## 次
 
-物理DMRGの基礎Notebookは03で一区切りとし、次はFashion-MNIST TT-MLPに対するDMRG-likeな2-core局所更新へ接続する。
+Fashion-MNIST TT-MLPに対する最初のDMRG-like full-batch 2-core sweepは完了した。次は同じ初期stateと計算予算を使い、TTのみ・通常parameterのみ・共同更新を比較したうえで、sweep数、同一pairの反復訪問数、SVD前inner step数、TT側・通常parameter側の学習率を別々に切り分ける。
 
-NNへ適用する段階では、量子Hamiltonianの最小固有値問題をそのまま移すのではなく、教師あり損失、局所更新変数、局所solver、通常のgradient-based Fine-tuningとの比較条件を別途定義する。
+NNへ適用する段階では、量子Hamiltonianの最小固有値問題をそのまま移すのではなく、教師あり損失、局所更新変数、局所solver、通常のgradient-based fine-tuningとの比較条件を別途定義する。

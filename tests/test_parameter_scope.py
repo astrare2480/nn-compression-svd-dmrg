@@ -10,7 +10,10 @@ import pytest
 import torch
 from torch import nn
 
-from nn_compression.compression import build_tt_conv2d, build_tt_linear
+from nn_compression.compression import (
+    build_tt_conv2d,
+    build_tt_linear,
+)
 from nn_compression.training import (
     parameter_change_summary,
     set_trainable_parameter_prefixes,

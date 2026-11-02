@@ -1,0 +1,34 @@
+{
+  "implementation_ok": true,
+  "canonical_weight_max_abs_B_minus_C": 1.30385160446167e-08,
+  "canonical_weight_frobenius_B_minus_C": 7.270721198437968e-07,
+  "canonical_logits_max_abs_B_minus_C": 1.4901161193847656e-08,
+  "shared_state_key_sets_equal": true,
+  "other_state_exact": true,
+  "values_finite": true,
+  "norm_A": 13.06302261352539,
+  "norm_B": 1.8824928998947144,
+  "norm_C": 1.8824927806854248,
+  "norm_ratio_B_against_A": 0.14410852339378102,
+  "norm_ratio_C_against_A": 0.1441085142680761,
+  "full_train_loss_C": 2.3034697688293457,
+  "full_train_accuracy_C": 0.09358,
+  "gradient_scope": "full training split, pair 0 only",
+  "activation_scope": "first 64 items of the training split",
+  "scale_correction": "not applied",
+  "unresolved": [
+    "rank制限によるノルム変化が、その後の学習を停滞させるかは未確認",
+    "pair 0 以外の初期勾配は未測定",
+    "相対更新量が学習に十分かは、この診断だけでは判断しない",
+    "同じseed・設定で再生成したstage Cは、00の保存checkpointとの完全一致を保証しない"
+  ],
+  "decision_for_02": "stage C を02内の全条件で共有する新しいbaselineとして渡す。00の保存checkpointとの完全一致は仮定せず、スケール補正はしない。",
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "device": "cuda",
+    "seed": 0,
+    "dtype": "torch.float32"
+  }
+}

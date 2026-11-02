@@ -17,7 +17,10 @@ from _dmrg_testing import (
     sweep_tolerances,
     tolerances,
 )
-from nn_compression.compression import tt_canonicality_errors, tt_ranks
+from nn_compression.tt_mps import (
+    tt_canonicality_errors,
+    tt_ranks,
+)
 from nn_compression.dmrg import (
     DMRGResult,
     DMRGRoundTripRecord,
@@ -244,13 +247,13 @@ def test_dmrg_runs_without_building_dense_or_model_specific_objects():
         raise AssertionError("DMRG 本体から dense / 模型固有の処理が呼ばれました。")
 
     targets = [
-        "nn_compression.dmrg.diagnostics.mpo_to_dense",
-        "nn_compression.dmrg.diagnostics.compute_dense_residual_and_variance",
+        "nn_compression.dmrg.support.diagnostics.mpo_to_dense",
+        "nn_compression.dmrg.support.diagnostics.compute_dense_residual_and_variance",
         "nn_compression.dmrg.models.tfim.build_tfim_mpo",
         "nn_compression.dmrg.models.tfim.build_tfim_dense_hamiltonian",
-        "nn_compression.dmrg.initialization.make_random_mps",
-        "nn_compression.compression.tt_reconstruct",
-        "nn_compression.compression.tt.tt_reconstruct",
+        "nn_compression.dmrg.support.initialization.make_random_mps",
+        "nn_compression.tt_mps.tt_reconstruct",
+        "nn_compression.tt_mps.core.tt_reconstruct",
     ]
     patches = [mock.patch(target, side_effect=forbidden) for target in targets]
     for patch in patches:

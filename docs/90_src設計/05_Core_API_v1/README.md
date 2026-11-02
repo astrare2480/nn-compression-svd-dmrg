@@ -152,24 +152,42 @@ Signature
 
 ```mermaid
 flowchart LR
-    Compression["compression<br/>SVD / Tucker / TT / rank sweep"]
-    Metrics["metrics<br/>accuracy / logits / error bound / stability"]
-    Training["training<br/>train / evaluate / parameter scope"]
-    Tensor["tensor<br/>unfold / fold / mode_dot"]
-    Utils["utils<br/>named module / path / seed"]
+    Linalg["linalg<br/>汎用SVD"]
+    Tensor["tensor<br/>一般テンソル演算"]
+    TTMPS["tt_mps<br/>汎用TT/MPS・TT-matrix"]
+    DMRG["dmrg<br/>DMRG Core"]
+    Support["dmrg.support<br/>初期化・dense診断"]
+    TFIM["dmrg.models<br/>TFIM"]
+    Compression["compression<br/>NN層へのSVD/Tucker/TT適用"]
+    Metrics["metrics<br/>評価指標"]
+    Training["training<br/>学習・sweep"]
+    Utils["utils<br/>module状態 / path / seed"]
     Datasets["datasets<br/>dataset / split / loader"]
     Models["models<br/>baseline architecture"]
     Selection["selection<br/>Pareto / knee"]
 
-    Compression -->|imports| Metrics
+    TTMPS -->|imports| Linalg
+    TTMPS -->|imports| Tensor
+    DMRG -->|imports| TTMPS
+    DMRG -->|imports| Linalg
+    Support -->|imports| TTMPS
+    Support -->|imports| DMRG
+    TFIM -->|imports| Linalg
+    TFIM -->|imports| TTMPS
+    Compression -->|imports| Linalg
     Compression -->|imports| Tensor
+    Compression -->|imports| TTMPS
+    Compression -->|imports| Metrics
     Compression -->|imports| Utils
-    Metrics -->|imports| Training
     Metrics -->|imports| Utils
+    Training -->|imports| Compression
+    Training -->|imports| Metrics
+    Training -->|imports| TTMPS
+    Training -->|imports| Utils
     Datasets -->|imports| Utils
 ```
 
-`models`と`selection`は、この図の範囲では他の`nn_compression` subpackageをimportしない。Public APIから利用する内部validation層の詳細は[[90_src設計/05_Core_API_v1/Internal_API]]に分ける。
+`linalg`、`tensor`、`utils`、`models`、`selection`は、他の`nn_compression` subpackageをimportしない。`dmrg` Coreは `support` と `models` をimportしない。Public APIから利用する内部validation層の詳細は[[90_src設計/05_Core_API_v1/Internal_API]]に分ける。
 
 ### Stability
 
@@ -185,10 +203,13 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/tensor/fold]]
 - [[90_src設計/05_Core_API_v1/tensor/mode_dot]]
 
+## linalg — SVD
+
+- [[90_src設計/05_Core_API_v1/linalg/truncated_svd]]
+- [[90_src設計/05_Core_API_v1/linalg/retained_energy_from_matrix]]
+
 ## compression — SVD / model replacement
 
-- [[90_src設計/05_Core_API_v1/compression/truncated_svd]]
-- [[90_src設計/05_Core_API_v1/compression/retained_energy_from_matrix]]
 - [[90_src設計/05_Core_API_v1/compression/retained_energy]]
 - [[90_src設計/05_Core_API_v1/compression/rebuild_linear_from_svd]]
 - [[90_src設計/05_Core_API_v1/compression/factorize_linear_layer]]
@@ -221,39 +242,52 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/compression/sweep_conv2d_ranks]]
 - [[90_src設計/05_Core_API_v1/compression/sweep_conv_svd_ranks]]
 
-## compression — TT / MPS / TT-matrix
+## tt_mps / compression — TT / MPS / TT-matrix / TTLinear
 
-- [[90_src設計/05_Core_API_v1/compression/tt_unfold]]
-- [[90_src設計/05_Core_API_v1/compression/tt_svd_exact]]
-- [[90_src設計/05_Core_API_v1/compression/tt_svd]]
-- [[90_src設計/05_Core_API_v1/compression/tt_svd_ranks]]
-- [[90_src設計/05_Core_API_v1/compression/tt_svd_error_bound]]
-- [[90_src設計/05_Core_API_v1/compression/tt_reconstruct]]
-- [[90_src設計/05_Core_API_v1/compression/tt_num_parameters]]
-- [[90_src設計/05_Core_API_v1/compression/tt_physical_shape]]
-- [[90_src設計/05_Core_API_v1/compression/tt_ranks]]
-- [[90_src設計/05_Core_API_v1/compression/tt_canonicalize]]
-- [[90_src設計/05_Core_API_v1/compression/tt_canonicality_errors]]
-- [[90_src設計/05_Core_API_v1/compression/tt_move_center]]
-- [[90_src設計/05_Core_API_v1/compression/tt_truncate_bond]]
-- [[90_src設計/05_Core_API_v1/compression/tt_bond_singular_values]]
-- [[90_src設計/05_Core_API_v1/compression/tt_round]]
-- [[90_src設計/05_Core_API_v1/compression/tt_inner]]
-- [[90_src設計/05_Core_API_v1/compression/tt_fro_norm]]
-- [[90_src設計/05_Core_API_v1/compression/tt_matrix_ranks]]
-- [[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters]]
-- [[90_src設計/05_Core_API_v1/compression/tt_matrix_physical_sizes]]
-- [[90_src設計/05_Core_API_v1/compression/tt_matrix_shape_imbalance]]
-- [[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters_from_ranks]]
-- [[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_tensor]]
-- [[90_src設計/05_Core_API_v1/compression/tt_cores_to_tt_matrix_cores]]
-- [[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_cores]]
-- [[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_unfold]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_svd_exact]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_svd]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_svd_ranks]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_svd_error_bound]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_reconstruct]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_num_parameters]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_physical_shape]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_ranks]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_canonicalize]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_canonicality_errors]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_move_center]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_truncate_bond]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_bond_singular_values]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_round]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_inner]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_fro_norm]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_ranks]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_num_parameters]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_physical_sizes]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_shape_imbalance]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_num_parameters_from_ranks]]
+- [[90_src設計/05_Core_API_v1/tt_mps/dense_to_tt_matrix_tensor]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_cores_to_tt_matrix_cores]]
+- [[90_src設計/05_Core_API_v1/tt_mps/dense_to_tt_matrix_cores]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_to_dense]]
 - [[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_cores_to_tt_cores]]
+- [[90_src設計/05_Core_API_v1/tt_mps/merge_tt_matrix_cores]]
+- [[90_src設計/05_Core_API_v1/tt_mps/merged_tt_matrix_to_matrix]]
+- [[90_src設計/05_Core_API_v1/compression/tt_linear_forward_with_merged_pair]]
+- [[90_src設計/05_Core_API_v1/tt_mps/TTMatrixPairSplit]]
+- [[90_src設計/05_Core_API_v1/tt_mps/split_merged_tt_matrix]]
+- [[90_src設計/05_Core_API_v1/tt_mps/canonicalize_tt_matrix_cores]]
+- [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_canonicality_errors]]
+- [[90_src設計/05_Core_API_v1/tt_mps/replace_tt_matrix_core_pair]]
+- [[90_src設計/05_Core_API_v1/compression/assign_tt_linear_cores]]
+- [[90_src設計/05_Core_API_v1/compression/module_forward_with_merged_tt_linear_pair]]
+- [[90_src設計/05_Core_API_v1/compression/module_forward_with_tt_linear_cores]]
 - [[90_src設計/05_Core_API_v1/compression/TTLinear]]
 - [[90_src設計/05_Core_API_v1/compression/build_tt_linear]]
 - [[90_src設計/05_Core_API_v1/compression/factorize_named_tt_linear]]
-- [[90_src設計/05_Core_API_v1/compression/ordered_factorizations]]
+- [[90_src設計/05_Core_API_v1/compression/tt_linear_initialization_stages]]
+- [[90_src設計/05_Core_API_v1/tt_mps/ordered_factorizations]]
 - [[90_src設計/05_Core_API_v1/compression/sweep_tt_matrix_weight_ranks]]
 - [[90_src設計/05_Core_API_v1/compression/tt_conv2d_forward]]
 - [[90_src設計/05_Core_API_v1/compression/TTConv2d]]
@@ -293,6 +327,29 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/training/set_trainable_parameter_prefixes]]
 - [[90_src設計/05_Core_API_v1/training/trainable_named_parameters]]
 - [[90_src設計/05_Core_API_v1/training/parameter_change_summary]]
+- [[90_src設計/05_Core_API_v1/training/NonFiniteLocalUpdate]]
+- [[90_src設計/05_Core_API_v1/training/TTLinearLocalUpdate]]
+- [[90_src設計/05_Core_API_v1/training/TTLinearFullBatchSweepResult]]
+- [[90_src設計/05_Core_API_v1/training/accumulate_tt_linear_pair_full_batch_gradients]]
+- [[90_src設計/05_Core_API_v1/training/update_tt_linear_two_core_pair]]
+- [[90_src設計/05_Core_API_v1/training/sweep_tt_linear_pairs_left_to_right]]
+- [[90_src設計/05_Core_API_v1/training/sweep_tt_linear_pairs_right_to_left]]
+- [[90_src設計/05_Core_API_v1/training/train_tt_linear_full_batch_sweeps]]
+- [[90_src設計/05_Core_API_v1/training/save_tt_linear_full_batch_sweep_run]]
+- [[90_src設計/05_Core_API_v1/training/load_tt_linear_sweep_checkpoint]]
+- [[90_src設計/05_Core_API_v1/training/load_condition_summary]]
+- [[90_src設計/05_Core_API_v1/training/run_resumable_condition_grid]]
+- [[90_src設計/05_Core_API_v1/training/measure_tt_pair_update_scales]]
+- [[90_src設計/05_Core_API_v1/training/TTUpdateScope]]
+- [[90_src設計/05_Core_API_v1/training/GpuResidentTensorBatches]]
+- [[90_src設計/05_Core_API_v1/training/ScopedFullBatchBudgetResult]]
+- [[90_src設計/05_Core_API_v1/training/accumulate_scoped_full_batch_gradients]]
+- [[90_src設計/05_Core_API_v1/training/train_scoped_full_batch_budget]]
+- [[90_src設計/05_Core_API_v1/training/save_scoped_full_batch_run]]
+- [[90_src設計/05_Core_API_v1/training/require_recorded_smoke_gate]]
+- [[90_src設計/05_Core_API_v1/training/assert_scope_budget_completed]]
+- [[90_src設計/05_Core_API_v1/training/reject_incomplete_scope_rows]]
+- [[90_src設計/05_Core_API_v1/training/incomplete_scope_names]]
 
 ## metrics — model comparison
 

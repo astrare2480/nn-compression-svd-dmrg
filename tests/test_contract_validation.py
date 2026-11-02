@@ -23,7 +23,11 @@ from nn_compression.compression import (
     tucker_parameter_count,
 )
 from nn_compression.compression.linear_svd import factorize_linear_layer
-from nn_compression.compression.svd import coerce_integer_scalar, coerce_rank, truncated_svd
+from nn_compression.linalg.svd import (
+    coerce_integer_scalar,
+    coerce_rank,
+    truncated_svd,
+)
 from nn_compression.compression.tucker_validation import validate_max_iter
 from nn_compression.metrics import (
     agreement,

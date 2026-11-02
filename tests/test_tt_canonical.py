@@ -15,7 +15,7 @@ import math
 import pytest
 import torch
 
-from nn_compression.compression import (
+from nn_compression.tt_mps import (
     tt_canonicality_errors,
     tt_canonicalize,
     tt_move_center,

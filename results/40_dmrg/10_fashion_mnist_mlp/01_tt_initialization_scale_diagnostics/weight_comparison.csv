@@ -1,0 +1,4 @@
+stage,shape,dtype,device,frobenius_norm,relative_error_against_A,norm_ratio_against_A,squared_norm_ratio_against_A,all_finite
+A,"(512, 784)",torch.float32,cuda:0,13.06302261352539,0.0,1.0,1.0,True
+B,"(512, 784)",torch.float32,cuda:0,1.8824928998947144,0.9895621647398531,0.14410852339378102,0.020767266514735934,True
+C,"(512, 784)",torch.float32,cuda:0,1.8824927806854248,0.9895621647398531,0.1441085142680761,0.0207672638845523,True

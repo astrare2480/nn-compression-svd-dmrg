@@ -14,7 +14,7 @@ import torch
 from torch import nn
 
 from .hooi import hooi, hooi_sweep
-from .svd import coerce_rank
+from ..linalg.svd import coerce_rank
 from .tucker import hosvd, reconstruct_tucker
 
 

@@ -13,8 +13,8 @@ from nn_compression.compression import (
     factorize_named_linear,
     rebuild_linear_from_svd,
     retained_energy,
-    truncated_svd,
 )
+from nn_compression.linalg import truncated_svd
 from nn_compression.compression.mlp_svd import (
     make_one_layer_svd_model,
     make_two_layer_svd_model,

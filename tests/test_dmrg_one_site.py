@@ -16,7 +16,7 @@ from _dmrg_testing import (
     sweep_tolerances,
     tolerances,
 )
-from nn_compression.compression import tt_canonicalize
+from nn_compression.tt_mps import tt_canonicalize
 from nn_compression.dmrg import (
     OneSiteUpdateResult,
     build_left_environments,

@@ -17,8 +17,12 @@ import math
 import pytest
 import torch
 
-from nn_compression.compression import tt_fro_norm, tt_inner, tt_reconstruct
-from nn_compression.compression.tt_contraction import _safe_sqrt
+from nn_compression.tt_mps import (
+    tt_fro_norm,
+    tt_inner,
+    tt_reconstruct,
+)
+from nn_compression.tt_mps.contraction import _safe_sqrt
 
 
 def _random_tt(

@@ -16,14 +16,19 @@ from _dmrg_testing import (
     sweep_tolerances,
     tolerances,
 )
-from nn_compression.compression import tt_canonicality_errors, tt_ranks
+from nn_compression.tt_mps import (
+    tt_canonicality_errors,
+    tt_ranks,
+)
 from nn_compression.dmrg import (
     SweepPassResult,
     SweepStepLog,
-    build_tfim_dense_hamiltonian,
-    build_tfim_mpo,
     mps_mpo_energy,
     two_site_sweep,
+)
+from nn_compression.dmrg.models import (
+    build_tfim_dense_hamiltonian,
+    build_tfim_mpo,
 )
 
 DIRECTIONS = ("left_to_right", "right_to_left")

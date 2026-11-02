@@ -53,20 +53,12 @@ from torch import nn
 from ..utils.modules import set_named_module
 from ._named_layer import _get_named_layer
 from .conv_svd import conv2d_weight_matrix
-from .svd import coerce_integer_scalar
-from .tt_matrix import (
-    dense_to_tt_matrix_cores,
-    tt_linear_forward,
-    tt_matrix_ranks,
-    tt_matrix_to_dense,
-)
-from .tt_matrix_validation import (
-    validate_dense_tt_matrix_weight,
-    validate_tt_linear_bias,
-    validate_tt_matrix_cores,
-    validate_tt_matrix_modes,
-)
-from .tt_modes import _positive_int
+from ..linalg.svd import coerce_integer_scalar
+from ..tt_mps.matrix import dense_to_tt_matrix_cores, tt_matrix_ranks, tt_matrix_to_dense
+from ..tt_mps.matrix_validation import validate_dense_tt_matrix_weight, validate_tt_matrix_cores, validate_tt_matrix_modes
+from ..tt_mps.modes import _positive_int
+from .tt_linear import tt_linear_forward
+from .tt_linear_validation import validate_tt_linear_bias
 from .tt_rank_sweep import sweep_tt_matrix_weight_ranks
 
 

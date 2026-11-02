@@ -105,6 +105,8 @@ compression.hooi
 → metrics.relative_frobenius_error
 ```
 
+この節はセルフレビュー時点の記録である。その後、`evaluate` の実装は `metrics/evaluation.py` へ移り、`training` が同じ関数を再公開する。現行の依存方向は [[90_src設計/01_アーキテクチャ設計]] を参照する。
+
 ### 修正
 
 `02_モジュール設計.md` で実装どおりの依存方向を明記した。

@@ -1,0 +1,72 @@
+{
+  "recommendation": "bs4096_gpu_resident を推奨候補にする。 1往復の代表時間の比 baseline/candidate は 10.4855。",
+  "adoption_rows": [
+    {
+      "condition_id": "bs512_dataloader",
+      "single_update_median_seconds": 1.6245449999987613,
+      "one_sweep_median_seconds": 17.20869010000024,
+      "one_sweep_wall_median_seconds": 17.20869010000024,
+      "total_update_median_seconds": 17.192989300005138,
+      "time_ratio_baseline_over_candidate": 1.0,
+      "single_update_numerical_pass": true,
+      "one_sweep_validation_pass": true,
+      "finite_pass": true,
+      "memory_pass": true,
+      "same_schedule": true,
+      "faster_than_baseline": false,
+      "meets_minimum_improvement": false,
+      "adoption_candidate": false
+    },
+    {
+      "condition_id": "bs4096_dataloader",
+      "single_update_median_seconds": 1.5704947999911383,
+      "one_sweep_median_seconds": 16.675540500000352,
+      "one_sweep_wall_median_seconds": 16.675540500000352,
+      "total_update_median_seconds": 16.660611500017694,
+      "time_ratio_baseline_over_candidate": 1.0319719531729648,
+      "single_update_numerical_pass": true,
+      "one_sweep_validation_pass": true,
+      "finite_pass": true,
+      "memory_pass": true,
+      "same_schedule": true,
+      "faster_than_baseline": true,
+      "meets_minimum_improvement": false,
+      "adoption_candidate": false
+    },
+    {
+      "condition_id": "bs512_gpu_resident",
+      "single_update_median_seconds": 0.3093510000035167,
+      "one_sweep_median_seconds": 2.5978173000039533,
+      "one_sweep_wall_median_seconds": 2.5978173000039533,
+      "total_update_median_seconds": 2.5833558000013,
+      "time_ratio_baseline_over_candidate": 6.624288051347588,
+      "single_update_numerical_pass": true,
+      "one_sweep_validation_pass": true,
+      "finite_pass": true,
+      "memory_pass": true,
+      "same_schedule": true,
+      "faster_than_baseline": true,
+      "meets_minimum_improvement": true,
+      "adoption_candidate": true
+    },
+    {
+      "condition_id": "bs4096_gpu_resident",
+      "single_update_median_seconds": 0.20637780000106432,
+      "one_sweep_median_seconds": 1.6411900000093738,
+      "one_sweep_wall_median_seconds": 1.6411900000093738,
+      "total_update_median_seconds": 1.6243752000154927,
+      "time_ratio_baseline_over_candidate": 10.48549534173493,
+      "single_update_numerical_pass": true,
+      "one_sweep_validation_pass": true,
+      "finite_pass": true,
+      "memory_pass": true,
+      "same_schedule": true,
+      "faster_than_baseline": true,
+      "meets_minimum_improvement": true,
+      "adoption_candidate": true
+    }
+  ],
+  "representative_time": "one-sweep adoption uses the median of one_sweep_wall_seconds; total_update_seconds and validation_seconds are not used for adoption; warmup, restore, and preload are excluded",
+  "adoption_time_field": "one_sweep_wall_median_seconds",
+  "minimum_time_improvement_ratio": 1.1
+}

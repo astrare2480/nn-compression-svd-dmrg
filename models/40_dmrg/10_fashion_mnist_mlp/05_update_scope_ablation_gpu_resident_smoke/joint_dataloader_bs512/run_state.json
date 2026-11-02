@@ -1,0 +1,54 @@
+{
+  "config": {
+    "condition_id": "joint_dataloader_bs512",
+    "layer_name": "fc1",
+    "out_modes": [
+      4,
+      2,
+      2,
+      2,
+      4,
+      4
+    ],
+    "in_modes": [
+      2,
+      2,
+      2,
+      2,
+      7,
+      7
+    ],
+    "implementation": "train_tt_linear_full_batch_sweeps",
+    "batch_size": 512,
+    "data_residency": "dataloader",
+    "tt_pair_learning_rate": 0.3,
+    "dense_parameter_learning_rate": 0.3,
+    "max_sweeps": 1,
+    "local_steps_per_pair": 8,
+    "early_stopping_enabled": false,
+    "checkpoint_sha256": "ef9d5afcbffc0cdad787bc7e17f230917ae7cfb780bd506f5a348ae38ce10c6a"
+  },
+  "stop_reason": "max_sweeps",
+  "stop_detail": "最大往復数 1 まで実行した。early stopping は無効。これは数学的収束の証明ではない。",
+  "completed_sweeps": 1,
+  "successful_local_updates": 80,
+  "incomplete_sweep_successes": 0,
+  "best_sweep": 1,
+  "best_validation_loss": 1.5624945714950562,
+  "center": 0,
+  "last_success_pair": 0,
+  "last_success_direction": "left",
+  "stop_sweep": null,
+  "stop_pair": null,
+  "stop_direction": null,
+  "stop_local_step": null,
+  "final_ranks": [
+    1,
+    8,
+    12,
+    12,
+    12,
+    12,
+    1
+  ]
+}

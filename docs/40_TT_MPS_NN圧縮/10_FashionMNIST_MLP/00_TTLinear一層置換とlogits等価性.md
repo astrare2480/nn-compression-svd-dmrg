@@ -191,9 +191,9 @@ def balanced_modes(
 Notebookは既存srcから次のfunctional APIを使う。
 
 ~~~python
-from nn_compression.compression import (
+from nn_compression.compression import tt_linear_forward
+from nn_compression.tt_mps import (
     dense_to_tt_matrix_cores,
-    tt_linear_forward,
     tt_matrix_num_parameters,
     tt_matrix_ranks,
     tt_matrix_to_dense,

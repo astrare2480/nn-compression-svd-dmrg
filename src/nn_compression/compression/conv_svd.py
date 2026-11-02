@@ -10,7 +10,7 @@ import torch
 from torch import nn
 
 from ..utils.modules import get_named_module, set_named_module
-from .svd import coerce_rank, truncated_svd
+from ..linalg.svd import coerce_rank, truncated_svd
 
 
 def conv2d_weight_matrix(weight: torch.Tensor) -> torch.Tensor:

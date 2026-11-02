@@ -72,9 +72,10 @@ weight.shape
 
 ## 対応コード
 
-現在の汎用実装：
+現在の汎用SVDは `linalg`、層への適用は `compression` に分かれる。
 
 ```text
+src/nn_compression/linalg/svd.py
 src/nn_compression/compression/svd.py
 src/nn_compression/compression/conv_svd.py
 ```

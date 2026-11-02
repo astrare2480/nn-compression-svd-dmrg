@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 import torch
 
-from nn_compression.compression import (
+from nn_compression.tt_mps import (
     dense_to_tt_matrix_cores,
     ordered_factorizations,
     tt_matrix_num_parameters,

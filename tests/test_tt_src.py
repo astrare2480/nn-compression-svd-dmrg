@@ -14,7 +14,7 @@ import math
 import pytest
 import torch
 
-from nn_compression.compression import (
+from nn_compression.tt_mps import (
     tt_num_parameters,
     tt_physical_shape,
     tt_ranks,
@@ -25,7 +25,7 @@ from nn_compression.compression import (
     tt_svd_ranks,
     tt_unfold,
 )
-from nn_compression.compression.tt_validation import (
+from nn_compression.tt_mps.validation import (
     validate_tt_cores,
     validate_tt_cut_index,
 )

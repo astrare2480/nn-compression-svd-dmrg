@@ -13,12 +13,12 @@
 ```mermaid
 flowchart LR
     Public["Public API<br/>__all__で公開"]
-    SVD["compression.svd<br/>scalar / rank / matrix validation"]
-    TT["compression.tt_validation<br/>TT dtype / cut / core / pair validation"]
-    Canonical["compression.tt_canonical<br/>QR step"]
-    Rounding["compression.tt_rounding<br/>tolerance / scale-safe tail"]
-    Contraction["compression.tt_contraction<br/>zero-safe sqrt"]
-    TTMatrix["compression.tt_matrix_validation<br/>TT-matrix modes / cores / Linear input"]
+    SVD["linalg.svd<br/>scalar / rank / matrix validation"]
+    TT["tt_mps.validation<br/>TT dtype / cut / core / pair validation"]
+    Canonical["tt_mps.canonical<br/>QR step"]
+    Rounding["tt_mps.rounding<br/>tolerance / scale-safe tail"]
+    Contraction["tt_mps.contraction<br/>zero-safe sqrt"]
+    TTMatrix["tt_mps.matrix_validation<br/>TT-matrix modes / cores"]
     Tucker["compression.tucker_validation<br/>Tucker rank / tolerance validation"]
     Tensor["tensor.validation<br/>generic tensor validation"]
     Layer["conv_svd / linear_svd<br/>layer固有max rank"]
@@ -39,7 +39,7 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 
 ## helper一覧
 
-### `compression.svd`
+### `linalg.svd`
 
 | helper | 責務 |
 |---|---|
@@ -48,7 +48,7 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 | `matrix_max_rank` | 2次元行列の最大rankを求める。 |
 | `as_matrix` | Linear weightまたは2次元TensorをSVD対象行列として解釈する。 |
 
-### `compression.tt_validation`
+### `tt_mps.validation`
 
 | helper | 責務 |
 |---|---|
@@ -57,7 +57,7 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 | `validate_tt_cores` | TT core列の次元、境界rank、隣接bond rank、dtype、deviceを検証する。 |
 | `validate_tt_pair` | 2つの検証済みTTについて、order、siteごとの物理次元、dtype、deviceが2項演算に適合するか検証する。A/Bのbond rank一致は要求しない。 |
 
-### `compression.tt_canonical`
+### `tt_mps.canonical`
 
 | helper | 責務 |
 |---|---|
@@ -65,14 +65,14 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 | `_qr_step_right_to_left` | coreを右直交化し、転置QRの`R.mT`を左隣coreへ吸収する。呼び出し側がclone済みのlistをin-place更新する。 |
 | `_scale_safe_frobenius_norm` | Gram差を最大絶対値で正規化してからFrobenius normを求め、微小なcanonicality誤差の二乗underflowを避ける。 |
 
-### `compression.tt`
+### `tt_mps.core`
 
 | helper | 責務 |
 |---|---|
 | `_tt_svd_sweep` | exact / 共通rank上限 / bond別rank上限で共有する逐次SVD本体。 |
 | `_scale_safe_vector_norm` | 特異値tailを最大絶対値で正規化してから2-normを求め、極小・極大値の二乗underflow / overflowを避ける。 |
 
-### `compression.tt_rounding`
+### `tt_mps.rounding`
 
 | helper | 責務 |
 |---|---|
@@ -84,29 +84,34 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 | `_left_unfolding_svd` | 3階coreを左展開してreduced SVDし、元shapeと`U, S, Vh`を返す。bond spectrum取得と打ち切りで共有する。 |
 | `_absorb_truncated_svd_right` | 保持した`U`を左coreへ戻し、`S @ Vh`を右隣coreへ吸収する。単一bond打ち切りとrounding sweepで共有する。 |
 
-### `compression.tt_contraction`
+### `tt_mps.contraction`
 
 | helper | 責務 |
 |---|---|
 | `_safe_sqrt` | 正値では通常の平方根、零点では有限な0勾配を返す。負値を`ValueError`とし、NaNを隠さず伝播する。 |
 
-### `compression.tt_matrix`
+### `tt_mps.matrix`
 
 | helper | 責務 |
 |---|---|
 | `_validate_tt_svd_max_rank` | 1-site TT-matrixでTT-SVDを迂回するときも、`max_rank`へ既存`tt_svd`と同じ型・下限contractを適用する。 |
 
-### `compression.tt_matrix_validation`
+### `tt_mps.matrix_validation`
 
 | helper | 責務 |
 |---|---|
 | `validate_tt_matrix_modes` | 出力・入力mode列が同じ非零長で、各要素がboolではない正の整数か検証し、tupleへ正規化する。 |
 | `validate_tt_matrix_cores` | 4階TT-matrix core列の境界rank、隣接bond、物理次元、dtype、deviceを検証する。 |
 | `validate_dense_tt_matrix_weight` | dense weightが2階で、mode積とshapeが一致し、対応dtypeであることを検証する。 |
+
+### `compression.tt_linear_validation`
+
+| helper | 責務 |
+|---|---|
 | `validate_tt_linear_input` | `tt_linear_forward`の入力が2階で、入力feature数、dtype、deviceがcoreと一致することを検証する。 |
 | `validate_tt_linear_bias` | biasの`None`分岐、shape、dtype、deviceを検証する。 |
 
-### `compression.tt_modes`
+### `tt_mps.modes`
 
 | helper | 責務 |
 |---|---|
@@ -141,18 +146,25 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 | `compression.conv_svd` | `conv2d_max_rank` | Conv2d weightを行列化したときの最大SVD rankを求める。 |
 | `compression.linear_svd` | `linear_max_rank` | Linear weightの最大SVD rankを求める。 |
 
+### `metrics.evaluation`
+
+| helper | 責務 |
+|---|---|
+| `evaluate` | loader全体のlossとaccuracyを計算する共有実装。`training.loops.evaluate` が同じ関数を再公開する。training状態の保存は `utils.module_state` へ委譲する。 |
+
 ## validation ownership
 
 - Tensor一般の次元・shape・modeは`tensor.validation`が担当する。
-- SVD共通のscalar・rank・行列解釈は`compression.svd`が担当する。
+- SVD共通のscalar・rank・行列解釈は`linalg.svd`が担当する。
 - Tucker / HOOI固有のrank辞書・収束条件は`compression.tucker_validation`が担当する。
-- TT固有のcut・core chain・dtype・2項演算の互換性は`compression.tt_validation`が担当する。
-- canonicalizationの方向別QR stepは`compression.tt_canonical`が担当する。
-- rounding固有の許容誤差、scale-safe norm、tail rank選択は`compression.tt_rounding`が担当する。
-- contractionの平方根境界処理は`compression.tt_contraction`が担当する。
-- TT-matrix固有のmode列、4階core、dense weight、forward入力・biasは`compression.tt_matrix_validation`が担当する。
-- 1-site TT-matrixでTT-SVDを迂回するときの`max_rank`整合は`compression.tt_matrix`のprivate helperが担当する。
-- TT-matrixのtensorization候補列挙に固有の正整数正規化と約数列挙は`compression.tt_modes`が担当する。
+- TT固有のcut・core chain・dtype・2項演算の互換性は`tt_mps.validation`が担当する。
+- canonicalizationの方向別QR stepは`tt_mps.canonical`が担当する。
+- rounding固有の許容誤差、scale-safe norm、tail rank選択は`tt_mps.rounding`が担当する。
+- contractionの平方根境界処理は`tt_mps.contraction`が担当する。
+- TT-matrix固有のmode列、4階core、dense weightは`tt_mps.matrix_validation`が担当する。
+- TTLinearの入力とbiasは`compression.tt_linear_validation`が担当する。
+- 1-site TT-matrixでTT-SVDを迂回するときの`max_rank`整合は`tt_mps.matrix`のprivate helperが担当する。
+- TT-matrixのtensorization候補列挙に固有の正整数正規化と約数列挙は`tt_mps.modes`が担当する。
 - Conv2d / Linear固有の最大rankは各factorization componentが担当する。
 
 ## 現在の重複と変更時の注意
@@ -169,4 +181,4 @@ Public APIは必要なvalidationを内部helperへ委譲するが、利用者に
 
 ## 関連API
 
-[[90_src設計/05_Core_API_v1/README]]、[[90_src設計/05_Core_API_v1/compression/truncated_svd]]、[[90_src設計/05_Core_API_v1/compression/hosvd]]、[[90_src設計/05_Core_API_v1/compression/tt_svd]]、[[90_src設計/05_Core_API_v1/compression/tt_canonicalize]]、[[90_src設計/05_Core_API_v1/compression/tt_round]]、[[90_src設計/05_Core_API_v1/compression/tt_inner]]、[[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]、[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/compression/ordered_factorizations]]、[[90_src設計/05_Core_API_v1/tensor/unfold]]
+[[90_src設計/05_Core_API_v1/README]]、[[90_src設計/05_Core_API_v1/linalg/truncated_svd]]、[[90_src設計/05_Core_API_v1/compression/hosvd]]、[[90_src設計/05_Core_API_v1/tt_mps/tt_svd]]、[[90_src設計/05_Core_API_v1/tt_mps/tt_canonicalize]]、[[90_src設計/05_Core_API_v1/tt_mps/tt_round]]、[[90_src設計/05_Core_API_v1/tt_mps/tt_inner]]、[[90_src設計/05_Core_API_v1/compression/tt_linear_forward]]、[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/tt_mps/ordered_factorizations]]、[[90_src設計/05_Core_API_v1/tensor/unfold]]

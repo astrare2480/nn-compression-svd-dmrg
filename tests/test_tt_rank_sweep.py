@@ -12,14 +12,14 @@ import numpy as np
 import pytest
 import torch
 
-from nn_compression.compression import (
+from nn_compression.tt_mps import (
     dense_to_tt_matrix_cores,
-    sweep_tt_matrix_weight_ranks,
     tt_matrix_num_parameters,
     tt_matrix_num_parameters_from_ranks,
     tt_matrix_ranks,
     tt_matrix_to_dense,
 )
+from nn_compression.compression import sweep_tt_matrix_weight_ranks
 from nn_compression.metrics import relative_frobenius_error
 
 DTYPES = [torch.float32, torch.float64]

@@ -1,13 +1,7 @@
-"""2-site DMRG の再利用可能な実装。
+"""2-site DMRG のアルゴリズム本体。
 
-構成:
-
-- DMRG 本体（TFIM・dense Hamiltonian・厳密 energy に依存しない）:
-  ``environment`` / ``effective_hamiltonian`` / ``one_site`` / ``two_site`` / ``sweep`` /
-  ``convergence``。
-- 実験支援（本体からは呼ばれない）: ``initialization``（初期 MPS）、``diagnostics``
-  （dense 化・全残差・energy 分散）。
-- 模型固有: ``models.tfim``。
+実験用の初期 MPS と dense 診断は ``nn_compression.dmrg.support``。
+開境界 TFIM は ``nn_compression.dmrg.models``。
 
 MPS core は ``(r_left, physical, r_right)``、MPO core は
 ``(w_left, physical_out, physical_in, w_right)``。
@@ -19,11 +13,6 @@ from .convergence import (
     DMRGRoundTripResult,
     run_two_site_dmrg,
     run_two_site_dmrg_round_trip,
-)
-from .diagnostics import (
-    ResidualVarianceDiagnostics,
-    compute_dense_residual_and_variance,
-    mpo_to_dense,
 )
 from .effective_hamiltonian import (
     apply_one_site_effective_hamiltonian,
@@ -40,8 +29,6 @@ from .environment import (
     update_left_environment,
     update_right_environment,
 )
-from .initialization import make_random_mps
-from .models import build_tfim_dense_hamiltonian, build_tfim_mpo
 from .one_site import OneSiteUpdateResult, update_one_site_core
 from .sweep import SweepPassResult, SweepStepLog, two_site_sweep
 from .two_site import (
@@ -53,7 +40,6 @@ from .two_site import (
 )
 
 __all__ = [
-    # DMRG 本体
     "update_left_environment",
     "update_right_environment",
     "build_left_environments",
@@ -80,11 +66,4 @@ __all__ = [
     "DMRGRoundTripResult",
     "DMRGRoundTripRecord",
     "DMRGResult",
-    # 実験支援・模型固有
-    "make_random_mps",
-    "mpo_to_dense",
-    "compute_dense_residual_and_variance",
-    "ResidualVarianceDiagnostics",
-    "build_tfim_mpo",
-    "build_tfim_dense_hamiltonian",
 ]

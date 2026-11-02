@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import torch
 
-from nn_compression.compression import tt_reconstruct
-from nn_compression.dmrg import make_random_mps
+from nn_compression.tt_mps import tt_reconstruct
+from nn_compression.dmrg.support import make_random_mps
 
 DTYPES = (torch.float32, torch.float64)
 

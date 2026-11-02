@@ -34,6 +34,18 @@ Notebook 14の保存結果とNotebook 11・13を統合した候補整理は、[[
 
 Notebook 15の統合結果と候補選択の考察は、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/08_TT-rankと更新範囲の統合trade-off]]に整理した。許容差、Pareto frontier、knee、学習コストを分ける一般的な方法は、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/78_accuracy許容差とParetoによる圧縮候補選択]]へ分けている。
 
+物理DMRGで使った2-site結合・局所更新・SVD再分割・左右sweepをTT-MLPへ移す次段階は、[[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]で理論を、[[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]で1 pair・固定minibatch・1 stepを整理した。Fashion-MNISTの6-core `fc1`を新しいdense初期値からTT-SVDし、各pairで全学習データ平均勾配を蓄積する左右sweepは、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]に従ってNotebook 00へ実装した。5 sweep・50局所更新は全て成功しbest checkpointも再現したが、accuracyは約9.5%でrandom baseline付近だった。実験結果、解釈の限界、次のcontrolled experimentは[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]に整理した。これは既存の学習済みcheckpointに対するfine-tuning系列とは別実験である。
+
+Notebook 01では、denseからrank cap 12のTTへ変換したときの重み・activation・勾配scaleを段階別に測定した。重みnormはTT-SVD・rank制限で`13.0630`から`1.88249`へ下がり、正準化前後の実効重みとlogitsは丸め誤差内で一致した。結果と因果解釈の限界は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/11_TT初期化スケール診断]]に整理した。
+
+Notebook 02では共同学習率`0.001`・`0.01`・`0.1`、往復数5・20、各pairの局所step数1・4の12条件を同じStage Cから独立に比較した。候補中では学習率`0.1`・800更新が最良で、同じ200更新の配分差は小さかった。完全な結果と考察は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/12_full-batch更新予算grid]]に整理した。
+
+Notebook 03では共同学習率`0.2`・`0.3`を40往復・各pair 8 step・3,200更新で比較した。`0.3`はvalidation loss `0.342614`、accuracy `0.8710`で候補中最良だったが、終盤の改善は計算量に対して小さくなった。02との間では更新予算も変わるため、学習率だけの効果とは扱わない。結果は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/13_joint学習率0.2_0.3長時間比較]]に整理した。
+
+Notebook 04では、batch size 512・4096とDataLoader・GPU常駐を$2\times2$で比較した。前処理済み全データをGPU上で再利用し、batch size 4096にすると、定常的な10局所更新は現行baseline比で約10.49倍になった。短期数値同等性、測定範囲、memoryとの交換条件は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/14_full-batch勾配集計高速化benchmark]]に整理した。一般技術は[[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]と[[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]へ分けた。
+
+Notebook 05では、04で採用したGPU常駐・batch size 4,096を共通にし、joint・TT-only・dense-onlyを同じStage C、学習率0.3、3,200 full-batch更新で比較した。jointはvalidation accuracy `0.8716`で両単独更新を上回った。TT-onlyも`0.0946`から`0.6278`へ改善した一方、dense-onlyは途中で`0.6672`へ達した後に大きく振動した。固定予算での性能、到達速度、計算費用、解釈の限界は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]に整理した。
+
 一般的なtoy modelでは、第1 Linearの重み誤差をReLUと第2 Linearへ伝播させる合成上界、1 sampleのclassification margin、batch logits errorからsample-wise prediction certificate、minimum marginによるbatch内全sampleの同時保証までを確認している。PyTorch操作は[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]に分け、Fashion-MNISTの実測結果とは数えない。
 
 ## 読む順序
@@ -74,11 +86,23 @@ Notebook 15の統合結果と候補選択の考察は、[[40_TT_MPS_NN圧縮/10_
 34. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/07_rank12追加と更新範囲比較]]
 35. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/78_accuracy許容差とParetoによる圧縮候補選択]]
 36. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/08_TT-rankと更新範囲の統合trade-off]]
+37. [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+38. [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]
+39. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
+40. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
+41. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/11_TT初期化スケール診断]]
+42. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/12_full-batch更新予算grid]]
+43. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/13_joint学習率0.2_0.3長時間比較]]
+44. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/14_full-batch勾配集計高速化benchmark]]
+45. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]
+46. [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
+47. [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
 
-対応Notebookは [10_fashion_mnist_mlp](../../../notebooks/30_tt_mps/10_fashion_mnist_mlp/) に置く。
+通常のTT圧縮系列は [10_fashion_mnist_mlp](../../../notebooks/30_tt_mps/10_fashion_mnist_mlp/) に、DMRG-like sweep系列は [10_fashion_mnist_mlp](../../../notebooks/40_dmrg/10_fashion_mnist_mlp/) に置く。
 
 ## 未完了の次段階
 
+- SVD前inner step数とTT側・通常parameter側の学習率を別々に切り分け、必要ならscopeごとの学習率や固定wall timeで比較すること
 - rank 12未満の少数候補を同じ条件で追加し、圧縮優先時の下限を確認すること
 - 学習済みFashion-MNIST MLPの打ち切りrankで、ReLUを通るhidden errorを数値確認すること。一般的なtoy例は実装検証ノート15で確認済み
 - 学習済みFashion-MNIST MLPの実際の打ち切りrankで、後続Linearを通るlogits errorと合成上界を数値確認すること。random toy modelは実装検証ノート16で確認済み

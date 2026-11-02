@@ -13,7 +13,7 @@ import math
 import pytest
 import torch
 
-from nn_compression.compression import (
+from nn_compression.tt_mps import (
     tt_bond_singular_values,
     tt_canonicalize,
     tt_num_parameters,
@@ -24,7 +24,7 @@ from nn_compression.compression import (
     tt_svd_exact,
     tt_truncate_bond,
 )
-from nn_compression.compression.tt_rounding import _choose_truncation_rank
+from nn_compression.tt_mps.rounding import _choose_truncation_rank
 
 SHAPE_4D = (2, 3, 2, 4)
 

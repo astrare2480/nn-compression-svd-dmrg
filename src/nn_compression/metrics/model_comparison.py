@@ -15,7 +15,8 @@ from contextlib import contextmanager
 import torch
 from torch.utils.data import DataLoader, RandomSampler
 
-from ..training.loops import _preserve_module_training_modes, evaluate
+from ..utils.module_state import _preserve_module_training_modes
+from .evaluation import evaluate
 
 
 @contextmanager
@@ -25,7 +26,7 @@ def _preserve_training_mode(*models):
     以前は ``model.train(state)`` で root の状態だけ保存・復元していたが、
     これは全 submodule へ再帰的に同じ状態を設定してしまうため、frozen
     BatchNorm のように個別に eval() にしていた submodule の状態を壊して
-    いた。training.loops 側の共通 helper に処理を委譲し、root/submodule
+    いた。``utils.module_state`` の共通 helper に処理を委譲し、root/submodule
     双方を個別に復元する。
     """
     with _preserve_module_training_modes(*models):

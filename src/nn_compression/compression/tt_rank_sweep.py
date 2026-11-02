@@ -23,14 +23,14 @@ from collections.abc import Sequence
 import torch
 
 from ..metrics.tensor_approximation import relative_frobenius_error
-from .svd import coerce_integer_scalar
-from .tt_matrix import (
+from ..linalg.svd import coerce_integer_scalar
+from ..tt_mps.matrix import (
     dense_to_tt_matrix_cores,
     tt_matrix_num_parameters,
     tt_matrix_ranks,
     tt_matrix_to_dense,
 )
-from .tt_matrix_validation import validate_dense_tt_matrix_weight
+from ..tt_mps.matrix_validation import validate_dense_tt_matrix_weight
 
 
 def _validate_rank_candidates(ranks: Sequence[int]) -> list[int]:

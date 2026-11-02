@@ -27,7 +27,7 @@ from dataclasses import dataclass
 
 import torch
 
-from ..compression import tt_canonicalize
+from ..tt_mps import tt_canonicalize
 from .environment import _boundary_environment, _build_left, _build_right, _energy, _update_left, _update_right
 from .two_site import _two_site_local_update
 from .validation import _validate_direction, _validate_max_bond, _validate_mps_mpo_pair, _validate_tolerance

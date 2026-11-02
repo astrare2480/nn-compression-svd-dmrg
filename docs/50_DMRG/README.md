@@ -2,7 +2,7 @@
 
 このディレクトリは、SVD → Tucker / HOSVD / HOOI → TT / MPSで学んだ低rank・Tensor Networkの考え方を、DMRGへ接続するための章。
 
-現時点では、横磁場Ising鎖でenvironmentベースの2-site局所更新を左右1往復へ接続し、さらに複数往復、energy安定による停止判定、global residual・energy分散、bond上限比較まで確認済みである。大規模な反復固有値solverとNN圧縮への適用はまだ扱っていない。
+現時点では、横磁場Ising鎖でenvironmentベースの2-site局所更新を左右1往復へ接続し、さらに複数往復、energy安定による停止判定、global residual・energy分散、bond上限比較まで確認済みである。加えて、物理DMRGの構造をTT-MLPへ移し、1組のTTLinear coreを結合テンソルとして更新する最小単位から、Fashion-MNIST全データを使う6-core左右sweep、学習率・更新予算の比較、GPU常駐による勾配集計高速化、TT-only・通常parameter-only・共同更新の固定予算ablationまで確認した。大規模な反復固有値solver、scope別の学習率最適化、固定wall time比較はまだ扱っていない。
 
 ## 現在の位置
 
@@ -17,7 +17,8 @@ TT / MPS
 基礎実装・正準形まで確認
 ↓
 DMRG
-複数往復・停止判定・bond上限比較まで確認
+物理系は複数往復・停止判定・bond上限比較まで確認
+TT-MLPは全データjoint sweep、データ供給高速化、更新対象ablationまで確認
 ```
 
 TT / MPSの準備と学習順は [[08_TT_MPS基礎実装検証/README]] を参照。
@@ -29,6 +30,9 @@ TT / MPSの準備と学習順は [[08_TT_MPS基礎実装検証/README]] を参�
 - [[50_DMRG/03_MPOとenvironmentによる1-site局所有効問題]]
 - [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
 - [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
+- [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+- [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
+- [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
 
 `01` は、SVD低rank近似からMPS / MPO、bond dimension、DMRG-like sweepへ進む概念的な橋渡しである。
 
@@ -40,12 +44,19 @@ TT / MPSの準備と学習順は [[08_TT_MPS基礎実装検証/README]] を参�
 
 `05` は、左右1往復を複数回反復する制御、energy安定による停止判定、global residualとenergy分散、bond制約内の理想値 $E_\chi^\star$、bond上限2・4・無切り捨ての比較を整理する。
 
+`06` は、TT-matrixの隣接2 coreの結合、更新後rankが増え得る理由、切り捨てなし再分割、rank制約の入れ子、最適化誤差とansatz誤差、NN勾配stepと物理DMRGの違い、$\beta$-smoothnessとSVD打ち切りを合わせた損失低下の十分条件を途中式から整理する。
+
+`07` は、TT-SVD・rank打ち切り・正準化を段階分けした初期化診断、$n_b/N$による全データ平均勾配、同じlossからTT pairと通常parameterの勾配を得るjoint update、候補検証後のatomic commit、方向付きSVD、左右sweepと更新予算、finalとbest、因果解釈の限界を整理する。
+
+`08` は、DataLoaderと前処理済みGPU tensor再利用の違い、batch sizeとの$2\times2$比較、数値的同等性、preloadと定常処理を分けたwall-clock測定、CUDA同期、speed-memory trade-off、ランダムaugmentationやGPU容量による適用限界を整理する。
+
 対応する学習用Notebook：
 
 - [[notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb|00_two_site_dmrg_local_update_exercises.ipynb]]
 - [[notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb|01_mpo_environment_one_site_local_update_exercises.ipynb]]
 - [[notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb|02_environment_two_site_dmrg_sweep_exercises.ipynb]]
 - [[notebooks/40_dmrg/00_fundamentals/03_dmrg_convergence_and_bond_dimension_exercises.ipynb|03_dmrg_convergence_and_bond_dimension_exercises.ipynb]]
+- [[notebooks/40_dmrg/00_fundamentals/04_tt_mlp_two_core_local_update.ipynb|04_tt_mlp_two_core_local_update.ipynb]]
 
 ## DMRGで確認した要素
 
@@ -66,6 +77,14 @@ discarded weightと局所・全体診断の分離
 複数往復とenergy安定停止
 global residualとenergy分散
 bond上限2・4・無切り捨ての比較
+TT-matrixの隣接2 core結合
+固定minibatchの分類損失による1回の局所勾配更新
+切り捨てなし・rank制限SVD再分割
+局所更新後のcore列をモデルへ書き戻す確認
+全データ平均損失による6-core joint sweep
+学習率・往復数・pair内局所step数の固定予算比較
+前処理済み学習データのGPU常駐による勾配集計高速化
+TT-only・通常parameter-only・共同更新の固定予算比較
 ```
 
 ## 今後確認する要素
@@ -73,6 +92,8 @@ bond上限2・4・無切り捨ての比較
 ```text
 複数seed・初期状態での収束確認
 反復固有値solver
+SVD前inner step数とTT側・通常parameter側の独立学習率の切り分け
+計算予算・wall time・peak memoryをそろえた比較
 ```
 
 NNへ適用する段階では、さらに
@@ -86,7 +107,7 @@ gradient-based Fine-tuningとどう比較するか
 
 を明示する必要がある。
 
-物理DMRGの基礎Notebookは03で一区切りとし、次はFashion-MNIST TT-MLPに対するDMRG-likeな2-core局所更新へ進む。
+物理DMRGの基礎Notebookは03で一区切りとした。Notebook 04でTT-MLPの1 pair・1 stepを確認した後、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]に従ってFashion-MNIST全学習データへ拡張した。Notebook 00の基準実験、01の初期化診断、02の学習率・更新予算grid、03の3,200更新、04のデータ供給高速化、05の更新対象ablationまでを実行し、結果は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]から[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]へ分けて整理した。
 
 ## これまでとの対応
 
@@ -124,4 +145,15 @@ DMRGを実装するときも、これまでと同様に、
 - [[00_基礎理論/06_手法間のつながり/14_低ランク学習からテンソルネットワークへの発展]]
 - [[06_Tucker基礎実装検証/README]]
 - [[08_TT_MPS基礎実装検証/README]]
+- [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+- [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
+- [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
+- [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/11_TT初期化スケール診断]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/12_full-batch更新予算grid]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/13_joint学習率0.2_0.3長時間比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/14_full-batch勾配集計高速化benchmark]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]
 - [[README_実装編]]

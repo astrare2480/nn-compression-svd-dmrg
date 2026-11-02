@@ -53,6 +53,7 @@ HOOI
 | `10_fashion_mnist_mlp/05` | batch logits errorから1 sampleのnorm chain、重み誤差上界、classification margin、prediction stability certificateへの接続 | 実装は[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/02_BatchLogitsErrorからPredictionStabilityCertificate_設定結果考察]] |
 | `10_fashion_mnist_mlp/06` | margin vector、minimum margin、bottleneck sample、batch内全sampleのprediction stability certificate | 実装は[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/03_MinimumMarginとBatch-widePredictionStability_設定結果考察]] |
 | `10_fashion_mnist_mlp/07` | 固定tensorization・3-core TT-matrixでのrank sweep、parameter count、compression ratio、weight reconstruction error | [[08_TT_MPS基礎実装検証/20_TT-matrixのrank_sweepと圧縮誤差のPyTorch確認]] |
+| `notebooks/40_dmrg/00_fundamentals/04` | TTLinearの1 pairを結合テンソルとして固定minibatchの分類損失で1回更新し、切り捨てなし／rank制限SVDで再分割 | [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]] |
 
 この対応は「Notebook 1本につきdocs 1本」ではなく、内容が連続するNotebookは1つの検証ノートへまとめる方針とする。
 
@@ -78,6 +79,7 @@ HOOI
 - [[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/20_TT-matrixのrank_sweepと圧縮誤差のPyTorch確認]]
+- [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]
 
 ## 共通実装・操作ノート
 
@@ -86,6 +88,7 @@ HOOI
 - [[08_TT_MPS基礎実装検証/29_TT_cutとPyTorchのreshape_Kronecker順序]]：複合添字、reshape、置換行列、Kronecker積の順序。
 - [[08_TT_MPS基礎実装検証/30_PyTorchのvector_norm_matrix_normとtorch_linalg]]：要素絶対値、vector norm、Frobenius norm、spectral norm、特異値関連APIの使い分け。
 - [[08_TT_MPS基礎実装検証/45_TT-matrix線形層のPyTorch直接forward]]：TT-matrix / MPOコアから密行列を作らないforward。
+- [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]：隣接TT-matrix coreの結合、独立leafへの局所勾配、方向付きSVD再分割、モデルへの書き戻し。
 - [[08_TT_MPS基礎実装検証/14_TTLinear置換で使うPyTorchモデル操作]]：checkpoint、`state_dict`、`eval()`、`no_grad()`、module pathによる一層置換。
 
 TT-matrixの理論は、定義とKronecker積を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/54_TT-matrixの定義とKronecker積表現]]、dense重みのtensorizationを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/55_dense重みのTT-matrix tensorizationとTT-SVD初期化]]、dense reconstructionを [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/56_TT-matrixのdense reconstruction]]、右から左へのforward縮約を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/57_TT-Linear_forwardの縮約とshape]]、dense `nn.Linear`との等価性を [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/58_TTLinearとdense_Linearのforward等価性]]、bond dimensionとunfoldingの表現能力を[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/69_TT-matrixのbond_dimensionと表現能力]]、固定tensorizationでのrank sweepを[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/70_TT-matrixのrank_sweepと圧縮率_再構成誤差]]に分けている。

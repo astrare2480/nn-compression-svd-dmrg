@@ -1,0 +1,38 @@
+{
+  "condition_id": "joint",
+  "scope": "joint",
+  "batch_size": 4096,
+  "data_residency": "gpu_resident",
+  "tt_learning_rate": 0.3,
+  "dense_learning_rate": 0.3,
+  "total_updates": 3200,
+  "evaluation_interval": 80,
+  "local_steps_per_pair": 8,
+  "max_sweeps": 40,
+  "seed": 0,
+  "rank_cap": 12,
+  "checkpoint_sha256": "ef9d5afcbffc0cdad787bc7e17f230917ae7cfb780bd506f5a348ae38ce10c6a",
+  "code_sha256": "69f465fb3772305e1222a303541611e4daf5acf9c9cf75e8457dd376612b1ba1",
+  "split_index_sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913|12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360|a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26",
+  "image_sha256": "6a1fd0602db5a1066210a55375d18f9b12115269e7c6759f64504735f020d4d5",
+  "label_sha256": "6ead6f3f16028865d36fd3c8625eba751820bd8031265a3be03e206136a3c96c",
+  "layer_name": "fc1",
+  "out_modes": [
+    4,
+    2,
+    2,
+    2,
+    4,
+    4
+  ],
+  "in_modes": [
+    2,
+    2,
+    2,
+    2,
+    7,
+    7
+  ],
+  "early_stopping_enabled": false,
+  "git_head": "95d5fe44b71d6f6fbd56e8fda9713b85983ea138"
+}

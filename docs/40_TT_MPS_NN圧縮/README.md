@@ -19,7 +19,9 @@ toy検証では人工的な重み誤差を使い、第2 Linearまでの恒等式
 
 Fashion-MNIST CNN系列のNotebook 00・01では、学習済みモデルへ進む前の小さいrandom Convを使い、Conv kernelのTT-matrix表現、exact／rank制限TTからのdense kernel再構成、patchを介したdirect forward、および再構成経路とのcore gradient等価性を確認した。Notebook 02では、そのdirect計算を`TTConv2d`として学習済みCNNの`conv2`へ接続した。CPU・float32、validation 5,000件でexact TT置換後もprediction agreement 1.0、accuracy 0.9194を維持したが、actual rank$(1,24,32,1)$ではparameter数が421,642から423,242へ増えたため、これは圧縮結果ではなくrank制限前の比較基準である。Notebook 03では固定tensorizationでrank sweepし、fine-tuning前にaccuracyをほぼ維持した確認済み境界としてrank 24を得た。Notebook 04ではrank 12・16・20・24のTT coresだけをfine-tuningし、全候補がdense baseline以上の開発用accuracyへ回復した。特にrank 12はaccuracy 0.6910から0.9238へ回復した一方、test性能、全parameter更新との比較、速度・peak memoryの優位性は未評価である。
 
-rank 12未満の追加候補、rank 64の学習率診断、複数seedでの更新方式比較、最終候補を固定した後のtest評価、parameter・MACs・latency・memoryの比較は、今後この章へ追加する。
+物理DMRGの2-site更新をTT-MLPへ移す橋渡しとして、1 pair・1 gradient stepの確認後、Fashion-MNISTの6-core `fc1`を全データ勾配で左右sweepする系列を実行した。Notebook 00の5 sweep・50局所更新ではaccuracyがrandom baseline付近だったため、Notebook 01でrank制限時の重み・activation・勾配scaleを診断し、Notebook 02で学習率・往復数・pair内局所step数を比較した。Notebook 03では共同学習率0.2・0.3を3,200更新まで実行し、0.3でvalidation accuracy 0.8710を得た。Notebook 04ではDataLoaderと前処理済みGPU tensor再利用を比較し、現在のbaselineに対する定常的な10局所更新を約10.49倍高速化した。Notebook 05では同じStage Cと3,200更新でjoint・TT-only・dense-onlyを比較し、jointが両単独更新より高いvalidation性能へ早く到達した。設計と結果は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]から[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]へ分け、一般技術は[[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]と[[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]に整理した。
+
+rank 12未満の追加候補、rank 64の学習率診断、複数seedでの更新方式比較、scopeごとの学習率・固定wall time比較、最終候補を固定した後のtest評価、parameter・MACs・latency・memoryの比較は、今後この章へ追加する。
 
 ## 関連
 
@@ -32,3 +34,14 @@ rank 12未満の追加候補、rank 64の学習率診断、複数seedでの更�
 - [[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]
 - [[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]
+- [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+- [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
+- [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
+- [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/11_TT初期化スケール診断]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/12_full-batch更新予算grid]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/13_joint学習率0.2_0.3長時間比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/14_full-batch勾配集計高速化benchmark]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]

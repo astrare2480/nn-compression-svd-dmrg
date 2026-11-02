@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import torch
 
-from ..compression import tt_canonicalize, tt_fro_norm, tt_inner
+from ..tt_mps import tt_canonicalize, tt_fro_norm, tt_inner
 from .validation import _validate_mps_cores, _validate_mps_mpo_pair, _validate_update_operands
 
 

@@ -52,8 +52,14 @@ src/nn_compression/
 ├─ tensor/
 │  ├─ operations.py
 │  └─ validation.py
-├─ compression/
-│  ├─ svd.py
+├─ linalg/
+│  └─ svd.py                 # モデル非依存の SVD
+├─ tt_mps/                   # 汎用 TT/MPS・TT-matrix
+├─ dmrg/                     # DMRG Core
+│  ├─ support/               # 初期化・dense診断
+│  └─ models/                # TFIM
+├─ compression/              # NN層への SVD / Tucker / TT 適用
+│  ├─ svd.py                 # retained energy と Compatibility API
 │  ├─ linear_svd.py
 │  ├─ conv_svd.py
 │  ├─ tucker.py
@@ -62,8 +68,11 @@ src/nn_compression/
 │  ├─ conv_tucker.py
 │  ├─ mlp_svd.py
 │  ├─ named_layers.py
-│  └─ rank_sweep.py
+│  ├─ rank_sweep.py
+│  ├─ tt_linear.py           # TTLinear と NN固有 forward
+│  └─ tt_conv.py             # TTConv
 ├─ metrics/
+│  ├─ evaluation.py
 │  ├─ model_comparison.py
 │  ├─ macs.py
 │  ├─ mlp_macs.py
@@ -142,13 +151,37 @@ foldのtarget shapeは2次元以上かつ正
 
 ---
 
-# 3. `compression/` — SVD
+# 3. `linalg/` と `compression/` — SVD
 
-## `svd.py`
+## `linalg/svd.py`
 
-モデル非依存のtruncated SVD、rank validation、retained energy等を扱う。
+モデル非依存のtruncated SVD、rank validation、行列としてのretained energyを扱う。
 
 rankは数学的最大rank以下を要求し、不正rankを黙ってclipしない。bool/Tensor scalarは整数rankとして扱わない。
+
+## `compression/svd.py`
+
+NN layerのweightに対するretained energyと、Compatibility APIを担当する。
+
+```text
+nn_compression.compression.SVD
+= nn_compression.linalg.truncated_svd
+```
+
+SVDの数値処理そのものは `linalg/svd.py` にあり、`compression/svd.py` はlayer weightを行列として渡す。
+
+## 汎用 TT/MPS と NN固有 TT
+
+```text
+tt_mps/
+→ 汎用TT/MPS・TT-matrix
+
+compression/tt_linear.py
+→ TTLinear と NN固有 forward
+
+compression/tt_conv.py
+→ TTConv2d
+```
 
 ## `linear_svd.py`
 
@@ -412,11 +445,11 @@ collect_compression_metrics
 
 ## `loops.py`
 
-`train_one_epoch()` / `evaluate()` を持つ。
+`train_one_epoch()` を持つ。`evaluate()` は `metrics/evaluation.py` の共有実装を再公開する。
 
 `train_one_epoch()` は空loaderを `ZeroDivisionError` に落とさず、実走査後に明示的な `ValueError` とする。`len(loader)` を仮定しない。
 
-`evaluate()` は一時的に `model.eval()` へ切り替えるが、呼び出し前後でrootだけでなく**全submoduleの `.training` 状態を個別に保存・復元**する。
+`evaluate()` は一時的に `model.eval()` へ切り替えるが、呼び出し前後でrootだけでなく**全submoduleの `.training` 状態を個別に保存・復元**する。保存と復元は `utils/module_state.py` が担当する。
 
 これは、
 
@@ -427,7 +460,7 @@ root model = train
 
 のようなfrozen submodule構成を `model.train(old_state)` で一括上書きしないためである。正常終了時だけでなく例外時も復元する。
 
-`metrics.model_comparison` の状態保護も同じhelperへ委譲する。
+`metrics.model_comparison` と `metrics.classification_outputs` も同じhelperを使う。Public APIは `from nn_compression.training import evaluate` のままである。
 
 ---
 
@@ -598,11 +631,11 @@ src/nn_compression/
 
 ---
 
-# 16. 次の実装
+# 16. TT/MPS と DMRG の配置
 
-次は **TT / MPS**。
+汎用TT/MPSは `tt_mps/`、NN固有の TTLinear / TTConv は `compression/tt_linear.py` と `compression/tt_conv.py`、DMRG Coreは `dmrg/` にある。
 
-SVDで学んだtruncationと、Tucker/HOOIで学んだTensor mode・rank・sweep・収束を土台に、
+SVDのtruncationと、Tucker/HOOIのTensor mode・rank・sweep・収束を土台に、
 
 ```text
 tensorization
@@ -614,9 +647,9 @@ tensorization
 → DMRGへの局所sweep接続
 ```
 
-へ進む。
+までを、上のpackage境界で分けている。
 
-Tucker src reviewで追加した次の原則もTT/MPSへ引き継ぐ。
+Tucker src reviewで追加した次の原則もTT/MPSへ引き継いでいる。
 
 ```text
 shape / rankを入口で検証する

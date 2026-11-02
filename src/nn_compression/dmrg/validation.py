@@ -31,8 +31,8 @@ import numbers
 
 import torch
 
-from ..compression.svd import coerce_integer_scalar
-from ..compression.tt_validation import validate_tt_dtype
+from ..linalg.svd import coerce_integer_scalar
+from ..tt_mps.validation import validate_tt_dtype
 
 _DIRECTIONS = ("left_to_right", "right_to_left")
 

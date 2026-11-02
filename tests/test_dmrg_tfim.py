@@ -10,10 +10,12 @@ import torch
 
 import nn_compression.dmrg.models.tfim as tfim_module
 from _dmrg_testing import DTYPES, available_devices, dense_state, kron_all, random_mps, tolerances
-from nn_compression.dmrg import (
+from nn_compression.dmrg.models import (
     build_tfim_dense_hamiltonian,
     build_tfim_mpo,
-    mpo_to_dense,
+)
+from nn_compression.dmrg.support import mpo_to_dense
+from nn_compression.dmrg import (
     mps_mpo_energy,
     run_two_site_dmrg,
 )

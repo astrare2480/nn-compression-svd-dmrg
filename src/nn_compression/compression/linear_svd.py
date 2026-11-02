@@ -11,7 +11,7 @@ import torch
 from torch import nn
 
 from ..utils.modules import get_named_module, set_named_module
-from .svd import coerce_rank, truncated_svd
+from ..linalg.svd import coerce_rank, truncated_svd
 
 
 def linear_max_rank(layer: nn.Linear) -> int:

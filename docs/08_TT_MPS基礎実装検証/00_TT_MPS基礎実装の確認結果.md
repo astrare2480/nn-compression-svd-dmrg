@@ -170,22 +170,22 @@ Notebook 13では、A/Bで異なる内部bond rankを持つTTを使い、left en
 現行の再利用APIは次へ分かれる。
 
 ```text
-tt.py
+tt_mps/core.py
 → tt_unfold
 → tt_svd_exact / tt_svd / tt_svd_ranks
 → tt_svd_error_bound
 → tt_reconstruct
 → tt_num_parameters / tt_physical_shape / tt_ranks
 
-tt_canonical.py
+tt_mps/canonical.py
 → tt_canonicalize / tt_move_center
 → tt_canonicality_errors
 
-tt_rounding.py
+tt_mps/rounding.py
 → tt_bond_singular_values
 → tt_truncate_bond / tt_round
 
-tt_contraction.py
+tt_mps/contraction.py
 → tt_inner / tt_fro_norm
 ```
 

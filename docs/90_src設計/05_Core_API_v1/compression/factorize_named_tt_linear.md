@@ -80,4 +80,4 @@ sequenceDiagram
 
 ## 関連API
 
-[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/compression/build_tt_linear]]、[[90_src設計/05_Core_API_v1/compression/ordered_factorizations]]、[[90_src設計/05_Core_API_v1/utils/get_named_module]]、[[90_src設計/05_Core_API_v1/utils/set_named_module]]、[[90_src設計/05_Core_API_v1/compression/factorize_named_linear]]
+[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/compression/build_tt_linear]]、[[90_src設計/05_Core_API_v1/tt_mps/ordered_factorizations]]、[[90_src設計/05_Core_API_v1/utils/get_named_module]]、[[90_src設計/05_Core_API_v1/utils/set_named_module]]、[[90_src設計/05_Core_API_v1/compression/factorize_named_linear]]

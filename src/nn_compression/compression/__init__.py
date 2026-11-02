@@ -28,20 +28,7 @@ from .rank_sweep import (
     sweep_conv_svd_ranks,
     sweep_layer_ranks,
 )
-from .svd import SVD, retained_energy, retained_energy_from_matrix, truncated_svd
-from .tt import (
-    tt_num_parameters,
-    tt_physical_shape,
-    tt_ranks,
-    tt_reconstruct,
-    tt_svd,
-    tt_svd_error_bound,
-    tt_svd_exact,
-    tt_svd_ranks,
-    tt_unfold,
-)
-from .tt_canonical import tt_canonicality_errors, tt_canonicalize, tt_move_center
-from .tt_contraction import tt_fro_norm, tt_inner
+from .svd import SVD, retained_energy
 from .tt_conv import (
     TTConv2d,
     build_tt_conv2d,
@@ -50,24 +37,20 @@ from .tt_conv import (
     tt_conv2d_forward,
     tt_conv2d_to_dense_weight,
 )
-from .tt_linear import TTLinear, build_tt_linear, factorize_named_tt_linear
-from .tt_matrix import (
-    dense_to_tt_matrix_cores,
-    dense_to_tt_matrix_tensor,
-    tt_cores_to_tt_matrix_cores,
+from .tt_linear import (
+    TTLinear,
+    build_tt_linear,
+    factorize_named_tt_linear,
     tt_linear_forward,
-    tt_matrix_num_parameters,
-    tt_matrix_ranks,
-    tt_matrix_to_dense,
+    tt_linear_initialization_stages,
 )
-from .tt_modes import (
-    ordered_factorizations,
-    tt_matrix_num_parameters_from_ranks,
-    tt_matrix_physical_sizes,
-    tt_matrix_shape_imbalance,
+from .tt_linear_two_site import (
+    assign_tt_linear_cores,
+    module_forward_with_merged_tt_linear_pair,
+    module_forward_with_tt_linear_cores,
+    tt_linear_forward_with_merged_pair,
 )
 from .tt_rank_sweep import sweep_tt_matrix_weight_ranks
-from .tt_rounding import tt_bond_singular_values, tt_round, tt_truncate_bond
 from .tucker import (
     compression_factor,
     hosvd,
@@ -77,9 +60,7 @@ from .tucker import (
 )
 
 __all__ = [
-    "truncated_svd",
     "retained_energy",
-    "retained_energy_from_matrix",
     "rebuild_linear_from_svd",
     "factorize_linear_layer",
     "factorize_named_linear",
@@ -107,40 +88,16 @@ __all__ = [
     "tucker2_hooi",
     "tucker2_hooi_sweep",
     "tucker2_effective_weight",
-    "tt_unfold",
-    "tt_svd_exact",
-    "tt_svd",
-    "tt_svd_error_bound",
-    "tt_svd_ranks",
-    "tt_reconstruct",
-    "tt_num_parameters",
-    "tt_physical_shape",
-    "tt_ranks",
-    "tt_canonicalize",
-    "tt_canonicality_errors",
-    "tt_move_center",
-    "tt_truncate_bond",
-    "tt_bond_singular_values",
-    "tt_round",
-    "tt_inner",
-    "tt_fro_norm",
-    # tt_distance_sq / tt_distance は現時点では公開しない。
-    # 理由: docs/90_src設計 に記載予定（distance API延期の設計メモ）。
-    "tt_matrix_ranks",
-    "tt_matrix_num_parameters",
-    "tt_matrix_to_dense",
-    "dense_to_tt_matrix_tensor",
-    "tt_cores_to_tt_matrix_cores",
-    "dense_to_tt_matrix_cores",
     "tt_linear_forward",
-    "ordered_factorizations",
-    "tt_matrix_physical_sizes",
-    "tt_matrix_shape_imbalance",
-    "tt_matrix_num_parameters_from_ranks",
+    "tt_linear_forward_with_merged_pair",
+    "assign_tt_linear_cores",
+    "module_forward_with_merged_tt_linear_pair",
+    "module_forward_with_tt_linear_cores",
     "sweep_tt_matrix_weight_ranks",
     "TTLinear",
     "build_tt_linear",
     "factorize_named_tt_linear",
+    "tt_linear_initialization_stages",
     "tt_conv2d_forward",
     "TTConv2d",
     "build_tt_conv2d",

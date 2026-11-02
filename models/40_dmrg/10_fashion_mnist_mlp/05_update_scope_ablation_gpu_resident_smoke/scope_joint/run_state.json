@@ -1,0 +1,38 @@
+{
+  "config": {
+    "condition_id": "scope_joint",
+    "scope": "joint",
+    "batch_size": 4096,
+    "layer_name": "fc1",
+    "out_modes": [
+      4,
+      2,
+      2,
+      2,
+      4,
+      4
+    ],
+    "in_modes": [
+      2,
+      2,
+      2,
+      2,
+      7,
+      7
+    ],
+    "early_stopping_enabled": false,
+    "git_head": "95d5fe44b71d6f6fbd56e8fda9713b85983ea138"
+  },
+  "stop_reason": "max_updates",
+  "stop_detail": "",
+  "completed_updates": 80,
+  "requested_updates": 80,
+  "best_update_count": 80,
+  "best_validation_loss": 1.5625096105575562,
+  "center": 0,
+  "seconds_train": 12.182495800065226,
+  "seconds_eval": 3.5031559000053676,
+  "svd_call_count": 80,
+  "dense_candidate_count": 80,
+  "core_writeback_count": 80
+}

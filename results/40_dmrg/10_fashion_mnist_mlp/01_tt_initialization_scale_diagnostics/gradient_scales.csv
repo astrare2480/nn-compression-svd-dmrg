@@ -1,0 +1,2 @@
+pair_index,num_samples,tt_parameter_norm,tt_gradient_norm,tt_relative_update,dense_parameter_norm,dense_gradient_norm,dense_relative_update,gradients_finite
+0,50000,1.8824927806854248,0.007720186375081539,4.101044346247417e-06,9.435225486755371,0.04319494217634201,4.578050862374894e-06,True

@@ -1,0 +1,167 @@
+{
+  "notebook": "04_full_batch_gradient_optimization_benchmark.ipynb",
+  "notebook_03": "D:\\dev\\nn-compression-svd-dmrg\\notebooks\\40_dmrg\\10_fashion_mnist_mlp\\03_joint_learning_rate_02_03_s40_l8.ipynb",
+  "notebook_03_sha256": "ae6d62ee803e734f1fa5005698fccf9984954a276f103bf04d06e02d27f736b8",
+  "git_head": "95d5fe44b71d6f6fbd56e8fda9713b85983ea138",
+  "checkpoint_path": "D:\\dev\\nn-compression-svd-dmrg\\models\\40_dmrg\\10_fashion_mnist_mlp\\01_tt_initialization_scale_diagnostics\\initial_stage_c.pt",
+  "checkpoint_sha256": "ef9d5afcbffc0cdad787bc7e17f230917ae7cfb780bd506f5a348ae38ce10c6a",
+  "training_module_path": "D:\\dev\\nn-compression-svd-dmrg\\src\\nn_compression\\training\\tt_linear_full_batch_sweep.py",
+  "training_module_sha256": "82f01f70fa227e73f63d0007891584372354f85e2b82a33455281730fa015cf2",
+  "split_identity": {
+    "train": {
+      "n": 50000,
+      "head": [
+        36044,
+        10678,
+        57327,
+        55074,
+        21567
+      ],
+      "tail": [
+        49628,
+        13838,
+        23049,
+        33946,
+        34814
+      ],
+      "sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913"
+    },
+    "early_stopping_validation": {
+      "n": 5000,
+      "head": [
+        59375,
+        23261,
+        23868,
+        32266,
+        29784
+      ],
+      "tail": [
+        1274,
+        42584,
+        38514,
+        54642,
+        11687
+      ],
+      "sha256": "12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360"
+    },
+    "rank_selection_validation": {
+      "n": 5000,
+      "head": [
+        30102,
+        43764,
+        35133,
+        50409,
+        21161
+      ],
+      "tail": [
+        6024,
+        6465,
+        31951,
+        27130,
+        1544
+      ],
+      "sha256": "a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26"
+    }
+  },
+  "image_sha256": "6a1fd0602db5a1066210a55375d18f9b12115269e7c6759f64504735f020d4d5",
+  "label_sha256": "6ead6f3f16028865d36fd3c8625eba751820bd8031265a3be03e206136a3c96c",
+  "gpu_name": "NVIDIA GeForce RTX 5070 Ti",
+  "cuda_version": "12.8",
+  "torch_version": "2.11.0+cu128",
+  "dtype": "torch.float32",
+  "seed": 0,
+  "joint_learning_rate": 0.2,
+  "conditions": [
+    {
+      "condition_id": "bs512_dataloader",
+      "batch_size": 512,
+      "data_residency": "dataloader"
+    },
+    {
+      "condition_id": "bs4096_dataloader",
+      "batch_size": 4096,
+      "data_residency": "dataloader"
+    },
+    {
+      "condition_id": "bs512_gpu_resident",
+      "batch_size": 512,
+      "data_residency": "gpu_resident"
+    },
+    {
+      "condition_id": "bs4096_gpu_resident",
+      "batch_size": 4096,
+      "data_residency": "gpu_resident"
+    }
+  ],
+  "single_update": {
+    "pair_index": 0,
+    "direction": "right",
+    "center": 0,
+    "local_step": 0
+  },
+  "one_sweep_visits": [
+    {
+      "pair_index": 0,
+      "direction": "right"
+    },
+    {
+      "pair_index": 1,
+      "direction": "right"
+    },
+    {
+      "pair_index": 2,
+      "direction": "right"
+    },
+    {
+      "pair_index": 3,
+      "direction": "right"
+    },
+    {
+      "pair_index": 4,
+      "direction": "right"
+    },
+    {
+      "pair_index": 4,
+      "direction": "left"
+    },
+    {
+      "pair_index": 3,
+      "direction": "left"
+    },
+    {
+      "pair_index": 2,
+      "direction": "left"
+    },
+    {
+      "pair_index": 1,
+      "direction": "left"
+    },
+    {
+      "pair_index": 0,
+      "direction": "left"
+    }
+  ],
+  "tolerances": {
+    "relative_tensor_difference": 0.0001,
+    "relative_denominator_floor": 1e-08,
+    "absolute_tensor_difference": 1e-05,
+    "one_sweep_validation_loss": 0.001,
+    "one_sweep_validation_accuracy": 0.001,
+    "maximum_peak_memory_fraction": 0.8,
+    "minimum_time_improvement_ratio": 1.1
+  },
+  "warmup_repeats": 1,
+  "measurement_repeats": 3,
+  "representative_time": "one-sweep adoption uses the median of one_sweep_wall_seconds; total_update_seconds and validation_seconds are not used for adoption; warmup, restore, and preload are excluded",
+  "adoption_time_field": "one_sweep_wall_median_seconds",
+  "time_definitions": {
+    "total_update_seconds": "sum of per-update total_seconds measured inside run_local_update",
+    "one_sweep_wall_seconds": "synced wall clock around the 10 local updates, including post-timer CPU transfers and reconstructions",
+    "validation_seconds": "evaluate plus validation logits and predictions after the sweep wall clock",
+    "unattributed_sweep_overhead_seconds": "one_sweep_wall_seconds - total_update_seconds, not clamped",
+    "preload_seconds": "one-time GPU residency copy, excluded from one_sweep_wall_seconds and the adoption ratio"
+  },
+  "numerical_pairing": "same repeat_index against bs512_dataloader",
+  "checked_at": "2026-11-02T14:01:04.596749+09:00",
+  "src_training_function_was_not_modified": true
+}

@@ -17,13 +17,16 @@ from torch import nn
 from torch.func import functional_call
 
 import nn_compression.compression as compression
+import nn_compression.tt_mps as tt_mps
 import nn_compression.compression.tt_linear as tt_linear_module
-import nn_compression.compression.tt_matrix as tt_matrix_module
+import nn_compression.tt_mps.matrix as tt_matrix_module
 from nn_compression.compression import (
     TTLinear,
     build_tt_linear,
-    dense_to_tt_matrix_cores,
     factorize_named_tt_linear,
+)
+from nn_compression.tt_mps import (
+    dense_to_tt_matrix_cores,
     tt_matrix_ranks,
     tt_matrix_to_dense,
 )
@@ -1186,5 +1189,6 @@ def test_named_replacement_keeps_cuda_device_and_logits():
     ["TTLinear", "build_tt_linear", "factorize_named_tt_linear", "ordered_factorizations"],
 )
 def test_public_api_is_exported(name):
-    assert name in compression.__all__
-    assert hasattr(compression, name)
+    package = tt_mps if name == "ordered_factorizations" else compression
+    assert name in package.__all__
+    assert hasattr(package, name)

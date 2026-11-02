@@ -1,7 +1,7 @@
 # `tt_linear_forward`
 
 **Stability:** A  
-**定義:** `src/nn_compression/compression/tt_matrix.py`  
+**定義:** `src/nn_compression/compression/tt_linear.py`
 **参照Notebook:** `notebooks/30_tt_mps/00_fundamentals/14_tt_matrix_dense_reconstruction_and_tt_linear_forward.ipynb`、`notebooks/30_tt_mps/00_fundamentals/15_ttlinear_dense_forward_equivalence_learning.ipynb`
 
 ## 責務
@@ -88,4 +88,4 @@ $$
 
 ## 関連API
 
-[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/compression/tt_matrix_to_dense]]、[[90_src設計/05_Core_API_v1/compression/dense_to_tt_matrix_cores]]、[[90_src設計/05_Core_API_v1/compression/tt_matrix_num_parameters]]、[[90_src設計/05_Core_API_v1/Internal_API]]
+[[90_src設計/05_Core_API_v1/compression/TTLinear]]、[[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_to_dense]]、[[90_src設計/05_Core_API_v1/tt_mps/dense_to_tt_matrix_cores]]、[[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_num_parameters]]、[[90_src設計/05_Core_API_v1/Internal_API]]

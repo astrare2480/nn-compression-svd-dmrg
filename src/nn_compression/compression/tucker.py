@@ -17,7 +17,7 @@ import torch
 
 from ..tensor.operations import mode_dot, unfold
 from ..tensor.validation import validate_tensor_ndim_at_least_2
-from .svd import truncated_svd
+from ..linalg.svd import truncated_svd
 from .tucker_validation import (
     validate_positive_shape,
     validate_real_dtype,

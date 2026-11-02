@@ -35,7 +35,7 @@ from dataclasses import dataclass
 
 import torch
 
-from ..compression import tt_ranks
+from ..tt_mps import tt_ranks
 from .environment import _energy
 from .sweep import SweepStepLog, two_site_sweep
 from .validation import (

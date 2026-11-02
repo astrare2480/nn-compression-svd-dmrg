@@ -83,15 +83,18 @@ $$
 現在の共通実装では、SVDそのものとLinear固有処理を分離している。
 
 ```text
+src/nn_compression/linalg/svd.py
 src/nn_compression/compression/svd.py
 src/nn_compression/compression/linear_svd.py
 ```
 
+`linalg/svd.py` がモデル非依存のSVD、`compression/svd.py` がlayerのretained energyと `SVD` aliasを担当する。
+
 主要な公開関数：
 
 ```python
+from nn_compression.linalg import truncated_svd
 from nn_compression.compression import (
-    truncated_svd,
     rebuild_linear_from_svd,
     factorize_linear_layer,
     factorize_named_linear,

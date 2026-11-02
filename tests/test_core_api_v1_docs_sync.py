@@ -18,11 +18,13 @@ SRC_ROOT = PROJECT_ROOT / "src"
 PUBLIC_PACKAGES = (
     "compression",
     "datasets",
+    "linalg",
     "metrics",
     "models",
     "selection",
     "tensor",
     "training",
+    "tt_mps",
     "utils",
 )
 

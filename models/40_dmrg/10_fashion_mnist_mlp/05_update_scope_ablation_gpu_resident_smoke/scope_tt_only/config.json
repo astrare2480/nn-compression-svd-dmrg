@@ -1,0 +1,24 @@
+{
+  "condition_id": "scope_tt_only",
+  "scope": "tt_only",
+  "batch_size": 4096,
+  "layer_name": "fc1",
+  "out_modes": [
+    4,
+    2,
+    2,
+    2,
+    4,
+    4
+  ],
+  "in_modes": [
+    2,
+    2,
+    2,
+    2,
+    7,
+    7
+  ],
+  "early_stopping_enabled": false,
+  "git_head": "95d5fe44b71d6f6fbd56e8fda9713b85983ea138"
+}

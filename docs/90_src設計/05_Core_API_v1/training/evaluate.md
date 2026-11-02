@@ -1,7 +1,7 @@
 # `evaluate`
 
 **Stability:** A  
-**定義:** `src/nn_compression/training/loops.py`
+**定義:** `src/nn_compression/metrics/evaluation.py`
 
 ## 責務
 

@@ -38,8 +38,8 @@ src版Notebook
 現在の主な実装は
 
 ```text
-src/nn_compression/compression/tt.py
-src/nn_compression/compression/tt_validation.py
+src/nn_compression/tt_mps/core.py
+src/nn_compression/tt_mps/validation.py
 ```
 
 である。

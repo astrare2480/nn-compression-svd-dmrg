@@ -21,7 +21,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from ..training.loops import _preserve_module_training_modes
+from ..utils.module_state import _preserve_module_training_modes
 from .tensor_comparison import (
     _error_summary,
     _scaled_float64_pair,

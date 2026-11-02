@@ -23,11 +23,13 @@ from _dmrg_testing import (
     tolerances,
 )
 from nn_compression.dmrg import (
+    mps_mpo_energy,
+    mps_mpo_expectation,
+)
+from nn_compression.dmrg.support import (
     ResidualVarianceDiagnostics,
     compute_dense_residual_and_variance,
     make_random_mps,
-    mps_mpo_energy,
-    mps_mpo_expectation,
     mpo_to_dense,
 )
 
@@ -321,7 +323,7 @@ CORE_MODULES = (
     "sweep",
     "convergence",
 )
-FORBIDDEN_MODULE_PARTS = {"models", "tfim", "diagnostics", "initialization"}
+FORBIDDEN_MODULE_PARTS = {"models", "tfim", "diagnostics", "initialization", "support", "compression", "training"}
 FORBIDDEN_NAMES = {
     "build_tfim_mpo",
     "build_tfim_dense_hamiltonian",
@@ -360,14 +362,20 @@ def test_core_modules_do_not_depend_on_tfim_dense_or_support_code(module_name):
 
 def test_core_modules_do_not_hardcode_two_level_systems_or_dtype_device_defaults():
     """物理次元 2・固定 site 数・module-level の dtype / device 既定値を持たない。"""
-    for module_name in (*CORE_MODULES, "initialization", "diagnostics"):
-        tree = ast.parse((SRC_DMRG / f"{module_name}.py").read_text(encoding="utf-8"))
+    support_modules = {
+        "initialization": SRC_DMRG / "support" / "initialization.py",
+        "diagnostics": SRC_DMRG / "support" / "diagnostics.py",
+    }
+    module_paths = {name: SRC_DMRG / f"{name}.py" for name in CORE_MODULES}
+    module_paths.update(support_modules)
+    for module_name, source_path in module_paths.items():
+        tree = ast.parse(source_path.read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.Assign):
                 for target in node.targets:
                     if isinstance(target, ast.Name):
                         assert target.id not in {"DTYPE", "DEVICE", "LENGTH", "SEED", "NUM_SITES"}
-        source = (SRC_DMRG / f"{module_name}.py").read_text(encoding="utf-8")
+        source = source_path.read_text(encoding="utf-8")
         assert "torch.set_default" not in source
         assert "manual_seed" not in source
 
@@ -383,10 +391,18 @@ def test_public_api_boundary_is_exactly_the_documented_list():
         "two_site_sweep", "run_two_site_dmrg_round_trip", "run_two_site_dmrg",
         "OneSiteUpdateResult", "TwoSiteSplitResult", "TwoSiteUpdateResult", "SweepStepLog",
         "SweepPassResult", "DMRGRoundTripResult", "DMRGRoundTripRecord", "DMRGResult",
-        "make_random_mps", "mpo_to_dense", "compute_dense_residual_and_variance",
-        "ResidualVarianceDiagnostics", "build_tfim_mpo", "build_tfim_dense_hamiltonian",
     }  # fmt: skip
     assert set(dmrg.__all__) == expected and len(dmrg.__all__) == len(expected)
+    from nn_compression.dmrg.models import __all__ as model_api
+    from nn_compression.dmrg.support import __all__ as support_api
+
+    assert set(support_api) == {
+        "make_random_mps",
+        "mpo_to_dense",
+        "compute_dense_residual_and_variance",
+        "ResidualVarianceDiagnostics",
+    }
+    assert set(model_api) == {"build_tfim_mpo", "build_tfim_dense_hamiltonian"}
     for name in dmrg.__all__:
         assert hasattr(dmrg, name)
     for private in ("_lowest_eigenpair", "_next_stability_count", "_choose_stop_reason", "_directional_sweep", "_kron_all"):
@@ -404,7 +420,16 @@ def test_every_top_level_definition_outside_all_is_private():
 
 @pytest.mark.parametrize(
     "module_name",
-    ["validation", "environment", "two_site", "sweep", "convergence", "diagnostics", "initialization", "models.tfim"],
+    [
+        "validation",
+        "environment",
+        "two_site",
+        "sweep",
+        "convergence",
+        "support.diagnostics",
+        "support.initialization",
+        "models.tfim",
+    ],
 )
 def test_each_module_imports_standalone_without_circular_import(module_name):
     """循環 import がない: 各 module を単独で import できる。"""

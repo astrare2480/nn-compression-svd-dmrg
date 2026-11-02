@@ -16,18 +16,23 @@ from _dmrg_testing import (
     sweep_tolerances,
     tolerances,
 )
-from nn_compression.compression import tt_fro_norm, tt_reconstruct
+from nn_compression.tt_mps import (
+    tt_fro_norm,
+    tt_reconstruct,
+)
 from nn_compression.dmrg import (
     build_left_environments,
     build_right_environments,
-    build_tfim_dense_hamiltonian,
-    build_tfim_mpo,
     mps_mpo_energy,
     mps_mpo_expectation,
     normalize_mps,
     run_two_site_dmrg,
     update_left_environment,
     update_right_environment,
+)
+from nn_compression.dmrg.models import (
+    build_tfim_dense_hamiltonian,
+    build_tfim_mpo,
 )
 
 PHYSICAL_CASES = {

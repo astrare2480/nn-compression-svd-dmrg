@@ -1,0 +1,136 @@
+{
+  "config": {
+    "notebook": "03_joint_learning_rate_02_03_s40_l8.ipynb",
+    "model": "MNISTMLP fc1 TTLinear, fc2 Linear, fc3 Linear, ReLU",
+    "condition_id": "lr0p2_s1_l1",
+    "initialization": "01 initial_stage_c.pt reloaded for every condition",
+    "checkpoint_path": "D:\\dev\\nn-compression-svd-dmrg\\models\\40_dmrg\\10_fashion_mnist_mlp\\01_tt_initialization_scale_diagnostics\\initial_stage_c.pt",
+    "checkpoint_sha256": "ef9d5afcbffc0cdad787bc7e17f230917ae7cfb780bd506f5a348ae38ce10c6a",
+    "layer_name": "fc1",
+    "out_modes": [
+      4,
+      2,
+      2,
+      2,
+      4,
+      4
+    ],
+    "in_modes": [
+      2,
+      2,
+      2,
+      2,
+      7,
+      7
+    ],
+    "rank_cap": 12,
+    "expected_initial_ranks": [
+      1,
+      8,
+      12,
+      12,
+      12,
+      12,
+      1
+    ],
+    "seed": 0,
+    "dtype": "torch.float32",
+    "batch_size": 512,
+    "joint_learning_rate": 0.2,
+    "tt_pair_learning_rate": 0.2,
+    "dense_parameter_learning_rate": 0.2,
+    "learning_rates_are_tied_for_this_comparison": true,
+    "max_sweeps": 1,
+    "local_steps_per_pair": 1,
+    "requested_full_data_gradient_passes": 10,
+    "early_stopping_enabled": false,
+    "early_stopping_patience": 1,
+    "early_stopping_min_delta": 0.0,
+    "split": "Fashion-MNIST 50000/5000/5000 seed 0; train / early-stopping / rank-selection",
+    "split_identity": {
+      "train": {
+        "n": 50000,
+        "head": [
+          36044,
+          10678,
+          57327,
+          55074,
+          21567
+        ],
+        "tail": [
+          49628,
+          13838,
+          23049,
+          33946,
+          34814
+        ],
+        "sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913"
+      },
+      "early_stopping_validation": {
+        "n": 5000,
+        "head": [
+          59375,
+          23261,
+          23868,
+          32266,
+          29784
+        ],
+        "tail": [
+          1274,
+          42584,
+          38514,
+          54642,
+          11687
+        ],
+        "sha256": "12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360"
+      },
+      "rank_selection_validation": {
+        "n": 5000,
+        "head": [
+          30102,
+          43764,
+          35133,
+          50409,
+          21161
+        ],
+        "tail": [
+          6024,
+          6465,
+          31951,
+          27130,
+          1544
+        ],
+        "sha256": "a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26"
+      }
+    },
+    "split_index_sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913|12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360|a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26",
+    "test_and_rank_selection_are_not_scanned": true,
+    "update_targets": "merged pair T, fc1.bias, fc2, fc3",
+    "code_path": "D:\\dev\\nn-compression-svd-dmrg\\src\\nn_compression\\training\\tt_linear_full_batch_sweep.py",
+    "code_sha256": "82f01f70fa227e73f63d0007891584372354f85e2b82a33455281730fa015cf2",
+    "git_head": "95d5fe44b71d6f6fbd56e8fda9713b85983ea138"
+  },
+  "stop_reason": "max_sweeps",
+  "stop_detail": "最大往復数 1 まで実行した。early stopping は無効。これは数学的収束の証明ではない。",
+  "completed_sweeps": 1,
+  "successful_local_updates": 10,
+  "incomplete_sweep_successes": 0,
+  "best_sweep": 1,
+  "best_validation_loss": 2.2993883838653564,
+  "center": 0,
+  "last_success_pair": 0,
+  "last_success_direction": "left",
+  "stop_sweep": null,
+  "stop_pair": null,
+  "stop_direction": null,
+  "stop_local_step": null,
+  "final_ranks": [
+    1,
+    8,
+    12,
+    12,
+    12,
+    12,
+    1
+  ]
+}

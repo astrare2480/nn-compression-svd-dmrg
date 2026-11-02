@@ -14,7 +14,7 @@ from __future__ import annotations
 import copy
 
 from .linear_svd import factorize_linear_layer, rebuild_linear_from_svd
-from .svd import truncated_svd
+from ..linalg.svd import truncated_svd
 
 
 def _resolve_mlp_ranks(fc1_rank, fc2_rank, r1, r2) -> tuple[int, int]:
