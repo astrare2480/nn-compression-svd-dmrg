@@ -1,0 +1,23 @@
+{
+  "actual_aggregation_and_figures_seconds": 3.5632802000036463,
+  "actual_control_seconds": 2.8631491999985883,
+  "actual_smoke_total_seconds": 47.37110950000351,
+  "aggregation_estimate_method": "measured aggregation and figure seconds, not scaled by candidate count",
+  "candidate_count": 12,
+  "control_estimate_method": "measured control seconds, not scaled by candidate count",
+  "estimated_main_calibration_seconds": 477.76308053266257,
+  "estimated_main_candidate_count": 512,
+  "estimated_main_reverse_candidate_count": 24,
+  "estimated_main_reverse_seconds": 30.146976600037306,
+  "estimated_main_total_seconds": 733.7052886660289,
+  "estimated_main_validation_seconds": 219.36880213332674,
+  "mean_calibration_seconds_per_candidate": 0.9331310166653566,
+  "mean_reverse_seconds_per_candidate": 1.2561240250015544,
+  "mean_validation_seconds_per_candidate": 0.4284546916666538,
+  "mode": "smoke",
+  "reverse_estimate_method": "upper_bound_before_deduplication: 2 models * (3 criteria * 2 budgets + 4 uniform ranks + 2 validation-loss oracles). Smoke reverse count is not scaled to 512.",
+  "run_id": "6bce1d306b5c5c193d7f0a40a0142b7ce7a1f96eae0efd8e2f2c7b8bfa2a89c6",
+  "stage": "complete",
+  "stop_reason": "completed",
+  "uniform_rank_8_used_as_main_budget": false
+}

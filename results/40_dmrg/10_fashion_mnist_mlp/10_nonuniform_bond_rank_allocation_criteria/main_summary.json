@@ -1,0 +1,18 @@
+{
+  "actual_aggregation_and_figures_seconds": 3.2435915999958524,
+  "actual_calibration_seconds": 386.0351379000349,
+  "actual_control_seconds": 2.729138700000476,
+  "actual_mean_calibration_seconds_per_candidate": 0.7539748787110057,
+  "actual_mean_reverse_seconds_per_candidate": 1.222144315386406,
+  "actual_mean_validation_seconds_per_candidate": 0.3938254533204457,
+  "actual_reverse_candidate_count": 13,
+  "actual_reverse_seconds": 15.887876100023277,
+  "actual_total_seconds": 710.1362038000007,
+  "actual_validation_seconds": 201.6386321000682,
+  "candidate_count": 512,
+  "mode": "main",
+  "run_id": "6bce1d306b5c5c193d7f0a40a0142b7ce7a1f96eae0efd8e2f2c7b8bfa2a89c6",
+  "stage": "complete",
+  "stop_reason": "completed",
+  "uniform_rank_8_used_as_main_budget": false
+}

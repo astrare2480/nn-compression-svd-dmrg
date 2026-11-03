@@ -1,0 +1,66 @@
+{
+  "bonds": [
+    2,
+    5
+  ],
+  "checkpoint_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+  "controls": [
+    {
+      "bond_index": 2,
+      "canonicality_max_error": 2.2021965833118884e-06,
+      "fixed_input_logits_relative_l2": 5.959288955637021e-07,
+      "passed": true,
+      "target_rank": 12
+    },
+    {
+      "bond_index": 5,
+      "canonicality_max_error": 2.2144279228086816e-06,
+      "fixed_input_logits_relative_l2": 7.231310519273393e-07,
+      "passed": true,
+      "target_rank": 12
+    }
+  ],
+  "device": "cpu",
+  "diagnostic_id": "7c00f545f6625cdd9656312caa37469967c8598b13e698f34e8c89be7bef5bfd",
+  "drop_last": false,
+  "dtype": "float32",
+  "evaluation_samples": 5000,
+  "evaluation_split": "rank_selection_validation",
+  "loss_recheck_atol": 1e-05,
+  "margin": "correct_class_logit - max_logit_of_other_classes",
+  "notebook_code_sha256": "29c7e4fe13cec12078c8f9124436c7cd44339bfc72140fe511a55f585c38d26b",
+  "parent_notebook_code_sha256": "68db3592c316b0e13c44cf86eb3ed321a85fde1b050dce63b650226be7fb0565",
+  "parent_run_id": "a81565ba154beb5e4f0ddbae5061ebde714baca3f0e75f1bc1490dfdcb0adead",
+  "relative_l2": "sqrt(sum_i ||candidate_i - baseline_i||^2) / sqrt(sum_i ||baseline_i||^2)",
+  "shuffle": false,
+  "split_index_sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913|12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360|a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26",
+  "stage_ratio": false,
+  "stages": [
+    "fc1_pre_relu",
+    "fc1_post_relu",
+    "logits"
+  ],
+  "target_rank": 11,
+  "thresholds": [
+    {
+      "best_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+      "generation": 112,
+      "generation_directory": "generation_000112",
+      "threshold_directory": "threshold_1e-06"
+    },
+    {
+      "best_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+      "generation": 112,
+      "generation_directory": "generation_000112",
+      "threshold_directory": "threshold_1e-04"
+    },
+    {
+      "best_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+      "generation": 112,
+      "generation_directory": "generation_000112",
+      "threshold_directory": "threshold_1e-02"
+    }
+  ],
+  "training": false,
+  "validation_batch_size": 512
+}

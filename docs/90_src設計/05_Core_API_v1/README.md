@@ -276,7 +276,10 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/tt_mps/merged_tt_matrix_to_matrix]]
 - [[90_src設計/05_Core_API_v1/compression/tt_linear_forward_with_merged_pair]]
 - [[90_src設計/05_Core_API_v1/tt_mps/TTMatrixPairSplit]]
+- [[90_src設計/05_Core_API_v1/tt_mps/BondRankDecision]]
+- [[90_src設計/05_Core_API_v1/tt_mps/select_bond_rank_from_singular_values]]
 - [[90_src設計/05_Core_API_v1/tt_mps/split_merged_tt_matrix]]
+- [[90_src設計/05_Core_API_v1/tt_mps/split_merged_tt_matrix_by_discarded_weight]]
 - [[90_src設計/05_Core_API_v1/tt_mps/canonicalize_tt_matrix_cores]]
 - [[90_src設計/05_Core_API_v1/tt_mps/tt_matrix_canonicality_errors]]
 - [[90_src設計/05_Core_API_v1/tt_mps/replace_tt_matrix_core_pair]]
@@ -335,6 +338,9 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/training/sweep_tt_linear_pairs_left_to_right]]
 - [[90_src設計/05_Core_API_v1/training/sweep_tt_linear_pairs_right_to_left]]
 - [[90_src設計/05_Core_API_v1/training/train_tt_linear_full_batch_sweeps]]
+- [[90_src設計/05_Core_API_v1/training/TTLinearGlobalFullBatchUpdate]]
+- [[90_src設計/05_Core_API_v1/training/accumulate_tt_linear_global_full_batch_gradients]]
+- [[90_src設計/05_Core_API_v1/training/update_tt_linear_global_full_batch]]
 - [[90_src設計/05_Core_API_v1/training/save_tt_linear_full_batch_sweep_run]]
 - [[90_src設計/05_Core_API_v1/training/load_tt_linear_sweep_checkpoint]]
 - [[90_src設計/05_Core_API_v1/training/load_condition_summary]]
@@ -350,6 +356,10 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/training/assert_scope_budget_completed]]
 - [[90_src設計/05_Core_API_v1/training/reject_incomplete_scope_rows]]
 - [[90_src設計/05_Core_API_v1/training/incomplete_scope_names]]
+- [[90_src設計/05_Core_API_v1/training/ValidationSelection]]
+- [[90_src設計/05_Core_API_v1/training/initial_validation_selection]]
+- [[90_src設計/05_Core_API_v1/training/update_validation_selection]]
+- [[90_src設計/05_Core_API_v1/training/replay_validation_selection]]
 
 ## metrics — model comparison
 
@@ -360,6 +370,7 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/metrics/logits_rmse]]
 - [[90_src設計/05_Core_API_v1/metrics/take_inference_batch]]
 - [[90_src設計/05_Core_API_v1/metrics/benchmark_inference]]
+- [[90_src設計/05_Core_API_v1/metrics/measure_synchronized_inference_latency]]
 - [[90_src設計/05_Core_API_v1/metrics/benchmark_inference_print]]
 - [[90_src設計/05_Core_API_v1/metrics/collect_compression_metrics]]
 - [[90_src設計/05_Core_API_v1/metrics/collect_model_logits]]
@@ -373,6 +384,7 @@ flowchart LR
 ## metrics — MACs / Tensor error
 
 - [[90_src設計/05_Core_API_v1/metrics/linear_macs]]
+- [[90_src設計/05_Core_API_v1/metrics/tt_linear_direct_contraction_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/compressed_linear_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/conv2d_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/compressed_conv2d_macs]]

@@ -1,0 +1,3 @@
+requested_rank_cap,state,source,stop_reason,loss_improvement_from_initial,accuracy_improvement_from_initial,early_stopping_loss_improvement_from_initial,early_stopping_accuracy_improvement_from_initial
+4,standard_tt,07,max_epochs,1.809762935686112,0.7192,1.8166644139289856,0.7202000000000001
+4,dmrg_like,07,max_sweeps,0.0919517917633059,0.2766,0.0916750518798825,0.2672

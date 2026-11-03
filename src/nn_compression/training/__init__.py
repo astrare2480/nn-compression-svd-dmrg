@@ -1,11 +1,26 @@
 """学習・評価処理。"""
 
 from .fit import fit_with_early_stopping, non_shuffling_loader
+from .validation_selection import (
+    ValidationSelection,
+    initial_validation_selection,
+    replay_validation_selection,
+    update_validation_selection,
+)
 from .loops import evaluate, train_one_epoch
 from .parameter_scope import (
     parameter_change_summary,
     set_trainable_parameter_prefixes,
     trainable_named_parameters,
+)
+from .tt_linear_adaptive_sweep import (
+    AdaptiveTTLinearSweepResult,
+    train_adaptive_tt_linear_full_batch_sweeps,
+)
+from .tt_linear_global_full_batch import (
+    TTLinearGlobalFullBatchUpdate,
+    accumulate_tt_linear_global_full_batch_gradients,
+    update_tt_linear_global_full_batch,
 )
 from .tt_linear_full_batch_sweep import (
     NonFiniteLocalUpdate,
@@ -22,8 +37,8 @@ from .tt_linear_full_batch_sweep import (
     train_tt_linear_full_batch_sweeps,
     update_tt_linear_two_core_pair,
 )
+from .gpu_resident_batches import GpuResidentTensorBatches
 from .tt_linear_scoped_update import (
-    GpuResidentTensorBatches,
     ScopedFullBatchBudgetResult,
     TTUpdateScope,
     accumulate_scoped_full_batch_gradients,
@@ -51,6 +66,11 @@ __all__ = [
     "sweep_tt_linear_pairs_left_to_right",
     "sweep_tt_linear_pairs_right_to_left",
     "train_tt_linear_full_batch_sweeps",
+    "TTLinearGlobalFullBatchUpdate",
+    "accumulate_tt_linear_global_full_batch_gradients",
+    "update_tt_linear_global_full_batch",
+    "AdaptiveTTLinearSweepResult",
+    "train_adaptive_tt_linear_full_batch_sweeps",
     "save_tt_linear_full_batch_sweep_run",
     "load_condition_summary",
     "load_tt_linear_sweep_checkpoint",
@@ -66,4 +86,8 @@ __all__ = [
     "assert_scope_budget_completed",
     "reject_incomplete_scope_rows",
     "incomplete_scope_names",
+    "ValidationSelection",
+    "initial_validation_selection",
+    "update_validation_selection",
+    "replay_validation_selection",
 ]

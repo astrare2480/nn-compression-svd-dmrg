@@ -29,11 +29,14 @@ from ..compression.tt_linear_two_site import (
     module_forward_with_merged_tt_linear_pair,
 )
 from ..tt_mps.matrix_two_site import (
+    BondRankDecision,
     merge_tt_matrix_cores,
     replace_tt_matrix_core_pair,
     split_merged_tt_matrix,
+    split_merged_tt_matrix_by_discarded_weight,
 )
 from ..utils.modules import get_named_module
+from .gpu_resident_batches import GpuResidentTensorBatches
 from .loops import evaluate
 
 
@@ -64,6 +67,7 @@ class TTLinearLocalUpdate:
     dense_parameter_norm: float
     dense_gradient_norm: float
     dense_relative_update: float
+    bond_rank_decision: BondRankDecision | None = None
 
 
 @dataclass(frozen=True)
@@ -229,21 +233,70 @@ def _restore_training_flags(flags: list[tuple[nn.Module, bool]]) -> None:
         module.training = training
 
 
+def _canonical_device(device: torch.device) -> torch.device:
+    if device.type == "cuda" and device.index is None:
+        return torch.device("cuda", torch.cuda.current_device())
+    return torch.device(device)
+
+
+def _same_device(left: torch.device, right: torch.device) -> bool:
+    return _canonical_device(left) == _canonical_device(right)
+
+
+def _batch_on_device(images: torch.Tensor, labels: torch.Tensor, device: torch.device):
+    """同じdeviceならsliceをそのまま返す。違うときだけ ``.to`` する。"""
+    if not _same_device(images.device, device):
+        images = images.to(device)
+    if not _same_device(labels.device, device):
+        labels = labels.to(device)
+    return images, labels
+
+
+def _full_batch_samples(source: DataLoader | GpuResidentTensorBatches, batch_size: int | None):
+    """DataLoader または GPU 常駐 source から、全sample数と連続batchを返す。"""
+    if isinstance(source, DataLoader):
+        if source.drop_last:
+            raise ValueError("勾配集計の loader は drop_last=False である必要があります。")
+        if not isinstance(source.sampler, SequentialSampler):
+            raise ValueError(
+                "勾配集計の loader は shuffle=False（SequentialSampler）である必要があります。"
+            )
+        if batch_size is not None and source.batch_size != batch_size:
+            raise ValueError("loader の batch_size と引数 batch_size が一致しません。")
+        dataset_size = len(source.dataset)
+        if dataset_size < 1:
+            raise ValueError("空の dataset では全データ勾配を集計できません。")
+        return int(dataset_size), source
+    if isinstance(source, GpuResidentTensorBatches):
+        if batch_size is None:
+            raise ValueError("GPU常駐sourceには batch_size が必要です。")
+        return source.n_samples, source.batches(batch_size)
+    raise TypeError(
+        "勾配集計の source は DataLoader または GpuResidentTensorBatches である必要があります: "
+        f"{type(source).__name__}"
+    )
+
+
 def accumulate_tt_linear_pair_full_batch_gradients(
     model: nn.Module,
-    loader: DataLoader,
+    source: DataLoader | GpuResidentTensorBatches,
     layer_name: str,
     pair_index: int,
     merged: torch.Tensor,
     *,
     device: torch.device,
     criterion: nn.Module | None = None,
+    batch_size: int | None = None,
 ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
     """全学習データの平均 cross-entropy の勾配を、batch に分けて足す。
 
     batch の平均損失を ``L_b``、batch の sample 数を ``n_b``、
     全 sample 数を ``N`` とすると、足す量は ``(n_b / N) * L_b`` の勾配である。
     ``L_b`` は平均なので、さらに ``N`` で割らない。
+
+    ``source`` は ``shuffle=False`` の ``DataLoader`` か、
+    ``GpuResidentTensorBatches``。後者は ``batch_size`` を明示し、
+    ``batches`` の連続sliceをそのまま使う。
 
     この関数は parameter も ``merged`` も更新しない。各 batch の計算グラフは
     ``backward`` のたびに捨てる。戻り値の勾配は ``detach().clone()`` した複製。
@@ -256,26 +309,22 @@ def accumulate_tt_linear_pair_full_batch_gradients(
         raise ValueError("merged は requires_grad=True の leaf である必要があります。")
     criterion = _mean_criterion(criterion)
     layer = _tt_linear_layer(model, layer_name)
-    if loader.drop_last:
-        raise ValueError("勾配集計の loader は drop_last=False である必要があります。")
-    if not isinstance(loader.sampler, SequentialSampler):
-        raise ValueError(
-            "勾配集計の loader は shuffle=False（SequentialSampler）である必要があります。"
-        )
-    dataset_size = len(loader.dataset)
-    if dataset_size < 1:
-        raise ValueError("空の dataset では全データ勾配を集計できません。")
     if pair_index < 0 or pair_index + 1 >= len(layer.cores):
         raise ValueError(f"pair_index={pair_index} は core 列の範囲外です。")
+    if isinstance(source, GpuResidentTensorBatches) and not _same_device(source.device, device):
+        raise ValueError(
+            "GPU常駐sourceは事前配置したdeviceと一致する必要があります。"
+            f" source={source.device}, requested={device}"
+        )
+    dataset_size, batches = _full_batch_samples(source, batch_size)
 
     merged.grad = None
     for parameter in model.parameters():
         parameter.grad = None
 
     seen = 0
-    for images, labels in loader:
-        images = images.to(device)
-        labels = labels.to(device)
+    for images, labels in batches:
+        images, labels = _batch_on_device(images, labels, device)
         if images.shape[0] != labels.shape[0]:
             raise ValueError(
                 f"images の batch 次元 {images.shape[0]} と labels {labels.shape[0]} が一致しません。"
@@ -299,7 +348,7 @@ def accumulate_tt_linear_pair_full_batch_gradients(
 
     if seen != dataset_size:
         raise ValueError(
-            f"処理した sample 数 {seen} が dataset 長 {dataset_size} と一致しません。"
+            f"処理した sample 数 {seen} が全 sample 数 {dataset_size} と一致しません。"
             " drop_last や sampler の取りこぼしがないかを確認してください。"
         )
     if merged.grad is None:
@@ -431,7 +480,7 @@ def _diagnostic_forward(
 def update_tt_linear_two_core_pair(
     model: nn.Module,
     candidate: nn.Module,
-    loader: DataLoader,
+    source: DataLoader | GpuResidentTensorBatches,
     *,
     layer_name: str,
     pair_index: int,
@@ -446,6 +495,9 @@ def update_tt_linear_two_core_pair(
     local_step: int = 0,
     criterion: nn.Module | None = None,
     observer: Callable[[dict], None] | None = None,
+    batch_size: int | None = None,
+    discarded_weight_threshold: float | None = None,
+    min_bond_rank: int = 1,
 ) -> TTLinearLocalUpdate:
     """1 pair を全データ勾配で1歩進め、方向付き SVD のあと成功時だけ反映する。
 
@@ -456,6 +508,8 @@ def update_tt_linear_two_core_pair(
     直交中心 ``center`` は、この pair の2 site のどちらかにあることを前提にする。
     進入側である必要はない。pair の外にある場合は ``ValueError``。
     成功後の中心は、右向きなら ``pair_index + 1``、左向きなら ``pair_index``。
+    ``discarded_weight_threshold`` が ``None`` のときは ``rank_cap`` 固定の分割である。
+    値を渡すと、その相対 discarded weight で bond rank を選び、``rank_cap`` は上限になる。
     """
     criterion = _mean_criterion(criterion)
     rank_cap = _require_positive_int(rank_cap, "rank_cap")
@@ -506,12 +560,13 @@ def update_tt_linear_two_core_pair(
     )
     grad_t, dense_grads = accumulate_tt_linear_pair_full_batch_gradients(
         model,
-        loader,
+        source,
         layer_name,
         pair_index,
         merged,
         device=device,
         criterion=criterion,
+        batch_size=batch_size,
     )
     t_candidate = merged.detach() - tt_lr * grad_t
     if not _tensor_is_finite(t_candidate):
@@ -544,11 +599,22 @@ def update_tt_linear_two_core_pair(
     )
 
     # SVD は学習グラフに入れない。T_candidate はすでに detach 済み。
-    split = split_merged_tt_matrix(
-        t_candidate.detach(),
-        max_bond=rank_cap,
-        direction=direction,
-    )
+    # threshold が None のときは従来の固定 rank_cap 分割のままである。
+    decision = None
+    if discarded_weight_threshold is None:
+        split = split_merged_tt_matrix(
+            t_candidate.detach(),
+            max_bond=rank_cap,
+            direction=direction,
+        )
+    else:
+        split, decision = split_merged_tt_matrix_by_discarded_weight(
+            t_candidate.detach(),
+            threshold=discarded_weight_threshold,
+            min_bond_rank=min_bond_rank,
+            max_bond_rank=rank_cap,
+            direction=direction,
+        )
     if (
         not _tensor_is_finite(split.left_core)
         or not _tensor_is_finite(split.right_core)
@@ -579,8 +645,7 @@ def update_tt_linear_two_core_pair(
         with torch.no_grad():
             parameter.copy_(value.to(parameter.device))
 
-    images = diagnostic_images.to(device)
-    labels = diagnostic_labels.to(device)
+    images, labels = _batch_on_device(diagnostic_images, diagnostic_labels, device)
     logits, diagnostic_loss = _diagnostic_forward(candidate, images, labels, criterion)
     if not _tensor_is_finite(logits) or not _tensor_is_finite(diagnostic_loss):
         raise NonFiniteLocalUpdate(
@@ -604,6 +669,7 @@ def update_tt_linear_two_core_pair(
         dense_parameter_norm=dense_parameter_norm,
         dense_gradient_norm=dense_gradient_norm,
         dense_relative_update=dense_relative_update,
+        bond_rank_decision=decision,
     )
 
 

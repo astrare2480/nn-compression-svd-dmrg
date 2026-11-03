@@ -1,0 +1,9 @@
+{
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "gpu_name": "",
+  "device": "cpu",
+  "compile": false,
+  "execution": "eager",
+  "training": false
+}

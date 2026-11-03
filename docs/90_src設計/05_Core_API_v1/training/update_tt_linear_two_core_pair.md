@@ -14,7 +14,7 @@
 update_tt_linear_two_core_pair(
     model: nn.Module,
     candidate: nn.Module,
-    loader: DataLoader,
+    source: DataLoader | GpuResidentTensorBatches,
     *,
     layer_name: str,
     pair_index: int,
@@ -29,6 +29,9 @@ update_tt_linear_two_core_pair(
     local_step: int = 0,
     criterion: nn.Module | None = None,
     observer=None,
+    batch_size: int | None = None,
+    discarded_weight_threshold: float | None = None,
+    min_bond_rank: int = 1,
 ) -> TTLinearLocalUpdate
 ```
 
@@ -36,7 +39,7 @@ update_tt_linear_two_core_pair(
 
 - `model`: 更新先。成功するまで値は変えない。
 - `candidate`: 検証専用の別モジュール。実モデルとstorageを共有してはならない。
-- `loader`: 全データ勾配を集計する`shuffle=False`のloader。
+- `source`: 全データ勾配を集計する`shuffle=False`の`DataLoader`、または`GpuResidentTensorBatches`。
 - `layer_name`: 対象`TTLinear`。
 - `pair_index`: 左site。
 - `direction`: `"right"`または`"left"`。
@@ -50,6 +53,9 @@ update_tt_linear_two_core_pair(
 - `local_step`: pair内の0始まりのstep。既定は0。
 - `criterion`: 平均cross-entropy。`None`ならそれを作る。
 - `observer`: 更新前のpair coreを受け取る任意の関数。`None`なら呼ばない。
+- `batch_size`: 常駐sourceのslice幅。`DataLoader`では省略できる。
+- `discarded_weight_threshold`: `None`なら`rank_cap`による固定rank分割のまま。有限の0以上の値なら、相対discarded weightがその値以下になる最小rankを`min_bond_rank`と`rank_cap`の間で選ぶ。
+- `min_bond_rank`: 閾値選択の下限。既定は1。`discarded_weight_threshold`が`None`のときは使わない。
 
 ## 戻り値
 
@@ -63,7 +69,7 @@ update_tt_linear_two_core_pair(
 
 1. 最新coreから独立なleaf `T`を作り、全データ勾配を集計する。この間、値は変えない。
 2. `T - tt_pair_learning_rate * grad_T`と、通常parameterの`parameter - dense_parameter_learning_rate * grad`を候補にする。
-3. 候補`T`をdetachしてから方向付きSVDし、rank上限を適用する。SVDは逆伝播経路に入れない。
+3. 候補`T`をdetachしてから方向付きSVDする。`discarded_weight_threshold`が`None`なら`rank_cap`までの固定rank、指定されていればdiscarded weightによるrank選択を行う。SVDは逆伝播経路に入れない。
 4. 候補を`candidate`だけに載せて、診断batchのforwardとlossが有限かを見る。
 5. すべて有限なら`candidate`の値を`model`へコピーする。右向きのあと中心は`pair_index + 1`、左向きのあと中心は`pair_index`。
 

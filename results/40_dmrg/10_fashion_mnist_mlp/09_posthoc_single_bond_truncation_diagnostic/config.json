@@ -1,0 +1,77 @@
+{
+  "bond_indices": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "canonicality_tolerance": 0.0001,
+  "checkpoint_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+  "criterion": "mean_cross_entropy",
+  "device": "cpu",
+  "evaluation_samples": 5000,
+  "evaluation_split": "rank_selection_validation",
+  "expected_ranks": [
+    1,
+    8,
+    12,
+    12,
+    12,
+    12,
+    1
+  ],
+  "experiment": "09_posthoc_single_bond_truncation_diagnostic",
+  "float32_reconstruction_tolerance": 1e-05,
+  "in_modes": [
+    2,
+    2,
+    2,
+    2,
+    7,
+    7
+  ],
+  "loss_recheck_atol": 1e-05,
+  "notebook_code_sha256": "68db3592c316b0e13c44cf86eb3ed321a85fde1b050dce63b650226be7fb0565",
+  "out_modes": [
+    4,
+    2,
+    2,
+    2,
+    4,
+    4
+  ],
+  "pair_index_rule": "bond_index - 1",
+  "representative_threshold_directory": "threshold_1e-02",
+  "results_dir": "results/40_dmrg/10_fashion_mnist_mlp/09_posthoc_single_bond_truncation_diagnostic",
+  "run_id": "a81565ba154beb5e4f0ddbae5061ebde714baca3f0e75f1bc1490dfdcb0adead",
+  "split_direction": "right",
+  "split_index_sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913|12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360|a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26",
+  "target_ranks": [
+    12,
+    11,
+    10,
+    8
+  ],
+  "thresholds": [
+    {
+      "best_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+      "generation": 112,
+      "generation_directory": "generation_000112",
+      "threshold_directory": "threshold_1e-06"
+    },
+    {
+      "best_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+      "generation": 112,
+      "generation_directory": "generation_000112",
+      "threshold_directory": "threshold_1e-04"
+    },
+    {
+      "best_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+      "generation": 112,
+      "generation_directory": "generation_000112",
+      "threshold_directory": "threshold_1e-02"
+    }
+  ],
+  "training": false,
+  "validation_batch_size": 512
+}

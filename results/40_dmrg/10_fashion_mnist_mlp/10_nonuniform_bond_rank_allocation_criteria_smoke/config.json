@@ -1,0 +1,96 @@
+{
+  "calibration_count": 5000,
+  "calibration_index_sha256": "e75097b22e62c74561c992db56af9c729d6618d7b234b56b9e368bc08eff116d",
+  "calibration_seed": 10,
+  "calibration_uses_training_split": true,
+  "candidate_count_per_model": 6,
+  "canonicality_tolerance": 0.0001,
+  "device": "cpu",
+  "dtype": "float32",
+  "float32_reconstruction_tolerance": 1e-05,
+  "generation_procedure": "deepcopy; for bond in primary order, canonicalize, merge, right SVD split, replace pair",
+  "loss_recheck_atol": 1e-05,
+  "main_budgets": [
+    "uniform_rank_11_total_macs",
+    "uniform_rank_10_total_macs"
+  ],
+  "mode": "smoke",
+  "notebook_code_sha256": "c629cfe7b08928cd2fe7d8afa3c275d29614abdecde60531f687a350ac8db939",
+  "primary_bond_order": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "rank_choices": [
+    8,
+    10,
+    11,
+    12
+  ],
+  "reverse_bond_order": [
+    5,
+    4,
+    3,
+    2
+  ],
+  "run_id": "6bce1d306b5c5c193d7f0a40a0142b7ce7a1f96eae0efd8e2f2c7b8bfa2a89c6",
+  "sources": [
+    {
+      "active_generation": false,
+      "actual_ranks": [
+        1,
+        8,
+        12,
+        12,
+        12,
+        12,
+        1
+      ],
+      "baseline_calibration_accuracy": 0.927,
+      "baseline_calibration_loss": 0.19419538998603822,
+      "baseline_validation_accuracy": 0.8906,
+      "baseline_validation_loss": 0.3090054250717163,
+      "fc1_parameters": 6480,
+      "generation": null,
+      "generation_directory": "",
+      "model_type": "standard_tt",
+      "role": "notebook06_adam_rank12_adopted_by_notebook07",
+      "sha256": "6493c9baed0ef1be387969dc95cd06cbb9203e64b59660d739c34dc3b58ce375",
+      "theoretical_fc1_macs": 2175488,
+      "theoretical_total_macs": 2309120,
+      "total_model_parameters": 140378,
+      "tt_core_elements": 5968
+    },
+    {
+      "active_generation": true,
+      "actual_ranks": [
+        1,
+        8,
+        12,
+        12,
+        12,
+        12,
+        1
+      ],
+      "baseline_calibration_accuracy": 0.9328,
+      "baseline_calibration_loss": 0.18813966081142425,
+      "baseline_validation_accuracy": 0.8968,
+      "baseline_validation_loss": 0.28660528535842894,
+      "fc1_parameters": 6480,
+      "generation": 112,
+      "generation_directory": "generation_000112",
+      "model_type": "dmrg_like",
+      "role": "notebook08_active_best_parameter_checked_against_notebook06",
+      "sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+      "theoretical_fc1_macs": 2175488,
+      "theoretical_total_macs": 2309120,
+      "total_model_parameters": 140378,
+      "tt_core_elements": 5968
+    }
+  ],
+  "split_index_sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913|12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360|a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26",
+  "theoretical_macs_include_bias_or_activation": false,
+  "training": false,
+  "uniform_rank_8_is_main_budget": false
+}

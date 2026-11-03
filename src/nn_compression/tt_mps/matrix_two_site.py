@@ -231,6 +231,25 @@ def split_merged_tt_matrix(
     available = int(singular_values.shape[0])
     retained = available if max_bond is None else min(available, max_bond)
 
+    return _assemble_pair_split(
+        merged,
+        u_factor,
+        singular_values,
+        vh,
+        retained,
+        direction,
+    )
+
+
+def _assemble_pair_split(
+    merged: torch.Tensor,
+    u_factor: torch.Tensor,
+    singular_values: torch.Tensor,
+    vh: torch.Tensor,
+    retained: int,
+    direction: str,
+) -> TTMatrixPairSplit:
+    """還元 SVD の先頭 ``retained`` 成分から、方向付きの 2 core を組む。"""
     r_left, m_k, n_k, m_next, n_next, r_right = merged.shape
     kept_u = u_factor[:, :retained]
     kept_s = singular_values[:retained]
@@ -249,6 +268,195 @@ def split_merged_tt_matrix(
         singular_values=singular_values,
         discarded_squared_norm=discarded_squared_norm,
     )
+
+
+@dataclass(frozen=True)
+class BondRankDecision:
+    """discarded weight による bond rank の選択結果。
+
+    ``available_rank`` は SVD 行列の shape から保持できる本数であり、
+    数値的 rank ではない。``threshold_required_rank`` は上限を掛ける前の値。
+    ``relative_discarded_weight`` は ``retained_rank`` で実際に捨てた割合。
+    比較の許容は ``comparison_atol`` と ``comparison_rtol`` だけを使い、
+    既定はどちらも 0 である。
+    """
+
+    available_rank: int
+    threshold_required_rank: int
+    retained_rank: int
+    relative_discarded_weight: float
+    threshold_satisfied: bool
+    cap_limited: bool
+    min_rank_limited: bool
+    zero_spectrum: bool
+
+
+def _finite_threshold(threshold: float) -> float:
+    if isinstance(threshold, bool) or not isinstance(threshold, (int, float)):
+        raise TypeError(f"threshold は実数である必要があります: {threshold!r}")
+    value = float(threshold)
+    if not math.isfinite(value) or value < 0.0:
+        raise ValueError(f"threshold は 0 以上の有限値である必要があります: {threshold!r}")
+    return value
+
+
+def _nonnegative_tolerance(value: float, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"{name} は実数である必要があります: {value!r}")
+    number = float(value)
+    if not math.isfinite(number) or number < 0.0:
+        raise ValueError(f"{name} は 0 以上の有限値である必要があります: {value!r}")
+    return number
+
+
+def select_bond_rank_from_singular_values(
+    singular_values: torch.Tensor,
+    *,
+    threshold: float,
+    min_bond_rank: int,
+    max_bond_rank: int,
+    comparison_atol: float = 0.0,
+    comparison_rtol: float = 0.0,
+) -> BondRankDecision:
+    r"""相対 discarded weight が閾値以下になる最小 rank を選ぶ。
+
+    ``discarded_weight(r) = sum_{j>r} σ_j^2 / sum_j σ_j^2``。
+    この量は相対 Frobenius 誤差の二乗であり、分類 accuracy の保証ではない。
+    二乗和は float64 で計算する。モデル本体の dtype は変えない。
+
+    探索範囲は ``1 .. available_rank``。``available_rank`` は引数の長さであり、
+    還元 SVD が shape から返した本数をそのまま渡す。
+    全特異値が 0 のときは ``threshold_required_rank = 1``、
+    ``retained_rank = min_bond_rank``、切り捨て量 0、閾値達成とする。
+    二乗和は最大特異値でスケールしてから計算し、tail は小さい側からの
+    逆向き累積和で作る。NaN と Inf はゼロスペクトルにせず ``ValueError``。
+    """
+    if not torch.is_tensor(singular_values):
+        raise TypeError(
+            f"singular_values は torch.Tensor である必要があります: {type(singular_values)!r}"
+        )
+    if singular_values.ndim != 1 or singular_values.shape[0] < 1:
+        raise ValueError(
+            "singular_values は長さ 1 以上の 1 階 Tensor である必要があります: "
+            f"shape={tuple(singular_values.shape)}"
+        )
+    validate_tt_dtype(singular_values, name="singular_values")
+    if not torch.isfinite(singular_values).all():
+        raise ValueError(
+            "特異値に NaN または Inf があります。ゼロスペクトルとは区別し、rank は選びません。"
+        )
+    if torch.any(singular_values < 0):
+        raise ValueError("特異値は 0 以上である必要があります。")
+    threshold = _finite_threshold(threshold)
+    comparison_atol = _nonnegative_tolerance(comparison_atol, "comparison_atol")
+    comparison_rtol = _nonnegative_tolerance(comparison_rtol, "comparison_rtol")
+    min_bond_rank = coerce_integer_scalar(min_bond_rank, name="min_bond_rank")
+    max_bond_rank = coerce_integer_scalar(max_bond_rank, name="max_bond_rank")
+    if min_bond_rank < 1 or max_bond_rank < 1 or min_bond_rank > max_bond_rank:
+        raise ValueError(
+            f"1 <= min_bond_rank <= max_bond_rank である必要があります: "
+            f"min={min_bond_rank}, max={max_bond_rank}"
+        )
+    available = int(singular_values.shape[0])
+    if min_bond_rank > available:
+        raise ValueError(
+            f"min_bond_rank={min_bond_rank} は available_rank={available} を超えています。"
+        )
+
+    if torch.all(singular_values == 0):
+        return BondRankDecision(
+            available_rank=available,
+            threshold_required_rank=1,
+            retained_rank=min_bond_rank,
+            relative_discarded_weight=0.0,
+            threshold_satisfied=True,
+            cap_limited=False,
+            min_rank_limited=min_bond_rank > 1,
+            zero_spectrum=True,
+        )
+
+    values = singular_values.detach().to(dtype=torch.float64)
+    scale = values.max()
+    if not torch.isfinite(scale) or float(scale) <= 0.0:
+        raise ValueError("特異値のスケールが有限な正の値ではありません。")
+    squares = (values / scale).square()
+    if not torch.isfinite(squares).all():
+        raise ValueError("スケール後の特異値二乗が有限ではありません。")
+    total = squares.sum()
+    if not torch.isfinite(total) or float(total) <= 0.0:
+        raise ValueError("特異値二乗和が有限な正の値ではありません。")
+    inclusive_from_here = torch.cumsum(squares.flip(0), dim=0).flip(0)
+    tail = torch.zeros_like(squares)
+    if available > 1:
+        tail[:-1] = inclusive_from_here[1:]
+    if not torch.isfinite(tail).all() or float(tail.min()) < 0.0:
+        raise ValueError("discarded weight の tail sum が有限な非負値ではありません。")
+    relative = tail / total
+    if not torch.isfinite(relative).all():
+        raise ValueError("相対 discarded weight が有限ではありません。")
+    limit = threshold + comparison_atol + comparison_rtol * abs(threshold)
+    required = available
+    for index in range(available):
+        if float(relative[index]) <= limit:
+            required = index + 1
+            break
+    cap_limited = required > max_bond_rank
+    retained = min(required, max_bond_rank, available)
+    min_rank_limited = retained < min_bond_rank
+    if min_rank_limited:
+        retained = min_bond_rank
+    relative_discarded_weight = float(relative[retained - 1])
+    return BondRankDecision(
+        available_rank=available,
+        threshold_required_rank=required,
+        retained_rank=retained,
+        relative_discarded_weight=relative_discarded_weight,
+        threshold_satisfied=relative_discarded_weight <= limit,
+        cap_limited=cap_limited,
+        min_rank_limited=min_rank_limited,
+        zero_spectrum=False,
+    )
+
+
+def split_merged_tt_matrix_by_discarded_weight(
+    merged: torch.Tensor,
+    *,
+    threshold: float,
+    min_bond_rank: int,
+    max_bond_rank: int,
+    direction: str = "right",
+    comparison_atol: float = 0.0,
+    comparison_rtol: float = 0.0,
+) -> tuple[TTMatrixPairSplit, BondRankDecision]:
+    """結合テンソルを 1 回だけ SVD し、discarded weight で rank を選んで分割する。
+
+    core の dtype / device は ``split_merged_tt_matrix`` と同じく入力を維持する。
+    rank の比較計算だけ float64 を使う。固定 rank の ``max_bond`` 分割は
+    ``split_merged_tt_matrix`` のままである。
+    """
+    matrix = merged_tt_matrix_to_matrix(merged)
+    if direction not in {"right", "left"}:
+        raise ValueError(
+            f'direction は "right" または "left" である必要があります: {direction!r}'
+        )
+    u_factor, singular_values, vh = torch.linalg.svd(matrix, full_matrices=False)
+    decision = select_bond_rank_from_singular_values(
+        singular_values,
+        threshold=threshold,
+        min_bond_rank=min_bond_rank,
+        max_bond_rank=max_bond_rank,
+        comparison_atol=comparison_atol,
+        comparison_rtol=comparison_rtol,
+    )
+    split = _assemble_pair_split(
+        merged,
+        u_factor,
+        singular_values,
+        vh,
+        decision.retained_rank,
+        direction,
+    )
+    return split, decision
 
 
 def canonicalize_tt_matrix_cores(
@@ -341,4 +549,86 @@ def replace_tt_matrix_core_pair(
         [(f"cores[{i}]", core) for i, core in enumerate(replaced)]
     )
     return replaced
+
+
+def truncate_tt_matrix_bond(
+    cores: Sequence[torch.Tensor],
+    out_modes: Sequence[int],
+    in_modes: Sequence[int],
+    pair_index: int,
+    *,
+    max_bond: int,
+    direction: str = "right",
+) -> tuple[list[torch.Tensor], TTMatrixPairSplit]:
+    """1 本の TT-matrix bond を、rank 上限付き SVD で切り詰める。
+
+    ``pair_index`` は切り詰める bond の左 site である。bond 番号を
+    ``pair_index + 1`` と数える実験でも、この関数へ渡すのは左 site の番号。
+
+    手順は、pair index の検証、その pair の左 site を中心にした正準化、
+    隣接 2 core の結合、``max_bond`` による SVD 分割、core 列への書き戻し。
+    入力の core 列も各 Tensor も変更しない。dtype、device、autograd graph は
+    再利用する正準化・結合・分割が維持する。
+
+    戻り値は、更新済み core 列と、その分割結果 ``TTMatrixPairSplit``。
+    還元 SVD の本数が ``max_bond`` 未満のときは、その本数を保持する。
+    """
+    if not isinstance(cores, (list, tuple)) or len(cores) == 0:
+        raise ValueError(f"cores は空でない list または tuple である必要があります: {cores!r}")
+    index = _pair_index(pair_index, len(cores))
+    canonical = canonicalize_tt_matrix_cores(cores, out_modes, in_modes, index)
+    merged = merge_tt_matrix_cores(canonical[index], canonical[index + 1])
+    split = split_merged_tt_matrix(merged, max_bond=max_bond, direction=direction)
+    replaced = replace_tt_matrix_core_pair(
+        canonical,
+        index,
+        split.left_core,
+        split.right_core,
+    )
+    return replaced, split
+
+
+def truncate_tt_matrix_bonds(
+    cores: Sequence[torch.Tensor],
+    out_modes: Sequence[int],
+    in_modes: Sequence[int],
+    bond_targets: Sequence[tuple[int, int]],
+    *,
+    direction: str = "right",
+) -> tuple[list[torch.Tensor], tuple[TTMatrixPairSplit, ...]]:
+    """複数の TT-matrix bond を、与えた順に 1 本ずつ切り詰める。
+
+    ``bond_targets`` は ``(pair_index, max_bond)`` の列である。
+    ``pair_index`` は ``truncate_tt_matrix_bond`` と同じく、切り詰める bond の
+    左 site を指す。各段は既存の ``truncate_tt_matrix_bond`` を、直前の結果に
+    対して呼ぶ。
+
+    切り詰める順序によって結果は変わり得る。後の bond は、前の切り詰めで
+    変わった core を正準化し直してから SVD するため、同じ target でも
+    逆順とは一致しないことがある。
+
+    入力の core 列も各 Tensor も変更しない。dtype、device、autograd graph は
+    各段の切り詰めが維持する。戻り値は更新済み core 列と、bond 順の
+    ``TTMatrixPairSplit`` である。
+    """
+    if isinstance(bond_targets, (str, bytes)) or not isinstance(bond_targets, Sequence):
+        raise TypeError("bond_targets は (pair_index, max_bond) の列である必要があります。")
+    updated: Sequence[torch.Tensor] = cores
+    splits: list[TTMatrixPairSplit] = []
+    for position, target in enumerate(bond_targets):
+        if not isinstance(target, tuple) or len(target) != 2:
+            raise ValueError(
+                f"bond_targets[{position}] は (pair_index, max_bond) である必要があります: {target!r}"
+            )
+        pair_index, max_bond = target
+        updated, split = truncate_tt_matrix_bond(
+            updated,
+            out_modes,
+            in_modes,
+            pair_index,
+            max_bond=max_bond,
+            direction=direction,
+        )
+        splits.append(split)
+    return list(updated), tuple(splits)
 

@@ -1,0 +1,44 @@
+{
+  "best_checkpoint_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+  "evaluation_settings": {
+    "criterion": "mean_cross_entropy",
+    "latency_batch_sizes": [
+      1,
+      4096
+    ],
+    "latency_repetitions": 100,
+    "latency_warmup": 20,
+    "split_index_sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913|12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360|a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26",
+    "validation_batch_size": 512
+  },
+  "latency_measured": true,
+  "metrics": {
+    "actual_ranks": [
+      1,
+      8,
+      12,
+      12,
+      12,
+      12,
+      1
+    ],
+    "best_checkpoint": "models/40_dmrg/10_fashion_mnist_mlp/08_adaptive_bond_rank_dmrg_like_pareto/threshold_1e-06/adaptive_dmrg_like/generation_000112/best_model.pt",
+    "best_checkpoint_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+    "early_stopping_validation_accuracy": 0.895,
+    "early_stopping_validation_loss": 0.2908534934520721,
+    "fc1_parameters": 6480,
+    "latency_batch_1_seconds": 0.0004945000000589062,
+    "latency_batch_4096_seconds": 0.010022000000390108,
+    "latency_gpu_name": "NVIDIA GeForce RTX 5070 Ti",
+    "rank_selection_validation_accuracy": 0.8968,
+    "rank_selection_validation_loss": 0.28660529990196226,
+    "state": "adaptive_dmrg_like",
+    "theoretical_total_macs": 2309120,
+    "threshold": 1e-06,
+    "total_model_parameters": 140378,
+    "training_time_seconds": 1403.3898987000066,
+    "tt_core_elements": 5968,
+    "validation_error": 0.10319999999999996
+  },
+  "threshold": 1e-06
+}

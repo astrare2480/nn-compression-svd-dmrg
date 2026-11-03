@@ -1,0 +1,11 @@
+requested_rank_cap,state,source,stop_reason,training_time_seconds,evaluation_time_seconds,save_time_seconds,train_full_dataset_gradient_passes,optimizer_steps,local_updates,peak_gpu_allocated_bytes,best_epoch,best_sweep
+1,initial,07,initial,0.0,0.3494149999999081,0.0,0,0,0,nan,0.0,0.0
+2,initial,07,initial,0.0,0.3066501999999218,0.0,0,0,0,nan,0.0,0.0
+3,initial,07,initial,0.0,0.2959338000000571,0.0,0,0,0,nan,0.0,0.0
+4,initial,07,initial,0.0,0.3159097000000201,0.0,0,0,0,nan,0.0,0.0
+5,initial,07,initial,0.0,0.2943867000000182,0.0,0,0,0,nan,0.0,0.0
+6,initial,07,initial,0.0,0.3082571000001053,0.0,0,0,0,nan,0.0,0.0
+8,initial,07,initial,0.0,0.325618600000098,0.0,0,0,0,nan,0.0,0.0
+12,initial,07,initial,0.0,0.317003100000079,0.0,0,0,0,nan,0.0,0.0
+4,standard_tt,07,max_epochs,3.810873399997945,0.5760125999976253,0.0248612000141292,1,782,0,110498816.0,1.0,nan
+4,dmrg_like,07,max_sweeps,8.230555300047854,0.536758999997005,0.0217021000134991,80,80,80,638676992.0,nan,1.0

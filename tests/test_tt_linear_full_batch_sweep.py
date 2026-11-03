@@ -22,6 +22,7 @@ from nn_compression.tt_mps import (
 )
 from nn_compression.models import MNISTMLP
 from nn_compression.training.loops import evaluate
+from nn_compression.training.gpu_resident_batches import GpuResidentTensorBatches
 from nn_compression.training.tt_linear_full_batch_sweep import (
     NonFiniteLocalUpdate,
     _advance_stopping,
@@ -1235,3 +1236,118 @@ def test_exception_during_resume_leaves_existing_artifacts_and_summary(tmp_path)
             run_one=run_one,
         )
     assert _file_snapshot(tmp_path) == before
+
+
+def test_gpu_resident_slices_match_dataloader_gradients():
+    train_x, train_y, _, _ = _synthetic(n_train=10, seed=1)
+    model = _build_model(seed=1)
+    merged = merge_tt_matrix_cores(model.fc1.cores[0], model.fc1.cores[1])
+    loader = _loader(train_x, train_y, batch_size=4)
+    resident = GpuResidentTensorBatches(train_x.contiguous(), train_y.contiguous())
+    grad_loader, dense_loader = accumulate_tt_linear_pair_full_batch_gradients(
+        model,
+        loader,
+        "fc1",
+        0,
+        merged.detach().clone().requires_grad_(True),
+        device=torch.device("cpu"),
+        batch_size=4,
+    )
+    grad_resident, dense_resident = accumulate_tt_linear_pair_full_batch_gradients(
+        model,
+        resident,
+        "fc1",
+        0,
+        merged.detach().clone().requires_grad_(True),
+        device=torch.device("cpu"),
+        batch_size=4,
+    )
+    torch.testing.assert_close(grad_resident, grad_loader, **CLOSE)
+    assert set(dense_resident) == set(dense_loader)
+    for name in dense_loader:
+        torch.testing.assert_close(dense_resident[name], dense_loader[name], **CLOSE)
+
+
+def test_gpu_resident_one_local_update_matches_dataloader():
+    train_x, train_y, _, _ = _synthetic(n_train=10, seed=2)
+    base = _build_model(seed=2)
+    model_loader = copy.deepcopy(base)
+    model_resident = copy.deepcopy(base)
+    candidate_loader = copy.deepcopy(model_loader)
+    candidate_resident = copy.deepcopy(model_resident)
+    loader = _loader(train_x, train_y, batch_size=4)
+    resident = GpuResidentTensorBatches(train_x.contiguous(), train_y.contiguous())
+    images, labels = _diagnostic(train_x, train_y)
+    common = dict(
+        layer_name="fc1",
+        pair_index=0,
+        direction="right",
+        center=0,
+        rank_cap=4,
+        tt_pair_learning_rate=1e-2,
+        dense_parameter_learning_rate=1e-3,
+        diagnostic_images=images,
+        diagnostic_labels=labels,
+        device=torch.device("cpu"),
+        batch_size=4,
+    )
+    update_loader = update_tt_linear_two_core_pair(
+        model_loader, candidate_loader, loader, **common
+    )
+    update_resident = update_tt_linear_two_core_pair(
+        model_resident, candidate_resident, resident, **common
+    )
+    for core_loader, core_resident in zip(model_loader.fc1.cores, model_resident.fc1.cores, strict=True):
+        torch.testing.assert_close(core_resident, core_loader, **CLOSE)
+    for name, parameter in model_loader.named_parameters():
+        if name.startswith("fc1.cores."):
+            continue
+        torch.testing.assert_close(model_resident.state_dict()[name], parameter, **CLOSE)
+    assert update_resident.retained_rank == update_loader.retained_rank
+    assert update_resident.center == update_loader.center
+    torch.testing.assert_close(
+        torch.tensor(update_resident.diagnostic_batch_loss),
+        torch.tensor(update_loader.diagnostic_batch_loss),
+        **CLOSE,
+    )
+
+
+def test_gpu_resident_keeps_incomplete_final_batch():
+    train_x, train_y, _, _ = _synthetic(n_train=10, seed=3)
+    resident = GpuResidentTensorBatches(train_x.contiguous(), train_y.contiguous())
+    sizes = [int(images.shape[0]) for images, _labels in resident.batches(4)]
+    assert sizes == [4, 4, 2]
+    assert sum(sizes) == resident.n_samples == 10
+    model = _build_model(seed=3)
+    merged = merge_tt_matrix_cores(model.fc1.cores[0], model.fc1.cores[1])
+    grad_resident, dense_resident = accumulate_tt_linear_pair_full_batch_gradients(
+        model,
+        resident,
+        "fc1",
+        0,
+        merged.detach().clone().requires_grad_(True),
+        device=torch.device("cpu"),
+        batch_size=4,
+    )
+    grad_loader, dense_loader = accumulate_tt_linear_pair_full_batch_gradients(
+        model,
+        _loader(train_x, train_y, batch_size=4),
+        "fc1",
+        0,
+        merged.detach().clone().requires_grad_(True),
+        device=torch.device("cpu"),
+        batch_size=4,
+    )
+    torch.testing.assert_close(grad_resident, grad_loader, **CLOSE)
+    for name in dense_loader:
+        torch.testing.assert_close(dense_resident[name], dense_loader[name], **CLOSE)
+    with pytest.raises(TypeError, match="GpuResidentTensorBatches"):
+        accumulate_tt_linear_pair_full_batch_gradients(
+            model,
+            object(),
+            "fc1",
+            0,
+            merged.detach().clone().requires_grad_(True),
+            device=torch.device("cpu"),
+            batch_size=4,
+        )

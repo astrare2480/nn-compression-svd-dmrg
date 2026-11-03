@@ -1,0 +1,14 @@
+{
+  "allow_tf32_cudnn": true,
+  "allow_tf32_matmul": false,
+  "compile": false,
+  "cuda": "12.8",
+  "cudnn": 91900,
+  "cudnn_deterministic": true,
+  "deterministic_algorithms": true,
+  "dtype": "float32",
+  "execution": "eager",
+  "gpu_name": "NVIDIA GeForce RTX 5070 Ti",
+  "inference_mode": true,
+  "torch": "2.11.0+cu128"
+}

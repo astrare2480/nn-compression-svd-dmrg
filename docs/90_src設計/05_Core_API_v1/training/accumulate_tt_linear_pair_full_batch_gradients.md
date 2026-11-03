@@ -13,25 +13,27 @@
 ```python
 accumulate_tt_linear_pair_full_batch_gradients(
     model: nn.Module,
-    loader: DataLoader,
+    source: DataLoader | GpuResidentTensorBatches,
     layer_name: str,
     pair_index: int,
     merged: torch.Tensor,
     *,
     device: torch.device,
     criterion: nn.Module | None = None,
+    batch_size: int | None = None,
 ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]
 ```
 
 ## 引数
 
 - `model`: 対象`TTLinear`を含むモデル。TT coreは凍結されている前提。
-- `loader`: `shuffle=False`かつ`drop_last=False`の勾配集計loader。
+- `source`: `shuffle=False`かつ`drop_last=False`の`DataLoader`、または`GpuResidentTensorBatches`。
 - `layer_name`: 対象`TTLinear`の名前。
 - `pair_index`: 結合する左site。
 - `merged`: `requires_grad=True`のleaf。対象pairの結合テンソル。
-- `device`: batchの移動先。
+- `device`: batchの計算device。常駐sourceはすでにこのdeviceにあること。
 - `criterion`: `reduction="mean"`の損失。`None`なら平均cross-entropy。
+- `batch_size`: 常駐sourceのslice幅。`DataLoader`では`None`ならloaderのbatch sizeを使う。
 
 ## 戻り値
 

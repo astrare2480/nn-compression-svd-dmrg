@@ -25,6 +25,7 @@ TTLinearLocalUpdate(
     dense_parameter_norm: float,
     dense_gradient_norm: float,
     dense_relative_update: float,
+    bond_rank_decision: BondRankDecision | None = None,
 ) -> None
 ```
 
@@ -43,6 +44,7 @@ TTLinearLocalUpdate(
 - `dense_parameter_norm`: 更新対象の通常parameterを連結した L2 norm。この実験では `fc1.bias`、`fc2`、`fc3`。
 - `dense_gradient_norm`: その通常parameterの勾配を同じ順に連結した L2 norm。
 - `dense_relative_update`: `dense_parameter_learning_rate * dense_gradient_norm / dense_parameter_norm`。診断値であり、受理条件ではない。
+- `bond_rank_decision`: 閾値でrankを選んだときの`BondRankDecision`。固定rank分割では`None`。
 
 ## 戻り値
 

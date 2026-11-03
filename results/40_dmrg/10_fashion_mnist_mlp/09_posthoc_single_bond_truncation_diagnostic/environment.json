@@ -1,0 +1,10 @@
+{
+  "compile": false,
+  "cuda": "12.8",
+  "device": "cpu",
+  "execution": "eager",
+  "gpu_name": "",
+  "run_id": "a81565ba154beb5e4f0ddbae5061ebde714baca3f0e75f1bc1490dfdcb0adead",
+  "torch": "2.11.0+cu128",
+  "training": false
+}

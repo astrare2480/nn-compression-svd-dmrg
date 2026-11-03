@@ -1,0 +1,10 @@
+population,frontier_kind,x_column,y_column,status,knee_defined,undefined_reason,aggressive,balanced,conservative,role_reason,completion_reason,point_count,frontier_count
+tt_candidates,inference,tt_core_elements,validation_error,provisional,False,too_few_points,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,2,1
+tt_candidates,inference,fc1_parameters,validation_error,provisional,False,too_few_points,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,2,1
+tt_candidates,inference,total_model_parameters,validation_error,provisional,False,too_few_points,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,2,1
+tt_candidates,inference,theoretical_total_macs,validation_error,provisional,False,too_few_points,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,2,1
+tt_candidates,inference,latency_batch_1_seconds,validation_error,provisional,False,,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,0,0
+tt_candidates,inference,latency_batch_4096_seconds,validation_error,provisional,False,,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,0,0
+tt_candidates,learning,training_time_seconds,validation_error,provisional,False,too_few_points,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,2,1
+tt_candidates,learning,train_full_dataset_gradient_passes,validation_error,provisional,False,too_few_points,,,,対象の rank と学習方式が揃っていません。,対象の rank と学習方式が揃っていません。,2,1
+tt_candidates,learning,peak_gpu_allocated_bytes,validation_error,unverified,False,too_few_points,,,,peak GPU memory は元の記録値であり再計測していない。この軸は未検証で、役割付けに使わない。,peak GPU memory は元の記録値であり再計測していない。この軸は未検証で、役割付けに使わない。,2,1

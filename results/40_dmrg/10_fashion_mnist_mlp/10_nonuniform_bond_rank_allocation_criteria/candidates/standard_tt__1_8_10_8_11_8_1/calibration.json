@@ -1,0 +1,23 @@
+{
+  "activation_score": 0.40069905792820454,
+  "baseline_calibration_accuracy": 0.927,
+  "baseline_calibration_loss": 0.19419538998603822,
+  "bond_order": "2|3|4|5",
+  "calibration_accuracy": 0.8792,
+  "calibration_loss": 0.32632726130485534,
+  "candidate_id": "standard_tt__1_8_10_8_11_8_1",
+  "canonicality_max_error": 1.617345560589456e-06,
+  "complete": true,
+  "fc1_parameters": 4256,
+  "model_type": "standard_tt",
+  "rank_sort_key": "001|008|010|008|011|008|001",
+  "ranks": "1|8|10|8|11|8|1",
+  "run_id": "6bce1d306b5c5c193d7f0a40a0142b7ce7a1f96eae0efd8e2f2c7b8bfa2a89c6",
+  "seconds": 0.65767870000127,
+  "task_score": 0.13213187131881712,
+  "theoretical_fc1_macs": 1383424,
+  "theoretical_total_macs": 1517056,
+  "total_model_parameters": 138154,
+  "tt_core_elements": 3744,
+  "weight_score": 0.37253454327583313
+}

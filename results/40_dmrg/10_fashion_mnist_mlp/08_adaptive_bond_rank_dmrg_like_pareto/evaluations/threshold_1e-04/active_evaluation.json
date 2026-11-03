@@ -1,0 +1,7 @@
+{
+  "best_checkpoint_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+  "file": "evaluation_000001.json",
+  "generation": 1,
+  "latency_measured": true,
+  "sha256": "5e88c626a43ef6e71ed21bf56d7592751ea5b37acf7187bfb168fee073a53fa2"
+}

@@ -46,6 +46,16 @@ Notebook 04では、batch size 512・4096とDataLoader・GPU常駐を$2\times2$�
 
 Notebook 05では、04で採用したGPU常駐・batch size 4,096を共通にし、joint・TT-only・dense-onlyを同じStage C、学習率0.3、3,200 full-batch更新で比較した。jointはvalidation accuracy `0.8716`で両単独更新を上回った。TT-onlyも`0.0946`から`0.6278`へ改善した一方、dense-onlyは途中で`0.6672`へ達した後に大きく振動した。固定予算での性能、到達速度、計算費用、解釈の限界は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]に整理した。
 
+Notebook 06では、Dense MLP、通常Adam TT、DMRG-like TTを共通のデータ分割とearly stopping規則で比較した。rank-selection accuracyは順に`0.8884`、`0.8906`、`0.8968`だった。TTはモデル総parameter数を73.80%削減した一方、現在のdirect contractionでは理論MACsがDenseの約4.316倍、推論latencyも増えた。DMRG-likeは通常TTより高い評価値へ到達したが、学習＋評価時間は約23.5倍だった。結果、計算費用、保存成果物監査、解釈の限界は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/16_Dense_通常TT_DMRG-like比較]]に整理した。
+
+Notebook 07では、rank cap `1, 2, 3, 4, 5, 6, 8, 12`の通常TTとDMRG-likeを比較し、固定rankの性能と費用の基準を作った。DMRG-likeはrank 5・6・12で同rankの通常TTを上回ったが、全rankではなかった。理論MACs対errorの規則は通常TT rank 1、DMRG-like rank 6、DMRG-like rank 12をそれぞれ`aggressive`・`balanced`・`conservative`に選んだが、実測latencyと学習時間では異なる候補が残った。図の読み取り、rank間の非単調性、保存成果物の検証範囲、次のadaptive truncationの比較基準は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/17_固定rank_sweepとPareto比較]]に整理した。
+
+Notebook 08では、rank cap 12のStage Cから、discarded-weight閾値`1e-6`・`1e-4`・`1e-2`でbond rankを選ぶadaptive DMRG-like学習を行った。すべての条件でrank列は`(1,8,12,12,12,12,1)`のままで、最大閾値`1e-2`でもrank 11以下は選ばれなかった。3閾値のbest modelは相互に同一で、07の固定DMRG-like rank 12ともparameter tensorが完全一致した。そのため07のPareto frontierは改善しなかったが、adaptive rank全般を否定する結果ではない。閾値未達率、bond別の違い、図の考察、次のスペクトル診断は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/18_adaptive_bond_rank_DMRG-likeと閾値探索]]に整理した。
+
+Notebook 09では、そのrank 12 best modelのbond 2〜5を一つずつrank 11・10・8へ切り、再学習なしで重み誤差と分類感度を測った。全12候補でlossは増加しaccuracyは低下したが、影響はbondごとに大きく異なった。rank 11ではbond 2の重み相対誤差`13.00%`に対してaccuracyが`0.84`ポイント低下した一方、bond 5は重み誤差`16.85%`でも低下は`0.30`ポイントだった。実画像に対する`fc1`出力、logits、正誤遷移、classification marginまで追跡し、重み再構成誤差だけでは分類性能への影響を順位付けできないことを[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/19_単一bond事後切り詰めと分類感度診断]]に整理した。
+
+Notebook 10では、通常TTとDMRG-likeのrank 12 checkpointについて、bond 2〜5のrankを`8・10・11・12`から選ぶ各256候補、合計512候補を再学習なしで生成した。一様rank 11・10相当の理論MAC予算以下から、実効重み誤差、実入力に対する`fc1`出力誤差、calibration cross-entropy増加の三基準で候補を選んだ。Task基準は主順序の4条件すべてでvalidation loss最小候補と一致し、DMRG-like・r10予算では一様rank 10のaccuracy`0.8236`に対して非一様配分`(11,11,10,8)`で`0.8672`を保った。一方、通常TT・r10では一様rank 10が選ばれ、非一様性自体が改善を保証するわけではなかった。全10図、選択基準、oracle regret、切り詰め順序依存性、08〜10の接続は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/20_非一様bond_rank配分と選択基準比較]]に整理した。
+
 一般的なtoy modelでは、第1 Linearの重み誤差をReLUと第2 Linearへ伝播させる合成上界、1 sampleのclassification margin、batch logits errorからsample-wise prediction certificate、minimum marginによるbatch内全sampleの同時保証までを確認している。PyTorch操作は[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]に分け、Fashion-MNISTの実測結果とは数えない。
 
 ## 読む順序
@@ -95,8 +105,13 @@ Notebook 05では、04で採用したGPU常駐・batch size 4,096を共通にし
 43. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/13_joint学習率0.2_0.3長時間比較]]
 44. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/14_full-batch勾配集計高速化benchmark]]
 45. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]
-46. [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
-47. [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
+46. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/16_Dense_通常TT_DMRG-like比較]]
+47. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/17_固定rank_sweepとPareto比較]]
+48. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/18_adaptive_bond_rank_DMRG-likeと閾値探索]]
+49. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/19_単一bond事後切り詰めと分類感度診断]]
+50. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/20_非一様bond_rank配分と選択基準比較]]
+51. [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
+52. [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
 
 通常のTT圧縮系列は [10_fashion_mnist_mlp](../../../notebooks/30_tt_mps/10_fashion_mnist_mlp/) に、DMRG-like sweep系列は [10_fashion_mnist_mlp](../../../notebooks/40_dmrg/10_fashion_mnist_mlp/) に置く。
 
@@ -104,9 +119,12 @@ Notebook 05では、04で採用したGPU常駐・batch size 4,096を共通にし
 
 - SVD前inner step数とTT側・通常parameter側の学習率を別々に切り分け、必要ならscopeごとの学習率や固定wall timeで比較すること
 - rank 12未満の少数候補を同じ条件で追加し、圧縮優先時の下限を確認すること
-- 学習済みFashion-MNIST MLPの打ち切りrankで、ReLUを通るhidden errorを数値確認すること。一般的なtoy例は実装検証ノート15で確認済み
-- 学習済みFashion-MNIST MLPの実際の打ち切りrankで、後続Linearを通るlogits errorと合成上界を数値確認すること。random toy modelは実装検証ノート16で確認済み
-- 学習済みFashion-MNIST MLPを実際にTT-rank打ち切りしたときのsample別classification margin、minimum margin、batch内prediction agreement。一般的なtoy例は理論ノート65〜67、実装ノート17〜19、toy結果ノート01〜03で確認済み
+- Notebook 10のTask基準が別のcalibration subset・seedでも同じrank配分を選ぶか確認すること
+- 逆順でも全候補を再列挙し、選択rank列とoracleが主順序から変わるか確認すること
+- 小さいaccuracy差を主張する場合、選択候補のsample別予測を保存し、対応のある正誤遷移を確認すること
+- Weight・Activation・Taskを独立運用した場合の候補選択計算量を分離すること
+- 切り詰め後fine-tuningで、選択した非一様rank配分の優位が残るか確認すること
+- 単一bondの重み誤差と実入力への作用が逆転した原因を、入力共分散・特異方向・複数seedで切り分けること
 - validationで選択したrank・tensorization・fine-tuning条件に対するFashion-MNIST test setでの最終評価
 - rank 64について、同じepoch 0から学習率を下げ、fine-tuning不要と更新量過大の仮説を切り分けること
 - 更新方式の差を複数seedとsample別の対応のある予測で確認すること

@@ -1,0 +1,8 @@
+population,frontier_kind,x_column,requested_rank_cap,state,source,x_value,validation_error,status
+tt_candidates,inference,tt_core_elements,4,standard_tt,07,784.0,0.1814,provisional
+tt_candidates,inference,fc1_parameters,4,standard_tt,07,1296.0,0.1814,provisional
+tt_candidates,inference,total_model_parameters,4,standard_tt,07,135194.0,0.1814,provisional
+tt_candidates,inference,theoretical_total_macs,4,standard_tt,07,411392.0,0.1814,provisional
+tt_candidates,learning,training_time_seconds,4,standard_tt,07,3.810873399997945,0.1814,provisional
+tt_candidates,learning,train_full_dataset_gradient_passes,4,standard_tt,07,1.0,0.1814,provisional
+tt_candidates,learning,peak_gpu_allocated_bytes,4,standard_tt,07,110498816.0,0.1814,unverified

@@ -1,0 +1,28 @@
+{
+  "controls": [
+    {
+      "calibration_accuracy": 0.927,
+      "calibration_loss": 0.19419539923667908,
+      "canonicality_max_error": 2.2880244614498224e-06,
+      "fixed_input_logits_relative_l2": 8.324492455358268e-07,
+      "model_type": "standard_tt",
+      "passed": true,
+      "seconds": 1.392918900004588,
+      "validation_accuracy": 0.8906,
+      "validation_loss": 0.30900536851882937
+    },
+    {
+      "calibration_accuracy": 0.9328,
+      "calibration_loss": 0.18813968980312348,
+      "canonicality_max_error": 2.2021965833118884e-06,
+      "fixed_input_logits_relative_l2": 1.074709189197165e-06,
+      "model_type": "dmrg_like",
+      "passed": true,
+      "seconds": 1.336219799995888,
+      "validation_accuracy": 0.8968,
+      "validation_loss": 0.28660530242919924
+    }
+  ],
+  "passed": true,
+  "run_id": "6bce1d306b5c5c193d7f0a40a0142b7ce7a1f96eae0efd8e2f2c7b8bfa2a89c6"
+}

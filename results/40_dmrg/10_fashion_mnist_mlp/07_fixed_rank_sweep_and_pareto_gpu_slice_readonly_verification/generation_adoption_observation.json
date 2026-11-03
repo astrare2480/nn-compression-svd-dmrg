@@ -1,0 +1,188 @@
+{
+  "conditions": [
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_01/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_01/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_02/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_03/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_04/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_05/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_06/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto/rank_08/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_01/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_01/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_02/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_02/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_03/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_03/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_04/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_04/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_05/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_05/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_06/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_06/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_08/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_08/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice_smoke/rank_04/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice_smoke/rank_04/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_smoke/rank_04/dmrg_like",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    },
+    {
+      "adoption_evidence": [],
+      "contiguous_from_1": true,
+      "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_smoke/rank_04/standard_tt",
+      "partial_directories": [],
+      "pointer_is_highest_generation": true
+    }
+  ],
+  "statement": "影響は確認されなかった",
+  "suspected_directories": []
+}

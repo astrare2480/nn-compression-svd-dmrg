@@ -1,0 +1,18 @@
+population,frontier_kind,x_column,y_column,status,knee_defined,undefined_reason,aggressive,balanced,conservative,role_reason,completion_reason,point_count,frontier_count
+tt_candidates,inference,tt_core_elements,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,16,6
+tt_candidates,inference,fc1_parameters,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,16,6
+tt_candidates,inference,total_model_parameters,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,16,6
+tt_candidates,inference,theoretical_total_macs,validation_error,final,True,,rank=1.0|state=standard_tt,rank=6.0|state=dmrg_like,rank=12.0|state=dmrg_like,knee を定義できた。,この軸の学習後候補と測定値は揃っています。,16,6
+tt_candidates,inference,latency_batch_1_seconds,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,16,5
+tt_candidates,inference,latency_batch_4096_seconds,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,16,7
+tt_candidates,learning,training_time_seconds,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,16,5
+tt_candidates,learning,train_full_dataset_gradient_passes,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,16,3
+tt_candidates,learning,peak_gpu_allocated_bytes,validation_error,unverified,True,,,,,peak GPU memory は元の記録値であり再計測していない。この軸は未検証で、役割付けに使わない。,peak GPU memory は元の記録値であり再計測していない。この軸は未検証で、役割付けに使わない。,16,4
+with_dense,inference,fc1_parameters,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,17,6
+with_dense,inference,total_model_parameters,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,17,6
+with_dense,inference,theoretical_total_macs,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,17,6
+with_dense,inference,latency_batch_1_seconds,validation_error,final,False,undesirable_side,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,17,4
+with_dense,inference,latency_batch_4096_seconds,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,17,7
+with_dense,learning,training_time_seconds,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,17,4
+with_dense,learning,train_full_dataset_gradient_passes,validation_error,final,True,,,,,役割付けは TT 候補の理論総 MACs 対 validation error だけに行う。,この軸の学習後候補と測定値は揃っています。,17,3
+with_dense,learning,peak_gpu_allocated_bytes,validation_error,unverified,True,,,,,peak GPU memory は元の記録値であり再計測していない。この軸は未検証で、役割付けに使わない。,peak GPU memory は元の記録値であり再計測していない。この軸は未検証で、役割付けに使わない。,17,3

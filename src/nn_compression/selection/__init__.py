@@ -9,6 +9,11 @@ from .knee import (
 )
 from .pareto import extract_pareto_frontier, is_pareto_candidate
 from .pareto_knee import ParetoKneeSelection, select_pareto_knee
+from .rank_allocation import (
+    RankAllocationSelection,
+    enumerate_bond_rank_allocations,
+    select_best_rank_allocation_under_budget,
+)
 
 __all__ = [
     "ParetoKneeSelection",
@@ -20,4 +25,7 @@ __all__ = [
     "line_equation",
     "find_knee_point",
     "find_knee_point_numpy",
+    "RankAllocationSelection",
+    "enumerate_bond_rank_allocations",
+    "select_best_rank_allocation_under_budget",
 ]

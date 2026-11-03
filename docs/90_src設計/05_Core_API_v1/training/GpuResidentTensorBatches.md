@@ -1,7 +1,7 @@
 # `GpuResidentTensorBatches`
 
 **Stability:** A  
-**定義:** `src/nn_compression/training/tt_linear_scoped_update.py`
+**定義:** `src/nn_compression/training/gpu_resident_batches.py`
 **参照Notebook:** `notebooks/40_dmrg/10_fashion_mnist_mlp/05_update_scope_ablation_gpu_resident.ipynb`
 
 ## 責務

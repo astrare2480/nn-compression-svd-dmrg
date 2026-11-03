@@ -4,6 +4,7 @@ Linear は ``in * out``、Conv2d は出力空間サイズ × カーネル積和�
 """
 
 import operator
+from collections.abc import Sequence
 
 import torch
 
@@ -57,6 +58,69 @@ def _coerce_macs_rank(rank: int, max_rank: int, *, name: str = "rank") -> int:
             f"{name} は 1〜{max_rank} の範囲で指定してください: {rank_int}"
         )
     return rank_int
+
+
+def tt_linear_direct_contraction_macs(
+    out_modes: Sequence[int],
+    in_modes: Sequence[int],
+    ranks: Sequence[int],
+) -> tuple[int, ...]:
+    """左から右へ ``torch.tensordot`` する TTLinear の、1 sample あたり site 別 MACs。
+
+    site ``k``（1 始まり）の積和回数は
+
+    ``(prod_{ell < k} m_ell) * (prod_{ell > k} n_ell) * m_k * r_{k-1} * n_k * r_k``
+
+    である。bias、活性化、reshape、backward、SVD は含めない。
+    戻り値は site 1 から site ``d`` までの整数列。
+    """
+    out_tuple = tuple(
+        _coerce_positive_int_scalar(mode, name=f"out_modes[{index}]")
+        for index, mode in enumerate(out_modes)
+    )
+    in_tuple = tuple(
+        _coerce_positive_int_scalar(mode, name=f"in_modes[{index}]")
+        for index, mode in enumerate(in_modes)
+    )
+    rank_tuple = tuple(
+        _coerce_positive_int_scalar(rank, name=f"ranks[{index}]")
+        for index, rank in enumerate(ranks)
+    )
+    if len(out_tuple) < 1:
+        raise ValueError("out_modes は 1 site 以上必要です。")
+    if len(out_tuple) != len(in_tuple):
+        raise ValueError(
+            "out_modes と in_modes の長さが一致しません: "
+            f"{len(out_tuple)} と {len(in_tuple)}"
+        )
+    if len(rank_tuple) != len(out_tuple) + 1:
+        raise ValueError(
+            "ranks の長さは mode 数 + 1 である必要があります: "
+            f"ranks={len(rank_tuple)} modes={len(out_tuple)}"
+        )
+    if rank_tuple[0] != 1 or rank_tuple[-1] != 1:
+        raise ValueError(
+            "境界 rank は両方 1 である必要があります: "
+            f"r_0={rank_tuple[0]} r_d={rank_tuple[-1]}"
+        )
+    site_count = len(out_tuple)
+    costs: list[int] = []
+    for site in range(site_count):
+        left_out = 1
+        for earlier in range(site):
+            left_out *= out_tuple[earlier]
+        right_in = 1
+        for later in range(site + 1, site_count):
+            right_in *= in_tuple[later]
+        costs.append(
+            left_out
+            * right_in
+            * out_tuple[site]
+            * rank_tuple[site]
+            * in_tuple[site]
+            * rank_tuple[site + 1]
+        )
+    return tuple(costs)
 
 
 def linear_macs(layer) -> int:

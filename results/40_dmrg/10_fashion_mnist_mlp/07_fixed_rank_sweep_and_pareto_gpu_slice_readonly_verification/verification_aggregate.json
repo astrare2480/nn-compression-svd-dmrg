@@ -1,0 +1,288 @@
+{
+  "judgements": [
+    {
+      "balanced": "rank=6|state=dmrg_like",
+      "frontier_count": 6,
+      "knee_defined": true,
+      "population": "tt_candidates",
+      "status": "reevaluated_checkpoint",
+      "undefined_reason": "",
+      "x_column": "total_model_parameters"
+    },
+    {
+      "balanced": "rank=6|state=dmrg_like",
+      "frontier_count": 6,
+      "knee_defined": true,
+      "population": "tt_candidates",
+      "status": "reevaluated_checkpoint",
+      "undefined_reason": "",
+      "x_column": "theoretical_total_macs"
+    },
+    {
+      "balanced": "rank=6|state=dmrg_like",
+      "frontier_count": 6,
+      "knee_defined": true,
+      "population": "tt_candidates",
+      "status": "reevaluated_checkpoint",
+      "undefined_reason": "",
+      "x_column": "fc1_parameters"
+    },
+    {
+      "balanced": "rank=6|state=dmrg_like",
+      "frontier_count": 6,
+      "knee_defined": true,
+      "population": "tt_candidates",
+      "status": "reevaluated_checkpoint",
+      "undefined_reason": "",
+      "x_column": "tt_core_elements"
+    },
+    {
+      "balanced": "rank=6|state=dmrg_like",
+      "frontier_count": 6,
+      "knee_defined": true,
+      "population": "with_dense",
+      "status": "reevaluated_checkpoint",
+      "undefined_reason": "",
+      "x_column": "total_model_parameters"
+    },
+    {
+      "balanced": "rank=6|state=dmrg_like",
+      "frontier_count": 6,
+      "knee_defined": true,
+      "population": "with_dense",
+      "status": "reevaluated_checkpoint",
+      "undefined_reason": "",
+      "x_column": "theoretical_total_macs"
+    },
+    {
+      "balanced": "rank=6|state=dmrg_like",
+      "frontier_count": 6,
+      "knee_defined": true,
+      "population": "with_dense",
+      "status": "reevaluated_checkpoint",
+      "undefined_reason": "",
+      "x_column": "fc1_parameters"
+    },
+    {
+      "balanced": "",
+      "frontier_count": "",
+      "knee_defined": false,
+      "population": "tt_candidates",
+      "status": "unverified",
+      "undefined_reason": "記録値の再計測をしていないため、メモリ frontier は確定しない。",
+      "x_column": "peak_gpu_allocated_bytes"
+    }
+  ],
+  "latency_remeasured": false,
+  "loss_recheck_atol": 1e-05,
+  "memory_comparison_status": "unverified",
+  "memory_rows_are_recorded_values": true,
+  "note": "再評価の一致は、保存済み best checkpoint の validation が履歴と合うことまでを示す。学習経路全体の正しさまでは示さない。",
+  "points": [
+    {
+      "fc1_parameters": 588,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8772,
+      "requested_rank_cap": 1,
+      "source": "07",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 156032,
+      "total_model_parameters": 134486,
+      "tt_core_elements": 76,
+      "validation_error": 0.12280000000000002
+    },
+    {
+      "fc1_parameters": 588,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8916,
+      "requested_rank_cap": 1,
+      "source": "07",
+      "state": "standard_tt",
+      "theoretical_total_macs": 156032,
+      "total_model_parameters": 134486,
+      "tt_core_elements": 76,
+      "validation_error": 0.10840000000000005
+    },
+    {
+      "fc1_parameters": 744,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.879,
+      "requested_rank_cap": 2,
+      "source": "07",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 209792,
+      "total_model_parameters": 134642,
+      "tt_core_elements": 232,
+      "validation_error": 0.121
+    },
+    {
+      "fc1_parameters": 744,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8862,
+      "requested_rank_cap": 2,
+      "source": "07",
+      "state": "standard_tt",
+      "theoretical_total_macs": 209792,
+      "total_model_parameters": 134642,
+      "tt_core_elements": 232,
+      "validation_error": 0.11380000000000001
+    },
+    {
+      "fc1_parameters": 980,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.881,
+      "requested_rank_cap": 3,
+      "source": "07",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 294912,
+      "total_model_parameters": 134878,
+      "tt_core_elements": 468,
+      "validation_error": 0.119
+    },
+    {
+      "fc1_parameters": 980,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8922,
+      "requested_rank_cap": 3,
+      "source": "07",
+      "state": "standard_tt",
+      "theoretical_total_macs": 294912,
+      "total_model_parameters": 134878,
+      "tt_core_elements": 468,
+      "validation_error": 0.1078
+    },
+    {
+      "fc1_parameters": 1296,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.885,
+      "requested_rank_cap": 4,
+      "source": "07",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 411392,
+      "total_model_parameters": 135194,
+      "tt_core_elements": 784,
+      "validation_error": 0.11499999999999999
+    },
+    {
+      "fc1_parameters": 1296,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8872,
+      "requested_rank_cap": 4,
+      "source": "07",
+      "state": "standard_tt",
+      "theoretical_total_macs": 411392,
+      "total_model_parameters": 135194,
+      "tt_core_elements": 784,
+      "validation_error": 0.11280000000000001
+    },
+    {
+      "fc1_parameters": 1692,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8928,
+      "requested_rank_cap": 5,
+      "source": "07",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 559232,
+      "total_model_parameters": 135590,
+      "tt_core_elements": 1180,
+      "validation_error": 0.10719999999999996
+    },
+    {
+      "fc1_parameters": 1692,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8874,
+      "requested_rank_cap": 5,
+      "source": "07",
+      "state": "standard_tt",
+      "theoretical_total_macs": 559232,
+      "total_model_parameters": 135590,
+      "tt_core_elements": 1180,
+      "validation_error": 0.11260000000000003
+    },
+    {
+      "fc1_parameters": 2168,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.894,
+      "requested_rank_cap": 6,
+      "source": "07",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 738432,
+      "total_model_parameters": 136066,
+      "tt_core_elements": 1656,
+      "validation_error": 0.10599999999999998
+    },
+    {
+      "fc1_parameters": 2168,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8852,
+      "requested_rank_cap": 6,
+      "source": "07",
+      "state": "standard_tt",
+      "theoretical_total_macs": 738432,
+      "total_model_parameters": 136066,
+      "tt_core_elements": 1656,
+      "validation_error": 0.11480000000000001
+    },
+    {
+      "fc1_parameters": 3360,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8892,
+      "requested_rank_cap": 8,
+      "source": "07",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 1190912,
+      "total_model_parameters": 137258,
+      "tt_core_elements": 2848,
+      "validation_error": 0.11080000000000001
+    },
+    {
+      "fc1_parameters": 3360,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8948,
+      "requested_rank_cap": 8,
+      "source": "07",
+      "state": "standard_tt",
+      "theoretical_total_macs": 1190912,
+      "total_model_parameters": 137258,
+      "tt_core_elements": 2848,
+      "validation_error": 0.10519999999999996
+    },
+    {
+      "fc1_parameters": 6480,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8906,
+      "requested_rank_cap": 12,
+      "source": "notebook06",
+      "state": "standard_tt",
+      "theoretical_total_macs": 2309120,
+      "total_model_parameters": 140378,
+      "tt_core_elements": 5968,
+      "validation_error": 0.10940000000000005
+    },
+    {
+      "fc1_parameters": 6480,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8968,
+      "requested_rank_cap": 12,
+      "source": "notebook06",
+      "state": "dmrg_like",
+      "theoretical_total_macs": 2309120,
+      "total_model_parameters": 140378,
+      "tt_core_elements": 5968,
+      "validation_error": 0.10319999999999996
+    },
+    {
+      "fc1_parameters": 401920,
+      "memory_status": "recorded_unverified",
+      "rank_selection_validation_accuracy": 0.8884,
+      "requested_rank_cap": "",
+      "source": "notebook06",
+      "state": "dense_reference",
+      "theoretical_total_macs": 535040,
+      "total_model_parameters": 535818,
+      "tt_core_elements": "",
+      "validation_error": 0.11160000000000003
+    }
+  ],
+  "training_time_remeasured": false
+}

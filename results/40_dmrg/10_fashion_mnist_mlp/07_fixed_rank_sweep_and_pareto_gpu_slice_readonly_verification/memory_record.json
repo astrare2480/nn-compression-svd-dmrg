@@ -1,0 +1,156 @@
+[
+  {
+    "active_generation": 74,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_01/dmrg_like",
+    "generation_000001_peak_gpu_allocated_bytes": 239875584,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 330953216,
+    "requested_rank_cap": 1,
+    "resume_count": 1,
+    "state": "dmrg_like"
+  },
+  {
+    "active_generation": 20,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_01/standard_tt",
+    "generation_000001_peak_gpu_allocated_bytes": 252061184,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 253684736,
+    "requested_rank_cap": 1,
+    "resume_count": 0,
+    "state": "standard_tt"
+  },
+  {
+    "active_generation": 70,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_02/dmrg_like",
+    "generation_000001_peak_gpu_allocated_bytes": 247572480,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 435811328,
+    "requested_rank_cap": 2,
+    "resume_count": 0,
+    "state": "dmrg_like"
+  },
+  {
+    "active_generation": 14,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_02/standard_tt",
+    "generation_000001_peak_gpu_allocated_bytes": 261695488,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 263319040,
+    "requested_rank_cap": 2,
+    "resume_count": 0,
+    "state": "standard_tt"
+  },
+  {
+    "active_generation": 91,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_03/dmrg_like",
+    "generation_000001_peak_gpu_allocated_bytes": 257207296,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 537000960,
+    "requested_rank_cap": 3,
+    "resume_count": 0,
+    "state": "dmrg_like"
+  },
+  {
+    "active_generation": 18,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_03/standard_tt",
+    "generation_000001_peak_gpu_allocated_bytes": 271329792,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 272954880,
+    "requested_rank_cap": 3,
+    "resume_count": 1,
+    "state": "standard_tt"
+  },
+  {
+    "active_generation": 79,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_04/dmrg_like",
+    "generation_000001_peak_gpu_allocated_bytes": 266843136,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 638190592,
+    "requested_rank_cap": 4,
+    "resume_count": 0,
+    "state": "dmrg_like"
+  },
+  {
+    "active_generation": 18,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_04/standard_tt",
+    "generation_000001_peak_gpu_allocated_bytes": 111037440,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 112665600,
+    "requested_rank_cap": 4,
+    "resume_count": 0,
+    "state": "standard_tt"
+  },
+  {
+    "active_generation": 104,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_05/dmrg_like",
+    "generation_000001_peak_gpu_allocated_bytes": 276250624,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 740956160,
+    "requested_rank_cap": 5,
+    "resume_count": 0,
+    "state": "dmrg_like"
+  },
+  {
+    "active_generation": 13,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_05/standard_tt",
+    "generation_000001_peak_gpu_allocated_bytes": 120672768,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 122305536,
+    "requested_rank_cap": 5,
+    "resume_count": 0,
+    "state": "standard_tt"
+  },
+  {
+    "active_generation": 80,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_06/dmrg_like",
+    "generation_000001_peak_gpu_allocated_bytes": 285890048,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 846868992,
+    "requested_rank_cap": 6,
+    "resume_count": 0,
+    "state": "dmrg_like"
+  },
+  {
+    "active_generation": 13,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_06/standard_tt",
+    "generation_000001_peak_gpu_allocated_bytes": 130309632,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 131950080,
+    "requested_rank_cap": 6,
+    "resume_count": 0,
+    "state": "standard_tt"
+  },
+  {
+    "active_generation": 77,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_08/dmrg_like",
+    "generation_000001_peak_gpu_allocated_bytes": 305163776,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 1049253376,
+    "requested_rank_cap": 8,
+    "resume_count": 0,
+    "state": "dmrg_like"
+  },
+  {
+    "active_generation": 14,
+    "cause": "学習peakの再計測はしていない。rank間の不連続を、保存された計測条件だけから一意の原因へは特定しない。",
+    "directory": "models/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/rank_08/standard_tt",
+    "generation_000001_peak_gpu_allocated_bytes": 150628864,
+    "memory_status": "recorded_unverified",
+    "recorded_peak_gpu_allocated_bytes": 152278528,
+    "requested_rank_cap": 8,
+    "resume_count": 0,
+    "state": "standard_tt"
+  }
+]

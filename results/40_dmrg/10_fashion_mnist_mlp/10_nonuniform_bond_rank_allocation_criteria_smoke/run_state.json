@@ -1,0 +1,13 @@
+{
+  "completed_candidates": null,
+  "estimated_remaining_seconds": null,
+  "mean_seconds_per_candidate": null,
+  "mode": "smoke",
+  "run_elapsed_seconds": 47.41230760000326,
+  "run_id": "6bce1d306b5c5c193d7f0a40a0142b7ce7a1f96eae0efd8e2f2c7b8bfa2a89c6",
+  "stage": "complete",
+  "stage_elapsed_seconds": 2.242693899999722,
+  "stop_reason": "completed",
+  "total_candidates": null,
+  "update_reason": "completed"
+}

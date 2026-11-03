@@ -13,7 +13,9 @@ from .macs import (
     factorized_conv2d_macs,
     factorized_linear_macs,
     linear_macs,
+    tt_linear_direct_contraction_macs,
 )
+from .inference_latency import measure_synchronized_inference_latency
 from .error_bounds import (
     LinearOutputErrorBounds,
     linear_output_error_bounds,
@@ -49,6 +51,15 @@ from .classification_outputs import (
 )
 from .tensor_approximation import relative_frobenius_error
 from .tensor_comparison import TensorApproximationMetrics, tensor_approximation_metrics
+from .tt_linear_structure import TTLinearStructureMetrics, tt_linear_structure_metrics
+from .module_outputs import CapturedModuleOutputs, StageChangeSummary, capture_internal_outputs, stage_change_summary
+from .classification_diagnostics import (
+    MarginChangeSummary,
+    PredictionTransitionSummary,
+    margin_change_summary,
+    prediction_transition_summary,
+    true_class_margins,
+)
 
 __all__ = [
     "count_parameters",
@@ -57,6 +68,7 @@ __all__ = [
     "agreement",
     "logits_rmse",
     "linear_macs",
+    "tt_linear_direct_contraction_macs",
     "compressed_linear_macs",
     "factorized_linear_macs",
     "conv2d_macs",
@@ -68,6 +80,7 @@ __all__ = [
     "estimate_cnn_linear_macs",
     "estimate_cnn_conv2_macs",
     "benchmark_inference",
+    "measure_synchronized_inference_latency",
     "benchmark_inference_print",
     "collect_compression_metrics",
     "take_inference_batch",
@@ -89,4 +102,15 @@ __all__ = [
     "collect_model_logits",
     "classification_metrics_from_logits",
     "compare_logits",
+    "TTLinearStructureMetrics",
+    "tt_linear_structure_metrics",
+    "CapturedModuleOutputs",
+    "StageChangeSummary",
+    "capture_internal_outputs",
+    "stage_change_summary",
+    "MarginChangeSummary",
+    "PredictionTransitionSummary",
+    "true_class_margins",
+    "margin_change_summary",
+    "prediction_transition_summary",
 ]

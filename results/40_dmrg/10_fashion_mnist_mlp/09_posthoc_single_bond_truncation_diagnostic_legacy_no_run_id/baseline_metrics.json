@@ -1,0 +1,21 @@
+{
+  "role": "baseline",
+  "checkpoint_sha256": "698cd7de461ed8d5020b7fcf739d064bf56d26938a539e32d304f5eb19e4b713",
+  "actual_ranks": [
+    1,
+    8,
+    12,
+    12,
+    12,
+    12,
+    1
+  ],
+  "rank_selection_validation_loss": 0.28660528535842894,
+  "rank_selection_validation_accuracy": 0.8968,
+  "evaluation_samples": 5000,
+  "tt_core_elements": 5968,
+  "fc1_parameters": 6480,
+  "total_model_parameters": 140378,
+  "theoretical_fc1_macs": 2175488,
+  "theoretical_total_macs": 2309120
+}
