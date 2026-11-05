@@ -1,0 +1,4 @@
+experiment_id,selection_criterion,budget_rank,budget_conv2_theoretical_macs,feasible_candidate_count,nonuniform_candidate_count,uniform_candidate_id,candidate_id,ranks,calibration_score,conv2_theoretical_macs,total_parameters,validation_used
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,weight,16,43753472,4,2,r_1_16_16_1,r_1_16_16_1,1|16|16|1,0.48096132278442383,43753472,410250,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,activation,16,43753472,4,2,r_1_16_16_1,r_1_16_16_1,1|16|16|1,0.5335657673382522,43753472,410250,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,task,16,43753472,4,2,r_1_16_16_1,r_1_16_16_1,1|16|16|1,0.16342624013423918,43753472,410250,False

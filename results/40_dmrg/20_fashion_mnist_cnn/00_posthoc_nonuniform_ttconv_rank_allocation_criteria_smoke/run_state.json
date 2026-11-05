@@ -1,0 +1,21 @@
+{
+  "candidate_count": 5,
+  "completed_candidate_count": 5,
+  "completed_candidate_ids": [
+    "r_1_24_24_1",
+    "r_1_16_16_1",
+    "r_1_12_16_1",
+    "r_1_16_12_1",
+    "r_1_12_12_1"
+  ],
+  "current_candidate_id": "",
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt",
+  "mode": "smoke",
+  "reverse_control_done": false,
+  "reverse_control_status": "not_run_for_smoke",
+  "selection_saved": true,
+  "stage": "complete",
+  "stop_reason": "completed",
+  "updated_at": "2026-11-05T20:56:36",
+  "validation_started": true
+}

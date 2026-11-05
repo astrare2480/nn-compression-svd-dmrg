@@ -300,6 +300,23 @@ def _finite_threshold(threshold: float) -> float:
     return value
 
 
+def _discarded_weight_meets_limit(
+    values: torch.Tensor,
+    tail_start: int,
+    reported_relative: float,
+    limit: float,
+) -> bool:
+    """閾値 0 では非零 tail を underflow した 0 と扱わない。
+
+    正の閾値は、通常 scale の既存結果に合わせ、報告用の float 相対量で比べる。
+    """
+    if limit == 0.0:
+        if tail_start >= int(values.shape[0]):
+            return True
+        return not bool(torch.any(values[tail_start:] > 0))
+    return reported_relative <= limit
+
+
 def _nonnegative_tolerance(value: float, name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise TypeError(f"{name} は実数である必要があります: {value!r}")
@@ -330,6 +347,9 @@ def select_bond_rank_from_singular_values(
     ``retained_rank = min_bond_rank``、切り捨て量 0、閾値達成とする。
     二乗和は最大特異値でスケールしてから計算し、tail は小さい側からの
     逆向き累積和で作る。NaN と Inf はゼロスペクトルにせず ``ValueError``。
+    報告する相対量は、この float64 計算のままである。閾値がちょうど 0 の
+    rank 判定だけは、正規化二乗が underflow して 0 になっても、tail に非零の
+    特異値が残っていれば未達とする。
     """
     if not torch.is_tensor(singular_values):
         raise TypeError(
@@ -397,7 +417,7 @@ def select_bond_rank_from_singular_values(
     limit = threshold + comparison_atol + comparison_rtol * abs(threshold)
     required = available
     for index in range(available):
-        if float(relative[index]) <= limit:
+        if _discarded_weight_meets_limit(values, index + 1, float(relative[index]), limit):
             required = index + 1
             break
     cap_limited = required > max_bond_rank
@@ -411,7 +431,9 @@ def select_bond_rank_from_singular_values(
         threshold_required_rank=required,
         retained_rank=retained,
         relative_discarded_weight=relative_discarded_weight,
-        threshold_satisfied=relative_discarded_weight <= limit,
+        threshold_satisfied=_discarded_weight_meets_limit(
+            values, retained, relative_discarded_weight, limit
+        ),
         cap_limited=cap_limited,
         min_rank_limited=min_rank_limited,
         zero_spectrum=False,

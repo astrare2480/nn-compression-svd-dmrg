@@ -1,0 +1,7 @@
+experiment_id,selection_criterion,budget_rank,budget_conv2_theoretical_macs,feasible_candidate_count,nonuniform_candidate_count,uniform_candidate_id,candidate_id,ranks,calibration_score,conv2_theoretical_macs,total_parameters,validation_used
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,weight,16,43753472,6,4,r_1_16_16_1,r_1_16_16_1,1|16|16|1,0.48096132278442383,43753472,410250,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,activation,16,43753472,6,4,r_1_16_16_1,r_1_16_16_1,1|16|16|1,0.5335657673382522,43753472,410250,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,task,16,43753472,6,4,r_1_16_16_1,r_1_16_16_1,1|16|16|1,0.16342624013423918,43753472,410250,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,weight,20,66734080,13,10,r_1_20_20_1,r_1_20_20_1,1|20|20|1,0.28472214937210083,66734080,413930,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,activation,20,66734080,13,10,r_1_20_20_1,r_1_16_24_1,1|16|24|1,0.3567923959624151,63823872,413578,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,task,20,66734080,13,10,r_1_20_20_1,r_1_16_24_1,1|16|24|1,0.042290231776237475,63823872,413578,False

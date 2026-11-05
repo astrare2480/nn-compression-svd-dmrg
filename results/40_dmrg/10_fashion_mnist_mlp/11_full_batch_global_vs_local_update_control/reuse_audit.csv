@@ -1,0 +1,12 @@
+source_notebook,source_run_id,source_checkpoint,reuse_decision,reaggregated,reason,method,learning_rate
+02_full_batch_sweep_update_budget_grid,,,reference_only,False,early stopping は無効。patience 1、min_delta 0、local step は 1 または 4、最大往復は 5 または 20。学習率 0.1 という値だけを今回の候補に使う。,,
+03_joint_learning_rate_02_03_s40_l8,,,reference_only,False,学習率 0.2 と 0.3、local step 8 だが、patience 1、min_delta 0、最大 40 往復であり、今回の停止規則より前で履歴が終わる。,,
+05_update_scope_ablation_gpu_resident,,,reference_only,False,joint、学習率 0.3、local step 8 の 40 往復は Notebook 06 の先頭に含まれる。early stopping は無効なので、単独の主比較には使わない。,,
+06_dense_tt_dmrg_like_convergence_comparison/standard_tt,,,reference_only,False,通常 TT は Adam、batch 64、学習率 0.001 であり、全データの単純 GD ではない。,,
+06_dense_tt_dmrg_like_convergence_comparison/dmrg_like,1b572c92e79acdf3887f3c517f4a9e4f374b3497e0628f661f806ce88444c333:b6de67aca5c7474aae7be17a8b77ea99e3da626a2bb80580334816c23deab0e2,models\40_dmrg\10_fashion_mnist_mlp\06_dense_tt_dmrg_like_convergence_comparison\dmrg_like\best_model.pt,reference_only,False,履歴構造と停止規則は監査できたが、保存時の学習実装と現行実装の同一性を確認できないため、Notebook 06の結果は参考値に限定し、Notebook 11の主比較用Local lr=0.3は新規実行する。,,
+,,,new_run,False,global_gd 学習率 0.1 は一致する保存履歴がないため新規実行する。,global_gd,0.1
+,,,new_run,False,global_gd 学習率 0.2 は一致する保存履歴がないため新規実行する。,global_gd,0.2
+,,,new_run,False,global_gd 学習率 0.3 は一致する保存履歴がないため新規実行する。,global_gd,0.3
+,,,new_run,False,local_sweep 学習率 0.1 は一致する保存履歴がないため新規実行する。,local_sweep,0.1
+,,,new_run,False,local_sweep 学習率 0.2 は一致する保存履歴がないため新規実行する。,local_sweep,0.2
+,,,new_run,False,local_sweep 学習率 0.3 は一致する保存履歴がないため新規実行する。,local_sweep,0.3

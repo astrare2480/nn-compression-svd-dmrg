@@ -1,0 +1,6 @@
+experiment_id,candidate_id,ranks,validation_loss,validation_accuracy,seconds
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,r_1_24_24_1,1|24|24|1,0.225672984457016,0.9256,0.4768246999992698
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,r_1_16_16_1,1|16|16|1,0.3724288938522339,0.864,0.3667138000000705
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,r_1_12_16_1,1|12|16|1,0.5736697905540467,0.7876,0.34224840000024415
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,r_1_16_12_1,1|16|12|1,0.5653233238220214,0.7968,0.3797300999995059
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,r_1_12_12_1,1|12|12|1,0.7249063271522522,0.7444,0.33541220000006433

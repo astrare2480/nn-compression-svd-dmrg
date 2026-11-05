@@ -332,6 +332,28 @@ loss図と同様、同程度のMACsでもaccuracyが異なった。したがっ�
 
 ただしaccuracyはargmaxの正誤だけを見るため、候補間のlogits変化や確信度差を全て表さない。候補選択ではlossも併せて見る。
 
+### 5.3 散布点とrank配分の対応
+
+図1〜5の点には、512候補すべてのrank列を直接表示していない。各点は、`model_type`と`candidate_id`の組で一意に特定する。`candidate_id`は、たとえば
+
+```text
+standard_tt__1_8_11_12_11_10_1
+dmrg_like__1_8_11_11_10_8_1
+```
+
+のように、学習方式と実際のrank列$(1,8,r_2,r_3,r_4,r_5,1)$を含む。
+
+図1・2の横軸と縦軸、および図3〜5のスコアとvalidation lossを点単位で確認する場合は、次の保存表を対応付ける。
+
+| 保存表 | 点を特定するキー | 図で使う主な列 |
+|---|---|---|
+| `calibration_metrics.csv` | `model_type`, `candidate_id` | rank列、理論MACs、Weight／Activation／Task score |
+| `validation_metrics.csv` | `model_type`, `candidate_id` | validation loss、accuracy、baseline差 |
+| `selection.csv` | model、予算、基準 | 各基準が選んだ`candidate_id`とrank列 |
+| `pareto_frontier.csv` | `model_type`, `candidate_id` | 非支配候補のrank列、理論MACs、loss／error |
+
+全512行を本文へ複製すると図より点の対応が読みにくくなるため、本文には考察で参照する選択候補を7.1の表、一様対照を7.3、oracleとの差を9章に掲載する。したがって、図の灰色点すべてを本文だけで逆引きする構成ではないが、考察に使う強調点はrank列まで本文で特定でき、その他の点も上記CSVのキーから一意に追跡できる。
+
 ---
 
 ## 6. 三つのスコアとvalidation性能

@@ -1,0 +1,4 @@
+experiment_id,score,candidate_count,spearman_with_validation_loss,pvalue_reported
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,weight,16,0.9411764705882352,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,activation,16,0.961764705882353,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,task,16,0.9941176470588234,False

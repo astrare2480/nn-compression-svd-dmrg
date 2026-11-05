@@ -1,0 +1,54 @@
+{
+  "conditions": [
+    {
+      "condition_run_id": "58d5b7e1074b6cb1c7134dd6b8bc2f875753189b331ff95352bd986cf73945e3",
+      "generation": 41,
+      "learning_rate": 0.1,
+      "method": "global_gd"
+    },
+    {
+      "condition_run_id": "58d5b7e1074b6cb1c7134dd6b8bc2f875753189b331ff95352bd986cf73945e3",
+      "generation": 27,
+      "learning_rate": 0.2,
+      "method": "global_gd"
+    },
+    {
+      "condition_run_id": "58d5b7e1074b6cb1c7134dd6b8bc2f875753189b331ff95352bd986cf73945e3",
+      "generation": 21,
+      "learning_rate": 0.3,
+      "method": "global_gd"
+    },
+    {
+      "condition_run_id": "58d5b7e1074b6cb1c7134dd6b8bc2f875753189b331ff95352bd986cf73945e3",
+      "generation": 202,
+      "learning_rate": 0.1,
+      "method": "local_sweep"
+    },
+    {
+      "condition_run_id": "58d5b7e1074b6cb1c7134dd6b8bc2f875753189b331ff95352bd986cf73945e3",
+      "generation": 179,
+      "learning_rate": 0.2,
+      "method": "local_sweep"
+    },
+    {
+      "condition_run_id": "58d5b7e1074b6cb1c7134dd6b8bc2f875753189b331ff95352bd986cf73945e3",
+      "generation": 112,
+      "learning_rate": 0.3,
+      "method": "local_sweep"
+    }
+  ],
+  "evaluation_interval": 80,
+  "implementation_sha256": "5fec9bbd3bba4da327374516f52c5f473d8555d91b15bacf76cc8facaca3ed12",
+  "initial_checkpoint_sha256": "ef9d5afcbffc0cdad787bc7e17f230917ae7cfb780bd506f5a348ae38ce10c6a",
+  "learning_rates": [
+    0.1,
+    0.2,
+    0.3
+  ],
+  "max_gradient_evaluations": 16000,
+  "min_delta": 0.0001,
+  "patience": 5,
+  "split_index_sha256": "aaed0a23690e2e3c0fd3b21c21ec28adb2606b17941b98087503382c3372f913|12cf7fe6cc2cdbb43177107c8a30dffb86cc099386d61fa5f4f05fdb1795d360|a80ccd6c95a3aa08fcfb7a5a10ffc883344da48ec37ce605220f964cef14cb26",
+  "training_contract_version": 1,
+  "training_run_id": "58d5b7e1074b6cb1c7134dd6b8bc2f875753189b331ff95352bd986cf73945e3"
+}

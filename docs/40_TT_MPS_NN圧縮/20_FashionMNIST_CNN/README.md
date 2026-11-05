@@ -9,6 +9,7 @@
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/02_学習済みCNNへのexact_TT-Conv接続]]
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/03_学習済みCNNのconv2_TT-rank_sweep]]
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/04_conv2_TT-cores-only_fine-tuning]]
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/05_事後非一様TTConv_rank配分と選択基準比較]]
 
 ## 対応Notebook
 
@@ -17,6 +18,7 @@
 - [02_pretrained_cnn_conv2_exact_ttconv_equivalence.ipynb](../../../notebooks/30_tt_mps/20_fashion_mnist_cnn/02_pretrained_cnn_conv2_exact_ttconv_equivalence.ipynb)
 - [03_pretrained_cnn_conv2_tt_rank_sweep.ipynb](../../../notebooks/30_tt_mps/20_fashion_mnist_cnn/03_pretrained_cnn_conv2_tt_rank_sweep.ipynb)
 - [04_pretrained_cnn_conv2_tt_cores_only_finetuning.ipynb](../../../notebooks/30_tt_mps/20_fashion_mnist_cnn/04_pretrained_cnn_conv2_tt_cores_only_finetuning.ipynb)
+- [00_posthoc_nonuniform_ttconv_rank_allocation_criteria.ipynb](../../../notebooks/40_dmrg/20_fashion_mnist_cnn/00_posthoc_nonuniform_ttconv_rank_allocation_criteria.ipynb)
 
 ## 技術ノート
 

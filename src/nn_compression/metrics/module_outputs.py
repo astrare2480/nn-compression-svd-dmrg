@@ -56,6 +56,16 @@ def _module_names(module_names: Sequence[str]) -> tuple[str, ...]:
     return names
 
 
+def _tensor_outside_inference(value: torch.Tensor) -> torch.Tensor:
+    """hook 内で複製済みの値を、inference tensor ではない Tensor へ写す。
+
+    device を変える場合も、この複製のあとで行う。
+    """
+    copied = torch.empty(value.shape, dtype=value.dtype, device=value.device)
+    copied.copy_(value)
+    return copied
+
+
 def _finite_tensor(value: torch.Tensor, name: str) -> None:
     if not torch.isfinite(value).all():
         raise ValueError(f"{name} に非有限値があります。0 へは置き換えません。")
@@ -93,7 +103,7 @@ def capture_internal_outputs(
                 raise RuntimeError(f"{name} が 1 回の forward で複数回呼ばれました。")
             if not torch.is_tensor(output):
                 raise TypeError(f"{name} の出力は Tensor である必要があります: {type(output)!r}")
-            captured[name] = output
+            captured[name] = output.detach().clone()
 
         return hook
 
@@ -116,7 +126,7 @@ def capture_internal_outputs(
     copied = []
     for name in names:
         _finite_tensor(captured[name], name)
-        copied.append((name, captured[name].detach().clone()))
+        copied.append((name, _tensor_outside_inference(captured[name])))
     return CapturedModuleOutputs(output=output.detach().clone(), modules=tuple(copied))
 
 

@@ -13,6 +13,7 @@ from .macs import (
     factorized_conv2d_macs,
     factorized_linear_macs,
     linear_macs,
+    tt_conv2d_direct_contraction_macs,
     tt_linear_direct_contraction_macs,
 )
 from .inference_latency import measure_synchronized_inference_latency
@@ -49,7 +50,7 @@ from .classification_outputs import (
     collect_model_logits,
     compare_logits,
 )
-from .tensor_approximation import relative_frobenius_error
+from .tensor_approximation import relative_frobenius_error, relative_l2_from_squared_sums
 from .tensor_comparison import TensorApproximationMetrics, tensor_approximation_metrics
 from .tt_linear_structure import TTLinearStructureMetrics, tt_linear_structure_metrics
 from .module_outputs import CapturedModuleOutputs, StageChangeSummary, capture_internal_outputs, stage_change_summary
@@ -68,6 +69,7 @@ __all__ = [
     "agreement",
     "logits_rmse",
     "linear_macs",
+    "tt_conv2d_direct_contraction_macs",
     "tt_linear_direct_contraction_macs",
     "compressed_linear_macs",
     "factorized_linear_macs",
@@ -85,6 +87,7 @@ __all__ = [
     "collect_compression_metrics",
     "take_inference_batch",
     "relative_frobenius_error",
+    "relative_l2_from_squared_sums",
     "LinearOutputErrorBounds",
     "linear_output_error_bounds",
     "mlp_logits_error_bound",

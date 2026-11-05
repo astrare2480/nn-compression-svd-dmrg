@@ -17,12 +17,14 @@ from .experiment_generation import (
     publish_generation,
     validate_generation_state,
 )
+from .module_state import restore_named_parameters, snapshot_named_parameters
 from .modules import get_named_module, set_named_module
 from .paths import find_project_root, get_experiment_dirs
 from .reproducibility import (
     capture_rng_state,
     index_sha256,
     notebook_code_sha256,
+    combined_file_sha256,
     restore_rng_state,
     tensor_sha256,
 )
@@ -44,7 +46,10 @@ __all__ = [
     "tensor_sha256",
     "index_sha256",
     "notebook_code_sha256",
+    "combined_file_sha256",
     "capture_rng_state",
+    "snapshot_named_parameters",
+    "restore_named_parameters",
     "restore_rng_state",
     "ActiveGeneration",
     "GenerationDecision",

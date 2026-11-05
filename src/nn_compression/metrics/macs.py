@@ -123,6 +123,30 @@ def tt_linear_direct_contraction_macs(
     return tuple(costs)
 
 
+def tt_conv2d_direct_contraction_macs(
+    out_modes: Sequence[int],
+    in_modes: Sequence[int],
+    ranks: Sequence[int],
+    out_height: int,
+    out_width: int,
+) -> int:
+    """TTConv2d の直接縮約 forward に対応する、1 画像あたりの理論 MACs を返す。
+
+    ``tt_conv2d_forward`` は各出力位置の patch に ``tt_linear_forward`` を
+    1 回適用する。戻り値は、その site 別 MACs の和に出力位置数
+    ``out_height * out_width`` を掛けた整数である。
+
+    ``out_height`` と ``out_width`` は、stride・padding・dilation・入力空間サイズから
+    決まる実際の出力サイズを呼び出し側が渡す。rank の位置は site 別の式が区別する。
+    unfold、bias、ReLU、pooling、backward は含めない。dense kernel 再構成の
+    MACs でも、2 層 Conv 分解の MACs でもない。
+    """
+    height = _coerce_positive_int_scalar(out_height, name="out_height")
+    width = _coerce_positive_int_scalar(out_width, name="out_width")
+    site_costs = tt_linear_direct_contraction_macs(out_modes, in_modes, ranks)
+    return height * width * sum(site_costs)
+
+
 def linear_macs(layer) -> int:
     """1サンプルを Linear 層へ通すときの MACs を返す。
 

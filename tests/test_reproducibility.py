@@ -214,6 +214,27 @@ def test_restore_accepts_states_loaded_from_torch_save(tmp_path):
     assert _draw() == expected
 
 
+def test_invalid_torch_rng_length_leaves_every_generator_unchanged():
+    random.seed(11)
+    np.random.seed(12)
+    torch.manual_seed(13)
+    python_before = random.getstate()
+    numpy_before = np.random.get_state()
+    torch_before = torch.get_rng_state().clone()
+    state = capture_rng_state(include_cuda=False)
+    saved_torch = state["torch"].clone()
+    state["torch"] = torch.zeros(4, dtype=torch.uint8)
+    with pytest.raises(ValueError, match="長さ"):
+        restore_rng_state(state)
+    assert random.getstate() == python_before
+    assert numpy_before[0] == np.random.get_state()[0]
+    assert np.array_equal(numpy_before[1], np.random.get_state()[1])
+    assert numpy_before[2:] == np.random.get_state()[2:]
+    assert torch.equal(torch.get_rng_state(), torch_before)
+    assert torch.equal(state["torch"], torch.zeros(4, dtype=torch.uint8))
+    assert torch.equal(saved_torch, torch_before)
+
+
 def test_restore_rejects_missing_keys_without_partial_restore():
     state = capture_rng_state(include_cuda=False)
     broken = {key: value for key, value in state.items() if key != "torch"}

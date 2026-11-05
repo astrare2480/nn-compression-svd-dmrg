@@ -1,0 +1,9 @@
+{
+  "candidate_id": "r_1_16_16_1",
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt",
+  "ranks": "1|16|16|1",
+  "seconds": 0.3667138000000705,
+  "selection_already_saved": true,
+  "validation_accuracy": 0.864,
+  "validation_loss": 0.3724288938522339
+}

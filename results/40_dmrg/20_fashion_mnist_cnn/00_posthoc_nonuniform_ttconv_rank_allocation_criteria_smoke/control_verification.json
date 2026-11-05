@@ -1,0 +1,9 @@
+{
+  "canonicality_max_error": 3.4929428238683613e-06,
+  "dense_kernel_retained_by_forward": false,
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt",
+  "passed": true,
+  "probe_conv2_max_abs": 8.106231689453125e-06,
+  "probe_logits_max_abs": 7.62939453125e-06,
+  "weight_relative_frobenius": 1.3643284546560608e-06
+}

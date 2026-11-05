@@ -1,0 +1,9 @@
+{
+  "candidate_id": "r_1_16_24_1",
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt",
+  "ranks": "1|16|24|1",
+  "seconds": 0.39487360000021,
+  "selection_already_saved": true,
+  "validation_accuracy": 0.9152,
+  "validation_loss": 0.25156322031021117
+}

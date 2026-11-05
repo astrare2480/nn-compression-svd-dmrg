@@ -153,6 +153,23 @@ rank 32はNotebook 02を再現するexact controlであり、parameter数がdens
 
 ![core parameter数とvalidation errorのPareto frontier](assets/03_pretrained_cnn_conv2_tt_rank_sweep/pareto_frontier.png)
 
+この図では各点へrankを直接書いていないため、点の対応は直前の全候補表、または保存済み`pareto_frontier.csv`で確認する。図に含まれる10点の対応は次のとおりである。
+
+| actual ranks | TT core parameter数 | validation error | validation accuracy |
+| :-- | --: | --: | --: |
+| $(1,1,1,1)$ | 80 | 0.8516 | 0.1484 |
+| $(1,2,2,1)$ | 208 | 0.7924 | 0.2076 |
+| $(1,4,4,1)$ | 608 | 0.6740 | 0.3260 |
+| $(1,8,8,1)$ | 1,984 | 0.6292 | 0.3708 |
+| $(1,12,12,1)$ | 4,128 | 0.3090 | 0.6910 |
+| $(1,16,16,1)$ | 7,040 | 0.1802 | 0.8198 |
+| $(1,20,20,1)$ | 10,720 | 0.1030 | 0.8970 |
+| $(1,24,24,1)$ | 15,168 | 0.0808 | 0.9192 |
+| $(1,24,28,1)$ | 17,600 | 0.0796 | 0.9204 |
+| $(1,24,29,1)$ | 18,208 | 0.0794 | 0.9206 |
+
+この対応表は`results/30_tt_mps/20_fashion_mnist_cnn/03_pretrained_cnn_conv2_tt_rank_sweep/pareto_frontier.csv`に基づく。圧縮にならないexact controlの$(1,24,32,1)$は、このPareto図には含めていない。
+
 この3点は、当初は次のtensorization比較へ渡すparameter予算候補として抽出したものであり、最終採用モデルではない。実際のNotebook 04では、tensorization比較よりfine-tuningを優先し、この3候補にaccuracy回復の基準となるrank 24を加えて比較した。
 
 ## 4. 実験結果からの考察

@@ -1,0 +1,32 @@
+{
+  "candidate_count": 16,
+  "completed_candidate_count": 16,
+  "completed_candidate_ids": [
+    "r_1_12_12_1",
+    "r_1_12_16_1",
+    "r_1_12_20_1",
+    "r_1_12_24_1",
+    "r_1_16_12_1",
+    "r_1_16_16_1",
+    "r_1_16_20_1",
+    "r_1_16_24_1",
+    "r_1_20_12_1",
+    "r_1_20_16_1",
+    "r_1_20_20_1",
+    "r_1_20_24_1",
+    "r_1_24_12_1",
+    "r_1_24_16_1",
+    "r_1_24_20_1",
+    "r_1_24_24_1"
+  ],
+  "current_candidate_id": "",
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt",
+  "mode": "main",
+  "reverse_control_done": true,
+  "reverse_control_status": "completed",
+  "selection_saved": true,
+  "stage": "complete",
+  "stop_reason": "completed",
+  "updated_at": "2026-11-05T20:57:32",
+  "validation_started": true
+}

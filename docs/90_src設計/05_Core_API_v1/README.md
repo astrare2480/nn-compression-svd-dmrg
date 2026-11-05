@@ -385,6 +385,7 @@ flowchart LR
 
 - [[90_src設計/05_Core_API_v1/metrics/linear_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/tt_linear_direct_contraction_macs]]
+- [[90_src設計/05_Core_API_v1/metrics/tt_conv2d_direct_contraction_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/compressed_linear_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/conv2d_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/compressed_conv2d_macs]]
@@ -394,6 +395,7 @@ flowchart LR
 - [[90_src設計/05_Core_API_v1/metrics/estimate_cnn_conv2_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/estimate_cnn_macs]]
 - [[90_src設計/05_Core_API_v1/metrics/relative_frobenius_error]]
+- [[90_src設計/05_Core_API_v1/metrics/relative_l2_from_squared_sums]]
 
 ## metrics — error bound / prediction stability
 

@@ -1,0 +1,17 @@
+experiment_id,candidate_id,ranks,validation_loss,validation_accuracy,seconds
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_12_12_1,1|12|12|1,0.7249063271522522,0.7444,0.3612253999999666
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_12_16_1,1|12|16|1,0.5736697905540467,0.7876,0.36972919999971054
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_12_20_1,1|12|20|1,0.44804458923339846,0.835,0.37105890000020736
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_12_24_1,1|12|24|1,0.395662890958786,0.856,0.3901918999999907
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_16_12_1,1|16|12|1,0.5653233238220214,0.7968,0.3768182000003435
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_16_16_1,1|16|16|1,0.3724288938522339,0.864,0.35982789999980014
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_16_20_1,1|16|20|1,0.2588220000982285,0.9076,0.3892230000001291
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_16_24_1,1|16|24|1,0.25156322031021117,0.9152,0.39487360000021
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_20_12_1,1|20|12|1,0.5544499598503113,0.8138,0.4101503000001685
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_20_16_1,1|20|16|1,0.4116417997837067,0.8612,0.3825898999984929
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_20_20_1,1|20|20|1,0.3149269093990326,0.8926,0.41427560000011
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_20_24_1,1|20|24|1,0.2478365671157837,0.9162,0.42549789999975474
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_24_12_1,1|24|12|1,0.4854164924621582,0.8352,0.3943301999988762
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_24_16_1,1|24|16|1,0.373259303855896,0.87,0.40042880000146397
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_24_20_1,1|24|20|1,0.2810609144926071,0.904,0.44010760000128357
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt,r_1_24_24_1,1|24|24|1,0.225672984457016,0.9256,0.44413429999985965

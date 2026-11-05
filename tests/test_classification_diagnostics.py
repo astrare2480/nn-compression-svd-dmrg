@@ -29,6 +29,24 @@ def test_true_class_margin_can_be_negative_and_differs_from_top_margin():
         true_class_margins(logits, torch.tensor([0, 3]))
 
 
+def test_true_class_margin_keeps_the_competitor_gradient():
+    logits = torch.tensor([[3.0, 2.0, 1.0]], requires_grad=True)
+    labels = torch.tensor([0])
+    original = logits.detach().clone()
+    margin = true_class_margins(logits, labels)
+    assert torch.allclose(margin, torch.tensor([1.0]))
+    margin.sum().backward()
+    assert torch.equal(logits.grad, torch.tensor([[1.0, -1.0, 0.0]]))
+    assert torch.equal(logits, original)
+
+    probe = torch.tensor([[3.0, 2.0, 1.0]], dtype=torch.float64, requires_grad=True)
+
+    def forward(values: torch.Tensor) -> torch.Tensor:
+        return true_class_margins(values, labels)
+
+    assert torch.autograd.gradcheck(forward, (probe,), eps=1e-6, atol=1e-6, rtol=1e-4)
+
+
 def test_margin_change_summary_counts_worsened_rows():
     baseline = torch.tensor([1.0, -0.5, 2.0])
     candidate = torch.tensor([0.0, 0.5, 2.0])

@@ -171,6 +171,9 @@ def capture_rng_state(*, include_cuda: bool | None = None) -> dict[str, Any]:
 def restore_rng_state(state: Mapping[str, Any]) -> None:
     """``capture_rng_state`` の結果から乱数状態を戻す。``state`` は変更しない。
 
+    長さと device 数の確認は、乱数系列を書き換える前に行う。適用の途中で失敗した
+    ときは Python、NumPy、PyTorch CPU、復元対象だった CUDA を呼出し前へ戻す。
+    戻す処理自体が失敗した場合は、その例外の原因として元の例外を残す。
     ``"cuda"`` があり CUDA が利用できる場合は全 device を戻す。保存時と device 数が
     違えば ``ValueError``。CUDA が利用できない環境では CUDA 分は戻さない。
     """
@@ -180,7 +183,14 @@ def restore_rng_state(state: Mapping[str, Any]) -> None:
     if missing:
         raise KeyError(f"乱数状態に必要な key がありません: {missing}")
     torch_state = _byte_tensor(state["torch"], "state['torch']")
+    current_torch = torch.get_rng_state()
+    if torch_state.numel() != current_torch.numel():
+        raise ValueError(
+            "PyTorch の乱数状態の長さが一致しません: "
+            f"saved={torch_state.numel()} current={current_torch.numel()}"
+        )
     numpy_state = _copy_numpy_state(state["numpy"])
+    python_state = state["python"]
     cuda_states = None
     if "cuda" in state and torch.cuda.is_available():
         saved = state["cuda"]
@@ -192,8 +202,49 @@ def restore_rng_state(state: Mapping[str, Any]) -> None:
                 f"saved={len(saved)} current={torch.cuda.device_count()}"
             )
         cuda_states = [_byte_tensor(value, f"state['cuda'][{index}]") for index, value in enumerate(saved)]
-    random.setstate(state["python"])
-    np.random.set_state(numpy_state)
-    torch.set_rng_state(torch_state)
-    if cuda_states is not None:
-        torch.cuda.set_rng_state_all(cuda_states)
+    previous_python = random.getstate()
+    previous_numpy = _copy_numpy_state(np.random.get_state())
+    previous_torch = current_torch.clone()
+    previous_cuda = (
+        [tensor.clone() for tensor in torch.cuda.get_rng_state_all()] if cuda_states is not None else None
+    )
+    try:
+        random.setstate(python_state)
+        np.random.set_state(numpy_state)
+        torch.set_rng_state(torch_state)
+        if cuda_states is not None:
+            torch.cuda.set_rng_state_all(cuda_states)
+    except Exception as original:
+        try:
+            random.setstate(previous_python)
+            np.random.set_state(previous_numpy)
+            torch.set_rng_state(previous_torch)
+            if previous_cuda is not None:
+                torch.cuda.set_rng_state_all(previous_cuda)
+        except Exception as rollback_error:
+            raise rollback_error from original
+        raise
+
+
+_FILE_HASH_CHUNK = 1 << 20
+
+
+def combined_file_sha256(paths: Sequence[str | os.PathLike]) -> str:
+    """ファイル内容を与えた順に連結した SHA-256 を返す。
+
+    Notebook 11 の helper と同じ legacy 互換の raw concatenation である。
+    長さの prefix は付けない。hash に入れるのはパス文字列ではなく内容で、
+    読み込みは 1 MiB ずつ行う。並びを変えると、連結結果が変わる限り digest も変わる。
+    同じパスが複数回現れても拒否せず、その回数だけ内容を反映する。
+    空の列は拒否する。``paths`` の並びは変えない。
+    """
+    if isinstance(paths, (str, bytes)) or not isinstance(paths, Sequence):
+        raise TypeError(f"paths はファイルパスの列である必要があります: {type(paths)!r}")
+    if len(paths) == 0:
+        raise ValueError("hash するファイルがありません。")
+    digest = hashlib.sha256()
+    for path in paths:
+        with Path(path).open("rb") as handle:
+            for chunk in iter(lambda: handle.read(_FILE_HASH_CHUNK), b""):
+                digest.update(chunk)
+    return digest.hexdigest()

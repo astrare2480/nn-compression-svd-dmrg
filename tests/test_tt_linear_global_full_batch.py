@@ -275,6 +275,43 @@ def test_parameters_hold_until_accumulation_finishes_and_chunking_matches():
         assert torch.allclose(parameter, other, rtol=1e-8, atol=1e-8)
 
 
+def test_forward_parameter_write_is_rolled_back_before_the_error():
+    model = _model()
+    features, _labels, loader = _data()
+
+    def rewrite(self, x):
+        with torch.no_grad():
+            self.fc2.bias.add_(1)
+        return self.fc2(self.relu1(self.fc1(x)))
+
+    model.forward = rewrite.__get__(model, type(model))
+    before = {name: parameter.detach().clone() for name, parameter in model.named_parameters()}
+    requires = {name: parameter.requires_grad for name, parameter in model.named_parameters()}
+    grads = {
+        name: None if parameter.grad is None else parameter.grad.detach().clone()
+        for name, parameter in model.named_parameters()
+    }
+    training = [(module, module.training) for module in model.modules()]
+    with pytest.raises(RuntimeError, match="parameter が変わりました"):
+        global_update.accumulate_tt_linear_global_full_batch_gradients(
+            model,
+            loader,
+            layer_name="fc1",
+            batch_size=None,
+            device=torch.device("cpu"),
+        )
+    for name, parameter in model.named_parameters():
+        assert torch.equal(parameter, before[name])
+        assert parameter.requires_grad is requires[name]
+        if grads[name] is None:
+            assert parameter.grad is None
+        else:
+            assert torch.equal(parameter.grad, grads[name])
+    for module, flag in training:
+        assert module.training is flag
+    assert features.shape[0] == 7
+
+
 def test_non_finite_gradient_or_candidate_does_not_write():
     _, _, loader = _data()
     model = _model()

@@ -1,0 +1,28 @@
+{
+  "activation_score": 0.5335657673382522,
+  "actual_ranks": [
+    1,
+    16,
+    16,
+    1
+  ],
+  "baseline_calibration_loss": 0.13325077464580537,
+  "bond_order": "1|2",
+  "calibration_accuracy": 0.8866,
+  "calibration_loss": 0.29667701478004455,
+  "candidate_id": "r_1_16_16_1",
+  "canonicality_max_error": 2.4635583031340502e-06,
+  "complete": true,
+  "conv2_parameters": 7104,
+  "conv2_theoretical_macs": 43753472,
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt",
+  "model_theoretical_macs": 44381952,
+  "r1": 16,
+  "r2": 16,
+  "ranks": "1|16|16|1",
+  "seconds": 1.1704036999999516,
+  "task_score": 0.16342624013423918,
+  "total_parameters": 410250,
+  "tt_core_elements": 7040,
+  "weight_score": 0.48096132278442383
+}

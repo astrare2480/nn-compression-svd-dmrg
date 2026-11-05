@@ -1,0 +1,9 @@
+{
+  "candidate_count": 5,
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt",
+  "finetuning": false,
+  "mode": "smoke",
+  "seconds": 14.018380100000286,
+  "stage": "complete",
+  "test_evaluated": false
+}

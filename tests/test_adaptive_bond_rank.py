@@ -161,6 +161,31 @@ def test_tiny_nonzero_singular_values_are_not_treated_as_zero() -> None:
     assert math.isfinite(decision.relative_discarded_weight)
 
 
+def test_threshold_zero_keeps_underflowing_tail_within_the_cap() -> None:
+    values = torch.tensor([1.0, 1e-200], dtype=torch.float64)
+    decision = select_bond_rank_from_singular_values(
+        values,
+        threshold=0.0,
+        min_bond_rank=1,
+        max_bond_rank=12,
+    )
+    assert decision.threshold_required_rank == 2
+    assert decision.retained_rank == 2
+    assert decision.zero_spectrum is False
+    assert decision.cap_limited is False
+    capped = select_bond_rank_from_singular_values(
+        values,
+        threshold=0.0,
+        min_bond_rank=1,
+        max_bond_rank=1,
+    )
+    assert capped.threshold_required_rank == 2
+    assert capped.retained_rank == 1
+    assert capped.cap_limited is True
+    assert capped.relative_discarded_weight == 0.0
+    assert capped.threshold_satisfied is False
+
+
 def test_non_finite_singular_values_are_rejected() -> None:
     with pytest.raises(ValueError, match="NaN または Inf"):
         select_bond_rank_from_singular_values(

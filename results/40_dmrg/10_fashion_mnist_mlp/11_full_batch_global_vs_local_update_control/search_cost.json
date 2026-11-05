@@ -1,0 +1,31 @@
+{
+  "completed_eval_seconds": {
+    "complete": true,
+    "recorded_sum": 1781.656577499969,
+    "unknown_conditions": []
+  },
+  "completed_train_seconds": {
+    "complete": true,
+    "recorded_sum": 7898.919113800839,
+    "unknown_conditions": []
+  },
+  "cost_note": "完了した更新秒、評価秒、失敗試行の秒は別項目。同じ full-dataset gradient evaluation 数は同じ計算費用ではない。保存の overhead はこれらの秒に含めない。wall-clock time、total evaluation time、end-to-end の総費用には、Local の境界評価の重複を含む。",
+  "failed_attempt_eval_seconds": {
+    "complete": true,
+    "recorded_sum": 0.0,
+    "unknown_conditions": []
+  },
+  "failed_attempt_train_seconds": {
+    "complete": true,
+    "recorded_sum": 4.369726900011301,
+    "unknown_conditions": []
+  },
+  "selected_learning_rates": {
+    "global_gd": 0.1,
+    "local_sweep": 0.2
+  },
+  "selection_notes": {
+    "global_gd": "selected",
+    "local_sweep": "selected"
+  }
+}

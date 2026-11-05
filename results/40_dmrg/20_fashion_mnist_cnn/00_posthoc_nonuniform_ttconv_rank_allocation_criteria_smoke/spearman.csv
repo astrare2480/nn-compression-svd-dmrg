@@ -1,0 +1,4 @@
+experiment_id,score,candidate_count,spearman_with_validation_loss,pvalue_reported
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,weight,5,0.8999999999999998,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,activation,5,0.8999999999999998,False
+00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt,task,5,0.9999999999999999,False

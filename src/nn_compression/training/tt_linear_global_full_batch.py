@@ -156,14 +156,23 @@ def accumulate_tt_linear_global_full_batch_gradients(
             grads[name] = parameter.grad.detach().clone()
         if set(grads) != set(saved_values):
             raise RuntimeError("勾配の parameter 名が集計前と一致しません。")
+        changed = [
+            name
+            for name, parameter in model.named_parameters()
+            if not _same_stored_values(parameter, saved_values[name])
+        ]
+        if changed:
+            raise RuntimeError(f"勾配集計中に parameter が変わりました: {changed[0]}")
         return grads, float(full_loss.detach()), seen
     finally:
         _restore_training_flags(flags)
-        for name, parameter in model.named_parameters():
-            parameter.requires_grad_(saved_requires_grad[name])
-            parameter.grad = saved_grads[name]
-            if not _same_stored_values(parameter, saved_values[name]):
-                raise RuntimeError(f"勾配集計中に parameter が変わりました: {name}")
+        with torch.no_grad():
+            for name, parameter in model.named_parameters():
+                if name in saved_values and not _same_stored_values(parameter, saved_values[name]):
+                    parameter.copy_(saved_values[name])
+                if name in saved_requires_grad:
+                    parameter.requires_grad_(saved_requires_grad[name])
+                    parameter.grad = saved_grads[name]
 
 
 def update_tt_linear_global_full_batch(

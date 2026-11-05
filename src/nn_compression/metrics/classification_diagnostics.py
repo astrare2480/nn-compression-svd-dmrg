@@ -75,11 +75,10 @@ def true_class_margins(logits: torch.Tensor, labels: torch.Tensor) -> torch.Tens
         raise ValueError(f"logits は 1 件以上、2 クラス以上が必要です: shape={tuple(logits.shape)}")
     if not torch.isfinite(logits).all():
         raise ValueError("logits に非有限値があるため、margin は計算しません。")
-    label_index = _labels(labels, int(logits.shape[0]), int(logits.shape[1]))
+    label_index = _labels(labels, int(logits.shape[0]), int(logits.shape[1])).to(device=logits.device)
     correct = logits.gather(1, label_index.view(-1, 1)).squeeze(1)
-    masked = logits.detach().clone()
-    masked.scatter_(1, label_index.view(-1, 1), torch.finfo(logits.dtype).min)
-    other = masked.max(dim=1).values
+    excluded = torch.nn.functional.one_hot(label_index, int(logits.shape[1])).to(dtype=torch.bool)
+    other = logits.masked_fill(excluded, torch.finfo(logits.dtype).min).max(dim=1).values
     if not torch.isfinite(other).all():
         raise ValueError("正解以外の最大 logit が有限ではありません。")
     margin = correct - other

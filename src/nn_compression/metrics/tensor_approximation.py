@@ -11,6 +11,8 @@ Tucker 以外の低ランク近似からも使える。
 
 from __future__ import annotations
 
+import math
+
 import torch
 
 
@@ -38,3 +40,39 @@ def relative_frobenius_error(
         raise ValueError("Xがゼロテンソルなので相対誤差を定義できません。")
 
     return torch.linalg.vector_norm(X - X_hat) / denominator
+
+
+def _nonnegative_finite_float(value: float, name: str) -> float:
+    if isinstance(value, bool) or torch.is_tensor(value):
+        raise TypeError(f"{name} は有限な非負の実数である必要があります: {value!r}")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise TypeError(f"{name} は有限な非負の実数である必要があります: {value!r}") from exc
+    if not math.isfinite(number) or number < 0.0:
+        raise ValueError(f"{name} は有限な非負の実数である必要があります: {number}")
+    return number
+
+
+def relative_l2_from_squared_sums(
+    difference_squared_sum: float,
+    baseline_squared_sum: float,
+) -> float:
+    """二乗和から、データ全体の relative L2 を返す。
+
+    ``sqrt(sum_i ||difference_i||_2^2) / sqrt(sum_i ||baseline_i||_2^2)``。
+    batch ごとの比を平均しない。負値へ丸めず、分母が 0 のときは epsilon に
+    置き換えず ``ValueError`` にする。feature map 全体を保持せず、streaming で
+    積んだ二乗和を渡すための関数である。
+    """
+    difference = _nonnegative_finite_float(difference_squared_sum, "difference_squared_sum")
+    baseline = _nonnegative_finite_float(baseline_squared_sum, "baseline_squared_sum")
+    if baseline == 0.0:
+        raise ValueError(
+            "baseline の二乗和がゼロなので relative L2 を定義できません。"
+            "epsilon には置き換えません。"
+        )
+    relative = math.sqrt(difference) / math.sqrt(baseline)
+    if not math.isfinite(relative):
+        raise ValueError(f"relative L2 が有限ではありません: {relative}")
+    return relative

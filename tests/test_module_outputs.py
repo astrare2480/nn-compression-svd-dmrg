@@ -68,6 +68,31 @@ def test_hooks_and_training_flags_are_cleared_when_forward_fails():
     assert model.hidden._forward_hooks == {}
 
 
+def test_linear_output_survives_following_inplace_relu():
+    torch.manual_seed(1)
+    model = TinyNet()
+    model.train()
+    model.act = nn.ReLU(inplace=True)
+    model.act.eval()
+    inputs = torch.randn(6, 3)
+    inputs_before = inputs.clone()
+    with torch.no_grad():
+        expected = torch.nn.functional.linear(inputs, model.hidden.weight, model.hidden.bias)
+    assert torch.any(expected < 0)
+    parameters = {name: parameter.detach().clone() for name, parameter in model.named_parameters()}
+    training = [(module, module.training) for module in model.modules()]
+    captured = capture_internal_outputs(model, inputs, ("hidden",))
+    assert torch.equal(captured.module("hidden"), expected)
+    assert torch.any(captured.module("hidden") < 0)
+    assert model.hidden._forward_hooks == {}
+    assert model.act._forward_hooks == {}
+    for module, flag in training:
+        assert module.training is flag
+    for name, parameter in model.named_parameters():
+        assert torch.equal(parameter, parameters[name])
+    assert torch.equal(inputs, inputs_before)
+
+
 def test_inplace_module_is_rejected_before_forward():
     model = TinyNet()
     model.act = nn.ReLU(inplace=True)

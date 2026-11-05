@@ -1,0 +1,18 @@
+{
+  "activation_score": 0.0,
+  "calibration_accuracy": 0.9518,
+  "calibration_loss": 0.13325077464580537,
+  "candidate_id": "source_checkpoint",
+  "conv2_parameters": 15232,
+  "conv2_theoretical_macs": 94531584,
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria_smoke/smoke/rank_24_selected.pt",
+  "model_theoretical_macs": 95160064,
+  "ranks": "1|24|24|1",
+  "role": "source",
+  "task_score": 0.0,
+  "total_parameters": 418378,
+  "tt_core_elements": 15168,
+  "validation_accuracy": 0.9256,
+  "validation_loss": 0.2256729646682739,
+  "weight_score": 0.0
+}

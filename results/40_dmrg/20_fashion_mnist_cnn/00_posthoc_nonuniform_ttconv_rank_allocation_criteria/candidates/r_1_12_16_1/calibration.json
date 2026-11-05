@@ -1,0 +1,28 @@
+{
+  "activation_score": 0.6203417693171515,
+  "actual_ranks": [
+    1,
+    12,
+    16,
+    1
+  ],
+  "baseline_calibration_loss": 0.13325077464580537,
+  "bond_order": "1|2",
+  "calibration_accuracy": 0.8014,
+  "calibration_loss": 0.5000915848255157,
+  "candidate_id": "r_1_12_16_1",
+  "canonicality_max_error": 3.263103053541272e-06,
+  "complete": true,
+  "conv2_parameters": 5472,
+  "conv2_theoretical_macs": 33216512,
+  "experiment_id": "00_posthoc_nonuniform_ttconv_rank_allocation_criteria/main/rank_24_selected.pt",
+  "model_theoretical_macs": 33844992,
+  "r1": 12,
+  "r2": 16,
+  "ranks": "1|12|16|1",
+  "seconds": 1.2086603999996441,
+  "task_score": 0.3668408101797104,
+  "total_parameters": 408618,
+  "tt_core_elements": 5408,
+  "weight_score": 0.5696421265602112
+}
