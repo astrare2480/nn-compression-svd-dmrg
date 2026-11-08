@@ -157,7 +157,7 @@ rankの和ではなく、direct TTConv縮約に基づく理論MACsで制約す�
 
 ### 5.1 `conv2`理論MACsとvalidation loss
 
-![conv2理論MACsとvalidation loss](../../../results/40_dmrg/20_fashion_mnist_cnn/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/figures/01_conv2_macs_vs_validation_loss.png)
+![conv2理論MACsとvalidation loss](assets/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/01_conv2_macs_vs_validation_loss.png)
 
 横軸は対象層`conv2`の理論MACs、縦軸はvalidation lossで、左下ほど費用とlossの両方が小さい。点を結んだ学習曲線ではなく、各点が異なるrank配分である。
 
@@ -165,13 +165,13 @@ rankの和ではなく、direct TTConv縮約に基づく理論MACsで制約す�
 
 ### 5.2 `conv2`理論MACsとvalidation accuracy
 
-![conv2理論MACsとvalidation accuracy](../../../results/40_dmrg/20_fashion_mnist_cnn/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/figures/02_conv2_macs_vs_validation_accuracy.png)
+![conv2理論MACsとvalidation accuracy](assets/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/02_conv2_macs_vs_validation_accuracy.png)
 
 左上ほど費用が小さくaccuracyが高い。予算20では$(16,24)$が$(20,20)$よりMACsが少なく、accuracyも高かった。一方、sourceの92.56%は完全には維持していない。
 
 ### 5.3 三スコアとvalidation loss
 
-![三つの選択スコアとvalidation loss](../../../results/40_dmrg/20_fashion_mnist_cnn/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/figures/03_scores_vs_validation_loss.png)
+![三つの選択スコアとvalidation loss](assets/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/03_scores_vs_validation_loss.png)
 
 三パネルは同じ16候補を異なる横軸で並べている。validation lossは共通で、横位置だけがWeight、Activation、Taskによって変わる。
 
@@ -187,7 +187,7 @@ rankの和ではなく、direct TTConv縮約に基づく理論MACsで制約す�
 
 ### 5.4 選択されたbond rank配分
 
-![予算・選択基準ごとのbond rank配分](../../../results/40_dmrg/20_fashion_mnist_cnn/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/figures/04_rank_allocation.png)
+![予算・選択基準ごとのbond rank配分](assets/00_posthoc_nonuniform_ttconv_rank_allocation_criteria/04_rank_allocation.png)
 
 予算16では三基準とも$(16,16)$である。予算20では、Weightは均等な$(20,20)$、ActivationとTaskは非一様な$(16,24)$を選んだ。棒の高さは性能ではなく、各bondに残したrankを表す。
 

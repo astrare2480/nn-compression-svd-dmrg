@@ -88,9 +88,9 @@ jointとtt-onlyでは、6 coreの左右1往復、各pair 8局所stepが80更新�
 
 ここでbestはvalidation loss基準であり、accuracy最大時点とは限らない。
 
-![更新数に対するvalidation loss](../../../results/40_dmrg/10_fashion_mnist_mlp/05_update_scope_ablation_gpu_resident/validation_loss_vs_updates.png)
+![更新数に対するvalidation loss](assets/05_update_scope_ablation_gpu_resident/validation_loss_vs_updates.png)
 
-![更新数に対するvalidation accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/05_update_scope_ablation_gpu_resident/validation_accuracy_vs_updates.png)
+![更新数に対するvalidation accuracy](assets/05_update_scope_ablation_gpu_resident/validation_accuracy_vs_updates.png)
 
 ### 2.1 時間とmemory
 
@@ -102,9 +102,9 @@ jointとtt-onlyでは、6 coreの左右1往復、各pair 8局所stepが80更新�
 
 総時間は学習と評価のほか保存時間を含む。GPU事前配置時間は約0.015秒で、学習曲線の時間軸には加えていない。
 
-![時間に対するvalidation loss](../../../results/40_dmrg/10_fashion_mnist_mlp/05_update_scope_ablation_gpu_resident/validation_loss_vs_time.png)
+![時間に対するvalidation loss](assets/05_update_scope_ablation_gpu_resident/validation_loss_vs_time.png)
 
-![時間に対するvalidation accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/05_update_scope_ablation_gpu_resident/validation_accuracy_vs_time.png)
+![時間に対するvalidation accuracy](assets/05_update_scope_ablation_gpu_resident/validation_accuracy_vs_time.png)
 
 ---
 

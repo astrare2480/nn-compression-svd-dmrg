@@ -75,11 +75,11 @@ checkpointはlossで選び、Paretoはそのcheckpointのaccuracyで決める。
 
 Denseの参照値はloss `0.310588`、accuracy `0.8884`である。通常TTではrank 8のaccuracy `0.8948`、rank 3のloss `0.300164`がそれぞれ最良だった。DMRG-likeではrank 12がaccuracy `0.8968`、loss `0.286605`の両方で最良だった。
 
-![rank対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/01_rank_vs_accuracy.png)
+![rank対accuracy](assets/17_fixed_rank_sweep_and_pareto/01_rank_vs_accuracy.png)
 
 通常TTはrank 1・3でもDenseを上回った。DMRG-likeはrank 5・6・12で同rankの通常TTを上回ったが、rank 1〜4・8では下回った。学習方式の優劣はrankによって入れ替わっており、どちらかが一貫して優位とは言えない。線は独立に学習した離散的なrank候補を結んだ視覚補助であり、学習曲線ではない。
 
-![rank対loss](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/02_rank_vs_loss.png)
+![rank対loss](assets/17_fixed_rank_sweep_and_pareto/02_rank_vs_loss.png)
 
 lossもrankに対して単調ではない。例えば通常TTではrank 3のlossがrank 8より低い一方、accuracyはrank 8が高い。cross-entropyは全classの予測確率と確信度を見るのに対し、accuracyはargmaxの正誤だけを見るため、順位の不一致は矛盾ではない。
 
@@ -95,41 +95,41 @@ lossもrankに対して単調ではない。例えば通常TTではrank 3のloss
 | 12 | 5,968 | 6,480 | 140,378 | 2,309,120 |
 | Dense | 対象外 | 401,920 | 535,818 | 535,040 |
 
-![rank対TT core要素数](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/03_rank_vs_tt_core_elements.png)
+![rank対TT core要素数](assets/17_fixed_rank_sweep_and_pareto/03_rank_vs_tt_core_elements.png)
 
-![rank対fc1 parameter数](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/04_rank_vs_fc1_parameters.png)
+![rank対fc1 parameter数](assets/17_fixed_rank_sweep_and_pareto/04_rank_vs_fc1_parameters.png)
 
-![rank対モデル総parameter数](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/05_rank_vs_total_parameters.png)
+![rank対モデル総parameter数](assets/17_fixed_rank_sweep_and_pareto/05_rank_vs_total_parameters.png)
 
 TT core要素数はrankとともに大きく増えるが、モデル総parameter数の増加は`134,486 -> 140,378`にとどまる。TT化していないfc2・fc3が共通で残るためである。rank 12でも総parameter数はDenseの約26%であり、モデルの保存量は大幅に減った。
 
-![rank対理論総MACs](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/06_rank_vs_total_macs.png)
+![rank対理論総MACs](assets/17_fixed_rank_sweep_and_pareto/06_rank_vs_total_macs.png)
 
 一方、現在のdirect contractionに基づく理論MACsはrank 4の`411,392`までDenseの`535,040`を下回るが、rank 5の`559,232`で上回る。rank 12はDenseの約4.32倍である。したがって、parameter数の削減と演算量の削減は別の成果である。
 
 ### 2.3 費用対accuracy
 
-![TT core要素数対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/07_accuracy_vs_tt_core_elements.png)
+![TT core要素数対accuracy](assets/17_fixed_rank_sweep_and_pareto/07_accuracy_vs_tt_core_elements.png)
 
 同rankの通常TTとDMRG-likeは同じ横位置にある。そのため縦方向の差は、同じモデル規模に対する学習後性能の差である。rank 6ではDMRG-like、rank 8では通常TTが上であり、「同じ規模ならDMRG-likeが常に上」ではない。
 
-![fc1 parameter数対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/08_accuracy_vs_fc1_parameters_dense_split.png)
+![fc1 parameter数対accuracy](assets/17_fixed_rank_sweep_and_pareto/08_accuracy_vs_fc1_parameters_dense_split.png)
 
-![モデル総parameter数対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/09_accuracy_vs_total_parameters_dense_split.png)
+![モデル総parameter数対accuracy](assets/17_fixed_rank_sweep_and_pareto/09_accuracy_vs_total_parameters_dense_split.png)
 
 TT候補はDenseより大幅に小さいfc1・総parameter数で、今回の記録値ではDenseに近い、またはそれを上回るaccuracyを得た。ただしfc2・fc3も学習しており、fc1単体の分類能力を測った結果ではない。また、1 seedのvalidation差を未知データ上の一般的な優越とは扱わない。
 
-![理論総MACs対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/10_accuracy_vs_total_macs.png)
+![理論総MACs対accuracy](assets/17_fixed_rank_sweep_and_pareto/10_accuracy_vs_total_macs.png)
 
 通常TT rank 1・3はDenseより少ない理論MACsでDense以上のaccuracyを記録した。DMRG-like rank 6・12はDenseより高精度だが、MACsはDenseより多い。DMRG-like rank 8は今回のrank 6より右かつ下に位置し、この2軸ではrank 6に支配された。
 
-![batch 1 latency対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/11_accuracy_vs_latency_batch1.png)
+![batch 1 latency対accuracy](assets/17_fixed_rank_sweep_and_pareto/11_accuracy_vs_latency_batch1.png)
 
-![batch 4096 latency対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/12_accuracy_vs_latency_batch4096.png)
+![batch 4096 latency対accuracy](assets/17_fixed_rank_sweep_and_pareto/12_accuracy_vs_latency_batch4096.png)
 
 実測latencyではbatch 1・4096の両方でDenseが高速側にある。低rank TTの理論MACs削減は、現在の直接縮約実装では実測高速化に結び付いていない。また同rankの2方式はforward構造が同じなので、小さなlatency差を学習方式固有の速度差とは解釈しない。
 
-![学習時間対accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/13_accuracy_vs_training_time.png)
+![学習時間対accuracy](assets/17_fixed_rank_sweep_and_pareto/13_accuracy_vs_training_time.png)
 
 通常TT rank 8は約47秒でaccuracy `0.8948`、DMRG-like rank 12は約1,355秒で`0.8968`だった。今回のDMRG-likeの最高精度には大きな追加学習費用が伴った。一方、DMRG-like rank 5の約773秒に対しrank 6は約644秒であり、rankと停止までの時間は単調ではない。
 
@@ -141,13 +141,13 @@ Pareto判定は、学習後の候補を対象に、validation errorと1つの費
 
 ### 3.1 parameter数・理論MACs
 
-![総parameter数対errorのPareto](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/frontier_with_dense_inference_total_model_parameters_dense_split.png)
+![総parameter数対errorのPareto](assets/17_fixed_rank_sweep_and_pareto/frontier_with_dense_inference_total_model_parameters_dense_split.png)
 
-![理論MACs対errorのPareto](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/frontier_with_dense_inference_theoretical_total_macs.png)
+![理論MACs対errorのPareto](assets/17_fixed_rank_sweep_and_pareto/frontier_with_dense_inference_theoretical_total_macs.png)
 
 総parameter数と理論MACsのどちらでも、主に通常TT rank 1・3・8とDMRG-like rank 5・6・12が非支配候補として残った。Denseは、より小さい費用かつ低いerrorのTT候補があるため、この2軸ではfrontierから外れた。これは保存量または理論MACsとerrorに限定した結論である。
 
-![TT内の理論MACs対errorと役割付け](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/frontier_tt_candidates_inference_theoretical_total_macs.png)
+![TT内の理論MACs対errorと役割付け](assets/17_fixed_rank_sweep_and_pareto/frontier_tt_candidates_inference_theoretical_total_macs.png)
 
 | 規則上の役割 | 候補 | accuracy | 理論MACs |
 |---|---|---:|---:|
@@ -159,13 +159,13 @@ Pareto判定は、学習後の候補を対象に、validation errorと1つの費
 
 ### 3.2 latency・学習時間
 
-![batch 1 latency対errorのPareto](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/frontier_with_dense_inference_latency_batch_1_seconds.png)
+![batch 1 latency対errorのPareto](assets/17_fixed_rank_sweep_and_pareto/frontier_with_dense_inference_latency_batch_1_seconds.png)
 
-![batch 4096 latency対errorのPareto](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/frontier_with_dense_inference_latency_batch_4096_seconds.png)
+![batch 4096 latency対errorのPareto](assets/17_fixed_rank_sweep_and_pareto/frontier_with_dense_inference_latency_batch_4096_seconds.png)
 
 実測latencyを横軸にするとDenseがfrontierへ戻る。理論MACsではTTに支配されたDenseが、実測速度では有力な候補である。この違いから、理論MACsの削減をそのまま高速化と言い換えることはできない。
 
-![学習時間対errorのPareto](../../../results/40_dmrg/10_fashion_mnist_mlp/07_fixed_rank_sweep_and_pareto_gpu_slice/figures_revised/main/frontier_with_dense_learning_training_time_seconds.png)
+![学習時間対errorのPareto](assets/17_fixed_rank_sweep_and_pareto/frontier_with_dense_learning_training_time_seconds.png)
 
 学習時間対errorでは、通常TT rank 8がDMRG-like rank 6より短時間かつ低errorである。そのためrank 6がMACs対errorで`balanced`に選ばれることと、学習時間対errorで通常TT rank 8に支配されることは矛盾しない。横軸にした費用が異なるためである。
 
@@ -222,7 +222,7 @@ best sweepと停止sweepはrankに対して単調ではない。rank 5から6で
 
 学習費用は、rankに依存する1更新あたりの費用と、validation lossの推移と停止規則で決まる更新回数の両方で決まる。したがって、best sweepを採用checkpointへの到達時点、停止sweep・総局所更新数・実測時間を実際に支払った費用として分ける。早く停止したことだけで良い学習とは言えない。
 
-### 4.4 固定rankを維持できたことと、全bondにそrankが必要なことは別
+### 4.4 固定rankを維持できたことと、全bondにそのrankが必要なことは別
 
 例えばrank 6では、
 

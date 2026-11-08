@@ -25,7 +25,7 @@ rank sweepや非一様rank配分の考察ノートでは、図中の各点がど
 
 - [[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]：2層MLPの重み誤差からbatch logits誤差、sample-wise certificate、minimum marginによるbatch内全予測不変の十分条件までの設定・結果・考察を確認する。
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]
-- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/README]]：小さいConv2dでのTT-matrix表現・direct forward／backward検証から、学習済みCNNの`conv2`に対するrank sweepとcores-only fine-tuningまでを扱う。
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/README]]：小さいConv2dでのTT-matrix表現・direct forward／backward検証から、学習済みCNNの`conv2`に対するrank sweep、cores-only fine-tuning、事後非一様rank配分、単一bond局所感度による配分予測までを扱う。
 
 toy検証では人工的な重み誤差を使い、第2 Linearまでの恒等式、合成上界、scale sweepを確認した。さらに、1 sampleのmargin、batch Frobenius誤差からsample-wise certificateへのchain、minimum marginを使った1 batch内全sampleの同時保証まで確認した。学習済みFashion-MNIST MLPでは、第1層のTT-rank sweep、tensorization比較、選択した3候補の通常fine-tuning、fine-tuning前後のPareto frontier比較、epoch 0を含むcheckpoint再選択、全parameter更新とTT coresのみ更新のablation、追加候補rank 12の同じablationまで進んでいる。Notebook 11ではafter frontierにrank 16だけが残り、次の追加候補としてrank 12を登録した。Notebook 12ではrank 16・32にtrained best、rank 64にepoch 0が選ばれ、保存checkpointの再評価値も許容差内で再現した。Notebook 13ではrank 16・32はTT coresのみでもaccuracyを回復したが、rank・指標を通した一貫した勝者はなく、rank 64では両方式ともepoch 0が選ばれた。Notebook 14ではrank 12もTT coresのみでaccuracy `0.3950`から`0.8884`へ回復した。Notebook 15では13・14の候補を統合し、accuracy Pareto、dense accuracyから0.001以内の許容差、補助的なkneeを分けて整理した。許容差規則ではrank 12・TT coresのみ更新が圧縮優先の暫定候補になったが、rank 12は探索下端なので、さらに低rankを検証する余地が残る。
 
@@ -33,9 +33,13 @@ Fashion-MNIST CNN系列のNotebook 00・01では、学習済みモデルへ進�
 
 CNN DMRG系列Notebook 00では、Notebook 04のfine-tuning済みrank 24 TTConvをsourceとして、二つの内部bond rankを`{12,16,20,24}`から選ぶ16候補を追加学習なしで評価した。uniform rank 20相当の予算では、Weight-awareの`(20,20)`に対し、Activation-awareとTask-awareは非一様配分`(16,24)`を選び、validation accuracyを2.26ポイント高く保ちながら対象層理論MACsも約4.36%少なくした。sourceに対してはaccuracyが1.04ポイント低下し、モデル総理論MACsが約32.3%減少した。MLPとのsource学習条件の違い、全16候補表、4図、oracle、順序依存性、適用範囲は[[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/05_事後非一様TTConv_rank配分と選択基準比較]]に整理した。
 
+CNN DMRG系列Notebook 01では、MLP通常TT、MLP DMRG-like、CNN TTConvの三sourceについて、単一bond削減の局所scoreから複数bond配分のscoreを予測した。直接加算と二乗量加算で、score再現、予算内の選択一致、選択後validation性能、評価候補数を分けて比較した。局所情報が有用な条件はあったが、scoreの再現とtask性能は同じではなく、候補数削減も実時間高速化の実証ではない。結果は[[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/06_単一bond局所感度によるrank配分予測]]、一般技術は[[00_基礎理論/03_モデル圧縮理論/31_TTConv圧縮/80_TTConvの非一様rank配分と局所感度予測]]に整理した。
+
 物理DMRGの2-site更新をTT-MLPへ移す橋渡しとして、1 pair・1 gradient stepの確認後、Fashion-MNISTの6-core `fc1`を全データ勾配で左右sweepする系列を実行した。Notebook 00の5 sweep・50局所更新ではaccuracyがrandom baseline付近だったため、Notebook 01でrank制限時の重み・activation・勾配scaleを診断し、Notebook 02で学習率・往復数・pair内局所step数を比較した。Notebook 03では共同学習率0.2・0.3を3,200更新まで実行し、0.3でvalidation accuracy 0.8710を得た。Notebook 04ではDataLoaderと前処理済みGPU tensor再利用を比較し、現在のbaselineに対する定常的な10局所更新を約10.49倍高速化した。Notebook 05では同じStage Cと3,200更新でjoint・TT-only・dense-onlyを比較し、jointが両単独更新より高いvalidation性能へ早く到達した。設計と結果は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]から[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]へ分け、一般技術は[[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]と[[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]に整理した。
 
-rank 12未満の追加候補、rank 64の学習率診断、複数seedでの更新方式比較、scopeごとの学習率・固定wall time比較、最終候補を固定した後のtest評価、parameter・MACs・latency・memoryの比較は、今後この章へ追加する。
+Notebook 06〜12では、Dense・通常TT・DMRG-likeの性能と費用、rank 1〜12の固定rank sweep、discarded-weightによるadaptive rank、単一bond事後切り詰め、非一様rank配分、全コア同時GDとの比較、データ計量を考慮したrank固定切り詰めを順に検証した。結果・図・保存成果物の確認範囲は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/16_Dense_通常TT_DMRG-like比較]]から[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/22_計量を考慮したbond切り詰め診断]]、一般技術は[[50_DMRG/09_全コア同時勾配法と2-core局所スイープの比較設計]]、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/80_適応bond_rank選択と非一様rank配分]]、[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/79_データ計量付きTT_bond切り詰めとALS]]へ分けた。
+
+rank 64の学習率診断、複数seedでの更新方式比較、scopeごとの学習率・固定wall time比較、最終候補を固定した後のtest評価、切り詰め後fine-tuning、別bond・別rankでのデータ計量付き切り詰めは、今後の検証として残る。parameter・理論MACs・latency・memoryは既に比較したが、実装や計測条件に依存するため同じ指標とは扱わない。
 
 ## 関連
 
@@ -51,6 +55,10 @@ rank 12未満の追加候補、rank 64の学習率診断、複数seedでの更�
 - [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
 - [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
 - [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
+- [[50_DMRG/09_全コア同時勾配法と2-core局所スイープの比較設計]]
+- [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/79_データ計量付きTT_bond切り詰めとALS]]
+- [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/80_適応bond_rank選択と非一様rank配分]]
+- [[00_基礎理論/03_モデル圧縮理論/31_TTConv圧縮/80_TTConvの非一様rank配分と局所感度予測]]
 - [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
@@ -59,3 +67,12 @@ rank 12未満の追加候補、rank 64の学習率診断、複数seedでの更�
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/13_joint学習率0.2_0.3長時間比較]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/14_full-batch勾配集計高速化benchmark]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/16_Dense_通常TT_DMRG-like比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/17_固定rank_sweepとPareto比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/18_adaptive_bond_rank_DMRG-likeと閾値探索]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/19_単一bond事後切り詰めと分類感度診断]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/20_非一様bond_rank配分と選択基準比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/21_全コア同時GDとDMRG-like局所スイープ比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/22_計量を考慮したbond切り詰め診断]]
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/05_事後非一様TTConv_rank配分と選択基準比較]]
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/06_単一bond局所感度によるrank配分予測]]

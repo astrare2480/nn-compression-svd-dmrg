@@ -76,9 +76,13 @@ $$
 
 全12条件でfinal lossが保存された往復終了時のbest lossと一致した。これは「最終時点が最小だった」ことを示すが、途中のaccuracyまで単調だったことは意味しない。
 
-![学習率0.1のvalidation曲線](../../../results/40_dmrg/10_fashion_mnist_mlp/02_full_batch_sweep_update_budget_grid/curves_jointx100_labeled.png)
+![学習率0.001のvalidation曲線](assets/02_full_batch_sweep_update_budget_grid/curves_jointx1.png)
 
-![全条件のfinal・best・時間](../../../results/40_dmrg/10_fashion_mnist_mlp/02_full_batch_sweep_update_budget_grid/final_best_and_time.png)
+![学習率0.01のvalidation曲線](assets/02_full_batch_sweep_update_budget_grid/curves_jointx10.png)
+
+![学習率0.1のvalidation曲線](assets/02_full_batch_sweep_update_budget_grid/curves_jointx100_labeled.png)
+
+![全条件のfinal・best・時間](assets/02_full_batch_sweep_update_budget_grid/final_best_and_time.png)
 
 ---
 

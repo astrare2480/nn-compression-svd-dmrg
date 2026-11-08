@@ -176,7 +176,7 @@ rank 24では、accuracyが`0.9192 → 0.9256`へ上がった一方、agreement�
 
 $$
 \mathcal L_{\mathrm{CE}}
-=-log p_{\mathrm{TT}}(y\mid x)
+=-\log p_{\mathrm{TT}}(y\mid x)
 $$
 
 である。denseとのagreementやlogits RMSEを保つ項は目的関数にない。denseモデルも誤分類するため、denseの出力から離れながら正解数が増えても矛盾しない。

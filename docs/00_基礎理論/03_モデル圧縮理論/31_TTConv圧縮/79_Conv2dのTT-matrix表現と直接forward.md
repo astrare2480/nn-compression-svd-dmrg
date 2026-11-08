@@ -25,6 +25,10 @@ Conv2dのweightを行列として捉え、TT-matrixへ変換し、次の2通り�
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/02_学習済みCNNへのexact_TT-Conv接続]]
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/03_学習済みCNNのconv2_TT-rank_sweep]]
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/04_conv2_TT-cores-only_fine-tuning]]
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/05_事後非一様TTConv_rank配分と選択基準比較]]
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/06_単一bond局所感度によるrank配分予測]]
+
+事後非一様rank配分と局所感度予測の一般技術は、[[00_基礎理論/03_モデル圧縮理論/31_TTConv圧縮/80_TTConvの非一様rank配分と局所感度予測]]へ分ける。
 
 ## 2. Conv2dをpatchごとの線形写像として見る
 
@@ -1005,7 +1009,7 @@ cores-onlyで目標accuracyへ回復した場合は、次のように読む。
 
 $$
 \mathcal L_{\mathrm{CE}}
-=-log p(y\mid x)
+=-\log p(y\mid x)
 $$
 
 である。元denseモデルのlogitsや予測classへ近づける項を目的関数へ入れていなければ、学習中にdenseから離れることは許される。

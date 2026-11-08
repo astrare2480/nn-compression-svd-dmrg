@@ -58,6 +58,8 @@ Notebook 10では、通常TTとDMRG-likeのrank 12 checkpointについて、bond
 
 Notebook 11では、同じStage C初期TT-MLP、全学習データ平均勾配、素朴なGD、共通の学習率候補と停止規則を用い、全コア同時更新とDMRG-like局所スイープを比較した。選択後のrank-selection validationでは、全コア同時GDのloss`0.310293`・accuracy`0.8886`に対し、DMRG-likeはloss`0.287969`・accuracy`0.8960`だった。一方、DMRG-likeはbestまでに約4.94倍のfull-dataset gradient evaluationsと約1.69倍の更新処理時間を使い、通常parameterの更新回数も約4.94倍だった。到達性能、同一目標への到達時間、評価費用、GPUメモリ、train-validation gap、loss基準checkpoint選択、因果解釈の限界は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/21_全コア同時GDとDMRG-like局所スイープ比較]]に整理した。
 
+Notebook 12では、Notebook 06のDMRG-like rank 12 best modelについて、bond 2をrank 11へ事後切り詰めし、通常SVD、分離計量SVD、固定rank ALSを比較した。validationのReLU前`fc1`出力相対誤差は順に`12.10%`、`8.52%`、`6.13%`で、同じrank 11でもデータ計量を考慮すると通常SVDの出力二乗誤差を約50%・75%削減できた。ただし、accuracy・loss・test、他bond、2-core更新直後での再現、大域最適性は未確認である。結果と訂正済み考察は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/22_計量を考慮したbond切り詰め診断]]、一般理論は[[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/79_データ計量付きTT_bond切り詰めとALS]]に整理した。
+
 一般的なtoy modelでは、第1 Linearの重み誤差をReLUと第2 Linearへ伝播させる合成上界、1 sampleのclassification margin、batch logits errorからsample-wise prediction certificate、minimum marginによるbatch内全sampleの同時保証までを確認している。PyTorch操作は[[08_TT_MPS基礎実装検証/16_第2Linearのlogits誤差伝播と合成上界のPyTorch確認]]、[[08_TT_MPS基礎実装検証/17_ClassificationMarginとArgmax安定性のPyTorch確認]]、[[08_TT_MPS基礎実装検証/18_BatchLogitsErrorからPredictionStabilityCertificateのPyTorch確認]]、[[08_TT_MPS基礎実装検証/19_MinimumMarginとBatch-widePredictionStabilityのPyTorch確認]]、設定・結果・考察は[[40_TT_MPS_NN圧縮/00_2層MLP_toy検証/README]]に分け、Fashion-MNISTの実測結果とは数えない。
 
 ## 読む順序
@@ -113,8 +115,12 @@ Notebook 11では、同じStage C初期TT-MLP、全学習データ平均勾配�
 49. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/19_単一bond事後切り詰めと分類感度診断]]
 50. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/20_非一様bond_rank配分と選択基準比較]]
 51. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/21_全コア同時GDとDMRG-like局所スイープ比較]]
-52. [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
-53. [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
+52. [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/22_計量を考慮したbond切り詰め診断]]
+53. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/79_データ計量付きTT_bond切り詰めとALS]]
+54. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/80_適応bond_rank選択と非一様rank配分]]
+55. [[50_DMRG/09_全コア同時勾配法と2-core局所スイープの比較設計]]
+54. [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
+55. [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
 
 通常のTT圧縮系列は [10_fashion_mnist_mlp](../../../notebooks/30_tt_mps/10_fashion_mnist_mlp/) に、DMRG-like sweep系列は [10_fashion_mnist_mlp](../../../notebooks/40_dmrg/10_fashion_mnist_mlp/) に置く。
 

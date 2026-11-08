@@ -2,7 +2,7 @@
 
 このディレクトリは、SVD → Tucker / HOSVD / HOOI → TT / MPSで学んだ低rank・Tensor Networkの考え方を、DMRGへ接続するための章。
 
-現時点では、横磁場Ising鎖でenvironmentベースの2-site局所更新を左右1往復へ接続し、さらに複数往復、energy安定による停止判定、global residual・energy分散、bond上限比較まで確認済みである。加えて、物理DMRGの構造をTT-MLPへ移し、1組のTTLinear coreを結合テンソルとして更新する最小単位から、Fashion-MNIST全データを使う6-core左右sweep、学習率・更新予算の比較、GPU常駐による勾配集計高速化、TT-only・通常parameter-only・共同更新の固定予算ablationまで確認した。大規模な反復固有値solver、scope別の学習率最適化、固定wall time比較はまだ扱っていない。
+現時点では、横磁場Ising鎖でenvironmentベースの2-site局所更新を左右1往復へ接続し、さらに複数往復、energy安定による停止判定、global residual・energy分散、bond上限比較まで確認済みである。加えて、物理DMRGの構造をTT-MLPへ移し、1組のTTLinear coreを結合テンソルとして更新する最小単位から、Fashion-MNIST全データを使う6-core左右sweep、学習率・更新予算の比較、GPU常駐による勾配集計高速化、更新対象ablation、Dense・通常TT・DMRG-like比較、固定rank sweep、adaptive rank、単一bond感度、非一様rank配分、全コア同時GDとのcontrol、データ計量付き切り詰め診断まで確認した。大規模な反復固有値solver、scope別の学習率最適化、固定wall time比較、複数seedでの最終比較はまだ扱っていない。
 
 ## 現在の位置
 
@@ -18,7 +18,7 @@ TT / MPS
 ↓
 DMRG
 物理系は複数往復・停止判定・bond上限比較まで確認
-TT-MLPは全データjoint sweep、データ供給高速化、更新対象ablationまで確認
+TT-MLPは固定rank・adaptive rank・非一様配分・全コア同時GD control・計量付き切り詰めまで確認
 ```
 
 TT / MPSの準備と学習順は [[08_TT_MPS基礎実装検証/README]] を参照。
@@ -33,6 +33,7 @@ TT / MPSの準備と学習順は [[08_TT_MPS基礎実装検証/README]] を参�
 - [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
 - [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
 - [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
+- [[50_DMRG/09_全コア同時勾配法と2-core局所スイープの比較設計]]
 
 `01` は、SVD低rank近似からMPS / MPO、bond dimension、DMRG-like sweepへ進む概念的な橋渡しである。
 
@@ -107,7 +108,7 @@ gradient-based Fine-tuningとどう比較するか
 
 を明示する必要がある。
 
-物理DMRGの基礎Notebookは03で一区切りとした。Notebook 04でTT-MLPの1 pair・1 stepを確認した後、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]に従ってFashion-MNIST全学習データへ拡張した。Notebook 00の基準実験、01の初期化診断、02の学習率・更新予算grid、03の3,200更新、04のデータ供給高速化、05の更新対象ablationまでを実行し、結果は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]から[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]へ分けて整理した。
+物理DMRGの基礎Notebookは03で一区切りとした。Notebook 04でTT-MLPの1 pair・1 stepを確認した後、[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]に従ってFashion-MNIST全学習データへ拡張した。Notebook 00〜05では基準実験、初期化診断、学習率・更新予算grid、長時間更新、データ供給高速化、更新対象ablationを行った。Notebook 06〜12ではDense・通常TT・DMRG-like比較、固定rank sweepとPareto、adaptive rank、単一bond感度、非一様rank配分、全コア同時GD control、データ計量付き切り詰めへ進んだ。結果は[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]から[[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/22_計量を考慮したbond切り詰め診断]]へ分けて整理した。
 
 ## これまでとの対応
 
@@ -151,9 +152,17 @@ DMRGを実装するときも、これまでと同様に、
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
 - [[50_DMRG/07_TT-MLPのfull-batch共同更新と更新予算]]
 - [[50_DMRG/08_full-batch勾配のGPU常駐高速化とbenchmark設計]]
+- [[50_DMRG/09_全コア同時勾配法と2-core局所スイープの比較設計]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/11_TT初期化スケール診断]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/12_full-batch更新予算grid]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/13_joint学習率0.2_0.3長時間比較]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/14_full-batch勾配集計高速化benchmark]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/15_更新対象固定予算ablation]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/16_Dense_通常TT_DMRG-like比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/17_固定rank_sweepとPareto比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/18_adaptive_bond_rank_DMRG-likeと閾値探索]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/19_単一bond事後切り詰めと分類感度診断]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/20_非一様bond_rank配分と選択基準比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/21_全コア同時GDとDMRG-like局所スイープ比較]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/22_計量を考慮したbond切り詰め診断]]
 - [[README_実装編]]

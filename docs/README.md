@@ -660,7 +660,7 @@ x = Pc
 → energy安定による停止と全系診断
 ```
 
-正準環境で $P^{\mathsf T}P=I$ になる理由と、非正準環境では一般化固有値問題になることも整理している。物理系の複数往復と停止判定、およびNN目的関数によるFashion-MNIST full-batch左右sweepは確認したが、大規模固有値solverと、更新対象・更新回数・学習率を切り分ける性能比較は未実施である。
+正準環境で $P^{\mathsf T}P=I$ になる理由と、非正準環境では一般化固有値問題になることも整理している。物理系の複数往復と停止判定に加え、NN目的関数によるFashion-MNIST full-batch左右sweep、更新対象ablation、Dense・通常TT・DMRG-like比較、固定rank・adaptive rank・非一様rank配分、全コア同時GD control、データ計量付き切り詰めまで確認した。大規模固有値solver、scope別の学習率最適化、固定wall time、複数seedでの最終比較は未実施である。
 
 - [[08_TT_MPS基礎実装検証/README]]
 - [[40_TT_MPS_NN圧縮/README]]
@@ -671,9 +671,11 @@ x = Pc
 - [[50_DMRG/04_environmentを用いた2-site_DMRG_1往復]]
 - [[50_DMRG/05_複数往復_停止判定_bond上限比較]]
 - [[50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新]]
+- [[50_DMRG/09_全コア同時勾配法と2-core局所スイープの比較設計]]
 - [[08_TT_MPS基礎実装検証/46_TTLinear_2-core局所更新のPyTorch確認]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計]]
 - [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察]]
+- [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]]
 
 ---
 

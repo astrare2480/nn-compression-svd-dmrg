@@ -60,9 +60,9 @@ tags:
 - 初期validation lossは共通の`2.303983`、accuracyは`0.0946`。
 - 保存された往復終了時のvalidation lossは、両条件とも40往復まで毎回低下。
 
-![学習率0.2・0.3のvalidation曲線](../../../results/40_dmrg/10_fashion_mnist_mlp/03_joint_learning_rate_02_03_s40_l8/curves_lr0p2_lr0p3.png)
+![学習率0.2・0.3のvalidation曲線](assets/03_joint_learning_rate_02_03_s40_l8/curves_lr0p2_lr0p3.png)
 
-![final・best・実行時間](../../../results/40_dmrg/10_fashion_mnist_mlp/03_joint_learning_rate_02_03_s40_l8/final_best_and_time.png)
+![final・best・実行時間](assets/03_joint_learning_rate_02_03_s40_l8/final_best_and_time.png)
 
 ### 2.1 最大相対更新量
 

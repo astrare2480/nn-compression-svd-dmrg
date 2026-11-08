@@ -201,6 +201,10 @@ sweep 0から5までの差は次のとおりである。
 - train accuracy：`+0.00068`、すなわち`+0.068` percentage point
 - validation accuracy：`+0.00060`、すなわち`+0.060` percentage point
 
+![sweepごとのtrain・validation履歴](assets/00_full_batch_two_core_sweep_training/learning_curve.png)
+
+この図はNotebook 00が保存した`learning_curve.png`である。lossとaccuracyのどちらも変化幅が小さく、表の差分値と同じく、分類学習がほぼ進んでいないことを示す。
+
 ### 3.2 局所更新の診断値
 
 - 成功した局所更新：50、失敗：0。

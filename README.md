@@ -181,9 +181,9 @@ TT-SVD / TT-rank
 → Fashion-MNIST MLP・CNNでのrank sweepとFine-tuning
 ```
 
-Fashion-MNIST MLPでは、`fc1`のtensorization・rank・更新範囲を比較した。保存済みの固定条件では、dense accuracyから0.001以内という許容差規則により、rank 12・TT coresのみ更新を圧縮優先の暫定候補とした。ただしrank 12は探索下端であり、さらに低rankを調べる余地がある。
+Fashion-MNIST MLPでは、`fc1`のtensorization・rank・更新範囲を比較した。初期系列では、dense accuracyから0.001以内という許容差規則により、rank 12・TT coresのみ更新を圧縮優先の暫定候補とした。その後、rank 1〜12の通常TT・DMRG-like比較、adaptive rank、単一bond感度、非一様rank配分、全コア同時GD control、データ計量付き切り詰めへ進み、モデル容量、学習方式、保存量、理論MACs、latency、学習費用を別々に評価した。
 
-Fashion-MNIST CNNでは、`conv2`をTT-Convへ置換した。rank制限なしの置換でdense modelとのforward・backward整合性を確認した後、rank sweepとTT cores-only Fine-tuningを行った。rank 12は開発用accuracyが0.6910から0.9238へ回復したが、test性能、全parameter更新との比較、速度・peak memoryの優位性は未評価である。
+Fashion-MNIST CNNでは、`conv2`をTT-Convへ置換した。rank制限なしの置換でdense modelとのforward・backward整合性を確認した後、rank sweepとTT cores-only Fine-tuningを行った。さらにfine-tuning済みrank 24をsourceとして、事後非一様rank配分と、単一bond局所感度から複数bond配分を予測する方法を検証した。rank 12は開発用accuracyが0.6910から0.9238へ回復したが、test性能、全parameter更新との比較、速度・peak memoryの優位性は未評価である。
 
 詳細：
 
@@ -211,7 +211,7 @@ DMRGでは、3-site実数MPSでの局所更新から始め、横磁場Ising Hami
 
 正準環境では $P^{\mathsf T}P=I$ となり、局所問題が通常の固有値問題へ簡約されることを整理した。小さい数値例では、更新前エネルギー $-0.936$、局所最適化後 $-2$、選択したrank-1打ち切り後 $-1$ を得ており、エネルギー最小化とSVDによる状態近似が別の目的であることを確認した。
 
-物理DMRGでは複数往復、energy停止判定、global residual・energy分散、bond上限比較まで確認した。NN目的関数への接続では、TT-MLPの1 pair・1 stepからFashion-MNIST全学習データに対する6-core左右sweepへ進み、5 sweep・50局所更新、validation best選択、checkpoint再現まで完了した。ただし、accuracyは約9.5%でrandom baseline付近であり、学習性能の結論ではなく基準実装の成立を確認した段階である。
+物理DMRGでは複数往復、energy停止判定、global residual・energy分散、bond上限比較まで確認した。NN目的関数への接続では、TT-MLPの1 pair・1 stepからFashion-MNIST全学習データに対する6-core左右sweepへ進み、初期基準実験の後、学習率・更新予算、GPU常駐高速化、更新対象ablation、Dense・通常TT・DMRG-like比較、固定rank・adaptive rank・非一様rank、全コア同時GD control、計量付き切り詰めまで実行した。最初の5 sweep・50局所更新はaccuracy約9.5%だったが、その後のNotebookで学習条件と更新方式を切り分けている。
 
 - [DMRG章](docs/50_DMRG/README.md)
 - [中心テンソルの線形写像と2-site局所更新](docs/50_DMRG/02_中心テンソルの線形写像と2-site局所更新.md)
@@ -221,6 +221,7 @@ DMRGでは、3-site実数MPSでの局所更新から始め、横磁場Ising Hami
 - [TT-MLPのDMRG-like 2-core局所更新](docs/50_DMRG/06_TT-MLPのDMRG-like_2-core局所更新.md)
 - [Fashion-MNIST full-batch 2-core sweep学習設計](docs/40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/09_full-batch_2-core_sweep学習設計.md)
 - [Fashion-MNIST full-batch 2-core sweep実験結果と考察](docs/40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/10_full-batch_2-core_sweep実験結果と考察.md)
+- [Fashion-MNIST TT-MLP実験全体](docs/40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README.md)
 - [2-site DMRG局所更新の演習Notebook](notebooks/40_dmrg/00_fundamentals/00_two_site_dmrg_local_update_exercises.ipynb)
 - [MPO・environment・1-site局所更新の演習Notebook](notebooks/40_dmrg/00_fundamentals/01_mpo_environment_one_site_local_update_exercises.ipynb)
 - [environmentを逐次更新する2-site DMRG 1往復演習Notebook](notebooks/40_dmrg/00_fundamentals/02_environment_two_site_dmrg_sweep_exercises.ipynb)

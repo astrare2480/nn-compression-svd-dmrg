@@ -5,6 +5,7 @@ Conv2dのweightをTT-matrixとして表し、dense kernel再構成経路、TT co
 ## 技術ノート
 
 - [[00_基礎理論/03_モデル圧縮理論/31_TTConv圧縮/79_Conv2dのTT-matrix表現と直接forward]]
+- [[00_基礎理論/03_モデル圧縮理論/31_TTConv圧縮/80_TTConvの非一様rank配分と局所感度予測]]
 
 ## 対応する実装確認
 

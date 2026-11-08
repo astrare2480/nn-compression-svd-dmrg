@@ -10,6 +10,7 @@
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/03_学習済みCNNのconv2_TT-rank_sweep]]
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/04_conv2_TT-cores-only_fine-tuning]]
 - [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/05_事後非一様TTConv_rank配分と選択基準比較]]
+- [[40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/06_単一bond局所感度によるrank配分予測]]
 
 ## 対応Notebook
 
@@ -19,7 +20,9 @@
 - [03_pretrained_cnn_conv2_tt_rank_sweep.ipynb](../../../notebooks/30_tt_mps/20_fashion_mnist_cnn/03_pretrained_cnn_conv2_tt_rank_sweep.ipynb)
 - [04_pretrained_cnn_conv2_tt_cores_only_finetuning.ipynb](../../../notebooks/30_tt_mps/20_fashion_mnist_cnn/04_pretrained_cnn_conv2_tt_cores_only_finetuning.ipynb)
 - [00_posthoc_nonuniform_ttconv_rank_allocation_criteria.ipynb](../../../notebooks/40_dmrg/20_fashion_mnist_cnn/00_posthoc_nonuniform_ttconv_rank_allocation_criteria.ipynb)
+- [01_local_sensitivity_rank_allocation_diagnostic.ipynb](../../../notebooks/40_dmrg/20_fashion_mnist_cnn/01_local_sensitivity_rank_allocation_diagnostic.ipynb)
 
 ## 技術ノート
 
 - [[00_基礎理論/03_モデル圧縮理論/31_TTConv圧縮/79_Conv2dのTT-matrix表現と直接forward]]
+- [[00_基礎理論/03_モデル圧縮理論/31_TTConv圧縮/80_TTConvの非一様rank配分と局所感度予測]]

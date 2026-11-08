@@ -83,7 +83,7 @@ pair 0、right方向、local step 0の1回を測定した。時間を次へ分�
 
 事前に定めた最低改善率は1.10倍である。数値、validation、有限性、memory、更新順の全条件を通過した候補のうち、`bs4096_gpu_resident`が最短だった。
 
-![1往復時間とpeak allocated memory](../../../results/40_dmrg/10_fashion_mnist_mlp/04_full_batch_gradient_optimization_benchmark/one_sweep_time_and_memory.png)
+![1往復時間とpeak allocated memory](assets/04_full_batch_gradient_optimization_benchmark/one_sweep_time_and_memory.png)
 
 ### 3.2 単一局所更新の時間内訳
 

@@ -118,9 +118,9 @@ Notebook末尾は保存済み結果から図を再生成したもので、本確
 
 Global・`0.3`は、非有限値発生前には6条件中で低いlossを記録したが、事前規則により選択対象外である。正常終了した候補の中から、全コア同時GDは`0.1`、DMRG-likeは`0.2`が選ばれた。
 
-![full-dataset gradient evaluationsとvalidation loss](../../../results/40_dmrg/10_fashion_mnist_mlp/11_full_batch_global_vs_local_update_control/figures/01_gradient_evaluations_vs_validation_loss.png)
+![full-dataset gradient evaluationsとvalidation loss](assets/11_full_batch_global_vs_local_update_control/01_gradient_evaluations_vs_validation_loss.png)
 
-![full-dataset gradient evaluationsとvalidation accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/11_full_batch_global_vs_local_update_control/figures/02_gradient_evaluations_vs_validation_accuracy.png)
+![full-dataset gradient evaluationsとvalidation accuracy](assets/11_full_batch_global_vs_local_update_control/02_gradient_evaluations_vs_validation_accuracy.png)
 
 ---
 
@@ -143,7 +143,7 @@ $$
 
 ただし、この差は単一seed、3個の学習率候補、開発用validationでの結果である。統計的有意性、別seedでの再現性、未使用testへの一般化を示していない。
 
-![選択条件のbestとfinal](../../../results/40_dmrg/10_fashion_mnist_mlp/11_full_batch_global_vs_local_update_control/figures/05_best_final_comparison.png)
+![選択条件のbestとfinal](assets/11_full_batch_global_vs_local_update_control/05_best_final_comparison.png)
 
 ---
 
@@ -198,11 +198,11 @@ peak GPU memoryはDMRG-likeが約`27.5%`少なかった。これは保存paramet
 
 6条件の探索全体では、更新処理が約132分、評価処理が約30分、別記録の失敗試行が約4.37秒だった。保存などを除いても約2時間41分であり、選択された2条件のbest時間だけでは実験全体の探索費用を表さない。
 
-![学習時間に対するvalidation loss](../../../results/40_dmrg/10_fashion_mnist_mlp/11_full_batch_global_vs_local_update_control/figures/03_train_seconds_vs_validation_loss.png)
+![学習時間に対するvalidation loss](assets/11_full_batch_global_vs_local_update_control/03_train_seconds_vs_validation_loss.png)
 
-![学習時間に対するvalidation accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/11_full_batch_global_vs_local_update_control/figures/04_train_seconds_vs_validation_accuracy.png)
+![学習時間に対するvalidation accuracy](assets/11_full_batch_global_vs_local_update_control/04_train_seconds_vs_validation_accuracy.png)
 
-![時間とpeak GPU memory](../../../results/40_dmrg/10_fashion_mnist_mlp/11_full_batch_global_vs_local_update_control/figures/06_time_and_peak_memory.png)
+![時間とpeak GPU memory](assets/11_full_batch_global_vs_local_update_control/06_time_and_peak_memory.png)
 
 ---
 

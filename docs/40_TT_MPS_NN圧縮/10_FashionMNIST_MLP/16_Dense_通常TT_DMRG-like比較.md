@@ -75,7 +75,7 @@ DMRG-likeはNotebook 05の3,200更新済みjointモデルから継続した。�
 
 ここで主比較に使うaccuracyは、最後の`0.8884`、`0.8906`、`0.8968`である。early-stopping用とrank-selection用は別の5,000件なので、同じcheckpointでも値が一致する必要はない。
 
-![rank-selection validation accuracy](../../../results/40_dmrg/10_fashion_mnist_mlp/06_dense_tt_dmrg_like_convergence_comparison/figures/rank_selection_accuracy.png)
+![rank-selection validation accuracy](assets/06_dense_tt_dmrg_like_convergence_comparison/rank_selection_accuracy.png)
 
 ### 2.2 停止結果と学習量
 
@@ -87,11 +87,17 @@ DMRG-likeはNotebook 05の3,200更新済みjointモデルから継続した。�
 
 3条件とも安全上限で打ち切られたのではなく、保存された停止規則でearly stoppingが成立した。ただし、1 epochと1局所更新の計算内容は同じではなく、共通の停止規則を使ったことは計算予算をそろえたことを意味しない。
 
-![Denseと通常TTのvalidation loss](../../../results/40_dmrg/10_fashion_mnist_mlp/06_dense_tt_dmrg_like_convergence_comparison/figures/validation_loss_by_epoch.png)
+![Denseと通常TTのvalidation loss](assets/06_dense_tt_dmrg_like_convergence_comparison/validation_loss_by_epoch.png)
 
-![DMRG-likeの局所更新数に対するvalidation loss](../../../results/40_dmrg/10_fashion_mnist_mlp/06_dense_tt_dmrg_like_convergence_comparison/figures/validation_loss_dmrg_cumulative_local_updates.png)
+![Denseと通常TTのvalidation accuracy](assets/06_dense_tt_dmrg_like_convergence_comparison/validation_accuracy_by_epoch.png)
 
-![DMRG-likeの累積学習・評価時間に対するvalidation loss](../../../results/40_dmrg/10_fashion_mnist_mlp/06_dense_tt_dmrg_like_convergence_comparison/figures/validation_loss_dmrg_wall_clock_seconds.png)
+![DMRG-likeの局所更新数に対するvalidation loss](assets/06_dense_tt_dmrg_like_convergence_comparison/validation_loss_dmrg_cumulative_local_updates.png)
+
+![DMRG-likeの局所更新数に対するvalidation accuracy](assets/06_dense_tt_dmrg_like_convergence_comparison/validation_accuracy_dmrg_cumulative_local_updates.png)
+
+![DMRG-likeの累積学習・評価時間に対するvalidation loss](assets/06_dense_tt_dmrg_like_convergence_comparison/validation_loss_dmrg_wall_clock_seconds.png)
+
+![DMRG-likeの累積学習・評価時間に対するvalidation accuracy](assets/06_dense_tt_dmrg_like_convergence_comparison/validation_accuracy_dmrg_wall_clock_seconds.png)
 
 今回の固定条件では、`cumulative_local_updates = 80 × sweep`かつ`train_full_dataset_gradient_passes = cumulative_local_updates`である。この3軸は曲線の横軸を定数倍しただけなので、重複していたsweep軸とgradient pass軸の図は削除し、局所更新数と累積学習＋評価時間だけを残した。
 
@@ -106,9 +112,15 @@ DMRG-likeはNotebook 05の3,200更新済みjointモデルから継続した。�
 | モデル全体の理論MACs/sample | 535,040 | 2,309,120 | 2,309,120 |
 | Dense比MACs | 1.000倍 | 4.316倍 | 4.316倍 |
 
-![モデル総parameter数](../../../results/40_dmrg/10_fashion_mnist_mlp/06_dense_tt_dmrg_like_convergence_comparison/figures/parameter_counts.png)
+![モデル総parameter数](assets/06_dense_tt_dmrg_like_convergence_comparison/parameter_counts.png)
 
-![理論MACs](../../../results/40_dmrg/10_fashion_mnist_mlp/06_dense_tt_dmrg_like_convergence_comparison/figures/theoretical_macs.png)
+![理論MACs](assets/06_dense_tt_dmrg_like_convergence_comparison/theoretical_macs.png)
+
+![parameter数とrank-selection accuracy](assets/06_dense_tt_dmrg_like_convergence_comparison/accuracy_vs_parameters.png)
+
+![理論MACsとrank-selection accuracy](assets/06_dense_tt_dmrg_like_convergence_comparison/accuracy_vs_macs.png)
+
+上の2図は、TTでparameter数は減った一方、現在の直接縮約実装では理論MACsが増えたことを、同じaccuracy軸で示す。parameter圧縮と演算量削減は同じ指標ではない。
 
 ### 2.4 推論latency
 
@@ -123,7 +135,7 @@ Dense比では、batch 1でTTが約4.2〜4.3倍、batch 4,096で約33.9倍遅か
 
 batch 4,096の推論時peak allocated memoryも、Dense約100 MBに対し、TTは約1.01 GBだった。
 
-![推論latency](../../../results/40_dmrg/10_fashion_mnist_mlp/06_dense_tt_dmrg_like_convergence_comparison/figures/inference_latency.png)
+![推論latency](assets/06_dense_tt_dmrg_like_convergence_comparison/inference_latency.png)
 
 ### 2.5 学習・評価費用
 
@@ -134,6 +146,10 @@ batch 4,096の推論時peak allocated memoryも、Dense約100 MBに対し、TT�
 | DMRG-like TT | 1,355.38秒 | 312.94秒 | 1,668.31秒 | 約1.36 GB |
 
 DMRG-likeの学習時間はDenseの約38.96倍、通常TTの約29.03倍だった。学習＋評価時間では、それぞれ約28.17倍、約23.53倍である。
+
+![学習時間とrank-selection accuracy](assets/06_dense_tt_dmrg_like_convergence_comparison/accuracy_vs_training_time.png)
+
+この図の学習時間は各方式の保存値であり、同じ更新予算にそろえた比較ではない。到達accuracyと、その学習手順で実際に要した学習時間の交換関係として読む。
 
 ---
 
