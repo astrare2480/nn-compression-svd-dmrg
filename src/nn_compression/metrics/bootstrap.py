@@ -7,10 +7,16 @@
     e = \\sum_d \\mathrm{numerator}_d / \\sum_d \\mathrm{denominator}_d
 
 で、文書の平均の比ではない。
+
+後半の ``bootstrap_counts`` からの関数は、同じ再標本を「各単位が何回選ばれたか」の
+行列（counts）として持つ。行列を 1 度作れば、方式やセルをまたいで同じ再標本を
+行列積で使い回せる。``bootstrap_ratio_difference_intervals`` と同じ ``seed`` なら、
+選ばれる単位は同じ。
 """
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping, Sequence
 
 import numpy as np
@@ -97,3 +103,50 @@ def bootstrap_ratio_difference_intervals(
             "n_resamples": float(n_resamples),
         }
     return results
+
+
+def bootstrap_counts(n_units: int, *, n_resamples: int, seed: int) -> np.ndarray:
+    """再標本ごとに、各単位が何回選ばれたかの行列 ``(n_resamples, n_units)`` を返す。
+
+    単位（記事・文書などのまとまり）を復元抽出で ``n_units`` 個選ぶ。行の和はどれも ``n_units``。
+    乱数は ``numpy.random.default_rng(seed).integers`` で、``bootstrap_ratio_difference_intervals``
+    と同じ抽選になる。
+    """
+    if n_units < 1 or n_resamples < 1:
+        raise ValueError(f"n_units と n_resamples は 1 以上: {n_units}, {n_resamples}")
+    rng = np.random.default_rng(seed)
+    picks = rng.integers(0, n_units, size=(n_resamples, n_units))
+    counts = np.zeros((n_resamples, n_units), dtype=np.float64)
+    rows = np.repeat(np.arange(n_resamples), n_units)
+    np.add.at(counts, (rows, picks.reshape(-1)), 1.0)
+    return counts
+
+
+def counts_digest(counts: np.ndarray) -> str:
+    """再標本の行列の sha256。どの計算も同じ再標本を使ったことを記録で照合するために使う。"""
+    return hashlib.sha256(np.ascontiguousarray(counts).tobytes()).hexdigest()
+
+
+def percentile_interval(values: np.ndarray, percentiles: tuple[float, float] = (2.5, 97.5)) -> tuple[float, float]:
+    """再標本の値の百分位区間。既定は 95% 区間（2.5% 点と 97.5% 点）。"""
+    low, high = np.percentile(values, list(percentiles))
+    return float(low), float(high)
+
+
+def ratio_point_and_boot(
+    numerator: np.ndarray, denominator: np.ndarray, counts: np.ndarray
+) -> tuple[float, np.ndarray]:
+    """単位ごとの分子・分母から、合計どうしの比の点推定と、再標本ごとの値を返す。
+
+    比は :math:`\\sum_d n_d / \\sum_d m_d` で、単位ごとの比の平均ではない。
+    ``counts`` は ``bootstrap_counts`` の行列。再標本ごとの値は ``(counts @ n) / (counts @ m)``。
+    """
+    numerator = np.asarray(numerator, dtype=np.float64)
+    denominator = np.asarray(denominator, dtype=np.float64)
+    if numerator.shape != denominator.shape or numerator.ndim != 1:
+        raise ValueError(f"形が違います: {numerator.shape} / {denominator.shape}")
+    if counts.shape[1] != numerator.shape[0]:
+        raise ValueError(f"単位の数が違います: {counts.shape[1]} != {numerator.shape[0]}")
+    point = float(numerator.sum() / denominator.sum())
+    boot = (counts @ numerator) / (counts @ denominator)
+    return point, boot

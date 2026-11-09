@@ -259,6 +259,43 @@ Core API v1 の `__all__` スナップショットは変えていない。Notebo
 | `relative_objective_difference` | `δ_Q = abs(Q_a − Q_b) / min(Q_a, Q_b)`。正の有限値以外は拒否する。 |
 | `classify_als_initialization_dependence` | 2 本の停止理由と最終 `Q_λ` から、`local_solver_unresolved` → `max_sweeps_unresolved` → `δ_Q` による 2 分類の順で判定する。 |
 
+### 実験の運用と LLM 評価の部品（`__all__` には未収載）
+
+Qwen3 の本実験（04）のコードから、モデルや実験に依存しない部分を切り出したもの。
+実験固有の定数・保存先・流れは `notebooks/50_llm_tt_vs_matrix/` 側（`10_qwen3_0p6b_base/qwen3_main`、`_shared/llm_tt_study`）に置く。
+
+| 定義元 | helper | 責務 |
+|---|---|---|
+| `utils.gpu_monitor` | `run_nvidia_smi` | `nvidia-smi` を実行し、(標準出力, 失敗の説明) を返す。コマンドがなくても例外にしない。 |
+| `utils.gpu_monitor` | `query_gpu` | 1 枚の GPU の使用率と、使用中・全体のメモリ（MiB）。読めなければ `None`。 |
+| `utils.gpu_monitor` | `compute_apps` | GPU で計算しているプロセスの pid・名前・使用メモリ。 |
+| `utils.gpu_monitor` | `other_python_processes` | 自分以外の Python プロセスの pid（計算の前に GPU の取り合いを記録する）。 |
+| `utils.gpu_monitor` | `nvidia_smi_snapshot` | GPU とプロセスの `nvidia-smi` の出力そのもの（記録用）。 |
+| `utils.gpu_monitor` | `GpuSampler` | `with` の間、別スレッドで一定間隔に GPU を読み、行と CSV に残す。予期しない失敗は `error` に残して記録だけ止める。 |
+| `utils.job_queue` | `pid_alive` | pid のプロセスが動いているか。範囲外の pid は偽。Windows ではプロセスが終わった状態かを `WaitForSingleObject` で調べる（`os.kill(pid, 0)` も終了コードも使わない）。 |
+| `utils.job_queue` | `exclusive_lock` | 共有ファイルを書き換えるあいだの OS のファイルロック。持ち主が落ちれば OS が外す。ファイルは消さない。 |
+| `utils.job_queue` | `read_lock` | 仕事のロックの中身（pid・owner・token）を読む。04 の pid だけの書き方も読む。 |
+| `utils.job_queue` | `try_claim` | 見張り役のロックの内側で仕事のロックを排他的に作り、合言葉（token）を返す。すでにあれば `None`。 |
+| `utils.job_queue` | `release_claim` | 合言葉が一致するときだけ仕事のロックを消す。 |
+| `utils.job_queue` | `clear_stale_locks` | 見張り役のロックの内側で、持ち主が終わった `*.lock` を消す。 |
+| `utils.job_queue` | `job_lock_path` | 仕事の id からロックの場所を作る。ファイル名に使えない id は拒む。 |
+| `utils.job_queue` | `JobClaim` | 取った仕事・ロックの場所・合言葉。`release()` で外す。 |
+| `utils.job_queue` | `claim_next_job` | 終わっておらず、誰も取っていない最初の仕事を取り、`JobClaim` を返す。 |
+| `utils.job_queue` | `dump_jobs` | 仕事の一覧を `{"jobs": [...]}` の JSON で書く。 |
+| `utils.job_queue` | `load_jobs` | `dump_jobs` の一覧を読む。 |
+| `utils.artifacts` | `read_csv_rows` | CSV を見出しを key にした辞書の列で読む。`missing_ok` でファイルがなければ空。 |
+| `utils.artifacts` | `to_jsonable` | NumPy・`Path`・0 次元 Tensor・NaN / ±∞ を、標準の JSON に書ける値へ直す。文字列にして重なる key は拒む。 |
+| `metrics.bootstrap` | `bootstrap_counts` | 再標本ごとに各単位が選ばれた回数の行列。`bootstrap_ratio_difference_intervals` と同じ抽選。 |
+| `metrics.bootstrap` | `counts_digest` | 再標本の行列の sha256（同じ再標本を使ったことの照合）。 |
+| `metrics.bootstrap` | `percentile_interval` | 再標本の値の百分位区間（既定 95%）。 |
+| `metrics.bootstrap` | `ratio_point_and_boot` | 合計どうしの比の点推定と、再標本ごとの値。 |
+| `metrics.als_convergence` | `study_sweep_row` | `StudySweepRecord` を CSV の 1 行にする（段の数、3 段目の残差、警告の数を含む）。 |
+| `metrics.als_convergence` | `first_sweep_within` | 目的値が最終値の `(1 + tolerance)` 倍以内に入った最初の掃引。 |
+| `llm.perplexity` | `sliding_windows` | `sliding_window_perplexity` と同じ窓（begin, end, 評価するトークン数）。`stride <= max_length` に限り、全トークンを 1 回ずつ評価する。 |
+| `llm.perplexity` | `window_target_labels` | 窓の末尾だけを数えるラベル（ほかは -100）。 |
+| `llm.perplexity` | `shifted_nll_sum` | 1 トークンずらした交差エントロピーの合計（float64）と数えたトークン数。 |
+| `llm.text_documents` | `cached_token_encoder` | 文書をまとめてトークン化して覚え、文書からトークン id を返す関数を作る。まとめての失敗は隠さない。 |
+
 ## validation ownership
 
 - Tensor一般の次元・shape・modeは`tensor.validation`が担当する。

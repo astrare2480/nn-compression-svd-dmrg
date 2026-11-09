@@ -1,4 +1,10 @@
-"""固定した滑り窓で、因果言語モデルの perplexity を計算する。"""
+"""固定した滑り窓で、因果言語モデルの perplexity を計算する。
+
+``sliding_window_perplexity`` はモデル全体を 1 度に評価する。窓を自分で回したいとき
+（途中の層から先だけを計算し直すときなど）は、同じ窓の切り方を
+``sliding_windows``・``window_target_labels``・``shifted_nll_sum`` で組み立てる。
+``sliding_window_perplexity`` は、それらと照らし合わせる独立な参照として、窓の計算を自分で持つ。
+"""
 
 from __future__ import annotations
 
@@ -102,3 +108,58 @@ def sliding_window_perplexity(
         "stride": stride,
         "use_cache": use_cache,
     }
+
+
+def sliding_windows(n_tokens: int, *, max_length: int, stride: int) -> list[tuple[int, int, int]]:
+    """``sliding_window_perplexity`` と同じ窓を ``(begin, end, 評価する新しいトークンの数)`` で返す。
+
+    窓は ``begin`` を ``stride`` ずつ進め、``end = min(begin + max_length, n_tokens)``。
+    評価するのは、前の窓の ``end`` より後ろのトークンだけ。最後の窓が列の終わりに届いたら止める。
+    すべてのトークンをちょうど 1 回ずつ評価するため、``1 <= stride <= max_length`` と
+    ``n_tokens >= 2`` を求める（``stride > max_length`` だと窓の間に評価しないトークンが残る）。
+    """
+    if max_length < 2 or not 1 <= stride <= max_length:
+        raise ValueError(f"max_length>=2, 1<=stride<=max_length である必要があります: {max_length}, {stride}")
+    if n_tokens < 2:
+        raise ValueError(f"n_tokens は 2 以上である必要があります: {n_tokens}")
+    windows = []
+    previous_end = 0
+    for begin in range(0, n_tokens, stride):
+        end = min(begin + max_length, n_tokens)
+        windows.append((begin, end, end - previous_end))
+        previous_end = end
+        if end == n_tokens:
+            break
+    return windows
+
+
+def window_target_labels(chunk: torch.Tensor, target_length: int) -> torch.Tensor:
+    """窓のトークン ``chunk``（shape ``(1, L)``）から、末尾 ``target_length`` 個だけを数えるラベルを作る。
+
+    数えない位置は -100。``1 <= target_length <= L`` でなければ ``ValueError``。
+    """
+    if chunk.ndim != 2 or chunk.shape[0] != 1:
+        raise ValueError(f"chunk は (1, L) である必要があります: shape={tuple(chunk.shape)}")
+    if not 1 <= target_length <= chunk.shape[1]:
+        raise ValueError(f"target_length は 1 以上 {chunk.shape[1]} 以下です: {target_length}")
+    labels = chunk.clone()
+    if target_length < chunk.shape[1]:
+        labels[:, :-target_length] = -100
+    return labels
+
+
+def shifted_nll_sum(logits: torch.Tensor, labels: torch.Tensor) -> tuple[float, int]:
+    """1 トークンずらした交差エントロピーの合計（float64 で足す）と、数えたトークン数。
+
+    Hugging Face の因果 LM の loss と同じずらし方。-100 のラベルは数えない。
+    数えるトークンが 0 なら ``RuntimeError``。
+    """
+    shift_logits = logits[:, :-1, :].float()
+    shift_labels = labels[:, 1:]
+    scored = int((shift_labels != -100).sum())
+    if scored == 0:
+        raise RuntimeError("評価対象のトークンが 0 です。")
+    losses = nn.functional.cross_entropy(
+        shift_logits.reshape(-1, shift_logits.shape[-1]), shift_labels.reshape(-1), ignore_index=-100, reduction="none"
+    )
+    return float(losses.to(torch.float64).sum()), scored
