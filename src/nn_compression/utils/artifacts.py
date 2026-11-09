@@ -2,6 +2,8 @@
 
 保存はすべて「同じディレクトリの一時ファイルへ書く → ``os.replace`` で差し替える」
 で行う。書き込み途中で例外が起きても既存ファイルは元のまま残り、一時ファイルは消す。
+
+読む側の小さな補助（CSV を行の辞書で読む、JSON に書ける値へ直す）もここに置く。
 """
 
 from __future__ import annotations
@@ -9,6 +11,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 import os
 import time
 import uuid
@@ -141,3 +144,64 @@ def file_sha256(path: str | os.PathLike) -> str:
         for chunk in iter(lambda: handle.read(1 << 20), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def read_csv_rows(path: str | os.PathLike, *, missing_ok: bool = False) -> list[dict[str, str]]:
+    """CSV を、見出しを key にした辞書の列で読む。値は文字列のまま。
+
+    ``missing_ok`` が真でファイルがなければ空の列を返す。偽なら ``FileNotFoundError``。
+    """
+    path = Path(path)
+    if missing_ok and not path.is_file():
+        return []
+    with path.open(encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def to_jsonable(value: Any) -> Any:
+    """``json.dumps`` で標準の JSON になる値へ再帰的に直す。
+
+    dict の key は文字列にする。tuple は list、``Path`` は文字列、NumPy の整数・浮動小数点は
+    Python の数、0 次元の ``torch.Tensor`` は Python の数にする。
+    NaN・正の無限大・負の無限大は、それぞれ文字列 ``"nan"``・``"inf"``・``"-inf"`` にする
+    （標準の JSON はこれらを持てない）。直せない型は ``TypeError``。
+    文字列にした key が重なる dict（``{1: ..., "1": ...}`` など）は、値を黙って失わないよう ``ValueError``。
+    """
+    if isinstance(value, Mapping):
+        converted: dict[str, Any] = {}
+        for key, item in value.items():
+            text_key = str(key)
+            if text_key in converted:
+                raise ValueError(f"文字列にすると重なる key があります: {text_key!r}")
+            converted[text_key] = to_jsonable(item)
+        return converted
+    if isinstance(value, (list, tuple)):
+        return [to_jsonable(item) for item in value]
+    if value is None or isinstance(value, (bool, str)):
+        return value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, torch.Tensor):
+        if value.ndim != 0:
+            raise TypeError(f"0 次元でない Tensor は JSON にしません: shape={tuple(value.shape)}")
+        return to_jsonable(value.item())
+    if isinstance(value, int):
+        return int(value)
+    if isinstance(value, float):
+        if math.isnan(value):
+            return "nan"
+        if math.isinf(value):
+            return "inf" if value > 0 else "-inf"
+        return float(value)
+    try:
+        import numpy as np
+    except ImportError:  # pragma: no cover - numpy は torch と一緒に入る
+        np = None
+    if np is not None:
+        if isinstance(value, np.bool_):
+            return bool(value)
+        if isinstance(value, np.integer):
+            return int(value)
+        if isinstance(value, np.floating):
+            return to_jsonable(float(value))
+    raise TypeError(f"JSON にできない型です: {type(value)!r}")

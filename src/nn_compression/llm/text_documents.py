@@ -3,6 +3,9 @@
 WikiText の生データは行に分かれている。記事の始まりは、見出し行
 `` = 題名 = ``（``=`` が左右に 1 つずつ）だけである。
 `` = = 小見出し = = `` は記事の始まりにしない。
+
+``cached_token_encoder`` は、同じ文書を何度もトークン化しないための前処理。
+``select_token_prefix_sequences`` などに渡す ``encode`` として使う。
 """
 
 from __future__ import annotations
@@ -203,3 +206,50 @@ def select_token_prefix_sequences(
         n_padding_tokens=0,
         eligible_token_counts=tuple(eligible_counts),
     )
+
+
+def cached_token_encoder(
+    tokenizer,
+    documents: Sequence[str],
+    *,
+    batch_size: int = 8,
+    progress: Callable[[int, int], None] | None = None,
+) -> Callable[[str], list[int]]:
+    """``documents`` をまとめてトークン化して覚え、文書からトークン id の列を返す関数を作る。
+
+    特殊トークンは足さず、切り詰めも padding もしない。呼び出せない（``__call__`` を持たない）
+    tokenizer だけは 1 文書ずつ ``tokenizer.encode`` で読む。呼び出せる tokenizer の失敗
+    （メモリ不足、設定の誤り、``input_ids`` のない戻り値など）は、そのまま例外として伝える。
+    戻り値の行数が文書の数と合わなければ ``ValueError``。返す関数は、覚えていない文書に
+    ``KeyError`` を出す（知らない文書を黙ってトークン化しない）。
+    ``progress`` を渡すと、バッチごとに ``(終わった文書数, 全体の文書数)`` で呼ぶ。
+    """
+    if batch_size < 1:
+        raise ValueError(f"batch_size は 1 以上です: {batch_size}")
+    cache: dict[str, list[int]] = {}
+    total = len(documents)
+    batch_call = callable(tokenizer)
+    for start in range(0, total, batch_size):
+        batch = list(documents[start : start + batch_size])
+        if batch_call:
+            encoded = tokenizer(
+                batch,
+                add_special_tokens=False,
+                truncation=False,
+                padding=False,
+                return_attention_mask=False,
+            )
+            token_rows = encoded["input_ids"]
+        else:
+            token_rows = [tokenizer.encode(text, add_special_tokens=False, truncation=False) for text in batch]
+        for text, token_ids in zip(batch, token_rows, strict=True):
+            if hasattr(token_ids, "tolist"):
+                token_ids = token_ids.tolist()
+            cache[text] = [int(token) for token in token_ids]
+        if progress is not None:
+            progress(min(start + batch_size, total), total)
+
+    def encode(text: str) -> list[int]:
+        return cache[text]
+
+    return encode
