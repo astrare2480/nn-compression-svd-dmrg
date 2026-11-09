@@ -1,0 +1,15 @@
+{
+  "budgets": {
+    "25": {
+      "delta_q": 0.0036021858921718446,
+      "equivalence_tolerance": 0.001,
+      "verdict": "max_sweeps_unresolved"
+    },
+    "50": {
+      "delta_q": 0.007018345621307332,
+      "equivalence_tolerance": 0.001,
+      "verdict": "local_solver_unresolved"
+    }
+  },
+  "equivalence_tolerance": 0.001
+}

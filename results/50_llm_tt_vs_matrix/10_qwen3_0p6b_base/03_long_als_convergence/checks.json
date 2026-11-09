@@ -1,0 +1,31 @@
+{
+  "check3": {
+    "25_M3": true,
+    "25_M4_retruncated": true,
+    "50_M3": true,
+    "50_M4_retruncated": true
+  },
+  "check4": {
+    "25_M3": {
+      "recomputed": 54043342.21335575,
+      "recorded": 54043342.21335575,
+      "relative_gap": 0.0
+    },
+    "25_M4_retruncated": {
+      "recomputed": 54238016.37824252,
+      "recorded": 54238016.378242515,
+      "relative_gap": 1.3736823531608017e-16
+    },
+    "50_M3": {
+      "recomputed": 28651953.427423928,
+      "recorded": 28651953.427423928,
+      "relative_gap": 0.0
+    },
+    "50_M4_retruncated": {
+      "recomputed": 28853042.73930319,
+      "recorded": 28853042.73930319,
+      "relative_gap": 0.0
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "budget": "50",
+    "cg_iterations": 7500,
+    "first_residual": 1.0685549968376279e-07,
+    "initial": "M4_retruncated",
+    "q_lambda_before": 28853042.73930319,
+    "q_lambda_candidate": 28853011.934010834,
+    "refinements": 15,
+    "retry_residual": 1.1911917136186721e-08,
+    "site": 1,
+    "sweep": 427,
+    "update_accepted": [
+      true,
+      false
+    ],
+    "update_cg_iterations": [
+      0,
+      7500
+    ],
+    "update_cg_residuals": [
+      9.97295786759582e-09,
+      1.1911917136186721e-08
+    ],
+    "update_retried": [
+      false,
+      true
+    ],
+    "update_sites": [
+      0,
+      1
+    ]
+  }
+]

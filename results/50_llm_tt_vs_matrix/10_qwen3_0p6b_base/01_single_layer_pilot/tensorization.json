@@ -1,0 +1,393 @@
+{
+  "counts": [
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 1569792,
+      "actual_ranks": [
+        1,
+        32,
+        382,
+        64,
+        1
+      ],
+      "budget": "50",
+      "dense_macs": 3145728,
+      "formula_parameters": 1569792,
+      "formula_ranks": [
+        1,
+        32,
+        382,
+        64,
+        1
+      ],
+      "macs": 12976128,
+      "method": "M3",
+      "rank_cap": 382,
+      "tensorization": "T1"
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 1570816,
+      "actual_ranks": [
+        1,
+        32,
+        382,
+        64,
+        1
+      ],
+      "actual_tt_parameters": 1569792,
+      "budget": "50",
+      "dense_macs": 3145728,
+      "diagonal_macs": 1024,
+      "formula_parameters": 1570816,
+      "formula_ranks": [
+        1,
+        32,
+        382,
+        64,
+        1
+      ],
+      "method": "M4",
+      "rank_cap": 382,
+      "scale_parameters": 1024,
+      "tensorization": "T1",
+      "tt_macs": 12976128
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 783360,
+      "actual_ranks": [
+        1,
+        32,
+        190,
+        64,
+        1
+      ],
+      "budget": "25",
+      "dense_macs": 3145728,
+      "formula_parameters": 783360,
+      "formula_ranks": [
+        1,
+        32,
+        190,
+        64,
+        1
+      ],
+      "macs": 6684672,
+      "method": "M3",
+      "rank_cap": 190,
+      "tensorization": "T1"
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 784384,
+      "actual_ranks": [
+        1,
+        32,
+        190,
+        64,
+        1
+      ],
+      "actual_tt_parameters": 783360,
+      "budget": "25",
+      "dense_macs": 3145728,
+      "diagonal_macs": 1024,
+      "formula_parameters": 784384,
+      "formula_ranks": [
+        1,
+        32,
+        190,
+        64,
+        1
+      ],
+      "method": "M4",
+      "rank_cap": 190,
+      "scale_parameters": 1024,
+      "tensorization": "T1",
+      "tt_macs": 6684672
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 1555648,
+      "actual_ranks": [
+        1,
+        109,
+        109,
+        1
+      ],
+      "budget": "50",
+      "dense_macs": 3145728,
+      "formula_parameters": 1555648,
+      "formula_ranks": [
+        1,
+        109,
+        109,
+        1
+      ],
+      "macs": 6976000,
+      "method": "M3",
+      "rank_cap": 109,
+      "tensorization": "T2"
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 1556672,
+      "actual_ranks": [
+        1,
+        109,
+        109,
+        1
+      ],
+      "actual_tt_parameters": 1555648,
+      "budget": "50",
+      "dense_macs": 3145728,
+      "diagonal_macs": 1024,
+      "formula_parameters": 1556672,
+      "formula_ranks": [
+        1,
+        109,
+        109,
+        1
+      ],
+      "method": "M4",
+      "rank_cap": 109,
+      "scale_parameters": 1024,
+      "tensorization": "T2",
+      "tt_macs": 6976000
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 783552,
+      "actual_ranks": [
+        1,
+        77,
+        77,
+        1
+      ],
+      "budget": "25",
+      "dense_macs": 3145728,
+      "formula_parameters": 783552,
+      "formula_ranks": [
+        1,
+        77,
+        77,
+        1
+      ],
+      "macs": 3666432,
+      "method": "M3",
+      "rank_cap": 77,
+      "tensorization": "T2"
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 784576,
+      "actual_ranks": [
+        1,
+        77,
+        77,
+        1
+      ],
+      "actual_tt_parameters": 783552,
+      "budget": "25",
+      "dense_macs": 3145728,
+      "diagonal_macs": 1024,
+      "formula_parameters": 784576,
+      "formula_ranks": [
+        1,
+        77,
+        77,
+        1
+      ],
+      "method": "M4",
+      "rank_cap": 77,
+      "scale_parameters": 1024,
+      "tensorization": "T2",
+      "tt_macs": 3666432
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 1572864,
+      "budget": "50",
+      "dense_macs": 3145728,
+      "macs": 1572864,
+      "method": "M1",
+      "rank": 384,
+      "tensorization": null
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 1572864,
+      "budget": "50",
+      "dense_macs": 3145728,
+      "macs": 1572864,
+      "method": "M2",
+      "rank": 384,
+      "tensorization": null
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 786432,
+      "budget": "25",
+      "dense_macs": 3145728,
+      "macs": 786432,
+      "method": "M1",
+      "rank": 192,
+      "tensorization": null
+    },
+    {
+      "actual_matches_rank_formula": true,
+      "actual_parameters": 786432,
+      "budget": "25",
+      "dense_macs": 3145728,
+      "macs": 786432,
+      "method": "M2",
+      "rank": 192,
+      "tensorization": null
+    }
+  ],
+  "m4b_implemented": false,
+  "tensorizations": {
+    "T1": {
+      "budgets": {
+        "25": {
+          "M3": {
+            "extra_parameters": 0,
+            "rank_cap": 190,
+            "ranks": [
+              1,
+              32,
+              190,
+              64,
+              1
+            ],
+            "total_parameters": 783360,
+            "tt_parameters": 783360
+          },
+          "M4": {
+            "extra_parameters": 1024,
+            "rank_cap": 190,
+            "ranks": [
+              1,
+              32,
+              190,
+              64,
+              1
+            ],
+            "total_parameters": 784384,
+            "tt_parameters": 783360
+          }
+        },
+        "50": {
+          "M3": {
+            "extra_parameters": 0,
+            "rank_cap": 382,
+            "ranks": [
+              1,
+              32,
+              382,
+              64,
+              1
+            ],
+            "total_parameters": 1569792,
+            "tt_parameters": 1569792
+          },
+          "M4": {
+            "extra_parameters": 1024,
+            "rank_cap": 382,
+            "ranks": [
+              1,
+              32,
+              382,
+              64,
+              1
+            ],
+            "total_parameters": 1570816,
+            "tt_parameters": 1569792
+          }
+        }
+      },
+      "imbalance": 2.0,
+      "in_modes": [
+        16,
+        16,
+        2,
+        2
+      ],
+      "n_cores": 4,
+      "out_modes": [
+        2,
+        2,
+        24,
+        32
+      ]
+    },
+    "T2": {
+      "budgets": {
+        "25": {
+          "M3": {
+            "extra_parameters": 0,
+            "rank_cap": 77,
+            "ranks": [
+              1,
+              77,
+              77,
+              1
+            ],
+            "total_parameters": 783552,
+            "tt_parameters": 783552
+          },
+          "M4": {
+            "extra_parameters": 1024,
+            "rank_cap": 77,
+            "ranks": [
+              1,
+              77,
+              77,
+              1
+            ],
+            "total_parameters": 784576,
+            "tt_parameters": 783552
+          }
+        },
+        "50": {
+          "M3": {
+            "extra_parameters": 0,
+            "rank_cap": 109,
+            "ranks": [
+              1,
+              109,
+              109,
+              1
+            ],
+            "total_parameters": 1555648,
+            "tt_parameters": 1555648
+          },
+          "M4": {
+            "extra_parameters": 1024,
+            "rank_cap": 109,
+            "ranks": [
+              1,
+              109,
+              109,
+              1
+            ],
+            "total_parameters": 1556672,
+            "tt_parameters": 1555648
+          }
+        }
+      },
+      "imbalance": 1.5,
+      "in_modes": [
+        64,
+        8,
+        2
+      ],
+      "n_cores": 3,
+      "out_modes": [
+        2,
+        16,
+        96
+      ]
+    }
+  }
+}

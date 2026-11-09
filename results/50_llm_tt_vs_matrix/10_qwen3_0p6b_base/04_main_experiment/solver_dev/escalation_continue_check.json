@@ -1,0 +1,104 @@
+{
+  "gpu_before": {
+    "apps": "1776, [Insufficient Permissions], [N/A]\n8788, C:\\Windows\\SystemApps\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\CrossDeviceResume.exe, [N/A]\n8368, C:\\Windows\\explorer.exe, [N/A]\n9736, C:\\Windows\\SystemApps\\Microsoft.Windows.StartMenuExperienceHost_cw5n1h2txyewy\\StartMenuExperienceHost.exe, [N/A]\n9764, C:\\Windows\\SystemApps\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\SearchHost.exe, [N/A]\n12084, C:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\156.0.4314.58\\msedgewebview2.exe, [N/A]\n7984, C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\CEF\\NVIDIA Overlay.exe, [N/A]\n12872, C:\\Windows\\SystemApps\\Microsoft.LockApp_cw5n1h2txyewy\\LockApp.exe, [N/A]\n16120, C:\\Windows\\SystemApps\\ShellExperienceHost_cw5n1h2txyewy\\ShellExperienceHost.exe, [N/A]\n17336, C:\\Windows\\SystemApps\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\TextInputHost.exe, [N/A]\n12796, C:\\Program Files\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe, [N/A]\n17508, C:\\Program Files\\Epic Games\\Launcher\\Engine\\Binaries\\Win64\\EpicWebHelper.exe, [N/A]\n18188, C:\\Program Files\\Electronic Arts\\EA Desktop\\13.822.0.6335-1793675718\\EA Desktop\\EACefSubProcess.exe, [N/A]\n17752, C:\\Program Files\\Electronic Arts\\EA Desktop\\13.822.0.6335-1793675718\\EA Desktop\\EADesktop.exe, [N/A]\n18796, C:\\Program Files (x86)\\Epic Games\\Epic Online Services\\managedArtifacts\\98bc04bc842e4906993fd6d6644ffb8d\\EOSOverlayRenderer-Win64-Shipping.exe, [N/A]\n20484, C:\\Program Files\\WindowsApps\\Microsoft.6365217CE6EB4_102.2504.16004.0_x64__8wekyb3d8bbwe\\MicrosoftSecurityApp\\MicrosoftSecurityApp.exe, [N/A]\n14628, C:\\Program Files\\WindowsApps\\OpenAI.ChatGPT-Desktop_1.2026.190.0_x64__2p2nqsd0c76g0\\app\\ChatGPT Classic.exe, [N/A]\n21724, C:\\Program Files\\WindowsApps\\AppleInc.iCloud_15.10.39.0_x64__nzyj5cx40ttqa\\iCloud\\iCloudHome.exe, [N/A]\n17244, C:\\Program Files\\LGHUB\\system_tray\\lghub_system_tray.exe, [N/A]\n20400, C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, [N/A]\n20372, C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe, [N/A]\n19160, C:\\Program Files\\LGHUB\\lghub.exe, [N/A]\n11736, C:\\Program Files (x86)\\Steam\\bin\\cef\\cef.win64\\steamwebhelper.exe, [N/A]\n35576, C:\\Users\\astra\\AppData\\Local\\Programs\\cursor\\Cursor.exe, [N/A]\n41304, C:\\Program Files\\WindowsApps\\Claude_4.23118.0.0_x64__pzs8sxrjxfjjc\\app\\claude.exe, [N/A]\n37728, C:\\Program Files\\WindowsApps\\Claude_4.23118.0.0_x64__pzs8sxrjxfjjc\\app\\claude.exe, [N/A]\n42304, C:\\Program Files\\WindowsApps\\PerplexityAI.PerplexityApp_2026.10.37378.0_x64__3jh4kjrg4dzr2\\app\\Perplexity.exe, [N/A]\n39376, C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.24.12741.0_x64__8wekyb3d8bbwe\\WindowsTerminal.exe, [N/A]\n36604, C:\\Netmarble\\Netmarble Launcher_EPIC\\Netmarble Launcher_EPIC.exe, [N/A]\n37764, C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.1103.4239.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe, [N/A]\n44620, C:\\Users\\astra\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\db1cc9e06a6c48d6\\bin\\node_modules\\@oai\\sky\\bin\\windows\\swift\\x64\\codex-computer-use-swift.exe, [N/A]\n11900, C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.1103.4239.0_x64__2p2nqsd0c76g0\\app\\ChatGPT.exe, [N/A]\n27428, C:\\Users\\astra\\AppData\\Local\\Programs\\cursor\\Cursor.exe, [N/A]\n46388, C:\\Users\\astra\\AppData\\Local\\Programs\\Obsidian\\Obsidian.exe, [N/A]\n26096, C:\\Program Files\\Sony\\INZONE Hub\\INZONEHub.exe, [N/A]\n21088, C:\\Program Files (x86)\\Microsoft\\Copilot\\Application\\copilotapp.exe, [N/A]\n46184, C:\\Program Files (x86)\\Microsoft\\Copilot\\Application\\undocked_copilot\\copilotapphost.exe, [N/A]\n30528, C:\\Program Files\\Riot Vanguard\\vgtray.exe, [N/A]\n8352, C:\\Windows\\System32\\ShellHost.exe, [N/A]\n7140, C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\CEF\\NVIDIA Overlay.exe, [N/A]",
+    "gpu": "7, 2597, 16303"
+  },
+  "middle_updates": [
+    {
+      "accepted": true,
+      "confirmation_a": 1.4852280598209487e-13,
+      "outcome": "target_met",
+      "stages": [
+        {
+          "cg_iterations": 2500,
+          "cumulative_refinements": 5,
+          "initial_residual": 0.00012667774462632182,
+          "max_refinements": 5,
+          "refinements": 5,
+          "residual": 1.1483750242123328e-07,
+          "seconds": 2.4364643000008073,
+          "stage": 1
+        },
+        {
+          "cg_iterations": 2500,
+          "cumulative_refinements": 10,
+          "initial_residual": 1.1483750242123328e-07,
+          "max_refinements": 5,
+          "refinements": 5,
+          "residual": 1.3880540238323052e-08,
+          "seconds": 2.4206604000064544,
+          "stage": 2
+        },
+        {
+          "cg_iterations": 1000,
+          "cumulative_refinements": 12,
+          "initial_residual": 1.3880540238323052e-08,
+          "max_refinements": 40,
+          "refinements": 2,
+          "residual": 6.418397414631674e-09,
+          "seconds": 0.9830971999908797,
+          "stage": 3
+        }
+      ]
+    },
+    {
+      "accepted": true,
+      "confirmation_a": 1.2086980346767924e-13,
+      "outcome": "target_met",
+      "stages": [
+        {
+          "cg_iterations": 2500,
+          "cumulative_refinements": 5,
+          "initial_residual": 0.0007943548109644416,
+          "max_refinements": 5,
+          "refinements": 5,
+          "residual": 1.3217954004696534e-07,
+          "seconds": 2.3872797999938484,
+          "stage": 1
+        },
+        {
+          "cg_iterations": 2500,
+          "cumulative_refinements": 10,
+          "initial_residual": 1.3217954004696534e-07,
+          "max_refinements": 5,
+          "refinements": 5,
+          "residual": 2.5980965462721346e-08,
+          "seconds": 2.4646746999933384,
+          "stage": 2
+        },
+        {
+          "cg_iterations": 500,
+          "cumulative_refinements": 11,
+          "initial_residual": 2.5980965462721346e-08,
+          "max_refinements": 40,
+          "refinements": 1,
+          "residual": 8.114021365319582e-09,
+          "seconds": 0.485366700013401,
+          "stage": 3
+        }
+      ]
+    }
+  ],
+  "n_stage2": 2,
+  "n_stage3": 2,
+  "n_warnings": 0,
+  "previous_restart": {
+    "note": "Claude が最初から解き直した 1 掃引目",
+    "stage1_residuals": [
+      1.148e-07,
+      1.322e-07
+    ],
+    "stage3_refinements": [
+      12,
+      11
+    ],
+    "stage3_residuals": [
+      6.4e-09,
+      8.1e-09
+    ],
+    "sweep_seconds": 26.3
+  },
+  "q_lambda": 28851908.188412502,
+  "stop_reason": "max_sweeps",
+  "sweep_seconds": 11.72698480001418
+}

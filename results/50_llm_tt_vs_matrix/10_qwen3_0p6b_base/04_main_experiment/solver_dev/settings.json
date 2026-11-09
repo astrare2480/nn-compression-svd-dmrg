@@ -1,0 +1,47 @@
+{
+  "cg_check_every_equivalence": [
+    1,
+    10
+  ],
+  "config": {
+    "adaptive_eta": 0.1,
+    "cg_check_every": 1,
+    "cg_relative_tolerance": 1e-08,
+    "cg_tolerance_max": 0.01,
+    "cg_tolerance_mode": "fixed",
+    "device": "cuda",
+    "gradient_tolerance": null,
+    "max_cg_iterations": 500,
+    "max_refinements": 5,
+    "max_sweeps": 50,
+    "precision": "float32_refine",
+    "preconditioner": "jacobi",
+    "sweep_tolerance": 1e-06,
+    "time_limit_seconds": null
+  },
+  "d_ref_down": 9104194.162342528,
+  "d_ref_up": 103865712.90466002,
+  "environment": {
+    "cuda": "12.8",
+    "gpu": "NVIDIA GeForce RTX 5070 Ti",
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128"
+  },
+  "equivalence_q_tolerance": 1e-06,
+  "gpu_contended": true,
+  "gpu_process_count": 44,
+  "idle_gpu_utilization": [
+    46,
+    47,
+    49
+  ],
+  "input_sha256": {
+    "history_smoke": "88f6b3eb4d7d9af854dce922910dead96fa14dd318e12154a2edb43be7fe1cfa",
+    "long_als_T2_50_M3": "4898d32c570d27a8023bfe7e90672188b9823c8920a2aeb03be79a73bd4f7372",
+    "long_als_T2_50_M4_retruncated": "b037e2380223aa1184b85563184bba8685287ab1330bddb5ff0b960a91fa65ad",
+    "pilot_calibration_grams": "5e0d2098091a13577d6899b73bfdc41b0df8435ea8f814b24cd089d91eff658c",
+    "pilot_weights": "f0815718a84d3cb0bd67d4e4651b9b2dbff1f0f71d24dbbd3647b26c09b19cfa"
+  },
+  "other_python_processes": [],
+  "tau_warn_provisional": 1e-07
+}

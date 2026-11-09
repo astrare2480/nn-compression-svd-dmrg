@@ -1,0 +1,388 @@
+NOTEBOOK D:\dev\nn-compression-svd-dmrg\notebooks\50_llm_tt_vs_matrix\10_qwen3_0p6b_base\03_long_als_convergence.ipynb
+
+===== CELL 2 =====
+{'gpu_name': 'NVIDIA GeForce RTX 5070 Ti', 'torch_version': '2.11.0+cu128', 'cuda_version': '12.8'}
+FULL_RULE {'relative_decrease_tolerance': 1e-07, 'patience_sweeps': 5, 'stationarity_tolerance': 1e-06, 'max_sweeps': 1000, 'local_residual_tolerance': 1e-08, 'retry_max_refinements': 10, 'monotone_tolerance': 1e-10, 'checkpoint_every': 50}
+SMOKE_RULE {'relative_decrease_tolerance': 1e-07, 'patience_sweeps': 5, 'stationarity_tolerance': 1e-06, 'max_sweeps': 5, 'local_residual_tolerance': 1e-08, 'retry_max_refinements': 10, 'monotone_tolerance': 1e-10, 'checkpoint_every': 2}
+
+===== CELL 4 =====
+validation_same documents 32
+validation_other documents 32
+inputs 14
+
+===== CELL 6 =====
+50 M3 cpu_q 1.20980141e+08 csv 1.20980141e+08 rel 0.000e+00
+50 M4_retruncated cpu_q 2.36066768e+08 csv 2.36066768e+08 rel 1.262e-16
+25 M3 cpu_q 1.60255804e+08 csv 1.60255804e+08 rel 1.860e-16
+25 M4_retruncated cpu_q 2.75675344e+08 csv 2.75675344e+08 rel 1.946e-15
+
+===== CELL 8 =====
+
+===== CELL 10 =====
+試運転はしません。
+
+===== CELL 12 =====
+本実行 50 M3
+50 M3 sweep 10 Q 3.00185887e+07 rel 4.494e-03 s_max 8.234e-03 retry False elapsed 48.9
+50 M3 sweep 20 Q 2.93729796e+07 rel 1.208e-03 s_max 4.991e-03 retry False elapsed 95.3
+50 M3 sweep 30 Q 2.91424512e+07 rel 5.554e-04 s_max 3.718e-03 retry False elapsed 147.7
+50 M3 sweep 40 Q 2.90243531e+07 rel 3.139e-04 s_max 2.962e-03 retry False elapsed 281.1
+50 M3 sweep 50 Q 2.89528887e+07 rel 2.030e-04 s_max 2.472e-03 retry False elapsed 397.4
+50 M3 sweep 60 Q 2.89041433e+07 rel 1.452e-04 s_max 2.141e-03 retry False elapsed 563.1
+50 M3 sweep 70 Q 2.88680367e+07 rel 1.107e-04 s_max 1.902e-03 retry False elapsed 711.2
+50 M3 sweep 80 Q 2.88400053e+07 rel 8.722e-05 s_max 1.712e-03 retry False elapsed 850.4
+50 M3 sweep 90 Q 2.88177189e+07 rel 6.992e-05 s_max 1.550e-03 retry False elapsed 902.2
+50 M3 sweep 100 Q 2.87997401e+07 rel 5.679e-05 s_max 1.408e-03 retry False elapsed 1033.9
+50 M3 sweep 110 Q 2.87850459e+07 rel 4.673e-05 s_max 1.284e-03 retry False elapsed 1187.4
+50 M3 sweep 120 Q 2.87728738e+07 rel 3.896e-05 s_max 1.176e-03 retry False elapsed 1328.0
+50 M3 sweep 130 Q 2.87626574e+07 rel 3.291e-05 s_max 1.083e-03 retry False elapsed 1461.6
+50 M3 sweep 140 Q 2.87539796e+07 rel 2.810e-05 s_max 1.002e-03 retry False elapsed 1503.0
+50 M3 sweep 150 Q 2.87465330e+07 rel 2.422e-05 s_max 9.323e-04 retry False elapsed 1543.5
+50 M3 sweep 160 Q 2.87400871e+07 rel 2.105e-05 s_max 8.709e-04 retry False elapsed 1580.6
+50 M3 sweep 170 Q 2.87344650e+07 rel 1.842e-05 s_max 8.168e-04 retry False elapsed 1614.7
+50 M3 sweep 180 Q 2.87295271e+07 rel 1.623e-05 s_max 7.687e-04 retry False elapsed 1646.4
+50 M3 sweep 190 Q 2.87251608e+07 rel 1.440e-05 s_max 7.259e-04 retry False elapsed 1678.8
+50 M3 sweep 200 Q 2.87212741e+07 rel 1.286e-05 s_max 6.875e-04 retry False elapsed 1709.9
+50 M3 sweep 210 Q 2.87177913e+07 rel 1.156e-05 s_max 6.532e-04 retry False elapsed 1745.0
+50 M3 sweep 220 Q 2.87146496e+07 rel 1.046e-05 s_max 6.223e-04 retry False elapsed 1776.2
+50 M3 sweep 230 Q 2.87117968e+07 rel 9.528e-06 s_max 5.945e-04 retry False elapsed 1808.4
+50 M3 sweep 240 Q 2.87091898e+07 rel 8.733e-06 s_max 5.694e-04 retry False elapsed 1841.2
+50 M3 sweep 250 Q 2.87067928e+07 rel 8.052e-06 s_max 5.468e-04 retry False elapsed 1875.0
+50 M3 sweep 260 Q 2.87045761e+07 rel 7.466e-06 s_max 5.264e-04 retry False elapsed 1911.7
+50 M3 sweep 270 Q 2.87025149e+07 rel 6.958e-06 s_max 5.078e-04 retry False elapsed 1945.0
+50 M3 sweep 280 Q 2.87005890e+07 rel 6.516e-06 s_max 4.910e-04 retry False elapsed 1976.0
+50 M3 sweep 290 Q 2.86987814e+07 rel 6.127e-06 s_max 4.756e-04 retry False elapsed 2007.5
+50 M3 sweep 300 Q 2.86970782e+07 rel 5.783e-06 s_max 4.615e-04 retry False elapsed 2039.5
+50 M3 sweep 310 Q 2.86954680e+07 rel 5.476e-06 s_max 4.485e-04 retry False elapsed 2074.6
+50 M3 sweep 320 Q 2.86939410e+07 rel 5.199e-06 s_max 4.364e-04 retry False elapsed 2105.4
+50 M3 sweep 330 Q 2.86924893e+07 rel 4.948e-06 s_max 4.251e-04 retry False elapsed 2136.1
+50 M3 sweep 340 Q 2.86911063e+07 rel 4.719e-06 s_max 4.145e-04 retry False elapsed 2167.0
+50 M3 sweep 350 Q 2.86897860e+07 rel 4.508e-06 s_max 4.046e-04 retry False elapsed 2197.9
+50 M3 sweep 360 Q 2.86885236e+07 rel 4.314e-06 s_max 3.951e-04 retry False elapsed 2233.5
+50 M3 sweep 370 Q 2.86873146e+07 rel 4.135e-06 s_max 3.862e-04 retry False elapsed 2264.1
+50 M3 sweep 380 Q 2.86861550e+07 rel 3.968e-06 s_max 3.778e-04 retry False elapsed 2294.5
+50 M3 sweep 390 Q 2.86850413e+07 rel 3.814e-06 s_max 3.698e-04 retry False elapsed 2324.5
+50 M3 sweep 400 Q 2.86839702e+07 rel 3.671e-06 s_max 3.622e-04 retry False elapsed 2353.1
+50 M3 sweep 410 Q 2.86829386e+07 rel 3.538e-06 s_max 3.550e-04 retry False elapsed 2383.7
+50 M3 sweep 420 Q 2.86819435e+07 rel 3.414e-06 s_max 3.482e-04 retry False elapsed 2408.4
+50 M3 sweep 430 Q 2.86809825e+07 rel 3.300e-06 s_max 3.417e-04 retry False elapsed 2432.7
+50 M3 sweep 440 Q 2.86800530e+07 rel 3.194e-06 s_max 3.357e-04 retry False elapsed 2453.6
+50 M3 sweep 450 Q 2.86791528e+07 rel 3.095e-06 s_max 3.299e-04 retry False elapsed 2474.5
+50 M3 sweep 460 Q 2.86782797e+07 rel 3.003e-06 s_max 3.245e-04 retry False elapsed 2501.4
+50 M3 sweep 470 Q 2.86774321e+07 rel 2.918e-06 s_max 3.194e-04 retry False elapsed 2523.7
+50 M3 sweep 480 Q 2.86766081e+07 rel 2.838e-06 s_max 3.145e-04 retry False elapsed 2546.3
+50 M3 sweep 490 Q 2.86758062e+07 rel 2.763e-06 s_max 3.099e-04 retry False elapsed 2568.4
+50 M3 sweep 500 Q 2.86750252e+07 rel 2.692e-06 s_max 3.055e-04 retry False elapsed 2590.8
+50 M3 sweep 510 Q 2.86742637e+07 rel 2.626e-06 s_max 3.014e-04 retry False elapsed 2617.5
+50 M3 sweep 520 Q 2.86735208e+07 rel 2.563e-06 s_max 2.974e-04 retry False elapsed 2639.9
+50 M3 sweep 530 Q 2.86727955e+07 rel 2.503e-06 s_max 2.936e-04 retry False elapsed 2661.6
+50 M3 sweep 540 Q 2.86720869e+07 rel 2.446e-06 s_max 2.900e-04 retry False elapsed 2683.9
+50 M3 sweep 550 Q 2.86713943e+07 rel 2.391e-06 s_max 2.865e-04 retry False elapsed 2706.4
+50 M3 sweep 560 Q 2.86707170e+07 rel 2.339e-06 s_max 2.832e-04 retry False elapsed 2733.5
+50 M3 sweep 570 Q 2.86700544e+07 rel 2.288e-06 s_max 2.799e-04 retry False elapsed 2757.0
+50 M3 sweep 580 Q 2.86694060e+07 rel 2.240e-06 s_max 2.768e-04 retry False elapsed 2781.8
+50 M3 sweep 590 Q 2.86687714e+07 rel 2.192e-06 s_max 2.737e-04 retry False elapsed 2803.9
+50 M3 sweep 600 Q 2.86681501e+07 rel 2.146e-06 s_max 2.708e-04 retry False elapsed 2826.9
+50 M3 sweep 610 Q 2.86675419e+07 rel 2.102e-06 s_max 2.679e-04 retry False elapsed 2853.9
+50 M3 sweep 620 Q 2.86669464e+07 rel 2.058e-06 s_max 2.650e-04 retry False elapsed 2876.0
+50 M3 sweep 630 Q 2.86663634e+07 rel 2.014e-06 s_max 2.622e-04 retry False elapsed 2898.1
+50 M3 sweep 640 Q 2.86657926e+07 rel 1.972e-06 s_max 2.594e-04 retry False elapsed 2920.4
+50 M3 sweep 650 Q 2.86652340e+07 rel 1.930e-06 s_max 2.567e-04 retry False elapsed 2943.8
+50 M3 sweep 660 Q 2.86646875e+07 rel 1.888e-06 s_max 2.539e-04 retry False elapsed 2972.9
+50 M3 sweep 670 Q 2.86641528e+07 rel 1.847e-06 s_max 2.512e-04 retry False elapsed 2997.1
+50 M3 sweep 680 Q 2.86636300e+07 rel 1.805e-06 s_max 2.485e-04 retry False elapsed 3022.4
+50 M3 sweep 690 Q 2.86631190e+07 rel 1.764e-06 s_max 2.458e-04 retry False elapsed 3047.7
+50 M3 sweep 700 Q 2.86626197e+07 rel 1.724e-06 s_max 2.431e-04 retry False elapsed 3072.9
+50 M3 sweep 710 Q 2.86621321e+07 rel 1.683e-06 s_max 2.403e-04 retry False elapsed 3103.2
+50 M3 sweep 720 Q 2.86616561e+07 rel 1.643e-06 s_max 2.376e-04 retry False elapsed 3128.5
+50 M3 sweep 730 Q 2.86611915e+07 rel 1.603e-06 s_max 2.349e-04 retry False elapsed 3153.6
+50 M3 sweep 740 Q 2.86607382e+07 rel 1.564e-06 s_max 2.323e-04 retry False elapsed 3178.8
+50 M3 sweep 750 Q 2.86602961e+07 rel 1.525e-06 s_max 2.296e-04 retry False elapsed 3204.4
+50 M3 sweep 760 Q 2.86598649e+07 rel 1.487e-06 s_max 2.270e-04 retry False elapsed 3234.3
+50 M3 sweep 770 Q 2.86594444e+07 rel 1.451e-06 s_max 2.244e-04 retry False elapsed 3259.5
+50 M3 sweep 780 Q 2.86590344e+07 rel 1.415e-06 s_max 2.219e-04 retry False elapsed 3284.3
+50 M3 sweep 790 Q 2.86586345e+07 rel 1.380e-06 s_max 2.194e-04 retry False elapsed 3309.2
+50 M3 sweep 800 Q 2.86582445e+07 rel 1.346e-06 s_max 2.170e-04 retry False elapsed 3334.4
+50 M3 sweep 810 Q 2.86578639e+07 rel 1.314e-06 s_max 2.146e-04 retry False elapsed 3364.4
+50 M3 sweep 820 Q 2.86574924e+07 rel 1.282e-06 s_max 2.124e-04 retry False elapsed 3389.7
+50 M3 sweep 830 Q 2.86571296e+07 rel 1.253e-06 s_max 2.102e-04 retry False elapsed 3414.9
+50 M3 sweep 840 Q 2.86567751e+07 rel 1.224e-06 s_max 2.081e-04 retry False elapsed 3440.2
+50 M3 sweep 850 Q 2.86564286e+07 rel 1.197e-06 s_max 2.061e-04 retry False elapsed 3465.6
+50 M3 sweep 860 Q 2.86560896e+07 rel 1.172e-06 s_max 2.042e-04 retry False elapsed 3495.6
+50 M3 sweep 870 Q 2.86557577e+07 rel 1.147e-06 s_max 2.024e-04 retry False elapsed 3520.9
+50 M3 sweep 880 Q 2.86554326e+07 rel 1.124e-06 s_max 2.007e-04 retry False elapsed 3546.3
+50 M3 sweep 890 Q 2.86551139e+07 rel 1.102e-06 s_max 1.990e-04 retry False elapsed 3571.4
+50 M3 sweep 900 Q 2.86548013e+07 rel 1.082e-06 s_max 1.975e-04 retry False elapsed 3596.8
+50 M3 sweep 910 Q 2.86544945e+07 rel 1.062e-06 s_max 1.960e-04 retry False elapsed 3626.8
+50 M3 sweep 920 Q 2.86541932e+07 rel 1.043e-06 s_max 1.946e-04 retry False elapsed 3652.1
+50 M3 sweep 930 Q 2.86538971e+07 rel 1.025e-06 s_max 1.932e-04 retry False elapsed 3677.3
+50 M3 sweep 940 Q 2.86536060e+07 rel 1.008e-06 s_max 1.919e-04 retry False elapsed 3702.5
+50 M3 sweep 950 Q 2.86533197e+07 rel 9.921e-07 s_max 1.907e-04 retry False elapsed 3724.5
+50 M3 sweep 960 Q 2.86530379e+07 rel 9.764e-07 s_max 1.895e-04 retry False elapsed 3751.4
+50 M3 sweep 970 Q 2.86527605e+07 rel 9.613e-07 s_max 1.884e-04 retry False elapsed 3773.0
+50 M3 sweep 980 Q 2.86524874e+07 rel 9.467e-07 s_max 1.872e-04 retry False elapsed 3794.9
+50 M3 sweep 990 Q 2.86522184e+07 rel 9.325e-07 s_max 1.861e-04 retry False elapsed 3817.7
+50 M3 sweep 1000 Q 2.86519534e+07 rel 9.186e-07 s_max 1.851e-04 retry False elapsed 3839.4
+停止 50 M3 max_sweeps
+本実行 50 M4_retruncated
+50 M4_retruncated sweep 10 Q 3.23740813e+07 rel 2.388e-03 s_max 1.265e-02 retry False elapsed 40.9
+50 M4_retruncated sweep 20 Q 3.17718725e+07 rel 1.619e-03 s_max 9.528e-03 retry False elapsed 63.9
+50 M4_retruncated sweep 30 Q 3.13415279e+07 rel 1.187e-03 s_max 7.684e-03 retry False elapsed 87.0
+50 M4_retruncated sweep 40 Q 3.10214300e+07 rel 8.897e-04 s_max 6.487e-03 retry False elapsed 109.5
+50 M4_retruncated sweep 50 Q 3.07752934e+07 rel 7.414e-04 s_max 5.844e-03 retry False elapsed 132.0
+50 M4_retruncated sweep 60 Q 3.05815639e+07 rel 5.459e-04 s_max 4.988e-03 retry False elapsed 159.0
+50 M4_retruncated sweep 70 Q 3.04287065e+07 rel 4.644e-04 s_max 4.623e-03 retry False elapsed 181.2
+50 M4_retruncated sweep 80 Q 3.02919075e+07 rel 4.501e-04 s_max 4.520e-03 retry False elapsed 203.5
+50 M4_retruncated sweep 90 Q 3.01662736e+07 rel 3.836e-04 s_max 4.086e-03 retry False elapsed 225.4
+50 M4_retruncated sweep 100 Q 3.00602426e+07 rel 3.381e-04 s_max 3.953e-03 retry False elapsed 245.5
+50 M4_retruncated sweep 110 Q 2.99573186e+07 rel 3.333e-04 s_max 3.798e-03 retry False elapsed 270.5
+50 M4_retruncated sweep 120 Q 2.98649841e+07 rel 2.859e-04 s_max 3.483e-03 retry False elapsed 290.3
+50 M4_retruncated sweep 130 Q 2.97846810e+07 rel 2.604e-04 s_max 3.347e-03 retry False elapsed 310.2
+50 M4_retruncated sweep 140 Q 2.97100731e+07 rel 2.441e-04 s_max 3.216e-03 retry False elapsed 330.1
+50 M4_retruncated sweep 150 Q 2.96422149e+07 rel 2.157e-04 s_max 2.997e-03 retry False elapsed 350.2
+50 M4_retruncated sweep 160 Q 2.95811005e+07 rel 2.009e-04 s_max 2.879e-03 retry False elapsed 375.3
+50 M4_retruncated sweep 170 Q 2.95249846e+07 rel 1.792e-04 s_max 2.696e-03 retry False elapsed 395.5
+50 M4_retruncated sweep 180 Q 2.94748626e+07 rel 1.638e-04 s_max 2.581e-03 retry False elapsed 415.7
+50 M4_retruncated sweep 190 Q 2.94286842e+07 rel 1.519e-04 s_max 2.519e-03 retry False elapsed 435.9
+50 M4_retruncated sweep 200 Q 2.93847809e+07 rel 1.471e-04 s_max 2.479e-03 retry False elapsed 456.2
+50 M4_retruncated sweep 210 Q 2.93423215e+07 rel 1.435e-04 s_max 2.431e-03 retry False elapsed 481.5
+50 M4_retruncated sweep 220 Q 2.93017029e+07 rel 1.330e-04 s_max 2.340e-03 retry False elapsed 501.7
+50 M4_retruncated sweep 230 Q 2.92639698e+07 rel 1.274e-04 s_max 2.312e-03 retry False elapsed 521.9
+50 M4_retruncated sweep 240 Q 2.92274690e+07 rel 1.204e-04 s_max 2.199e-03 retry False elapsed 542.0
+50 M4_retruncated sweep 250 Q 2.91946866e+07 rel 1.061e-04 s_max 2.075e-03 retry False elapsed 562.1
+50 M4_retruncated sweep 260 Q 2.91650425e+07 rel 9.899e-05 s_max 2.045e-03 retry False elapsed 587.3
+50 M4_retruncated sweep 270 Q 2.91367110e+07 rel 9.603e-05 s_max 2.045e-03 retry False elapsed 607.5
+50 M4_retruncated sweep 280 Q 2.91088707e+07 rel 9.571e-05 s_max 2.054e-03 retry False elapsed 627.8
+50 M4_retruncated sweep 290 Q 2.90807998e+07 rel 9.624e-05 s_max 2.032e-03 retry False elapsed 649.6
+50 M4_retruncated sweep 300 Q 2.90541091e+07 rel 8.775e-05 s_max 1.928e-03 retry False elapsed 671.6
+50 M4_retruncated sweep 310 Q 2.90300938e+07 rel 7.760e-05 s_max 1.775e-03 retry False elapsed 697.2
+50 M4_retruncated sweep 320 Q 2.90093300e+07 rel 6.789e-05 s_max 1.683e-03 retry False elapsed 719.2
+50 M4_retruncated sweep 330 Q 2.89901467e+07 rel 6.516e-05 s_max 1.651e-03 retry False elapsed 740.8
+50 M4_retruncated sweep 340 Q 2.89718208e+07 rel 6.110e-05 s_max 1.585e-03 retry False elapsed 762.6
+50 M4_retruncated sweep 350 Q 2.89550747e+07 rel 5.513e-05 s_max 1.513e-03 retry False elapsed 784.5
+50 M4_retruncated sweep 360 Q 2.89399654e+07 rel 5.003e-05 s_max 1.467e-03 retry False elapsed 810.4
+50 M4_retruncated sweep 370 Q 2.89260520e+07 rel 4.682e-05 s_max 1.454e-03 retry False elapsed 832.1
+50 M4_retruncated sweep 380 Q 2.89127263e+07 rel 4.580e-05 s_max 1.458e-03 retry False elapsed 853.5
+50 M4_retruncated sweep 390 Q 2.88993982e+07 rel 4.650e-05 s_max 1.458e-03 retry False elapsed 875.3
+50 M4_retruncated sweep 400 Q 2.88858913e+07 rel 4.669e-05 s_max 1.433e-03 retry False elapsed 897.0
+50 M4_retruncated sweep 410 Q 2.88726215e+07 rel 4.509e-05 s_max 1.384e-03 retry False elapsed 923.3
+50 M4_retruncated sweep 420 Q 2.88600775e+07 rel 4.193e-05 s_max 1.321e-03 retry False elapsed 946.9
+停止 50 M4_retruncated local_solver_unresolved
+本実行 25 M3
+25 M3 sweep 10 Q 5.62955330e+07 rel 3.481e-03 s_max 1.199e-02 retry False elapsed 12.2
+25 M3 sweep 20 Q 5.53161327e+07 rel 1.037e-03 s_max 7.476e-03 retry False elapsed 26.2
+25 M3 sweep 30 Q 5.49309129e+07 rel 5.079e-04 s_max 5.509e-03 retry False elapsed 40.1
+25 M3 sweep 40 Q 5.47210800e+07 rel 3.042e-04 s_max 4.379e-03 retry False elapsed 54.4
+25 M3 sweep 50 Q 5.45881228e+07 rel 2.022e-04 s_max 3.631e-03 retry False elapsed 68.8
+25 M3 sweep 60 Q 5.44970725e+07 rel 1.424e-04 s_max 3.084e-03 retry False elapsed 86.9
+25 M3 sweep 70 Q 5.44313200e+07 rel 1.055e-04 s_max 2.668e-03 retry False elapsed 101.3
+25 M3 sweep 80 Q 5.43813739e+07 rel 8.203e-05 s_max 2.351e-03 retry False elapsed 115.7
+25 M3 sweep 90 Q 5.43418224e+07 rel 6.597e-05 s_max 2.102e-03 retry False elapsed 129.8
+25 M3 sweep 100 Q 5.43096625e+07 rel 5.414e-05 s_max 1.901e-03 retry False elapsed 144.1
+25 M3 sweep 110 Q 5.42830836e+07 rel 4.504e-05 s_max 1.734e-03 retry False elapsed 162.6
+25 M3 sweep 120 Q 5.42608515e+07 rel 3.787e-05 s_max 1.593e-03 retry False elapsed 177.2
+25 M3 sweep 130 Q 5.42420745e+07 rel 3.212e-05 s_max 1.471e-03 retry False elapsed 191.7
+25 M3 sweep 140 Q 5.42260906e+07 rel 2.744e-05 s_max 1.365e-03 retry False elapsed 206.4
+25 M3 sweep 150 Q 5.42123894e+07 rel 2.361e-05 s_max 1.272e-03 retry False elapsed 220.9
+25 M3 sweep 160 Q 5.42005592e+07 rel 2.046e-05 s_max 1.191e-03 retry False elapsed 239.9
+25 M3 sweep 170 Q 5.41902552e+07 rel 1.791e-05 s_max 1.121e-03 retry False elapsed 254.6
+25 M3 sweep 180 Q 5.41811850e+07 rel 1.585e-05 s_max 1.060e-03 retry False elapsed 269.4
+25 M3 sweep 190 Q 5.41731050e+07 rel 1.420e-05 s_max 1.008e-03 retry False elapsed 284.3
+25 M3 sweep 200 Q 5.41658204e+07 rel 1.287e-05 s_max 9.624e-04 retry False elapsed 299.2
+25 M3 sweep 210 Q 5.41591844e+07 rel 1.177e-05 s_max 9.223e-04 retry False elapsed 318.2
+25 M3 sweep 220 Q 5.41530932e+07 rel 1.084e-05 s_max 8.858e-04 retry False elapsed 333.1
+25 M3 sweep 230 Q 5.41474784e+07 rel 9.999e-06 s_max 8.514e-04 retry False elapsed 347.8
+25 M3 sweep 240 Q 5.41422978e+07 rel 9.223e-06 s_max 8.180e-04 retry False elapsed 362.4
+25 M3 sweep 250 Q 5.41375251e+07 rel 8.487e-06 s_max 7.847e-04 retry False elapsed 377.1
+25 M3 sweep 260 Q 5.41331420e+07 rel 7.782e-06 s_max 7.515e-04 retry False elapsed 396.0
+25 M3 sweep 270 Q 5.41291308e+07 rel 7.111e-06 s_max 7.184e-04 retry False elapsed 410.6
+25 M3 sweep 280 Q 5.41254709e+07 rel 6.482e-06 s_max 6.859e-04 retry False elapsed 425.3
+25 M3 sweep 290 Q 5.41221371e+07 rel 5.903e-06 s_max 6.543e-04 retry False elapsed 439.7
+25 M3 sweep 300 Q 5.41191006e+07 rel 5.380e-06 s_max 6.244e-04 retry False elapsed 454.2
+25 M3 sweep 310 Q 5.41163299e+07 rel 4.916e-06 s_max 5.963e-04 retry False elapsed 472.6
+25 M3 sweep 320 Q 5.41137931e+07 rel 4.510e-06 s_max 5.706e-04 retry False elapsed 485.2
+25 M3 sweep 330 Q 5.41114593e+07 rel 4.160e-06 s_max 5.472e-04 retry False elapsed 496.9
+25 M3 sweep 340 Q 5.41092998e+07 rel 3.860e-06 s_max 5.262e-04 retry False elapsed 508.4
+25 M3 sweep 350 Q 5.41072890e+07 rel 3.605e-06 s_max 5.076e-04 retry False elapsed 520.0
+25 M3 sweep 360 Q 5.41054043e+07 rel 3.389e-06 s_max 4.912e-04 retry False elapsed 535.7
+25 M3 sweep 370 Q 5.41036264e+07 rel 3.206e-06 s_max 4.768e-04 retry False elapsed 547.2
+25 M3 sweep 380 Q 5.41019390e+07 rel 3.051e-06 s_max 4.642e-04 retry False elapsed 558.5
+25 M3 sweep 390 Q 5.41003285e+07 rel 2.919e-06 s_max 4.533e-04 retry False elapsed 570.5
+25 M3 sweep 400 Q 5.40987839e+07 rel 2.806e-06 s_max 4.437e-04 retry False elapsed 581.4
+25 M3 sweep 410 Q 5.40972960e+07 rel 2.707e-06 s_max 4.353e-04 retry False elapsed 597.1
+25 M3 sweep 420 Q 5.40958572e+07 rel 2.622e-06 s_max 4.280e-04 retry False elapsed 607.8
+25 M3 sweep 430 Q 5.40944615e+07 rel 2.547e-06 s_max 4.216e-04 retry False elapsed 618.6
+25 M3 sweep 440 Q 5.40931036e+07 rel 2.481e-06 s_max 4.159e-04 retry False elapsed 629.3
+25 M3 sweep 450 Q 5.40917790e+07 rel 2.423e-06 s_max 4.110e-04 retry False elapsed 640.0
+25 M3 sweep 460 Q 5.40904837e+07 rel 2.372e-06 s_max 4.066e-04 retry False elapsed 655.7
+25 M3 sweep 470 Q 5.40892143e+07 rel 2.327e-06 s_max 4.029e-04 retry False elapsed 666.5
+25 M3 sweep 480 Q 5.40879672e+07 rel 2.289e-06 s_max 3.997e-04 retry False elapsed 677.2
+25 M3 sweep 490 Q 5.40867395e+07 rel 2.255e-06 s_max 3.970e-04 retry False elapsed 687.9
+25 M3 sweep 500 Q 5.40855281e+07 rel 2.228e-06 s_max 3.948e-04 retry False elapsed 699.6
+25 M3 sweep 510 Q 5.40843304e+07 rel 2.205e-06 s_max 3.930e-04 retry False elapsed 715.8
+25 M3 sweep 520 Q 5.40831438e+07 rel 2.186e-06 s_max 3.916e-04 retry False elapsed 727.5
+25 M3 sweep 530 Q 5.40819660e+07 rel 2.172e-06 s_max 3.906e-04 retry False elapsed 739.0
+25 M3 sweep 540 Q 5.40807951e+07 rel 2.160e-06 s_max 3.899e-04 retry False elapsed 750.7
+25 M3 sweep 550 Q 5.40796294e+07 rel 2.152e-06 s_max 3.894e-04 retry False elapsed 762.4
+25 M3 sweep 560 Q 5.40784679e+07 rel 2.145e-06 s_max 3.891e-04 retry False elapsed 777.9
+25 M3 sweep 570 Q 5.40773095e+07 rel 2.140e-06 s_max 3.889e-04 retry False elapsed 789.7
+25 M3 sweep 580 Q 5.40761539e+07 rel 2.135e-06 s_max 3.887e-04 retry False elapsed 801.2
+25 M3 sweep 590 Q 5.40750010e+07 rel 2.130e-06 s_max 3.885e-04 retry False elapsed 813.4
+25 M3 sweep 600 Q 5.40738510e+07 rel 2.124e-06 s_max 3.883e-04 retry False elapsed 825.2
+25 M3 sweep 610 Q 5.40727047e+07 rel 2.116e-06 s_max 3.878e-04 retry False elapsed 841.2
+25 M3 sweep 620 Q 5.40715629e+07 rel 2.107e-06 s_max 3.872e-04 retry False elapsed 853.4
+25 M3 sweep 630 Q 5.40704267e+07 rel 2.096e-06 s_max 3.863e-04 retry False elapsed 864.8
+25 M3 sweep 640 Q 5.40692973e+07 rel 2.082e-06 s_max 3.852e-04 retry False elapsed 876.7
+25 M3 sweep 650 Q 5.40681760e+07 rel 2.066e-06 s_max 3.839e-04 retry False elapsed 888.7
+25 M3 sweep 660 Q 5.40670643e+07 rel 2.048e-06 s_max 3.822e-04 retry False elapsed 904.6
+25 M3 sweep 670 Q 5.40659635e+07 rel 2.026e-06 s_max 3.803e-04 retry False elapsed 916.3
+25 M3 sweep 680 Q 5.40648750e+07 rel 2.002e-06 s_max 3.781e-04 retry False elapsed 928.0
+25 M3 sweep 690 Q 5.40638004e+07 rel 1.976e-06 s_max 3.757e-04 retry False elapsed 939.9
+25 M3 sweep 700 Q 5.40627410e+07 rel 1.946e-06 s_max 3.730e-04 retry False elapsed 951.8
+25 M3 sweep 710 Q 5.40616984e+07 rel 1.914e-06 s_max 3.700e-04 retry False elapsed 967.8
+25 M3 sweep 720 Q 5.40606742e+07 rel 1.878e-06 s_max 3.667e-04 retry False elapsed 979.6
+25 M3 sweep 730 Q 5.40596703e+07 rel 1.839e-06 s_max 3.631e-04 retry False elapsed 991.3
+25 M3 sweep 740 Q 5.40586884e+07 rel 1.797e-06 s_max 3.591e-04 retry False elapsed 1003.1
+25 M3 sweep 750 Q 5.40577305e+07 rel 1.751e-06 s_max 3.548e-04 retry False elapsed 1015.0
+25 M3 sweep 760 Q 5.40567986e+07 rel 1.701e-06 s_max 3.500e-04 retry False elapsed 1030.9
+25 M3 sweep 770 Q 5.40558947e+07 rel 1.648e-06 s_max 3.449e-04 retry False elapsed 1042.4
+25 M3 sweep 780 Q 5.40550207e+07 rel 1.591e-06 s_max 3.394e-04 retry False elapsed 1054.4
+25 M3 sweep 790 Q 5.40541782e+07 rel 1.532e-06 s_max 3.335e-04 retry False elapsed 1066.0
+25 M3 sweep 800 Q 5.40533686e+07 rel 1.470e-06 s_max 3.273e-04 retry False elapsed 1077.8
+25 M3 sweep 810 Q 5.40525929e+07 rel 1.406e-06 s_max 3.208e-04 retry False elapsed 1093.5
+25 M3 sweep 820 Q 5.40518517e+07 rel 1.342e-06 s_max 3.140e-04 retry False elapsed 1105.1
+25 M3 sweep 830 Q 5.40511452e+07 rel 1.278e-06 s_max 3.070e-04 retry False elapsed 1117.0
+25 M3 sweep 840 Q 5.40504730e+07 rel 1.215e-06 s_max 3.000e-04 retry False elapsed 1128.7
+25 M3 sweep 850 Q 5.40498345e+07 rel 1.154e-06 s_max 2.928e-04 retry False elapsed 1140.4
+25 M3 sweep 860 Q 5.40492287e+07 rel 1.094e-06 s_max 2.857e-04 retry False elapsed 1156.0
+25 M3 sweep 870 Q 5.40486544e+07 rel 1.037e-06 s_max 2.787e-04 retry False elapsed 1167.8
+25 M3 sweep 880 Q 5.40481101e+07 rel 9.830e-07 s_max 2.718e-04 retry False elapsed 1179.5
+25 M3 sweep 890 Q 5.40475941e+07 rel 9.319e-07 s_max 2.650e-04 retry False elapsed 1191.2
+25 M3 sweep 900 Q 5.40471049e+07 rel 8.839e-07 s_max 2.585e-04 retry False elapsed 1202.7
+25 M3 sweep 910 Q 5.40466406e+07 rel 8.391e-07 s_max 2.521e-04 retry False elapsed 1218.0
+25 M3 sweep 920 Q 5.40461997e+07 rel 7.972e-07 s_max 2.459e-04 retry False elapsed 1230.0
+25 M3 sweep 930 Q 5.40457806e+07 rel 7.582e-07 s_max 2.400e-04 retry False elapsed 1241.7
+25 M3 sweep 940 Q 5.40453817e+07 rel 7.220e-07 s_max 2.343e-04 retry False elapsed 1253.5
+25 M3 sweep 950 Q 5.40450016e+07 rel 6.882e-07 s_max 2.289e-04 retry False elapsed 1265.1
+25 M3 sweep 960 Q 5.40446391e+07 rel 6.568e-07 s_max 2.236e-04 retry False elapsed 1281.0
+25 M3 sweep 970 Q 5.40442930e+07 rel 6.275e-07 s_max 2.185e-04 retry False elapsed 1293.0
+25 M3 sweep 980 Q 5.40439621e+07 rel 6.001e-07 s_max 2.137e-04 retry False elapsed 1304.5
+25 M3 sweep 990 Q 5.40436455e+07 rel 5.745e-07 s_max 2.090e-04 retry False elapsed 1315.8
+25 M3 sweep 1000 Q 5.40433422e+07 rel 5.504e-07 s_max 2.045e-04 retry False elapsed 1327.4
+停止 25 M3 max_sweeps
+本実行 25 M4_retruncated
+25 M4_retruncated sweep 10 Q 6.24813374e+07 rel 3.730e-03 s_max 3.387e-02 retry False elapsed 15.8
+25 M4_retruncated sweep 20 Q 6.08593811e+07 rel 2.256e-03 s_max 2.797e-02 retry False elapsed 30.7
+25 M4_retruncated sweep 30 Q 5.97564463e+07 rel 1.462e-03 s_max 1.703e-02 retry False elapsed 44.3
+25 M4_retruncated sweep 40 Q 5.88602396e+07 rel 1.722e-03 s_max 2.048e-02 retry False elapsed 57.5
+25 M4_retruncated sweep 50 Q 5.81468572e+07 rel 9.791e-04 s_max 1.546e-02 retry False elapsed 71.1
+25 M4_retruncated sweep 60 Q 5.76453948e+07 rel 4.152e-04 s_max 7.543e-03 retry False elapsed 89.6
+25 M4_retruncated sweep 70 Q 5.73042542e+07 rel 3.638e-04 s_max 6.799e-03 retry False elapsed 103.7
+25 M4_retruncated sweep 80 Q 5.71308037e+07 rel 2.856e-04 s_max 6.651e-03 retry False elapsed 118.4
+25 M4_retruncated sweep 90 Q 5.69622777e+07 rel 3.077e-04 s_max 6.894e-03 retry False elapsed 134.0
+25 M4_retruncated sweep 100 Q 5.67949845e+07 rel 2.516e-04 s_max 5.829e-03 retry False elapsed 150.0
+25 M4_retruncated sweep 110 Q 5.66597042e+07 rel 2.498e-04 s_max 6.117e-03 retry False elapsed 171.0
+25 M4_retruncated sweep 120 Q 5.65059886e+07 rel 2.719e-04 s_max 6.024e-03 retry False elapsed 187.0
+25 M4_retruncated sweep 130 Q 5.63749877e+07 rel 1.961e-04 s_max 5.045e-03 retry False elapsed 203.2
+25 M4_retruncated sweep 140 Q 5.62619333e+07 rel 2.036e-04 s_max 4.969e-03 retry False elapsed 219.7
+25 M4_retruncated sweep 150 Q 5.61593527e+07 rel 1.791e-04 s_max 4.745e-03 retry False elapsed 236.5
+25 M4_retruncated sweep 160 Q 5.60619708e+07 rel 1.742e-04 s_max 4.718e-03 retry False elapsed 258.5
+25 M4_retruncated sweep 170 Q 5.59671139e+07 rel 1.617e-04 s_max 4.537e-03 retry False elapsed 275.8
+25 M4_retruncated sweep 180 Q 5.58782773e+07 rel 1.550e-04 s_max 4.363e-03 retry False elapsed 293.6
+25 M4_retruncated sweep 190 Q 5.57986971e+07 rel 1.349e-04 s_max 4.139e-03 retry False elapsed 312.0
+25 M4_retruncated sweep 200 Q 5.57237184e+07 rel 1.343e-04 s_max 4.087e-03 retry False elapsed 330.4
+25 M4_retruncated sweep 210 Q 5.56477593e+07 rel 1.344e-04 s_max 3.915e-03 retry False elapsed 353.0
+25 M4_retruncated sweep 220 Q 5.55763971e+07 rel 1.219e-04 s_max 3.605e-03 retry False elapsed 370.0
+25 M4_retruncated sweep 230 Q 5.55131921e+07 rel 1.107e-04 s_max 3.441e-03 retry False elapsed 386.5
+25 M4_retruncated sweep 240 Q 5.54567179e+07 rel 9.143e-05 s_max 3.084e-03 retry False elapsed 403.5
+25 M4_retruncated sweep 250 Q 5.54102058e+07 rel 8.072e-05 s_max 3.065e-03 retry False elapsed 420.0
+25 M4_retruncated sweep 260 Q 5.53632761e+07 rel 9.062e-05 s_max 3.276e-03 retry False elapsed 441.3
+25 M4_retruncated sweep 270 Q 5.53119568e+07 rel 9.076e-05 s_max 3.161e-03 retry False elapsed 458.3
+25 M4_retruncated sweep 280 Q 5.52614892e+07 rel 9.377e-05 s_max 3.154e-03 retry False elapsed 475.5
+25 M4_retruncated sweep 290 Q 5.52115889e+07 rel 8.722e-05 s_max 3.024e-03 retry False elapsed 492.7
+25 M4_retruncated sweep 300 Q 5.51651487e+07 rel 8.189e-05 s_max 3.001e-03 retry False elapsed 509.9
+25 M4_retruncated sweep 310 Q 5.51182011e+07 rel 8.853e-05 s_max 3.038e-03 retry False elapsed 532.0
+25 M4_retruncated sweep 320 Q 5.50727579e+07 rel 7.489e-05 s_max 2.696e-03 retry False elapsed 549.2
+25 M4_retruncated sweep 330 Q 5.50357896e+07 rel 6.215e-05 s_max 2.490e-03 retry False elapsed 567.3
+25 M4_retruncated sweep 340 Q 5.50029311e+07 rel 5.903e-05 s_max 2.467e-03 retry False elapsed 586.3
+25 M4_retruncated sweep 350 Q 5.49706331e+07 rel 5.781e-05 s_max 2.384e-03 retry False elapsed 605.6
+25 M4_retruncated sweep 360 Q 5.49404025e+07 rel 5.216e-05 s_max 2.239e-03 retry False elapsed 629.6
+25 M4_retruncated sweep 370 Q 5.49135472e+07 rel 4.684e-05 s_max 2.169e-03 retry False elapsed 648.8
+25 M4_retruncated sweep 380 Q 5.48884623e+07 rel 4.500e-05 s_max 2.149e-03 retry False elapsed 667.4
+25 M4_retruncated sweep 390 Q 5.48644814e+07 rel 4.234e-05 s_max 2.092e-03 retry False elapsed 685.4
+25 M4_retruncated sweep 400 Q 5.48418851e+07 rel 4.102e-05 s_max 2.110e-03 retry False elapsed 704.0
+25 M4_retruncated sweep 410 Q 5.48184055e+07 rel 4.426e-05 s_max 2.121e-03 retry False elapsed 726.4
+25 M4_retruncated sweep 420 Q 5.47952228e+07 rel 3.952e-05 s_max 1.937e-03 retry False elapsed 744.1
+25 M4_retruncated sweep 430 Q 5.47754805e+07 rel 3.361e-05 s_max 1.802e-03 retry False elapsed 760.7
+25 M4_retruncated sweep 440 Q 5.47578156e+07 rel 3.194e-05 s_max 1.800e-03 retry False elapsed 777.8
+25 M4_retruncated sweep 450 Q 5.47394773e+07 rel 3.526e-05 s_max 1.853e-03 retry False elapsed 794.7
+25 M4_retruncated sweep 460 Q 5.47201300e+07 rel 3.372e-05 s_max 1.708e-03 retry False elapsed 816.5
+25 M4_retruncated sweep 470 Q 5.47034568e+07 rel 2.825e-05 s_max 1.570e-03 retry False elapsed 833.6
+25 M4_retruncated sweep 480 Q 5.46888487e+07 rel 2.580e-05 s_max 1.544e-03 retry False elapsed 850.3
+25 M4_retruncated sweep 490 Q 5.46749542e+07 rel 2.536e-05 s_max 1.584e-03 retry False elapsed 866.9
+25 M4_retruncated sweep 500 Q 5.46607351e+07 rel 2.684e-05 s_max 1.677e-03 retry False elapsed 883.7
+25 M4_retruncated sweep 510 Q 5.46451328e+07 rel 3.024e-05 s_max 1.805e-03 retry False elapsed 905.1
+25 M4_retruncated sweep 520 Q 5.46269577e+07 rel 3.600e-05 s_max 1.906e-03 retry False elapsed 922.5
+25 M4_retruncated sweep 530 Q 5.46064837e+07 rel 3.714e-05 s_max 1.793e-03 retry False elapsed 940.7
+25 M4_retruncated sweep 540 Q 5.45877235e+07 rel 3.191e-05 s_max 1.623e-03 retry False elapsed 960.0
+25 M4_retruncated sweep 550 Q 5.45716283e+07 rel 2.787e-05 s_max 1.546e-03 retry False elapsed 978.9
+25 M4_retruncated sweep 560 Q 5.45570492e+07 rel 2.608e-05 s_max 1.527e-03 retry False elapsed 1002.0
+25 M4_retruncated sweep 570 Q 5.45429965e+07 rel 2.547e-05 s_max 1.493e-03 retry False elapsed 1020.7
+25 M4_retruncated sweep 580 Q 5.45296763e+07 rel 2.324e-05 s_max 1.403e-03 retry False elapsed 1038.3
+25 M4_retruncated sweep 590 Q 5.45179034e+07 rel 2.036e-05 s_max 1.340e-03 retry False elapsed 1056.1
+25 M4_retruncated sweep 600 Q 5.45074105e+07 rel 1.850e-05 s_max 1.328e-03 retry False elapsed 1073.1
+25 M4_retruncated sweep 610 Q 5.44975847e+07 rel 1.786e-05 s_max 1.363e-03 retry False elapsed 1095.1
+25 M4_retruncated sweep 620 Q 5.44876108e+07 rel 1.894e-05 s_max 1.420e-03 retry False elapsed 1113.1
+25 M4_retruncated sweep 630 Q 5.44769304e+07 rel 1.959e-05 s_max 1.370e-03 retry False elapsed 1130.6
+25 M4_retruncated sweep 640 Q 5.44671016e+07 rel 1.657e-05 s_max 1.242e-03 retry False elapsed 1148.8
+25 M4_retruncated sweep 650 Q 5.44588511e+07 rel 1.422e-05 s_max 1.184e-03 retry False elapsed 1166.5
+25 M4_retruncated sweep 660 Q 5.44514867e+07 rel 1.310e-05 s_max 1.181e-03 retry False elapsed 1189.0
+25 M4_retruncated sweep 670 Q 5.44444393e+07 rel 1.297e-05 s_max 1.221e-03 retry False elapsed 1207.2
+25 M4_retruncated sweep 680 Q 5.44370970e+07 rel 1.415e-05 s_max 1.299e-03 retry False elapsed 1224.7
+25 M4_retruncated sweep 690 Q 5.44286379e+07 rel 1.680e-05 s_max 1.373e-03 retry False elapsed 1241.9
+25 M4_retruncated sweep 700 Q 5.44189021e+07 rel 1.835e-05 s_max 1.374e-03 retry False elapsed 1259.6
+25 M4_retruncated sweep 710 Q 5.44091591e+07 rel 1.730e-05 s_max 1.336e-03 retry False elapsed 1281.7
+25 M4_retruncated sweep 720 Q 5.44001383e+07 rel 1.620e-05 s_max 1.335e-03 retry False elapsed 1298.9
+25 M4_retruncated sweep 730 Q 5.43912160e+07 rel 1.681e-05 s_max 1.369e-03 retry False elapsed 1316.2
+25 M4_retruncated sweep 740 Q 5.43817376e+07 rel 1.777e-05 s_max 1.360e-03 retry False elapsed 1333.7
+25 M4_retruncated sweep 750 Q 5.43721621e+07 rel 1.718e-05 s_max 1.271e-03 retry False elapsed 1351.2
+25 M4_retruncated sweep 760 Q 5.43635244e+07 rel 1.465e-05 s_max 1.142e-03 retry False elapsed 1373.5
+25 M4_retruncated sweep 770 Q 5.43563019e+07 rel 1.234e-05 s_max 1.072e-03 retry False elapsed 1391.5
+25 M4_retruncated sweep 780 Q 5.43500421e+07 rel 1.094e-05 s_max 1.048e-03 retry False elapsed 1409.0
+25 M4_retruncated sweep 790 Q 5.43443783e+07 rel 1.005e-05 s_max 1.044e-03 retry False elapsed 1426.0
+25 M4_retruncated sweep 800 Q 5.43390956e+07 rel 9.499e-06 s_max 1.054e-03 retry False elapsed 1443.9
+25 M4_retruncated sweep 810 Q 5.43340156e+07 rel 9.281e-06 s_max 1.078e-03 retry False elapsed 1466.0
+25 M4_retruncated sweep 820 Q 5.43289279e+07 rel 9.517e-06 s_max 1.117e-03 retry False elapsed 1482.2
+25 M4_retruncated sweep 830 Q 5.43235039e+07 rel 1.051e-05 s_max 1.175e-03 retry False elapsed 1499.3
+25 M4_retruncated sweep 840 Q 5.43172243e+07 rel 1.255e-05 s_max 1.232e-03 retry False elapsed 1516.0
+25 M4_retruncated sweep 850 Q 5.43098027e+07 rel 1.432e-05 s_max 1.223e-03 retry False elapsed 1532.8
+25 M4_retruncated sweep 860 Q 5.43021240e+07 rel 1.357e-05 s_max 1.115e-03 retry False elapsed 1554.2
+25 M4_retruncated sweep 870 Q 5.42954406e+07 rel 1.127e-05 s_max 9.876e-04 retry False elapsed 1571.5
+25 M4_retruncated sweep 880 Q 5.42898421e+07 rel 9.685e-06 s_max 9.220e-04 retry False elapsed 1588.3
+25 M4_retruncated sweep 890 Q 5.42848422e+07 rel 8.906e-06 s_max 9.015e-04 retry False elapsed 1605.1
+25 M4_retruncated sweep 900 Q 5.42801245e+07 rel 8.568e-06 s_max 9.045e-04 retry False elapsed 1622.0
+25 M4_retruncated sweep 910 Q 5.42754877e+07 rel 8.575e-06 s_max 9.222e-04 retry False elapsed 1643.6
+25 M4_retruncated sweep 920 Q 5.42707384e+07 rel 8.948e-06 s_max 9.445e-04 retry False elapsed 1660.8
+25 M4_retruncated sweep 930 Q 5.42657139e+07 rel 9.493e-06 s_max 9.477e-04 retry False elapsed 1678.7
+25 M4_retruncated sweep 940 Q 5.42605404e+07 rel 9.410e-06 s_max 9.071e-04 retry False elapsed 1696.2
+25 M4_retruncated sweep 950 Q 5.42556976e+07 rel 8.459e-06 s_max 8.462e-04 retry False elapsed 1712.5
+25 M4_retruncated sweep 960 Q 5.42514209e+07 rel 7.444e-06 s_max 8.012e-04 retry False elapsed 1734.2
+25 M4_retruncated sweep 970 Q 5.42476234e+07 rel 6.672e-06 s_max 7.741e-04 retry False elapsed 1749.0
+25 M4_retruncated sweep 980 Q 5.42441815e+07 rel 6.103e-06 s_max 7.586e-04 retry False elapsed 1762.7
+25 M4_retruncated sweep 990 Q 5.42410028e+07 rel 5.681e-06 s_max 7.512e-04 retry False elapsed 1776.6
+25 M4_retruncated sweep 1000 Q 5.42380164e+07 rel 5.380e-06 s_max 7.497e-04 retry False elapsed 1790.3
+停止 25 M4_retruncated max_sweeps
+
+===== CELL 14 =====
+本実行の検算 3・4 は通りました。
+
+===== CELL 16 =====
+{'50': {'verdict': 'local_solver_unresolved', 'delta_q': 0.007018345621307332, 'equivalence_tolerance': 0.001}, '25': {'verdict': 'max_sweeps_unresolved', 'delta_q': 0.0036021858921718446, 'equivalence_tolerance': 0.001}}
+
+===== CELL 18 =====
+摂動の対象になる予算はありません。
+
+===== CELL 20 =====
+history 3426 diagnostics 69 failures 1
+
+NOTEBOOK_FINISHED

@@ -83,7 +83,7 @@ SVD/Tuckerの式だけでなく、
 
 も実験を通して整理している。
 
-SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、TT/MPSの基礎実装は [[08_TT_MPS基礎実装検証/README]]、学習済みNNへのTT適用は [[40_TT_MPS_NN圧縮/README]]、DMRGへの接続は [[50_DMRG/README]]、現行srcの設計は [[90_src設計/README]] を参照。
+SVDの全体結果は [[SVD実験まとめ]]、Tucker/HOOIは [[06_Tucker基礎実装検証/README]]、TT/MPSの基礎実装は [[08_TT_MPS基礎実装検証/README]]、学習済みNNへのTT適用は [[40_TT_MPS_NN圧縮/README]]、DMRGへの接続は [[50_DMRG/README]]、LLM単層のTT対行列低rank比較は [[60_LLM_TT_vs_Matrix/README]]、現行srcの設計は [[90_src設計/README]] を参照。
 
 ---
 

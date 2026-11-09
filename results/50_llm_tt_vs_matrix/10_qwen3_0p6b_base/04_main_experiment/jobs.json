@@ -1,0 +1,1124 @@
+{
+  "jobs": [
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L14_down_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L14_down_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L14_gate_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L14_gate_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L14_up_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L14_up_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_q_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_q_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_k_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_k_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_v_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_v_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L14_o_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L14_o_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L14_down_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L14_down_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L14_gate_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L14_gate_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L14_up_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L14_up_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_q_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_q_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_k_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_k_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_v_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_v_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L14_o_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L14_o_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L14_down_50_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L14_down_25_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L14_gate_50_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L14_gate_25_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_q_50_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_q_25_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_k_50_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_k_25_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_v_50_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_v_25_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L14_o_50_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L14_o_25_M5_M4r_M4rinit_lam1e-06",
+      "init": "M4r",
+      "kind": "M5_M4r",
+      "lambda": 1e-06,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L14_down_50_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L14_down_50_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L14_down_25_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L14_down_25_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L14_gate_50_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L14_gate_50_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L14_gate_25_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L14_gate_25_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_q_50_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L14_q_50_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_q_25_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L14_q_25_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L14_o_50_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L14_o_50_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L14_o_25_M5_lambda_M3init_lam1e-07",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-07,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L14_o_25_M5_lambda_M3init_lam1e-05",
+      "init": "M3",
+      "kind": "M5_lambda",
+      "lambda": 1e-05,
+      "layer": 14,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L7_down_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L7_down_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L7_gate_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L7_gate_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L7_up_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L7_up_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L7_q_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L7_q_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L7_k_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L7_k_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L7_v_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L7_v_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L7_o_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L7_o_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L7_down_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L7_down_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L7_gate_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L7_gate_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L7_up_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L7_up_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L7_q_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L7_q_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L7_k_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L7_k_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L7_v_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L7_v_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L7_o_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L7_o_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 7,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L21_down_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L21_down_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L21_gate_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L21_gate_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L21_up_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L21_up_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L21_q_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L21_q_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L21_k_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L21_k_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L21_v_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L21_v_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L21_o_50_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L21_o_25_M5_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M5",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 50,
+      "group": "down_in",
+      "id": "L21_down_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 25,
+      "group": "down_in",
+      "id": "L21_down_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "down"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L21_gate_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L21_gate_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "gate"
+    },
+    {
+      "budget_percent": 50,
+      "group": "mlp_in",
+      "id": "L21_up_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 25,
+      "group": "mlp_in",
+      "id": "L21_up_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "up"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L21_q_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L21_q_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "q"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L21_k_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L21_k_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "k"
+    },
+    {
+      "budget_percent": 50,
+      "group": "attn_in",
+      "id": "L21_v_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 25,
+      "group": "attn_in",
+      "id": "L21_v_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "v"
+    },
+    {
+      "budget_percent": 50,
+      "group": "o_in",
+      "id": "L21_o_50_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "o"
+    },
+    {
+      "budget_percent": 25,
+      "group": "o_in",
+      "id": "L21_o_25_M3F_M3init_lam1e-06",
+      "init": "M3",
+      "kind": "M3F",
+      "lambda": 1e-06,
+      "layer": 21,
+      "projection": "o"
+    }
+  ]
+}

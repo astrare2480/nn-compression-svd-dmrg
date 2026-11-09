@@ -1,0 +1,61 @@
+{
+  "RUN_FULL": true,
+  "RUN_SMOKE": false,
+  "environment": {
+    "cuda_version": "12.8",
+    "gpu_name": "NVIDIA GeForce RTX 5070 Ti",
+    "torch_version": "2.11.0+cu128"
+  },
+  "equivalence_tolerance": 0.001,
+  "full_rule": {
+    "checkpoint_every": 50,
+    "local_residual_tolerance": 1e-08,
+    "max_sweeps": 1000,
+    "monotone_tolerance": 1e-10,
+    "patience_sweeps": 5,
+    "relative_decrease_tolerance": 1e-07,
+    "retry_max_refinements": 10,
+    "stationarity_tolerance": 1e-06
+  },
+  "input_sha256": {
+    "als_trajectory.csv": "ac43dbb6ecef6b933ec261a7d115de52d2bc912374c8a9045f9aa35f5559dfc7",
+    "calibration_grams.pt": "5e0d2098091a13577d6899b73bfdc41b0df8435ea8f814b24cd089d91eff658c",
+    "m3_T2_25.pt": "65175f2c2c5d87b81bf04d1ab607f78f89cf83f8360581972b19c556ca5898d9",
+    "m3_T2_50.pt": "368879b2e63df613384824b5a2bf3b53fc25f612922eeb08e2b7751e4404c82a",
+    "m4_T2_25.pt": "8dcfd9601013f729a8e169fc66268bf9874e77c11da6618e389e368a5e5ac600",
+    "m4_T2_50.pt": "270e0000bb890050752148b5e52ed7db9d4342023a9605a83e1734751a824a46",
+    "m5_history.csv": "0c745c517c87b0d03abcfa7f45a0bd7d478efae656dc6f2ea095c13a782a525b",
+    "m5_initial_values.csv": "4fcb2953efbbc8496a36a5ba3e404aa01d211b5a602bbcdc541bffdfb1a50541",
+    "rho.csv": "774532104d877b1251222c8dd06306f46049228ab2ac5fb92f43dc0ebab88ba1",
+    "validation_other_activations.pt": "40a980a5abb0780a9c6424fe5fe1be4288b7815fb57da9f750815c69b4832dc8",
+    "validation_other_grams.pt": "cd5935dcb953a7912e76aedd894a519e679909344788bffaad1bb707c8790efb",
+    "validation_same_activations.pt": "8e1002d369c8f8588cc180e0c25b87da0248b40bd9ae33359e744ff9933d20e5",
+    "validation_same_grams.pt": "8286d220e543fbdf3179bd5607429dc9d0926acec41b3543e35777b838441c53",
+    "weights_float64.pt": "f0815718a84d3cb0bd67d4e4651b9b2dbff1f0f71d24dbbd3647b26c09b19cfa"
+  },
+  "smoke_rule": {
+    "checkpoint_every": 2,
+    "local_residual_tolerance": 1e-08,
+    "max_sweeps": 5,
+    "monotone_tolerance": 1e-10,
+    "patience_sweeps": 5,
+    "relative_decrease_tolerance": 1e-07,
+    "retry_max_refinements": 10,
+    "stationarity_tolerance": 1e-06
+  },
+  "solver_config": {
+    "adaptive_eta": 0.1,
+    "cg_relative_tolerance": 1e-08,
+    "cg_tolerance_max": 0.01,
+    "cg_tolerance_mode": "fixed",
+    "device": "cuda",
+    "gradient_tolerance": null,
+    "max_cg_iterations": 500,
+    "max_refinements": 5,
+    "max_sweeps": 50,
+    "precision": "float32_refine",
+    "preconditioner": "jacobi",
+    "sweep_tolerance": 1e-06,
+    "time_limit_seconds": null
+  }
+}

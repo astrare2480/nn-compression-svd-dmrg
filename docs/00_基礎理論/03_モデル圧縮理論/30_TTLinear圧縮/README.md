@@ -26,5 +26,6 @@ TT-matrix・TTLinearの数学的基礎を、学習済みMLPの一層置換、ran
 20. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/78_accuracy許容差とParetoによる圧縮候補選択]]
 21. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/79_データ計量付きTT_bond切り詰めとALS]]
 22. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/80_適応bond_rank選択と非一様rank配分]]
+23. [[00_基礎理論/03_モデル圧縮理論/30_TTLinear圧縮/81_計量付きTT_ALSの局所方程式と停留性]]
 
 spectral normと最大特異値の一般的な導出は [[00_基礎理論/01_数学基礎/01_線形代数/07_spectral_normと最大特異値_supとmax]]、前提となるTT-matrixの定義とforwardは [[00_基礎理論/01_数学基礎/02_テンソル代数/60_TT_matrix_TTLinear基礎/README]]、PyTorchの一般的な小規模確認は [[08_TT_MPS基礎実装検証/README]]、学習済みFashion-MNIST MLPへの適用記録は [[40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README]] を参照する。

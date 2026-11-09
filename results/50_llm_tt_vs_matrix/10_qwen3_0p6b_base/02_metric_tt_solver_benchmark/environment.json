@@ -1,0 +1,7 @@
+{
+  "cuda_version": "12.8",
+  "gpu_name": "NVIDIA GeForce RTX 5070 Ti",
+  "matmul_tf32_before": false,
+  "note": "計測中の TF32 は各セルで切る。M5 コアは使わない。短い ALS の初期値は M3 の 50% である。",
+  "torch_version": "2.11.0+cu128"
+}

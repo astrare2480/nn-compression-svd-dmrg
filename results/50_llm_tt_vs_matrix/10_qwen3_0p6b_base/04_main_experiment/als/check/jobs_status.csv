@@ -1,0 +1,2 @@
+job_id,kind,layer,projection,budget_percent,stop_reason,sweeps,q_lambda,delta_50,s_max,n_warnings,n_stage2,n_stage3,seconds,peak_memory_bytes,check_ok,check_relative_gap,check_detail
+L14_k_25_M5_M3init_lam1e-06,M5,14,k,25,max_sweeps,2,535900.0703814543,,0.030661125546911132,0,4,0,11.553046099987114,126851584,True,2.1723326467203158e-16,recomputed=535900.0703814542; reference=3662940.7408309723; monotone=True

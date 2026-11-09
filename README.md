@@ -191,6 +191,8 @@ Fashion-MNIST CNNでは、`conv2`をTT-Convへ置換した。rank制限なしの
 - [TT/MPSによるNN圧縮](docs/40_TT_MPS_NN圧縮/README.md)
 - [Fashion-MNIST MLPのTT圧縮](docs/40_TT_MPS_NN圧縮/10_FashionMNIST_MLP/README.md)
 - [Fashion-MNIST CNNのTT圧縮](docs/40_TT_MPS_NN圧縮/20_FashionMNIST_CNN/README.md)
+- [LLMのTT圧縮と行列低rank近似の比較](docs/60_LLM_TT_vs_Matrix/README.md)
+- [Qwen3-0.6B-Baseの長いALS収束確認](docs/60_LLM_TT_vs_Matrix/10_Qwen3_0p6B_Base/03_長いALSの収束確認と初期値依存.md)
 
 ## DMRG入門
 

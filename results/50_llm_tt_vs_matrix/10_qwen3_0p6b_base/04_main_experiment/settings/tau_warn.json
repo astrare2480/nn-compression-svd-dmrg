@@ -1,0 +1,8 @@
+{
+  "tau_warn": 1e-07,
+  "decided": "2026-11-08",
+  "rule": "design.md §3.2: candidate 1e-7 only; fixed if every stage-3 residual in precheck 1 and precheck 2 is <= 1e-7 and finite, else 1e-8",
+  "precheck_1": "results/.../solver_dev/claude_checks.json (g, g_continue): 10 stage-3 updates, residuals 6.2e-9 to 9.1e-9",
+  "precheck_2": "results/.../smoke_summary.json stage3_residuals: 12 stage-3 updates, max 9.79e-9",
+  "decided_by": "Claude, mechanically by the pre-registered rule"
+}

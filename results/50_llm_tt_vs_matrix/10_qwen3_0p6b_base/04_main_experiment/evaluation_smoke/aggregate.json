@@ -1,0 +1,45 @@
+{
+  "checks_passed": true,
+  "development_cells": [
+    {
+      "cell": "L14_up_25",
+      "class_c4": "high",
+      "class_wt2": "high",
+      "rho_c4": 0.7628857616214296,
+      "rho_wt2": 0.8532591103685975
+    }
+  ],
+  "flags": {
+    "attained_residual_positive_wt2": [
+      "L14_down_25",
+      "L14_up_25",
+      "L14_q_25"
+    ],
+    "lambda_sensitive": [],
+    "not_classified": [],
+    "optimization_censored": [],
+    "small_baseline_gap": [],
+    "strong_calibration_validation_reversal": []
+  },
+  "main": {
+    "skipped": "main_set のセルが 2（smoke など）"
+  },
+  "n_checks": 48,
+  "near_saturated_bond": [],
+  "sublayer_class_counts_main_c4": {
+    "denominator_not_informative": 0,
+    "high": 2,
+    "low": 0,
+    "mid": 0,
+    "not_classified": 0,
+    "unresolved": 0
+  },
+  "sublayer_class_counts_main_wt2": {
+    "denominator_not_informative": 0,
+    "high": 2,
+    "low": 0,
+    "mid": 0,
+    "not_classified": 0,
+    "unresolved": 0
+  }
+}

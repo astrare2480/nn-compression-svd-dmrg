@@ -1,0 +1,95 @@
+{
+  "checks": {
+    "check_1_exact_tt_relative_error": {
+      "T1": 7.26695432841186e-15,
+      "T2": 4.4924066311278595e-15
+    },
+    "check_2": {
+      "discarded_energy": 194.32466619337822,
+      "plain_q": 226.53855094168813,
+      "q_lambda": 194.3246661933784,
+      "q_lambda_minus_discarded_energy_abs": 1.7053025658242404e-13
+    },
+    "check_3": {
+      "hvp_max_abs": 7.105427357601002e-15,
+      "jacobi_max_abs": 3.552713678800501e-15
+    },
+    "check_4": {
+      "difference": 4.10981432403025,
+      "gram_lambda_min": 9.11041109906679,
+      "hessian_min": 13.22022542309704
+    },
+    "check_5_block_cg": {
+      "reason": "K⊗I のブロック CG は実装していない。HVP を正とする。",
+      "status": "not_applicable"
+    },
+    "check_6_cpu": {
+      "logits_equal": true,
+      "logits_max_abs": 0.0,
+      "weight_equal": true,
+      "window_tokens": 1024
+    },
+    "check_6_gpu_perplexity": {
+      "agreement_rule": "差し替えと1回目の差が、1回目と2回目の差の10倍または絶対の下限以下。",
+      "cuda_max_allocated": 4305736704,
+      "mean_nll_delta": 0.0,
+      "mean_nll_limit": 1e-12,
+      "mean_nll_noise": 0.0,
+      "perplexity_delta": 0.0,
+      "perplexity_limit": 1e-08,
+      "perplexity_noise": 0.0,
+      "runs": [
+        {
+          "label": "direct_1",
+          "max_length": 1024,
+          "mean_nll": 2.540171945164497,
+          "n_tokens": 262336,
+          "n_windows": 512,
+          "perplexity": 12.681851366393587,
+          "seconds": 113.04684189999534,
+          "stride": 512,
+          "use_cache": false
+        },
+        {
+          "label": "direct_2",
+          "max_length": 1024,
+          "mean_nll": 2.540171945164497,
+          "n_tokens": 262336,
+          "n_windows": 512,
+          "perplexity": 12.681851366393587,
+          "seconds": 110.78374279999116,
+          "stride": 512,
+          "use_cache": false
+        },
+        {
+          "label": "bf16_float64_float32",
+          "max_length": 1024,
+          "mean_nll": 2.540171945164497,
+          "n_tokens": 262336,
+          "n_windows": 512,
+          "perplexity": 12.681851366393587,
+          "seconds": 110.79635760000383,
+          "stride": 512,
+          "use_cache": false
+        }
+      ]
+    },
+    "check_7_real_parameter_counts": {
+      "n_mismatches": 0,
+      "n_rows": 12
+    },
+    "check_8_hash_overlaps": {},
+    "pytest": {
+      "full_suite_not_rerun": {
+        "earlier_run_in_this_task": "5 failed, 2385 passed, 1 skipped, 3 errors, 35.27s",
+        "reason": "Notebook 11 は再描画フラグが真のまま実行され、既存の結果を書き換え得る。全スイートはこの Notebook では再実行しない。"
+      },
+      "internal_helper_log": "\u001b[31mF\u001b[0m\u001b[31m                                                                        [100%]\u001b[0m\n================================== FAILURES ===================================\n\u001b[1m\u001b[31mE   AssertionError: Internal_API.mdにoutput_error_ratios_from_gramの定義元ごとの説明がありません。\u001b[0m\n\u001b[1m\u001b[31m    assert 0 >= 1\u001b[0m\n\u001b[1m\u001b[31m     +  where 0 = <built-in method count of str object at 0x000001D02571EC80>('`output_error_ratios_from_gram`')\u001b[0m\n\u001b[1m\u001b[31m     +    where <built-in method count of str object at 0x000001D02571EC80> = '# Internal helper API境界\\n\\n**Status:** Internal — Core API v1のPublic APIではない\\n\\n## 目的\\n\\n`src/nn_compression/`内で複数のPu...ssion/TTLinear]]、[[90_src設計/05_Core_API_v1/tt_mps/ordered_factorizations]]、[[90_src設計/05_Core_API_v1/tensor/unfold]]\\n'.count\u001b[0m\n\u001b[1m\u001b[31mD:\\dev\\nn-compression-svd-dmrg\\tests\\test_core_api_v1_docs_sync.py\u001b[0m:236: AssertionError: Internal_API.mdにoutput_error_ratios_from_gramの定義元ごとの説明がありません。\n\u001b[36m\u001b[1m=========================== short test summary info ===========================\u001b[0m\n\u001b[31mFAILED\u001b[0m tests/test_core_api_v1_docs_sync.py::\u001b[1mtest_visible_internal_helpers_are_listed_in_internal_boundary\u001b[0m - AssertionError: Internal_API.mdにoutput_error_ratios_from_gramの定義元ごと...\n\u001b[31m\u001b[31m\u001b[1m1 failed\u001b[0m\u001b[31m in 2.19s\u001b[0m\u001b[0m\n\n",
+      "internal_helper_returncode": 1,
+      "new_tests_returncode": 0,
+      "new_tests_stderr": "",
+      "new_tests_stdout": "\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m.\u001b[0m\u001b[32m                                                       [100%]\u001b[0m\n\u001b[32m\u001b[32m\u001b[1m18 passed\u001b[0m\u001b[32m in 2.65s\u001b[0m\u001b[0m\n"
+    },
+    "weight_bf16_float64_float32_bitwise_equal": true
+  }
+}

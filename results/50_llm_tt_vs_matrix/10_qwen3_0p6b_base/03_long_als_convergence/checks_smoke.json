@@ -1,0 +1,102 @@
+{
+  "check1": {
+    "passed": true,
+    "runs": {
+      "25_M3": {
+        "expected": 160255803.7364327,
+        "initial_q_lambda": 160255803.73643273,
+        "relative_gap": 1.859671955264109e-16
+      },
+      "25_M4_retruncated": {
+        "expected": 275675344.37701094,
+        "initial_q_lambda": 275675344.3770115,
+        "relative_gap": 1.9459186826837984e-15
+      },
+      "50_M3": {
+        "expected": 120980140.89096689,
+        "initial_q_lambda": 120980140.89096689,
+        "relative_gap": 0.0
+      },
+      "50_M4_retruncated": {
+        "expected": 236066768.29707655,
+        "initial_q_lambda": 236066768.29707658,
+        "relative_gap": 1.2624531018356124e-16
+      }
+    }
+  },
+  "check1_first": {
+    "budget": "50",
+    "expected": 120980140.89096689,
+    "initial": "M3",
+    "initial_q_lambda": 120980140.89096689,
+    "passed": true,
+    "relative_gap": 0.0
+  },
+  "check2": {
+    "bitwise_equal": true,
+    "max_relative_gap": 0.0,
+    "passed": true,
+    "q_lambda": [
+      34793743.04997083,
+      33183750.182686172,
+      32211445.905647084,
+      31568643.603398327,
+      31115467.22434319
+    ],
+    "reference": [
+      34793743.04997083,
+      33183750.182686172,
+      32211445.905647084,
+      31568643.603398327,
+      31115467.22434319
+    ],
+    "relative_gaps": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "check3": {
+    "passed": true,
+    "runs": {
+      "25_M3": true,
+      "25_M4_retruncated": true,
+      "50_M3": true,
+      "50_M4_retruncated": true
+    }
+  },
+  "check4": {
+    "passed": true,
+    "runs": {
+      "25_M3": {
+        "recomputed": 57965505.656121805,
+        "recorded": 57965505.65612182,
+        "relative_gap": 2.5706945924440364e-16
+      },
+      "25_M4_retruncated": {
+        "recomputed": 64233075.36225362,
+        "recorded": 64233075.36225362,
+        "relative_gap": 0.0
+      },
+      "50_M3": {
+        "recomputed": 31115467.224343188,
+        "recorded": 31115467.22434319,
+        "relative_gap": 1.1972471027359128e-16
+      },
+      "50_M4_retruncated": {
+        "recomputed": 32838588.97083878,
+        "recorded": 32838588.970838785,
+        "relative_gap": 1.1344245947260505e-16
+      }
+    }
+  },
+  "resume": {
+    "core_max_abs": 0.0,
+    "core_max_rel": 0.0,
+    "matched": true,
+    "mismatched_fields": [],
+    "resumed_from_sweep": 2
+  }
+}

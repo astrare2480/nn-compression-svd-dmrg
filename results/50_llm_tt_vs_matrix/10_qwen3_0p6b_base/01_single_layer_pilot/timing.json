@@ -1,0 +1,67 @@
+{
+  "condition": {
+    "budget": "25",
+    "canonicality_max_error": 5.892202314945044e-15,
+    "cg_iterations_requested": 10,
+    "core_shape": [
+      77,
+      16,
+      8,
+      77
+    ],
+    "initial": "M3",
+    "probe_relative_tolerance": 1e-30,
+    "probe_tolerance_reason": "10反復まで残差で止めないための計測専用の値。本実行の許容値は 1e-8 のまま。",
+    "rank_cap": 77,
+    "ranks": [
+      1,
+      77,
+      77,
+      1
+    ],
+    "site": 1,
+    "tensorization": "T2"
+  },
+  "extrapolation": {
+    "assumption": "測った T2・25%・site 1 の1コアを、すべてのサイトとすべての M5 条件に使う。HVP の密行列積は rank にほぼ依らない。コアの再構成は rank が大きい T1・50% の方が重い可能性がある。",
+    "hvp_applies_per_site_at_500": 501,
+    "jobs": "T1 と T2 のそれぞれで、予算2つ × 初期値2つ = 4本。合計8本。",
+    "main_m5_hours": 12.023634733147142,
+    "main_m5_seconds": 43285.085039329715,
+    "seconds_per_site_at_500": 18.035452099720715,
+    "sensitivity_hours_if_same_eight_jobs": 12.023634733147142,
+    "sensitivity_note": "16系列の M2 と M5 の組み合わせは設計が格子を指定していない。M5 を主実験と同じ8本とすると、上の時間をもう一度足す。M2 の SVD はこの見積もりには入れていない。",
+    "updates_per_sweep": {
+      "T1": 7,
+      "T2": 5
+    },
+    "worst_cg_iterations": 500,
+    "worst_sweeps": 50
+  },
+  "hvp_seconds_median": 0.03297030000248924,
+  "hvp_seconds_samples": [
+    0.03297030000248924,
+    0.032719599999836646,
+    0.03359749999071937
+  ],
+  "memory_bytes": {
+    "rss_after_update": 3944751104,
+    "rss_before_update": 3958681600,
+    "rss_peak_during_hvp": 3958681600,
+    "rss_peak_during_update": 3964870656
+  },
+  "reference_gemm_3072x1024_by_1024x1024_seconds": 0.01967549999244511,
+  "update": {
+    "accept_seconds": 0.0646952999959467,
+    "accepted": true,
+    "cg_seconds": 0.39169099999708124,
+    "converged": false,
+    "final_relative_residual": 0.1605238222552159,
+    "hessian_applies_in_cg": 11,
+    "iterations": 10,
+    "jacobi_seconds": 0.0017514999926788732,
+    "q_after": 84526848.32368915,
+    "q_before": 160255803.73643273,
+    "seconds_per_cg_iteration_including_hvp": 0.03916909999970812
+  }
+}

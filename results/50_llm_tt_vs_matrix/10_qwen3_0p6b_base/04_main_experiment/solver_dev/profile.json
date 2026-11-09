@@ -1,0 +1,290 @@
+{
+  "events": [
+    {
+      "count": 2016,
+      "cpu_time_total": 0.09649649999999883,
+      "device_time_total": 0.08932287500000544,
+      "key": "aten::bmm",
+      "self_cpu_time_total": 0.0765310999999934,
+      "self_device_time_total": 0.08810386900000546
+    },
+    {
+      "count": 1005,
+      "cpu_time_total": 0.23825999999999767,
+      "device_time_total": 0.13906578699999866,
+      "key": "hvp_dense",
+      "self_cpu_time_total": 0.07361419999999605,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 2010,
+      "cpu_time_total": 0.1187490000000032,
+      "device_time_total": 0.0899543989999996,
+      "key": "aten::tensordot",
+      "self_cpu_time_total": 0.014574099999984479,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 3015,
+      "cpu_time_total": 0.12275320000000528,
+      "device_time_total": 0.3811370030000048,
+      "key": "aten::mm",
+      "self_cpu_time_total": 0.07426249999998216,
+      "self_device_time_total": 0.3790802130000048
+    },
+    {
+      "count": 1005,
+      "cpu_time_total": 0.058977799999997776,
+      "device_time_total": 0.2911826040000052,
+      "key": "hvp_gemm",
+      "self_cpu_time_total": 0.013890400000001484,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 1005,
+      "cpu_time_total": 0.2589182999999945,
+      "device_time_total": 0.11662650700000145,
+      "key": "hvp_adjoint",
+      "self_cpu_time_total": 0.059155700000005355,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 7,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.06940905100000058,
+      "key": "_ZN7cutlass7Kernel2I49cutlass_80_tensorop_d884gemm_64x32_16x4_nn_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.06940905100000058
+    },
+    {
+      "count": 4,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.0044779719999999985,
+      "key": "_ZN7cutlass7Kernel2I49cutlass_80_tensorop_d884gemm_64x64_16x4_tn_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.0044779719999999985
+    },
+    {
+      "count": 1005,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.2140117209999967,
+      "key": "hvp_dense",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.2140117209999967
+    },
+    {
+      "count": 3,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.0018106390000000047,
+      "key": "_ZN7cutlass7Kernel2I49cutlass_80_tensorop_d884gemm_64x32_16x4_nt_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.0018106390000000047
+    },
+    {
+      "count": 3,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.003296087000000016,
+      "key": "_ZN7cutlass7Kernel2I49cutlass_80_tensorop_d884gemm_64x64_16x4_nn_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.003296087000000016
+    },
+    {
+      "count": 1005,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.3009215080000042,
+      "key": "hvp_gemm",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.3009215080000042
+    },
+    {
+      "count": 1005,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.14210039199999586,
+      "key": "hvp_adjoint",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.14210039199999586
+    },
+    {
+      "count": 1010,
+      "cpu_time_total": 0.05319980000000134,
+      "device_time_total": 0.006722279999999548,
+      "key": "aten::linalg_vector_norm",
+      "self_cpu_time_total": 0.015739799999990332,
+      "self_device_time_total": 0.0066492219999995435
+    },
+    {
+      "count": 2010,
+      "cpu_time_total": 0.8206039000000047,
+      "device_time_total": 0.0021225899999892063,
+      "key": "aten::item",
+      "self_cpu_time_total": 0.0033630999999987544,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 2010,
+      "cpu_time_total": 0.7773503000000038,
+      "device_time_total": 0.0,
+      "key": "cudaStreamSynchronize",
+      "self_cpu_time_total": 0.7773503000000038,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 4011,
+      "cpu_time_total": 0.581515099999999,
+      "device_time_total": 0.007385442999999534,
+      "key": "cudaDeviceSynchronize",
+      "self_cpu_time_total": 0.581515099999999,
+      "self_device_time_total": 0.007385442999999534
+    },
+    {
+      "count": 1,
+      "cpu_time_total": 0.0,
+      "device_time_total": 3.839999999996507e-06,
+      "key": "_Z20magma_sgemmEx_kernelIfffLb0ELb1ELi6ELi4ELi6ELi3ELi4EEviii6TensoriS0_iS0_iS0_iiiPKT_S3_S1_S1_i18cublasLtEpilogue_tiPKvx",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 3.839999999996507e-06
+    },
+    {
+      "count": 1,
+      "cpu_time_total": 0.0,
+      "device_time_total": 6.592000000004191e-06,
+      "key": "_ZN7cutlass7Kernel2I42cutlass_80_simt_sgemm_128x32_8x5_nt_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 6.592000000004191e-06
+    },
+    {
+      "count": 1,
+      "cpu_time_total": 0.0,
+      "device_time_total": 5.4720000000088476e-06,
+      "key": "_ZN7cutlass7Kernel2I41cutlass_80_simt_sgemm_64x64_8x5_nn_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 5.4720000000088476e-06
+    },
+    {
+      "count": 1,
+      "cpu_time_total": 0.0,
+      "device_time_total": 2.0480000000097787e-06,
+      "key": "_ZN7cutlass7Kernel2I41cutlass_80_simt_sgemm_64x64_8x5_tn_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 2.0480000000097787e-06
+    },
+    {
+      "count": 1002,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.030363617999997514,
+      "key": "_ZN7cutlass7Kernel2I41cutlass_80_simt_sgemm_64x64_8x5_nt_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.030363617999997514
+    },
+    {
+      "count": 2004,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.08729189800000406,
+      "key": "_ZN7cutlass7Kernel2I42cutlass_80_simt_sgemm_128x64_8x5_nn_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.08729189800000406
+    },
+    {
+      "count": 1002,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.2276553610000046,
+      "key": "_ZN7cutlass7Kernel2I43cutlass_80_simt_sgemm_256x128_8x4_nn_align1EEvNT_6ParamsE",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.2276553610000046
+    },
+    {
+      "count": 1002,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.04252791700000306,
+      "key": "_Z20magma_sgemmEx_kernelIfffLb1ELb0ELi6ELi4ELi6ELi3ELi4EEviii6TensoriS0_iS0_iS0_iiiPKT_S3_S1_S1_i18cublasLtEpilogue_tiPKvx",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.04252791700000306
+    },
+    {
+      "count": 2002,
+      "cpu_time_total": 0.09369529999999929,
+      "device_time_total": 0.022128516999996413,
+      "key": "aten::dot",
+      "self_cpu_time_total": 0.03681540000000776,
+      "self_device_time_total": 0.022102148999996397
+    },
+    {
+      "count": 2002,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.01895701499999713,
+      "key": "_Z10dot_kernelIfLi128ELi0E15cublasDotParamsI16cublasGemvTensorIKfE30cublasGemvTensorStridedBatchedIfEEEvT2_",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.01895701499999713
+    },
+    {
+      "count": 1000,
+      "cpu_time_total": 0.076073099999993,
+      "device_time_total": 0.014117993999995757,
+      "key": "cg_dot",
+      "self_cpu_time_total": 0.022098899999994582,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 1000,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.017973513999996183,
+      "key": "cg_dot",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.017973513999996183
+    },
+    {
+      "count": 1000,
+      "cpu_time_total": 0.45781689999999803,
+      "device_time_total": 0.0012637489999940735,
+      "key": "cg_curvature_item",
+      "self_cpu_time_total": 0.012744199999996578,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 1000,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.0012637489999940735,
+      "key": "cg_curvature_item",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.0012637489999940735
+    },
+    {
+      "count": 1000,
+      "cpu_time_total": 0.3952679000000004,
+      "device_time_total": 0.009093434999986667,
+      "key": "cg_residual_item",
+      "self_cpu_time_total": 0.025448999999990687,
+      "self_device_time_total": 0.0
+    },
+    {
+      "count": 1000,
+      "cpu_time_total": 0.0,
+      "device_time_total": 0.10579175699999521,
+      "key": "cg_residual_item",
+      "self_cpu_time_total": 0.0,
+      "self_device_time_total": 0.10579175699999521
+    }
+  ],
+  "gpu_contended": true,
+  "hypothesis": "掃引時間のうち HVP 以外の約 1.35 秒は、主に CG 内の .item() 同期である。",
+  "hypothesis_holds": false,
+  "hypothesis_rule": "サイト 1 の 1 更新で、cg_curvature_item と cg_residual_item の CPU 時間が、壁時計から HVP の CUDA 時間を引いた残りのうち 50% 以上なら成り立つ。",
+  "site1_cg_statuses": [
+    "max_iterations",
+    "max_iterations"
+  ],
+  "site1_hvp_cuda_seconds": 1.203908519000002,
+  "site1_hvp_timer_seconds": 0.936133499519201,
+  "site1_item_cpu_seconds": 0.8530847999999984,
+  "site1_non_hvp_seconds": 3.4664667809892435,
+  "site1_preconditioner_apply_seconds": 0.15822449990082532,
+  "site1_preconditioner_seconds": 0.06187140001566149,
+  "site1_wall_seconds": 4.670375299989246,
+  "sweep20_median_accept_seconds": 0.21883129997877404,
+  "sweep20_median_hvp_seconds": 1.6310942998388782,
+  "sweep20_median_non_hvp_seconds": 3.4842773001582827,
+  "sweep20_median_preconditioner_apply_seconds": 0.34189379948657006,
+  "sweep20_median_preconditioner_seconds": 0.00392330001341179,
+  "sweep20_median_qr_seconds": 0.061615000042365864,
+  "sweep20_median_seconds": 5.115371599997161
+}

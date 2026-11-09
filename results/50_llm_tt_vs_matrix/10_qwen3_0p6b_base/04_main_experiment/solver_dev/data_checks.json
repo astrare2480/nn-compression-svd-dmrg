@@ -1,0 +1,45 @@
+{
+  "d_ref_down": 9104194.162342528,
+  "d_ref_up": 103865712.90466002,
+  "down_in_modes": [
+    64,
+    16,
+    3
+  ],
+  "down_m2_abs_gap": 9.313225746154785e-10,
+  "down_m2_bitwise_equal": false,
+  "down_m2_ok": true,
+  "down_m2_rank": 384,
+  "down_m2_relative_gap": 2.963556439343803e-16,
+  "down_m2_within_1e-8": true,
+  "down_n_tokens": 131072,
+  "down_out_modes": [
+    2,
+    8,
+    64
+  ],
+  "down_ranks": [
+    1,
+    109,
+    109,
+    1
+  ],
+  "down_small_baseline_gap": false,
+  "hash_match": true,
+  "modes_and_ranks_match_design": true,
+  "n_sequences": 128,
+  "q_down_m2": 3142584.2351148,
+  "q_down_m3": 12246778.397457328,
+  "q_up_m2": 17114427.986306872,
+  "q_up_m3": 120980140.89096689,
+  "up_gram_bitwise_equal": false,
+  "up_gram_relative_frobenius": 7.327496575555371e-16,
+  "up_m2_abs_gap": 1.1175870895385742e-08,
+  "up_m2_bitwise_equal": false,
+  "up_m2_ok": true,
+  "up_m2_rank": 384,
+  "up_m2_relative_gap": 6.530087306644121e-16,
+  "up_m2_within_1e-8": false,
+  "up_n_tokens": 131072,
+  "up_small_baseline_gap": false
+}

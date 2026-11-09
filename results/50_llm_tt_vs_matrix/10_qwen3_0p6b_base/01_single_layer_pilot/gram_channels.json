@@ -1,0 +1,80 @@
+{
+  "calibration": {
+    "G_condition_number": 306084136240460.9,
+    "G_effective_rank": 59.95792817232501,
+    "G_eigenvalue_max": 56212627.83522127,
+    "G_eigenvalue_min": 1.836509024141663e-07,
+    "G_lambda_condition_number": 405861302.0920498,
+    "G_lambda_effective_rank": 59.958182248525084,
+    "G_lambda_eigenvalue_max": 56212627.97372317,
+    "G_lambda_eigenvalue_min": 0.13850206384291866,
+    "lambda": 1e-06,
+    "n_features": 1024.0,
+    "n_tokens": 131072.0,
+    "regularization_shift": 0.13850187919402512,
+    "regularization_to_min_eigenvalue": 754158.4461244743,
+    "rms_max": 17.432087750541616,
+    "rms_median": 0.6503315103652175,
+    "rms_q50": 0.6503535561040505,
+    "rms_q90": 0.9379004435297804,
+    "rms_q99": 3.191363347548055,
+    "split": "calibration"
+  },
+  "n_channels_above_q99": 11,
+  "n_tokens": 131072,
+  "rms_max": 17.432087750541616,
+  "rms_median": 0.6503315103652175,
+  "rms_min": 2.6333567814260834e-05,
+  "top10": [
+    {
+      "index": 277,
+      "rms": 17.432087750541616,
+      "rms_over_median": 26.804925599794462
+    },
+    {
+      "index": 23,
+      "rms": 8.423452996215724,
+      "rms_over_median": 12.952552447420587
+    },
+    {
+      "index": 16,
+      "rms": 4.3970277004202085,
+      "rms_over_median": 6.761209675894216
+    },
+    {
+      "index": 9,
+      "rms": 4.3591479296098745,
+      "rms_over_median": 6.7029628122460725
+    },
+    {
+      "index": 12,
+      "rms": 3.788033813000262,
+      "rms_over_median": 5.824773600271887
+    },
+    {
+      "index": 30,
+      "rms": 3.738067767437029,
+      "rms_over_median": 5.747941946312551
+    },
+    {
+      "index": 109,
+      "rms": 3.5207165794059088,
+      "rms_over_median": 5.4137259586710185
+    },
+    {
+      "index": 8,
+      "rms": 3.505791630248747,
+      "rms_over_median": 5.390776203170504
+    },
+    {
+      "index": 32,
+      "rms": 3.429203135812602,
+      "rms_over_median": 5.273007813948316
+    },
+    {
+      "index": 62,
+      "rms": 3.3550187978278854,
+      "rms_over_median": 5.158936241523575
+    }
+  ]
+}
