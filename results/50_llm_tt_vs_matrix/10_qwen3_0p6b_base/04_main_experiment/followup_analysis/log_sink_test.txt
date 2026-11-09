@@ -1,0 +1,10 @@
+W1109 21:15:48.369000 28560 site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]Loading weights:  25%|██▍       | 76/310 [00:00<00:00, 741.56it/s]Loading weights:  49%|████▊     | 151/310 [00:00<00:00, 637.52it/s]Loading weights: 100%|██████████| 310/310 [00:00<00:00, 958.50it/s]
+Using the latest cached version of the dataset since Salesforce/wikitext couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'wikitext-2-raw-v1' at D:\dev\nn-compression-svd-dmrg\data\hf_cache\datasets\Salesforce___wikitext\wikitext-2-raw-v1\0.0.0\b08601e04326c79dfdd32d625aee71d232d685c3 (last modified on Sat Nov  7 17:56:08 2026).
+L7 wt2: 285 chunks 62s  sink mass 0.479
+L7 c4: 128 chunks 28s  sink mass 0.481
+L14 wt2: 285 chunks 71s  sink mass 0.414
+L14 c4: 128 chunks 32s  sink mass 0.414
+L21 wt2: 285 chunks 83s  sink mass 0.693
+L21 c4: 128 chunks 42s  sink mass 0.687
