@@ -1,0 +1,27 @@
+﻿python.exe : W1109 23:00:05.301000 34328 site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE:
+ Redirects are currently not supported in Windows or MacOs.
+At line:1 char:388
++ ... FFLINE='1'; & C:\Users\astra\anaconda3\envs\pytorch-svd\python.exe no ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (W1109 23:00:05....ndows or MacOs.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]
+Loading weights:  27%|██▋       | 84/310 [00:00<00:00, 820.61it/s]
+Loading weights:  54%|█████▍    | 167/310 [00:00<00:00, 613.22it/s]
+Loading weights:  75%|███████▍  | 232/310 [00:00<00:00, 559.57it/s]
+Loading weights: 100%|██████████| 310/310 [00:00<00:00, 781.59it/s]
+Using the latest cached version of the dataset since Salesforce/wikitext couldn't be found on the Hugging Face Hub (off
+line mode is enabled).
+Found the latest cached dataset configuration 'wikitext-2-raw-v1' at D:\dev\nn-compression-svd-dmrg\data\hf_cache\datas
+ets\Salesforce___wikitext\wikitext-2-raw-v1\0.0.0\b08601e04326c79dfdd32d625aee71d232d685c3 (last modified on Sat Nov  7
+ 17:56:08 2026).
+L7 wt2: 285 chunks 49s first share=['0.107', '0.076', '0.202', '0.616'] rest share=['0.661', '0.097', '0.119', '0.122']
+L7 c4: 128 chunks 23s first share=['0.107', '0.076', '0.202', '0.616'] rest share=['0.636', '0.078', '0.119', '0.166']
+L14 wt2: 285 chunks 81s first share=['0.294', '0.171', '0.183', '0.353'] rest share=['0.714', '0.090', '0.101', '0.094']
+L14 c4: 128 chunks 47s first share=['0.294', '0.171', '0.183', '0.353'] rest share=['0.700', '0.078', '0.097', '0.125']
+L21 wt2: 285 chunks 84s first share=['0.121', '0.131', '0.134', '0.615'] rest share=['0.623', '0.136', '0.145', '0.096']
+L21 c4: 128 chunks 31s first share=['0.121', '0.131', '0.134', '0.615'] rest share=['0.595', '0.121', '0.150', '0.134']
+checks: {'max_band_sum_gap': 2.220446049250313e-16, 'max_error_sum_gap': 1.999175598422335e-15}
+exit=0
