@@ -1,0 +1,19 @@
+{
+  "extra_sweeps_done": 10000,
+  "final_q_lambda": 12300932.113886869,
+  "final_s_max": 4.216818124444278e-08,
+  "gram_sha256": "bb84c19c03cd76e1164a68eec8149f9c3cf3cf4c11e399d86adebd1f58dea9a4",
+  "initial_q_lambda": 12305883.772912426,
+  "job_id": "L7_v_25_M5_M3init_lam1e-06_continue",
+  "max_extra_sweeps": 10000,
+  "method_sha256": "8aac7a54f541810092ae5aa526e3b4cc30bcc4b21dd44fee574c51116aac6abc",
+  "seconds_total": 11572.75917179999,
+  "start_checkpoint": "models\\50_llm_tt_vs_matrix\\10_qwen3_0p6b_base\\04_main_experiment\\als\\full\\L7_v_25_M5_M3init_lam1e-06.pt",
+  "start_checkpoint_sha256": "93d06da67e0d3f822e5b0e901d67734b332f901b3ce64907a57378621b90be1c",
+  "start_q_lambda_recorded": 12305883.772912426,
+  "start_stop_reason": "study_resolution_reached",
+  "start_sweeps": 800,
+  "stop_reason": "max_sweeps",
+  "weight_sha256": "749d07ce1c13caad69e6b5099dfd319db0cd731dee96cf61d81085bd27f785d6",
+  "window": 100
+}

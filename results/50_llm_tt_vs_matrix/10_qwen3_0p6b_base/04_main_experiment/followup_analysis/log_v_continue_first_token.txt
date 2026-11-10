@@ -1,0 +1,25 @@
+﻿python.exe : W1110 20:46:05.190000 20632 site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE:
+ Redirects are currently not supported in Windows or MacOs.
+At line:1 char:433
++ ... n-svd-dmrg; & C:\Users\astra\anaconda3\envs\pytorch-svd\python.exe no ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (W1110 20:46:05....ndows or MacOs.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]
+Loading weights:  34%|███▍      | 105/310 [00:00<00:00, 1007.59it/s]
+Loading weights:  67%|██████▋   | 209/310 [00:00<00:00, 1000.03it/s]
+Loading weights: 100%|██████████| 310/310 [00:00<00:00, 1076.37it/s]
+Using the latest cached version of the dataset since Salesforce/wikitext couldn't be found on the Hugging Face Hub (off
+line mode is enabled).
+Found the latest cached dataset configuration 'wikitext-2-raw-v1' at D:\dev\nn-compression-svd-dmrg\data\hf_cache\datas
+ets\Salesforce___wikitext\wikitext-2-raw-v1\0.0.0\b08601e04326c79dfdd32d625aee71d232d685c3 (last modified on Sat Nov  7
+ 17:56:08 2026).
+L7 wt2: 285 chunks 103 matrices 130s last sweep 10800 proj_first=4.156 heads_sink=0.307
+L7 c4: 128 chunks 103 matrices 65s last sweep 10800 proj_first=4.153 heads_sink=0.318
+L14 wt2: 285 chunks 103 matrices 135s last sweep 10500 proj_first=4.291 heads_sink=0.210
+L14 c4: 128 chunks 103 matrices 68s last sweep 10500 proj_first=4.281 heads_sink=0.215
+L21 wt2: 285 chunks 103 matrices 141s last sweep 10450 proj_first=15.848 heads_sink=0.860
+L21 c4: 128 chunks 103 matrices 71s last sweep 10450 proj_first=15.851 heads_sink=0.936
+checks: {'L7_start_vs_04_M5_max_abs': 0.0, 'L7_W_file_vs_model_max_abs': 0.0, 'L14_start_vs_04_M5_max_abs': 0.0, 'L14_W_file_vs_model_max_abs': 0.0, 'L21_start_vs_04_M5_max_abs': 0.0, 'L21_W_file_vs_model_max_abs': 0.0, 'max_rel_gap_vs_sink_test': 4.001280042392405e-07}
